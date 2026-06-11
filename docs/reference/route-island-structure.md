@@ -11,28 +11,39 @@ Self-contained folders under `pages/<page-name>/` with page-prefixed role files,
 ## Canonical tree
 
 ```text
-pages/<page-name>/
-├── <PAGE>.OVERVIEW.md                        REQUIRED — AI/human entry doc
-├── <page>.route.tsx                   REQUIRED — Lazy boundary
-├── <page>.manifest.ts                     REQUIRED — Manifest (path, RBAC, testId, kind, children)
-├── <Page>Page.tsx                     REQUIRED when kind: leaf — top-level UI
-├── <Page>Layout.tsx                   REQUIRED when kind: layout — top-level UI + <Outlet />
-├── <page>.contracts.ts                OPTIONAL — Zod schemas
-├── <page>.api.ts                      OPTIONAL — fetchers
-├── <page>.search.ts                   OPTIONAL — URL search-params schema
-├── <page>.fixtures.ts                 OPTIONAL — mocks (REPLACE_WITH_API)
-├── <page>.constants.ts                OPTIONAL
-├── <page>.resource.ts                 OPTIONAL — resource manifest (resource pages only)
-├── store/use<X>Store/                 RARE — page-local Zustand (folder-per-unit + index.ts)
-├── components/<Name>/                 folder-per-unit: <Name>.tsx + .test.tsx + index.ts
-├── forms/<Name>Form/                  folder-per-unit
-├── hooks/use<Name>/                   folder-per-unit
-├── dialogs/<Name>Dialog/              folder-per-unit (resource pages)
-├── __tests__/integration/             cross-component flows in this island
-├── shared/                            FAMILY-SHARED (layout pages only) — code used by
-│                                      this page + its children; never by other families
-└── <child-segment>/                   nested route — DIRECT child, full recursive copy
-                                       ($param folders for dynamic segments)
+src/pages/<page>/                          ← folder = URL segment
+│
+│══ MANDATORY — every page, validator-enforced ════════════════════════════
+├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
+├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.manifest.ts                     manifest — path, testId, permission, kind, children
+├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
+│
+│══ OPTIONAL — the page's OWN data layer ══════════════════════════════════
+├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
+├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
+│                                          even from its children — sharing goes via shared/)
+├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.search.ts                       URL search-param schema (validateSearch)
+├── <page>.constants.ts                    page-scoped constants
+├── <page>.resource.ts                     resource manifest (resource pages only)
+│
+│══ OPTIONAL — units (each: <X>.tsx + <X>.test.tsx + index.ts) ════════════
+├── components/<Widget>/                   page-only widgets
+├── forms/<Name>Form/                      page-only forms
+├── hooks/use<X>/                          page-only Query hooks (wrap <page>.api.ts)
+├── dialogs/<Name>Dialog/                  URL-driven dialogs (resource pages)
+├── store/use<X>Store/                     RARE page-local Zustand
+├── __tests__/integration/                 this page's cross-component flows
+│
+│══ OPTIONAL — FAMILY-SHARED (kind:'layout' only) ═════════════════════════
+├── shared/                                used by THIS page + its children — never other families
+│   ├── components/<X>/  hooks/use<X>/     same unit shapes as root shared
+│   └── <name>-contracts.ts · <name>-api.ts   family-scoped plain modules
+│
+│══ OPTIONAL — children (kind:'layout' only; disk mirrors URL) ════════════
+└── <child>/  ·  $param/                   full recursive copy of this exact anatomy
+                                           (`shared` & unit names are reserved — can't be routes)
 ```
 
 **No child route folders** when `kind: 'leaf'` and `children: []`.

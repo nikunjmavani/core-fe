@@ -111,23 +111,39 @@ src/pages/
 Every route uses a **route island** ([`agent-os/skills/route-island/SKILL.md`](agent-os/skills/route-island/SKILL.md), [`docs/reference/route-island-structure.md`](docs/reference/route-island-structure.md)). Layout parents nest children **directly** as `<segment>/` (or `$param/`). **`<page>.manifest.ts`** is the layout + leaf manifest; top-level UI is `<Page>Page.tsx` / `<Page>Layout.tsx` at island root; tests are colocated next to source (sub-units use folder-per-unit).
 
 ```
-pages/<page>/
-├── <PAGE>.OVERVIEW.md                # required — AI/human entry doc
-├── <page>.route.tsx                  # required — lazy boundary
-├── <page>.manifest.ts                    # required — manifest (path, RBAC, testId, kind, children)
-├── <Page>Page.tsx | <Page>Layout.tsx # required — top-level UI
-├── <page>.contracts.ts               # optional — Zod schemas
-├── <page>.api.ts                     # optional — fetchers
-├── <page>.search.ts                  # optional — URL search-params schema
-├── <page>.fixtures.ts                # optional — mocks
-├── store/use<X>Store/                # rare — page-local Zustand (folder-per-unit)
-├── components/<Name>/                # folder-per-unit: <Name>.tsx + .test.tsx + index.ts
-├── forms/<Name>Form/                 # folder-per-unit
-├── hooks/use<Name>/                  # folder-per-unit
-├── dialogs/<Name>Dialog/             # folder-per-unit (resource pages)
-├── __tests__/integration/            # cross-component flows in this island
-├── shared/                           # FAMILY-SHARED (layout pages) — this page + children only
-└── <child>/                          # nested route — DIRECT child, full recursive copy
+src/pages/<page>/                          ← folder = URL segment
+│
+│══ MANDATORY — every page, validator-enforced ════════════════════════════
+├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
+├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.manifest.ts                     manifest — path, testId, permission, kind, children
+├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
+│
+│══ OPTIONAL — the page's OWN data layer ══════════════════════════════════
+├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
+├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
+│                                          even from its children — sharing goes via shared/)
+├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.search.ts                       URL search-param schema (validateSearch)
+├── <page>.constants.ts                    page-scoped constants
+├── <page>.resource.ts                     resource manifest (resource pages only)
+│
+│══ OPTIONAL — units (each: <X>.tsx + <X>.test.tsx + index.ts) ════════════
+├── components/<Widget>/                   page-only widgets
+├── forms/<Name>Form/                      page-only forms
+├── hooks/use<X>/                          page-only Query hooks (wrap <page>.api.ts)
+├── dialogs/<Name>Dialog/                  URL-driven dialogs (resource pages)
+├── store/use<X>Store/                     RARE page-local Zustand
+├── __tests__/integration/                 this page's cross-component flows
+│
+│══ OPTIONAL — FAMILY-SHARED (kind:'layout' only) ═════════════════════════
+├── shared/                                used by THIS page + its children — never other families
+│   ├── components/<X>/  hooks/use<X>/     same unit shapes as root shared
+│   └── <name>-contracts.ts · <name>-api.ts   family-scoped plain modules
+│
+│══ OPTIONAL — children (kind:'layout' only; disk mirrors URL) ════════════
+└── <child>/  ·  $param/                   full recursive copy of this exact anatomy
+                                           (`shared` & unit names are reserved — can't be routes)
 ```
 
 ### `<page>.route.tsx` Contract

@@ -5,26 +5,39 @@ Copy for **`pages/<page-name>/`** or any nested **`pages/.../<child-segment>/`**
 ## Tree
 
 ```text
-pages/<page-name>/
-├── <PAGE>.OVERVIEW.md
-├── page.ts
-├── route.tsx
-├── contracts.ts
-├── api.ts
-├── hooks/
-├── components/
-├── forms/
-├── search.ts              # optional
-├── fixtures.ts            # optional
-├── __tests__/
-│   ├── unit/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── forms/
-│   │   ├── api.test.ts
-│   │   └── page.test.tsx
-│   └── integration/       # optional
-└── <child-segment>/       # layout only — DIRECT child, recursive full tree
+src/pages/<page>/                          ← folder = URL segment
+│
+│══ MANDATORY — every page, validator-enforced ════════════════════════════
+├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
+├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.manifest.ts                     manifest — path, testId, permission, kind, children
+├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
+│
+│══ OPTIONAL — the page's OWN data layer ══════════════════════════════════
+├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
+├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
+│                                          even from its children — sharing goes via shared/)
+├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.search.ts                       URL search-param schema (validateSearch)
+├── <page>.constants.ts                    page-scoped constants
+├── <page>.resource.ts                     resource manifest (resource pages only)
+│
+│══ OPTIONAL — units (each: <X>.tsx + <X>.test.tsx + index.ts) ════════════
+├── components/<Widget>/                   page-only widgets
+├── forms/<Name>Form/                      page-only forms
+├── hooks/use<X>/                          page-only Query hooks (wrap <page>.api.ts)
+├── dialogs/<Name>Dialog/                  URL-driven dialogs (resource pages)
+├── store/use<X>Store/                     RARE page-local Zustand
+├── __tests__/integration/                 this page's cross-component flows
+│
+│══ OPTIONAL — FAMILY-SHARED (kind:'layout' only) ═════════════════════════
+├── shared/                                used by THIS page + its children — never other families
+│   ├── components/<X>/  hooks/use<X>/     same unit shapes as root shared
+│   └── <name>-contracts.ts · <name>-api.ts   family-scoped plain modules
+│
+│══ OPTIONAL — children (kind:'layout' only; disk mirrors URL) ════════════
+└── <child>/  ·  $param/                   full recursive copy of this exact anatomy
+                                           (`shared` & unit names are reserved — can't be routes)
 ```
 
 ## `<page>.manifest.ts`
