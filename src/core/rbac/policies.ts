@@ -1,10 +1,10 @@
-import type { OrgPermission } from '@/core/types/permissions.ts';
+import type { OrganizationPermission } from '@/core/types/permissions.ts';
 import type { Role } from '@/shared/auth/types.ts';
 
 // The permission codes live in core/types (so lib may reference them); the RBAC
 // engine re-exports them for its consumers.
-export { orgPermissionSchema } from '@/core/types/permissions.ts';
-export type { OrgPermission };
+export { organizationPermissionSchema } from '@/core/types/permissions.ts';
+export type { OrganizationPermission };
 
 /**
  * Access context for a permission decision: the user's global role plus the set
@@ -14,7 +14,7 @@ export interface AccessContext {
   /** Platform-wide role. */
   role: Role;
   /** Permission codes granted in the active organization. */
-  permissions: OrgPermission[];
+  permissions: OrganizationPermission[];
 }
 
 /**
@@ -30,7 +30,10 @@ export interface AccessContext {
  * @example
  * hasPermission({ role: 'user', permissions: ['membership:read'] }, 'membership:read'); // true
  */
-export function hasPermission(ctx: AccessContext, permission: OrgPermission): boolean {
+export function hasPermission(
+  ctx: AccessContext,
+  permission: OrganizationPermission,
+): boolean {
   if (ctx.role === 'super_admin') return true;
   return ctx.permissions.includes(permission);
 }
@@ -43,7 +46,7 @@ export function hasPermission(ctx: AccessContext, permission: OrgPermission): bo
  */
 export function hasAllPermissions(
   ctx: AccessContext,
-  permissions: OrgPermission[],
+  permissions: OrganizationPermission[],
 ): boolean {
   return permissions.every((p) => hasPermission(ctx, p));
 }
@@ -56,7 +59,7 @@ export function hasAllPermissions(
  */
 export function hasAnyPermission(
   ctx: AccessContext,
-  permissions: OrgPermission[],
+  permissions: OrganizationPermission[],
 ): boolean {
   return permissions.some((p) => hasPermission(ctx, p));
 }

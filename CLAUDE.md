@@ -26,6 +26,7 @@ pnpm health:fix   # Auto-fix + full health check
 - **Credentials / env:** docs/integrations/credentials-and-env.md; Sentry: docs/integrations/sentry-sourcemaps.md
 - **Cursor ↔ backend API (MCP):** agent-os/docs/cursor-backend-mcp.md
 - **Git workflow:** docs/process/git-workflow.md
+- **Routing & tenancy (implemented spec):** docs/reference/routing-and-tenancy.md
 - **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/dependency-upgrades.md, docs/reference/internationalization.md
 
 ## Architecture Overview
@@ -33,7 +34,6 @@ pnpm health:fix   # Auto-fix + full health check
 ```
 Layer          Purpose                                                    Files (approx)
 ─────────────  ─────────────────────────────────────────────────────────  ──────────────
-src/app/       Route tree, guards, providers, error boundaries            ~10
 src/app/       Application shell: routes, guards, providers, error        ~20
                boundaries, analytics + observability bootstrap
 src/core/      HTTP, RBAC, config, data-provider, resources,             ~30
@@ -53,7 +53,7 @@ agent-os/      Agents, skills, rules, hooks, MCP, docs                    ~50+
 tests/              # At project root: utils, e2e, load (see tests/README.md)
 src/
 ├── app/            # Application shell: route tree, guards, providers, error boundaries
-├── core/           # Framework-agnostic services: auth, HTTP, RBAC, config, data-provider, resources, observability
+├── core/           # Framework-agnostic services: HTTP, RBAC, config, data-provider, resources, version
 ├── pages/          # Page-first feature directories (each = a frontend route)
 ├── shared/         # Cross-page reusables: components, forms, hooks, layouts, store
 ├── lib/            # Pure utilities: cn(), animations, helpers (no side effects)
@@ -62,53 +62,57 @@ src/
 └── index.css       # Tailwind CSS v4 entry with @theme tokens
 ```
 
-All Zustand stores live in **`src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useTenantStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`. Cross-page API helpers (organization-domain schemas + fetchers, tenancy bootstrap, my-orgs listing) live in **`src/shared/api/`**. Auth infrastructure (token, refresh-timer, idle-timeout, login/logout service, mocks) lives in **`src/shared/auth/`**.
+All Zustand stores live in **`src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useOrganizationStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`. Cross-page API helpers (auth-screen schemas + fetchers `auth-api.ts`/`auth-contracts.ts`, organization-domain schemas + fetchers) live in **`src/shared/api/`**. Organization/tenancy runtime (URL-driven context, membership, `/` resolver, my-organizations) lives in **`src/shared/tenancy/`** — the URL is the single source of truth for organization context. Auth infrastructure (token, refresh-timer, idle-timeout, login/logout service, mocks) lives in **`src/shared/auth/`**.
 
-**Dependency rule (one-way):** `ui → lib → core → shared → pages → app`. Pages never import from other pages. One documented exception: the core kernel (`core/http`, `core/rbac`) may import the shared runtime trio — `shared/auth`, `shared/errors`, `useAuthStore`/`useTenantStore` (see `agent-os/rules/file-structure.mdc` → Import Rules; enforced in `eslint.config.mjs`).
+**Dependency rule (one-way):** `ui → lib → core → shared → pages → app`. Pages never import from other pages. One documented exception: the core kernel (`core/http`, `core/rbac`) may import the shared runtime trio — `shared/auth`, `shared/errors`, `useAuthStore`/`useOrganizationStore` (see `agent-os/rules/file-structure.mdc` → Import Rules; enforced in `eslint.config.mjs`).
 
 ## Route Marker Convention (`<page>.route.tsx`)
 
 Every directory under `src/pages/` that corresponds to a frontend URL path **must** contain a **`<page>.route.tsx`** file (page-prefixed, lowercase-dotted). This file is the boundary between routes.
 
+**The rule in five lines (read this first):**
+
+1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/org_8fK2x/dashboard` → `pages/organization/$organizationId/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. One exception: `/` is a pure resolver route (redirect only, no island).
+2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.page.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationId/` → `organization-id.route.tsx`, `ORGANIZATION_ID.OVERVIEW.md`).
+3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppShell via the `pages/organization/$organizationId/` layout island (the org guard boundary). No grouping directories under `pages/`.
+4. **Code used by 2+ page islands lives in `shared/`** (e.g. `shared/api/auth-api.ts`, `shared/tenancy/`).
+5. **Settings is a global hash modal, not a route space** — `#settings/<scope>/<section>` opens `shared/components/SettingsModal/` over any page (see `agent-os/rules/file-structure.mdc` → Settings hash modal). Full spec: `docs/reference/routing-and-tenancy.md`.
+
 **Source of truth for what is live today:** [`src/app/routes/routeTree.tsx`](src/app/routes/routeTree.tsx) and [`docs/reference/routes-and-ui.md`](docs/reference/routes-and-ui.md). The tree below mixes **implemented** routes with **common examples** (same shapes as new features).
 
 ```
 src/pages/
-├── auth/
-│   ├── login/
-│   │   ├── login.route.tsx          ← /login
-│   │   └── forms/LoginForm/         (folder-per-unit)
-│   ├── register/
-│   │   ├── register.route.tsx       ← /register
-│   │   └── forms/RegisterForm/
-│   ├── auth.contracts.ts            ← Shared auth Zod schemas
-│   └── auth.api.ts                  ← Shared auth API calls
-├── dashboard/
-│   ├── dashboard.route.tsx          ← / (index)
-│   ├── dashboard.page.ts            ← manifest
-│   ├── DashboardPage.tsx            ← top-level UI
-│   ├── dashboard.contracts.ts
-│   ├── dashboard.api.ts
-│   ├── hooks/useDashboard/          (folder-per-unit)
-│   └── components/                  (each sub-unit a folder)
-├── organizations/
-│   ├── organizations.route.tsx      ← /organizations
-│   ├── organizations.page.ts
-│   ├── OrganizationsListPage.tsx
-│   ├── organizations.contracts.ts
-│   ├── organizations.api.ts
-│   ├── hooks/, components/, forms/, dialogs/
-│   └── sub-pages/{create, $id, $id-edit}/  ← URL-driven CRUD dialogs
-└── ...
+├── login/                           ← /login (AuthLayout via pathless auth-shell)
+│   ├── login.route.tsx
+│   ├── login.page.ts                ← manifest
+│   ├── LoginPage.tsx                ← top-level UI
+│   ├── LOGIN.OVERVIEW.md
+│   └── forms/LoginForm/             (folder-per-unit)
+├── register/  forgot-password/  reset-password/  verify-email/  mfa/
+├── callback/
+│   └── callback.route.tsx           ← /callback (one URL for every OAuth provider)
+├── onboarding/   accept-invite/
+└── organization/
+    ├── organization.route.tsx       ← /organization (picker)
+    ├── organization.page.ts
+    ├── OrganizationPickerPage.tsx
+    └── $organizationId/             ← /organization/org_8fK2x — org guard boundary
+        ├── organization-id.route.tsx     ($param folder → strip-$ kebab prefix)
+        ├── organization-id.page.ts       kind: 'layout', children: [dashboard, suspended]
+        ├── OrganizationLayout.tsx        mounts shared AppShell
+        ├── ORGANIZATION_ID.OVERVIEW.md
+        ├── dashboard/               ← …/dashboard — full island (api, contracts, hooks/, components/)
+        ├── suspended/               ← …/suspended — status-guard target
+        └── patients/                ← (example) future islands nest directly: patients/$patientId/…
 ```
 
 ### Page Directory Shape (route island)
 
-Every route uses a **route island** ([`agent-os/skills/route-island/SKILL.md`](agent-os/skills/route-island/SKILL.md), [`docs/reference/route-island-structure.md`](docs/reference/route-island-structure.md)). Layout parents nest children under **`sub-pages/<sub-page-name>/`**. **`<page>.page.ts`** is the layout + leaf manifest; top-level UI is `<Page>Page.tsx` / `<Page>Layout.tsx` at island root; tests are colocated next to source (sub-units use folder-per-unit).
+Every route uses a **route island** ([`agent-os/skills/route-island/SKILL.md`](agent-os/skills/route-island/SKILL.md), [`docs/reference/route-island-structure.md`](docs/reference/route-island-structure.md)). Layout parents nest children **directly** as `<segment>/` (or `$param/`). **`<page>.page.ts`** is the layout + leaf manifest; top-level UI is `<Page>Page.tsx` / `<Page>Layout.tsx` at island root; tests are colocated next to source (sub-units use folder-per-unit).
 
 ```
 pages/<page>/
-├── OVERVIEW.md                       # required — AI/human entry doc
+├── <PAGE>.OVERVIEW.md                # required — AI/human entry doc
 ├── <page>.route.tsx                  # required — lazy boundary
 ├── <page>.page.ts                    # required — manifest (path, RBAC, testId, kind, children)
 ├── <Page>Page.tsx | <Page>Layout.tsx # required — top-level UI
@@ -122,7 +126,7 @@ pages/<page>/
 ├── hooks/use<Name>/                  # folder-per-unit
 ├── dialogs/<Name>Dialog/             # folder-per-unit (resource pages)
 ├── __tests__/integration/            # cross-component flows in this island
-└── sub-pages/<child>/                # nested routes — full recursive copy
+└── <child>/                          # nested route — DIRECT child, full recursive copy
 ```
 
 ### `<page>.route.tsx` Contract
@@ -148,7 +152,7 @@ export function loader() {
 ### Dialog vs Full Page Decision
 
 - **Full page**: a new directory with `<page>.route.tsx`.
-- **URL-driven dialog** (Create/Edit on resource pages): `sub-pages/<segment>/<segment>.route.tsx` that renders `null`; the parent list page reads URL and opens the matching dialog.
+- **URL-driven dialog** (Create/Edit on resource pages): a direct child `<segment>/<segment>.route.tsx` that renders `null`; the parent list page reads URL and opens the matching dialog.
 - **Action dialog** (no URL needed, e.g., delete confirm): inline `AlertDialog`, no `route.tsx`.
 - Rule: Everything between two `<page>.route.tsx` files belongs to the parent.
 
@@ -173,7 +177,7 @@ src/shared/
 ├── hooks/
 │   ├── use<X>/                      # cross-page custom hooks — folder-per-unit
 │   └── useList/, useOne/, useCreate/, useUpdate/, useDelete/   # standard CRUD hooks
-├── layouts/<Name>/                  # AuthLayout, DashboardLayout — folder-per-unit
+├── layouts/<Name>/                  # AuthLayout, AppShell — folder-per-unit
 └── store/                           # global Zustand
     ├── useThemeStore/
     ├── useUIStore/
@@ -273,7 +277,7 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 
 - All routes are lazy loaded via `route.tsx` files.
 - Route config lives in `src/app/routes/routeTree.tsx`.
-- Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` (auth redirect, tenant bootstrap, `requirePermission`).
+- Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationId` chain (auth → membership/context sync from the URL → status) plus `requirePermission`; see `src/app/guards/GUARDS.OVERVIEW.md`.
 - RBAC enforcement in route loaders: `requirePermission('domain.action')`.
 
 ## New-deployment detection
@@ -292,3 +296,13 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 - **E2E:** `tests/e2e/` (Playwright)
 - **Load (k6):** `tests/load/` (e.g. `tests/load/k6/scenarios/` when multiple scenarios)
 - Unit/integration run with Vitest; E2E with Playwright; load with k6
+
+**Mock map** (every mock is tagged `REPLACE_WITH_API`; dev-only — production builds reject mock mode):
+
+| Location                                                            | What it mocks                                                           |
+| ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `core/http/mock.ts`                                                 | `mockResponse()` helper — wraps fixtures with realistic latency         |
+| `shared/auth/mock-auth.ts`, `mock-credentials.ts`                   | Mock session/user + the demo login credentials                          |
+| `shared/api/organization-mock-store.ts`, `organization-fixtures.ts` | In-memory org-domain state (members, invitations, roles, …) + seed data |
+| `pages/<page>/<page>.fixtures.ts`                                   | Page-local mock data, colocated with the island that owns it            |
+| `tests/utils/apiMocks.ts`, `mockApiClient.ts`                       | Unit-test API doubles (never imported by app code)                      |

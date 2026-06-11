@@ -3,15 +3,15 @@ import * as Sentry from '@sentry/react';
 import { AppError } from '@/shared/errors/AppError.ts';
 import { isHttpError } from '@/shared/errors/HttpError.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import { useTenantStore } from '@/shared/store/useTenantStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
- * Global error handler — reports errors to Sentry with user/tenant context.
+ * Global error handler — reports errors to Sentry with user/organization context.
  * Only sends user.id for identification (no email/PII).
  */
 export function reportError(error: unknown, context?: Record<string, unknown>): void {
   const user = useAuthStore.getState().user;
-  const tenant = useTenantStore.getState();
+  const organization = useOrganizationStore.getState();
 
   Sentry.withScope((scope) => {
     if (user) {
@@ -19,9 +19,9 @@ export function reportError(error: unknown, context?: Record<string, unknown>): 
       scope.setUser({ id: user.id });
     }
 
-    if (tenant.tenantId) {
-      scope.setTag('tenant_id', tenant.tenantId);
-      scope.setTag('tenant_slug', tenant.tenantSlug ?? 'unknown');
+    if (organization.organizationId) {
+      scope.setTag('organization_id', organization.organizationId);
+      scope.setTag('organization_slug', organization.organizationSlug ?? 'unknown');
     }
 
     if (context) {

@@ -1,4 +1,4 @@
-import type { OrgPermission } from '@/core/rbac/policies.ts';
+import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 import type {
   ApiKey,
   Invitation,
@@ -12,7 +12,7 @@ import type {
  * every management surface is reachable in the demo. The real backend returns
  * these from the membership response.
  */
-export const MY_PERMISSIONS_FIXTURE: OrgPermission[] = [
+export const MY_PERMISSIONS_FIXTURE: OrganizationPermission[] = [
   'organization:read',
   'organization:update',
   'organization:delete',

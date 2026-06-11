@@ -21,8 +21,10 @@ vi.mock('@/shared/store/useAuthStore/index.ts', () => ({
   useAuthStore: { getState: () => ({ user: null }) },
 }));
 
-vi.mock('@/shared/store/useTenantStore/index.ts', () => ({
-  useTenantStore: { getState: () => ({ tenantId: null, tenantSlug: null }) },
+vi.mock('@/shared/store/useOrganizationStore/index.ts', () => ({
+  useOrganizationStore: {
+    getState: () => ({ organizationId: null, organizationSlug: null }),
+  },
 }));
 
 describe('getErrorMessage', () => {

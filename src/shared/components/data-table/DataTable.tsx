@@ -34,13 +34,24 @@ function DataTableInner<TData>({
       <TableHeader>
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <TableHead key={header.id} colSpan={header.colSpan}>
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(header.column.columnDef.header, header.getContext())}
-              </TableHead>
-            ))}
+            {headerGroup.headers.map((header) => {
+              // aria-sort is only valid on the columnheader (<th>) itself,
+              // not on the sort-menu trigger button inside it.
+              const sorted = header.column.getIsSorted();
+              let ariaSort: 'ascending' | 'descending' | 'none' | undefined;
+              if (header.column.getCanSort()) {
+                ariaSort = 'none';
+                if (sorted === 'asc') ariaSort = 'ascending';
+                else if (sorted === 'desc') ariaSort = 'descending';
+              }
+              return (
+                <TableHead key={header.id} colSpan={header.colSpan} aria-sort={ariaSort}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
+                </TableHead>
+              );
+            })}
           </TableRow>
         ))}
       </TableHeader>

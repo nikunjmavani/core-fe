@@ -1,9 +1,9 @@
 import { redirect } from '@tanstack/react-router';
 
 import { AUTH_ROUTES } from '@/core/config/constants.ts';
-import { hasPermission, type OrgPermission } from '@/core/rbac/policies.ts';
+import { hasPermission, type OrganizationPermission } from '@/core/rbac/policies.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import { useTenantStore } from '@/shared/store/useTenantStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
  * Route loader/`beforeLoad` guard — throws a redirect if the user lacks an
@@ -17,14 +17,14 @@ import { useTenantStore } from '@/shared/store/useTenantStore/index.ts';
  * @example
  * beforeLoad: () => requirePermission('membership:read');
  */
-export function requirePermission(permission: OrgPermission): void {
+export function requirePermission(permission: OrganizationPermission): void {
   const { user, isAuthenticated } = useAuthStore.getState();
 
   if (!isAuthenticated || !user) {
     throw redirect({ to: AUTH_ROUTES.LOGIN });
   }
 
-  const { permissions } = useTenantStore.getState();
+  const { permissions } = useOrganizationStore.getState();
   if (!hasPermission({ role: user.role, permissions }, permission)) {
     throw redirect({ to: AUTH_ROUTES.UNAUTHORIZED });
   }
@@ -32,11 +32,17 @@ export function requirePermission(permission: OrgPermission): void {
 
 /**
  * Route loader guard — throws redirect if not authenticated.
+ *
+ * @param redirectTo - Optional path to return to after login; carried as the
+ * `redirect` search param (LoginForm validates it via `isSafeRedirectPath`).
  */
-export function requireAuth(): void {
+export function requireAuth(redirectTo?: string): void {
   const { isAuthenticated } = useAuthStore.getState();
 
   if (!isAuthenticated) {
-    throw redirect({ to: AUTH_ROUTES.LOGIN });
+    throw redirect({
+      to: AUTH_ROUTES.LOGIN,
+      search: redirectTo ? { redirect: redirectTo } : undefined,
+    });
   }
 }

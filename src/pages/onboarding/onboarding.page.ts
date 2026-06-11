@@ -1,4 +1,4 @@
-import type { PageManifest } from '@/lib/route-island/page-manifest.ts';
+import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
 /**
  * Onboarding — leaf island (`/onboarding`).

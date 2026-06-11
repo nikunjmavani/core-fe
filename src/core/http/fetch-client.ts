@@ -1,10 +1,15 @@
-import { API_BASE_PATH, API_ENDPOINTS, HTTP, TENANT } from '@/core/config/constants.ts';
+import {
+  API_BASE_PATH,
+  API_ENDPOINTS,
+  HTTP,
+  ORGANIZATION,
+} from '@/core/config/constants.ts';
 import { config } from '@/core/config/env.ts';
 import { forceLogout } from '@/shared/auth/service.ts';
 import { getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { authTokenResponseSchema } from '@/shared/auth/types.ts';
 import { HttpError } from '@/shared/errors/HttpError.ts';
-import { useTenantStore } from '@/shared/store/useTenantStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 // ------------------------------------------------------------------
 // Request ID
@@ -57,9 +62,9 @@ function buildHeaders(_method: string, customHeaders?: HeadersInit): Headers {
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
-  const tenantId = useTenantStore.getState().tenantId;
-  if (tenantId) {
-    headers.set(TENANT.HEADER, tenantId);
+  const organizationId = useOrganizationStore.getState().organizationId;
+  if (organizationId) {
+    headers.set(ORGANIZATION.HEADER, organizationId);
   }
   return headers;
 }

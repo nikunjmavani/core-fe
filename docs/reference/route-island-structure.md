@@ -1,6 +1,6 @@
 # Route island structure
 
-Self-contained folders under `pages/<page-name>/` with page-prefixed role files, folder-per-unit sub-units, **`sub-pages/`** for nested routes, **`<page>.page.ts`** for the layout/leaf manifest, and colocated tests.
+Self-contained folders under `pages/<page-name>/` with page-prefixed role files, folder-per-unit sub-units, **direct child folders** for nested routes (the pages tree mirrors the URL tree), **`<page>.page.ts`** for the layout/leaf manifest, and colocated tests.
 
 **Rule (contract):** [`agent-os/rules/file-structure.mdc`](../../agent-os/rules/file-structure.mdc)
 **Skill (workflow):** [`agent-os/skills/route-island/SKILL.md`](../../agent-os/skills/route-island/SKILL.md)
@@ -12,7 +12,7 @@ Self-contained folders under `pages/<page-name>/` with page-prefixed role files,
 
 ```text
 pages/<page-name>/
-├── OVERVIEW.md                        REQUIRED — AI/human entry doc
+├── <PAGE>.OVERVIEW.md                        REQUIRED — AI/human entry doc
 ├── <page>.route.tsx                   REQUIRED — Lazy boundary
 ├── <page>.page.ts                     REQUIRED — Manifest (path, RBAC, testId, kind, children)
 ├── <Page>Page.tsx                     REQUIRED when kind: leaf — top-level UI
@@ -29,11 +29,11 @@ pages/<page-name>/
 ├── hooks/use<Name>/                   folder-per-unit
 ├── dialogs/<Name>Dialog/              folder-per-unit (resource pages)
 ├── __tests__/integration/             cross-component flows in this island
-└── sub-pages/
-    └── <sub-page-name>/               full recursive copy of this tree
+└── <child-segment>/                   nested route — DIRECT child, full recursive copy
+                                       ($param folders for dynamic segments)
 ```
 
-**No `sub-pages/`** when `kind: 'leaf'` and `children: []`.
+**No child route folders** when `kind: 'leaf'` and `children: []`.
 
 ---
 
@@ -42,7 +42,7 @@ pages/<page-name>/
 | Category                      | Style                                  | Example                                                        |
 | ----------------------------- | -------------------------------------- | -------------------------------------------------------------- |
 | Role files (single-per-page)  | `<page>.<role>.<ext>` lowercase-dotted | `dashboard.route.tsx`, `dashboard.page.ts`, `dashboard.api.ts` |
-| Identity doc                  | UPPERCASE                              | `OVERVIEW.md`                                                  |
+| Entry doc                     | UPPER_SNAKE, directory-prefixed        | `<PAGE>.OVERVIEW.md`                                           |
 | Top-level UI                  | PascalCase, page-prefixed              | `DashboardPage.tsx`, `OrganizationLayout.tsx`                  |
 | Sub-units                     | PascalCase, no prefix                  | `ActivityFeed/`, `LoginForm/`, `useDashboard/`                 |
 | shadcn primitives (exception) | flat lowercase                         | `shared/components/ui/button.tsx`                              |
@@ -51,17 +51,17 @@ pages/<page-name>/
 
 ## `<page>.page.ts` (layout + leaf manifest)
 
-| Field        | Role                                                             |
-| ------------ | ---------------------------------------------------------------- |
-| `segment`    | URL segment; child folder name under `sub-pages/`                |
-| `path`       | Full URL                                                         |
-| `testId`     | Root `data-testid` for the page container                        |
-| `permission` | RBAC for the route's loader; `null` if just auth-gated           |
-| `kind`       | `'layout'` (renders `<Outlet />` + has `sub-pages/`) or `'leaf'` |
-| `children`   | Sub-pages segments — disk: `sub-pages/<segment>/`                |
+| Field        | Role                                                              |
+| ------------ | ----------------------------------------------------------------- |
+| `segment`    | URL segment; equals the island's folder name                      |
+| `path`       | Full URL                                                          |
+| `testId`     | Root `data-testid` for the page container                         |
+| `permission` | RBAC for the route's loader; `null` if just auth-gated            |
+| `kind`       | `'layout'` (renders `<Outlet />` + has child folders) or `'leaf'` |
+| `children`   | Child URL segments — disk: `<segment>/` directly                  |
 
 ```ts
-import type { PageManifest } from '@/lib/route-island/page-manifest.ts';
+import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
 export const page = {
   segment: 'organization',
@@ -99,7 +99,7 @@ Resources (organizations, members, roles, etc.) add a CRUD specialization:
 ```
 pages/<resource>/
 ├── <resource>.route.tsx                 parent route — renders the list
-├── <resource>.page.ts                   kind: 'layout', children: ['create', '$id', '$id-edit']
+├── <resource>.page.ts                   kind: 'layout', children: ['create', '$<resource>Id']
 ├── <resource>.resource.ts               resource manifest
 ├── <Resource>ListPage.tsx               top-level UI — mounts the dialogs
 ├── components/, forms/, hooks/          folder-per-unit
@@ -107,10 +107,9 @@ pages/<resource>/
 │   ├── Create<Resource>Dialog/
 │   ├── Edit<Resource>Dialog/
 │   └── Delete<Resource>Dialog/          optional — usually inline AlertDialog
-└── sub-pages/
-    ├── create/create.route.tsx          → /<resource>/create   (renders null; list opens dialog)
-    ├── $id/$id.route.tsx                → /<resource>/[id]     (show)
-    └── $id-edit/$id-edit.route.tsx      → /<resource>/[id]/edit  (edit)
+├── create/create.route.tsx              → /<resource>/create   (renders null; list opens dialog)
+└── $<resource>Id/                       → /<resource>/[id]     (show — strip-$ kebab role files)
+    └── edit/edit.route.tsx              → /<resource>/[id]/edit  (renders null; list opens dialog)
 ```
 
 URL ↔ action mapping:
@@ -155,7 +154,7 @@ Established cases:
 | Cross-component integration in this island | `__tests__/integration/`                        |
 | Browser E2E (full app, cross-page)         | Project `tests/e2e/` (Playwright)               |
 
-**No test required for:** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `OVERVIEW.md`, `index.ts` (barrel).
+**No test required for:** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
 
 Vitest globs cover both `src/**/*.test.{ts,tsx}` and `src/**/__tests__/**/*.test.{ts,tsx}`.
 
@@ -163,12 +162,12 @@ Vitest globs cover both `src/**/*.test.{ts,tsx}` and `src/**/__tests__/**/*.test
 
 ## Examples
 
-| Island                   | Path                                        | Notes                                      |
-| ------------------------ | ------------------------------------------- | ------------------------------------------ |
-| Dashboard                | `src/pages/dashboard/`                      | Leaf — top-level UI is `DashboardPage.tsx` |
-| Organization hub         | `src/pages/organization/`                   | Layout — children in `sub-pages/`          |
-| Members sub-page         | `src/pages/organization/sub-pages/members/` | Leaf under a layout                        |
-| Organizations (resource) | `src/pages/organizations/`                  | Resource — list + URL-driven dialogs       |
+| Island                   | Path                                                | Notes                                      |
+| ------------------------ | --------------------------------------------------- | ------------------------------------------ |
+| Dashboard                | `src/pages/dashboard/`                              | Leaf — top-level UI is `DashboardPage.tsx` |
+| Organization hub         | `src/pages/organization/`                           | Layout — picker + `$organizationId/` child |
+| Dashboard child          | `src/pages/organization/$organizationId/dashboard/` | Leaf under the org layout                  |
+| Organizations (resource) | `src/pages/organizations/`                          | Resource — list + URL-driven dialogs       |
 
 ---
 

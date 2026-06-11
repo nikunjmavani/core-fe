@@ -82,6 +82,7 @@ export function createMockDataProvider(seed: Store = {}): DataProvider {
       const list = rows(resource);
       const idx = list.findIndex((r) => r.id === id);
       if (idx === -1) throw new Error(`[mock] ${resource}/${id} not found`);
+      // eslint-disable-next-line security/detect-object-injection -- idx is derived from findIndex (validated above)
       const existing = list[idx]!;
       const updated: Row = { ...existing, ...(data as Record<string, unknown>), id };
       // eslint-disable-next-line security/detect-object-injection -- idx is derived from findIndex (validated above)

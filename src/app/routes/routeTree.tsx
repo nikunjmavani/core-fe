@@ -10,49 +10,52 @@ import {
 import { lazy, Suspense } from 'react';
 import { Toaster } from 'sonner';
 
-import { AUTH_ROUTES, TENANT } from '@/core/config/constants.ts';
-import { dashboardSearchSchema } from '@/pages/dashboard/dashboard.search.ts';
-import { listMyOrganizations } from '@/shared/api/my-orgs.ts';
-import { getMyPermissions } from '@/shared/api/organization-api.ts';
-import { FullPageSpinner } from '@/shared/components/FullPageSpinner.tsx';
-import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import {
-  getLastTenantFromStorage,
-  persistTenantToStorage,
-  useTenantStore,
-} from '@/shared/store/useTenantStore/index.ts';
+  requireActiveOrganization,
+  requireOrganizationContext,
+} from '@/app/guards/route-guards.ts';
+import { requireAuth } from '@/core/rbac/guards.ts';
+import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
+import { SettingsModal } from '@/shared/components/SettingsModal/index.ts';
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { resolveRootRedirect } from '@/shared/tenancy/organization-resolver.ts';
 
 import { ErrorBoundary } from './ErrorBoundary.tsx';
 
 // ── Lazy components ──
+const AuthLayout = lazy(() =>
+  import('@/shared/layouts/AuthLayout/index.ts').then((m) => ({
+    default: m.AuthLayout,
+  })),
+);
 const LoginPage = lazy(() =>
-  import('@/pages/auth/login/login.route.tsx').then((m) => ({ default: m.Component })),
+  import('@/pages/login/login.route.tsx').then((m) => ({ default: m.Component })),
 );
 const RegisterPage = lazy(() =>
-  import('@/pages/auth/register/register.route.tsx').then((m) => ({
+  import('@/pages/register/register.route.tsx').then((m) => ({
     default: m.Component,
   })),
 );
 const ForgotPasswordPage = lazy(() =>
-  import('@/pages/auth/forgot-password/forgot-password.route.tsx').then((m) => ({
+  import('@/pages/forgot-password/forgot-password.route.tsx').then((m) => ({
     default: m.Component,
   })),
 );
 const ResetPasswordPage = lazy(() =>
-  import('@/pages/auth/reset-password/reset-password.route.tsx').then((m) => ({
+  import('@/pages/reset-password/reset-password.route.tsx').then((m) => ({
     default: m.Component,
   })),
 );
 const VerifyEmailPage = lazy(() =>
-  import('@/pages/auth/verify-email/verify-email.route.tsx').then((m) => ({
+  import('@/pages/verify-email/verify-email.route.tsx').then((m) => ({
     default: m.Component,
   })),
 );
 const MfaPage = lazy(() =>
-  import('@/pages/auth/mfa/mfa.route.tsx').then((m) => ({ default: m.Component })),
+  import('@/pages/mfa/mfa.route.tsx').then((m) => ({ default: m.Component })),
 );
-const AuthCallbackPage = lazy(() =>
-  import('@/pages/auth/callback/callback.route.tsx').then((m) => ({
+const CallbackPage = lazy(() =>
+  import('@/pages/callback/callback.route.tsx').then((m) => ({
     default: m.Component,
   })),
 );
@@ -69,15 +72,25 @@ const AcceptInvitePage = lazy(() =>
 const UnauthorizedPage = lazy(() =>
   import('@/app/routes/UnauthorizedPage.tsx').then((m) => ({ default: m.Component })),
 );
-const DashboardLayout = lazy(() =>
-  import('@/shared/layouts/DashboardLayout/index.ts').then((m) => ({
+const OrganizationPickerPage = lazy(() =>
+  import('@/pages/organization/organization.route.tsx').then((m) => ({
+    default: m.Component,
+  })),
+);
+const OrganizationShell = lazy(() =>
+  import('@/pages/organization/$organizationId/organization-id.route.tsx').then((m) => ({
     default: m.Component,
   })),
 );
 const DashboardPage = lazy(() =>
-  import('@/pages/dashboard/dashboard.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+  import('@/pages/organization/$organizationId/dashboard/dashboard.route.tsx').then(
+    (m) => ({ default: m.Component }),
+  ),
+);
+const SuspendedPage = lazy(() =>
+  import('@/pages/organization/$organizationId/suspended/suspended.route.tsx').then(
+    (m) => ({ default: m.Component }),
+  ),
 );
 const NotFoundPage = lazy(() =>
   import('@/app/routes/NotFoundPage.tsx').then((m) => ({ default: m.Component })),
@@ -105,62 +118,85 @@ const rootRoute = createRootRoute({
       <div className="bg-background text-foreground min-h-screen">
         <Outlet />
       </div>
+      {/* Global hash-driven settings modal — overlays any page (#settings/…). */}
+      <SettingsModal />
       <Toaster richColors closeButton position="top-right" />
     </>
   ),
+  notFoundComponent: () => <Lazy C={NotFoundPage} />,
   errorComponent: ({ error }) => <ErrorBoundary error={error} />,
+});
+
+// ── Auth shell ──
+// Pathless layout route (`id`, not `path`): mounts the split-screen AuthLayout
+// once over every auth page; the pages keep their top-level URLs (/login, …).
+const authShellRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'auth-shell',
+  component: () => (
+    <Suspense fallback={<FullPageSpinner />}>
+      <AuthLayout>
+        <Outlet />
+      </AuthLayout>
+    </Suspense>
+  ),
 });
 
 // ── Public ──
 const loginRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authShellRoute,
   path: '/login',
+  // `redirect` = post-login return path, set by requireAuth (validated in
+  // LoginForm). Optional return type keeps `search` optional for plain links.
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+  }),
   component: () => <Lazy C={LoginPage} />,
 });
 
 const registerRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authShellRoute,
   path: '/register',
   component: () => <Lazy C={RegisterPage} />,
 });
 
 const forgotPasswordRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authShellRoute,
   path: '/forgot-password',
   component: () => <Lazy C={ForgotPasswordPage} />,
 });
 
 const resetPasswordRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authShellRoute,
   path: '/reset-password',
   component: () => <Lazy C={ResetPasswordPage} />,
 });
 
 const verifyEmailRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authShellRoute,
   path: '/verify-email',
   component: () => <Lazy C={VerifyEmailPage} />,
 });
 
 const mfaRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => authShellRoute,
   path: '/mfa',
   component: () => <Lazy C={MfaPage} />,
 });
 
-const authCallbackRoute = createRoute({
+// One provider-agnostic OAuth / magic-link return URL for all third parties —
+// the backend brokers each provider's dance and lands every flow on /callback.
+// Outside the auth shell: it renders a bare spinner, not the split-screen form.
+const callbackRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/auth/callback',
-  component: () => <Lazy C={AuthCallbackPage} />,
+  path: '/callback',
+  component: () => <Lazy C={CallbackPage} />,
 });
 
 const onboardingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/onboarding',
-  beforeLoad: () => {
-    const { isAuthenticated } = useAuthStore.getState();
-    if (!isAuthenticated) throw redirect({ to: AUTH_ROUTES.LOGIN });
-  },
+  beforeLoad: ({ location }) => requireAuth(location.href),
   component: () => <Lazy C={OnboardingPage} />,
 });
 
@@ -176,116 +212,64 @@ const unauthorizedRoute = createRoute({
   component: () => <Lazy C={UnauthorizedPage} />,
 });
 
-// ── Protected / (dashboard layout + index) ──
-// Pathless layout route (uses `id`, not `path`) so it can wrap the index `/`
-// and sibling paths without colliding with the index route's own `/` id.
-const dashboardLayoutRoute = createRoute({
+// ── Index resolver ──
+// `/` keeps no UI: last-used organization → its dashboard, else the
+// `/organization` picker, else onboarding (routing-and-tenancy.md §2).
+const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
-  id: 'protected',
-  beforeLoad: async () => {
-    const { isAuthenticated } = useAuthStore.getState();
-    if (!isAuthenticated) throw redirect({ to: AUTH_ROUTES.LOGIN });
-
-    const store = useTenantStore.getState();
-    const hasTenant = store.tenantId && store.tenantId !== TENANT.LOCALHOST_FALLBACK;
-    if (!hasTenant) {
-      const last = getLastTenantFromStorage();
-      if (last) {
-        store.setTenant(last.id, last.slug);
-      } else {
-        const list = await listMyOrganizations();
-        if (list.length === 0) {
-          throw redirect({ to: '/onboarding' });
-        }
-        const first = list[0];
-        if (first) {
-          store.setTenant(first.id, first.slug);
-          persistTenantToStorage(first.id, first.slug);
-        }
-      }
-    }
-
-    // Resolve the user's org-scoped permissions for RBAC gating.
-    if (useTenantStore.getState().permissions.length === 0) {
-      useTenantStore.getState().setPermissions(await getMyPermissions());
-    }
+  path: '/',
+  beforeLoad: async ({ location }) => {
+    requireAuth(location.href);
+    throw redirect(await resolveRootRedirect());
   },
-  component: function ProtectedLayout() {
+  component: () => null,
+});
+
+// ── Organization picker (/organization) ──
+const organizationPickerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/organization',
+  beforeLoad: ({ location }) => requireAuth(location.href),
+  component: () => <Lazy C={OrganizationPickerPage} />,
+});
+
+// ── Organization shell (/organization/$organizationId) ──
+// The URL is the single source of truth for organization context: the guard
+// chain validates the param, confirms membership (404 otherwise), syncs the
+// derived store, and refetches per-organization permissions on change.
+const organizationShellRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/organization/$organizationId',
+  beforeLoad: async ({ location, params }) => {
+    requireAuth(location.href);
+    await requireOrganizationContext(params.organizationId);
+  },
+  component: function OrganizationShellRoute() {
     const isLoading = useAuthStore((s) => s.isLoading);
     if (isLoading) return <FullPageSpinner />;
-    return (
-      <Suspense fallback={<FullPageSpinner />}>
-        <DashboardLayout />
-      </Suspense>
-    );
+    return <Lazy C={OrganizationShell} />;
   },
 });
 
-const dashboardIndexRoute = createRoute({
-  getParentRoute: () => dashboardLayoutRoute,
-  path: '/',
-  validateSearch: (search) => dashboardSearchSchema.parse(search),
-  component: () => (
-    <Suspense fallback={<FullPageSpinner />}>
-      <DashboardPage />
-    </Suspense>
-  ),
+const organizationDashboardRoute = createRoute({
+  getParentRoute: () => organizationShellRoute,
+  path: 'dashboard',
+  beforeLoad: ({ params }) => requireActiveOrganization(params.organizationId),
+  component: () => <Lazy C={DashboardPage} />,
 });
 
-// ── Settings (dialog-as-route) ──
-// /settings is a "modal route": the SettingsDialog (mounted in DashboardLayout)
-// reads the URL and shows the matching section. Each leaf route renders null so
-// the dashboard chrome stays in place behind the dialog backdrop.
-const settingsLayoutRoute = createRoute({
-  getParentRoute: () => dashboardLayoutRoute,
-  path: 'settings',
-  component: () => null,
+// Outside the status gate on purpose: a suspended organization must still be
+// able to render its blocked state without redirect-looping.
+const organizationSuspendedRoute = createRoute({
+  getParentRoute: () => organizationShellRoute,
+  path: 'suspended',
+  component: () => <Lazy C={SuspendedPage} />,
 });
 
-const settingsIndexRoute = createRoute({
-  getParentRoute: () => settingsLayoutRoute,
-  path: '/',
-  beforeLoad: () => {
-    throw redirect({ to: '/settings/profile' });
-  },
-  component: () => null,
-});
-
-const settingsProfileRoute = createRoute({
-  getParentRoute: () => settingsLayoutRoute,
-  path: 'profile',
-  component: () => null,
-});
-
-const settingsAccountRoute = createRoute({
-  getParentRoute: () => settingsLayoutRoute,
-  path: 'account',
-  component: () => null,
-});
-
-const settingsSecurityRoute = createRoute({
-  getParentRoute: () => settingsLayoutRoute,
-  path: 'security',
-  component: () => null,
-});
-
-const settingsAppearanceRoute = createRoute({
-  getParentRoute: () => settingsLayoutRoute,
-  path: 'appearance',
-  component: () => null,
-});
-
-const settingsNotificationsRoute = createRoute({
-  getParentRoute: () => settingsLayoutRoute,
-  path: 'notifications',
-  component: () => null,
-});
-
-const settingsOrgGeneralRoute = createRoute({
-  getParentRoute: () => settingsLayoutRoute,
-  path: 'organization',
-  component: () => null,
-});
+// Settings is no longer a route space: the global SettingsModal (mounted on
+// the root route) is driven by the URL hash — #settings/<scope>/<section> —
+// so it overlays any page without unmounting it. See
+// shared/components/SettingsModal/ and routing-and-tenancy.md §7.
 
 // ── 404 ──
 const notFoundRoute = createRoute({
@@ -296,27 +280,23 @@ const notFoundRoute = createRoute({
 
 // ── Tree ──
 export const routeTree = rootRoute.addChildren([
-  loginRoute,
-  registerRoute,
-  forgotPasswordRoute,
-  resetPasswordRoute,
-  verifyEmailRoute,
-  mfaRoute,
-  authCallbackRoute,
+  indexRoute,
+  authShellRoute.addChildren([
+    loginRoute,
+    registerRoute,
+    forgotPasswordRoute,
+    resetPasswordRoute,
+    verifyEmailRoute,
+    mfaRoute,
+  ]),
+  callbackRoute,
   onboardingRoute,
   acceptInviteRoute,
   unauthorizedRoute,
-  dashboardLayoutRoute.addChildren([
-    dashboardIndexRoute,
-    settingsLayoutRoute.addChildren([
-      settingsIndexRoute,
-      settingsProfileRoute,
-      settingsAccountRoute,
-      settingsSecurityRoute,
-      settingsAppearanceRoute,
-      settingsNotificationsRoute,
-      settingsOrgGeneralRoute,
-    ]),
+  organizationPickerRoute,
+  organizationShellRoute.addChildren([
+    organizationDashboardRoute,
+    organizationSuspendedRoute,
   ]),
   notFoundRoute,
 ]);

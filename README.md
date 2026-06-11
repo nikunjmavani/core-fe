@@ -64,7 +64,7 @@ The app runs at **http://localhost:5173**.
 | **Load tests**                          | `pnpm test:load`                      | k6 smoke/load (see `tests/load/`)                                                                                                                                                  |
 | **Full validation**                     | `pnpm validate`                       | Lint + type-check + unit tests                                                                                                                                                     |
 | **Full health check**                   | `pnpm health`                         | Format, lint, types, tests, build, size, env, public, route-island structure. Use after major changes.                                                                             |
-| **Structure validation**                | `pnpm validate:structure`             | Route-island shape + OVERVIEW.md references resolve (agent-accuracy guard).                                                                                                        |
+| **Structure validation**                | `pnpm validate:structure`             | Route-island shape + <PAGE>.OVERVIEW.md references resolve (agent-accuracy guard).                                                                                                 |
 | **Health check + fix**                  | `pnpm health:fix`                     | Auto-fix format + lint, then run full health check.                                                                                                                                |
 | **Code review report**                  | `pnpm report:code-review`             | Generate full code review report to `reports/code-review/full-code-review-report.md` (lint, types, build, tests, coverage, architecture).                                          |
 | **Security: secrets**                   | `pnpm security:secrets`               | Gitleaks scan (requires `gitleaks` CLI)                                                                                                                                            |
@@ -161,7 +161,7 @@ flowchart TB
     D[Root shell - routeTree.tsx]
     E[Public: login, register, unauthorized]
     F[Auth guards - beforeLoad]
-    G[DashboardLayout]
+    G[AppShell]
     H[Pages: dashboard, onboarding, accept-invite, settings]
   end
   A --> B --> C --> D

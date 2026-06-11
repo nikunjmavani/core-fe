@@ -18,10 +18,10 @@ vi.mock('@/shared/store/useAuthStore/index.ts', () => {
   };
 });
 
-vi.mock('@/shared/store/useTenantStore/index.ts', () => {
+vi.mock('@/shared/store/useOrganizationStore/index.ts', () => {
   let state = { permissions: [] as string[] };
   return {
-    useTenantStore: {
+    useOrganizationStore: {
       getState: () => state,
       __setState: (s: typeof state) => {
         state = s;
@@ -35,14 +35,15 @@ vi.mock('@/core/rbac/policies.ts', async (importOriginal) => {
 });
 
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import { useTenantStore } from '@/shared/store/useTenantStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { requireAuth, requirePermission } from './guards.ts';
 
 const setAuth = (useAuthStore as unknown as { __setState: (s: unknown) => void })
   .__setState;
-const setTenant = (useTenantStore as unknown as { __setState: (s: unknown) => void })
-  .__setState;
+const setOrganization = (
+  useOrganizationStore as unknown as { __setState: (s: unknown) => void }
+).__setState;
 
 describe('requireAuth', () => {
   beforeEach(() => {
@@ -62,7 +63,7 @@ describe('requireAuth', () => {
 describe('requirePermission', () => {
   beforeEach(() => {
     setAuth({ user: null, isAuthenticated: false });
-    setTenant({ permissions: [] });
+    setOrganization({ permissions: [] });
   });
 
   it('throws redirect to login when not authenticated', () => {
@@ -79,7 +80,7 @@ describe('requirePermission', () => {
       user: { id: '1', email: 'u@test.com', role: 'user' },
       isAuthenticated: true,
     });
-    setTenant({ permissions: ['membership:read'] });
+    setOrganization({ permissions: ['membership:read'] });
     try {
       requirePermission('membership:manage');
       expect.fail('should throw');
@@ -93,7 +94,7 @@ describe('requirePermission', () => {
       user: { id: '1', email: 'u@test.com', role: 'user' },
       isAuthenticated: true,
     });
-    setTenant({ permissions: ['membership:manage'] });
+    setOrganization({ permissions: ['membership:manage'] });
     expect(() => requirePermission('membership:manage')).not.toThrow();
   });
 
@@ -102,7 +103,7 @@ describe('requirePermission', () => {
       user: { id: '1', email: 'sa@test.com', role: 'super_admin' },
       isAuthenticated: true,
     });
-    setTenant({ permissions: [] });
+    setOrganization({ permissions: [] });
     expect(() => requirePermission('organization:delete')).not.toThrow();
   });
 });

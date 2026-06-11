@@ -2,7 +2,8 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
-import { renderWithProviders } from '../../../tests/utils/renderWithProviders.tsx';
+import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
+
 import { ErrorBoundary } from './ErrorBoundary.tsx';
 
 vi.mock('@/shared/errors/errorHandler.ts', () => ({

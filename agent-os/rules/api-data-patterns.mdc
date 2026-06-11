@@ -22,7 +22,7 @@ export const usersApi = {
 };
 ```
 
-**Exception:** Auth service (`core/auth/service.ts`) and auth API (`pages/auth/api.ts`) use raw `fetch` to avoid interceptor recursion.
+**Exception:** Auth service (`shared/auth/service.ts`) and auth API (`shared/api/auth-api.ts`) use raw `fetch` to avoid interceptor recursion.
 
 ## TanStack Query Hooks
 

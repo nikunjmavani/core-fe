@@ -41,7 +41,7 @@ Use this skill when:
 - **`src/pages/**`route islands:** under`**tests**/unit/`mirroring`components/`, `hooks/`, `forms/`(import source via`../../components/...`). Island `api.ts`→`**tests**/unit/api.test.ts`.
 - **`shared/`, `core/`, `lib/`, `stores/`:** colocated next to source (`.test.tsx` / `.test.ts`).
 
-See `agent-os/skills/route-island/SKILL.md` and `src/lib/route-island/__tests__/README.md`.
+See `agent-os/skills/route-island/SKILL.md` and `src/lib/routes/__tests__/README.md`.
 
 ### 3. Templates
 

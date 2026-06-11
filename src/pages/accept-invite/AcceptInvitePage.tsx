@@ -2,7 +2,7 @@ import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
-import { acceptInvitation, getMyPermissions } from '@/shared/api/organization-api.ts';
+import { acceptInvitation } from '@/shared/api/organization-api.ts';
 import { startMockSession } from '@/shared/auth/mock-auth.ts';
 import { MOCK_ACCESS_TOKEN, MOCK_USER } from '@/shared/auth/mock-auth.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
@@ -16,10 +16,7 @@ import {
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import {
-  persistTenantToStorage,
-  useTenantStore,
-} from '@/shared/store/useTenantStore/index.ts';
+import { persistOrganizationToStorage } from '@/shared/store/useOrganizationStore/index.ts';
 
 type Status = 'accepting' | 'success' | 'error';
 
@@ -48,10 +45,10 @@ export function AcceptInvitePage() {
         useAuthStore.getState().setUser(MOCK_USER);
         scheduleTokenRefresh();
 
-        const tenant = useTenantStore.getState();
-        tenant.setTenant(accepted.organizationId, accepted.organizationSlug);
-        persistTenantToStorage(accepted.organizationId, accepted.organizationSlug);
-        tenant.setPermissions(await getMyPermissions());
+        // Persist the joined organization as last-used; the `/` resolver
+        // validates it against memberships and the $organizationId guard
+        // syncs context + permissions from the URL.
+        persistOrganizationToStorage(accepted.organizationId, accepted.organizationSlug);
 
         setStatus('success');
         setTimeout(() => navigate({ to: '/', replace: true }), 900);

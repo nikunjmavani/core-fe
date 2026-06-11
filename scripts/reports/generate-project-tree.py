@@ -118,7 +118,7 @@ Regenerate: python3 scripts/reports/generate-project-tree.py
 §1  ARCHITECTURE
 ================================================================================
 
-Dependency flow:  shared/ ← pages/ ← core/   (+ lib/, app/)
+Dependency flow:  ui → lib → core → shared → pages → app (one-way)
 
 Layer          Purpose
 ─────────────  ─────────────────────────────────────────────────────────
@@ -144,15 +144,15 @@ Stats: ~{src_ts} src files · ~{src_tests} tests in src/ · {e2e} E2E specs · {
 ================================================================================
 
 Route island (pages/<name>/):
-  *.page.ts | *.route.tsx | OVERVIEW.md | components/<Unit>/ | hooks/<hook>/ | forms/<Form>/
-  api.ts | contracts.ts | __tests__/unit/
+  *.page.ts | *.route.tsx | *.OVERVIEW.md | components/<Unit>/ | hooks/<hook>/ | forms/<Form>/
+  <page>.api.ts | <page>.contracts.ts | __tests__/integration/
 
 Shared folder-per-unit:
   components/<Name>/index.tsx   hooks/useList/   forms/ProfileForm/
   store/useThemeStore/          api/             auth/
 
 Tests:
-  pages/**     → __tests__/unit/ (mirrors source dirs)
+  everywhere    → colocated *.test.ts(x) next to source (folder-per-unit)
   shared/core  → colocated *.test.ts(x) next to source OR in unit folder
 
 """

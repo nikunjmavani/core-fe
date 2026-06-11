@@ -5,9 +5,9 @@ import { createRoot } from 'react-dom/client';
 
 import { router } from '@/app/routes/routeTree.tsx';
 import { startVersionCheck } from '@/core/version/check.ts';
-import { resolveTenantFromSubdomain } from '@/shared/api/tenancy-service.ts';
 import { silentRefresh } from '@/shared/auth/service.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { resolveOrganizationFromSubdomain } from '@/shared/tenancy/tenancy-service.ts';
 
 import App from './App.tsx';
 
@@ -37,12 +37,12 @@ function initObservabilityWhenIdle(): void {
   }
 }
 
-// ── 1. Bootstrap: resolve tenant → mount React immediately → silent auth in background ──
+// ── 1. Bootstrap: resolve organization → mount React immediately → silent auth in background ──
 const root = createRoot(document.getElementById('root')!);
 
-// Resolve tenant from subdomain (SYNC — just parses hostname)
-// Must happen before silentRefresh so X-Tenant-ID header is available
-resolveTenantFromSubdomain();
+// Resolve organization from subdomain (SYNC — just parses hostname)
+// Must happen before silentRefresh so X-Organization-ID header is available
+resolveOrganizationFromSubdomain();
 
 // Mount React immediately so user sees app (spinner or login) instead of blank screen.
 // Silent refresh runs in background; when it fails, clearAuth() updates store and router reacts.

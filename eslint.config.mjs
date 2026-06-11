@@ -176,9 +176,9 @@ export default defineConfig([
               // kernel may read auth runtime, error reporting, and the
               // auth/tenant stores. Everything else in shared is off-limits.
               regex:
-                '^@/shared/(?!auth/|errors/|store/useAuthStore/|store/useTenantStore/)',
+                '^@/shared/(?!auth/|errors/|store/useAuthStore/|store/useOrganizationStore/)',
               message:
-                'src/core may import from shared ONLY the runtime trio: @/shared/auth, @/shared/errors, useAuthStore, useTenantStore (see file-structure.mdc → Import Rules).',
+                'src/core may import from shared ONLY the runtime trio: @/shared/auth, @/shared/errors, useAuthStore, useOrganizationStore (see file-structure.mdc → Import Rules).',
             },
           ],
         },

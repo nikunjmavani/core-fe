@@ -1,17 +1,17 @@
 import type { z } from 'zod';
 
-import type { OrgPermission } from '@/core/rbac/policies.ts';
+import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 
 /**
  * Per-action permission map for a resource. `null` means "no specific
  * permission" (auth-only). Mirrors the standard CRUD verbs.
  */
 export interface ResourcePermissions {
-  list: OrgPermission | null;
-  show: OrgPermission | null;
-  create: OrgPermission | null;
-  update: OrgPermission | null;
-  delete: OrgPermission | null;
+  list: OrganizationPermission | null;
+  show: OrganizationPermission | null;
+  create: OrganizationPermission | null;
+  update: OrganizationPermission | null;
+  delete: OrganizationPermission | null;
 }
 
 /**

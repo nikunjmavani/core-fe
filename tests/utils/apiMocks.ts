@@ -1,10 +1,4 @@
 import { API_ENDPOINTS } from '@/core/config/constants.ts';
-import type {
-  ActivityItem,
-  DashboardStat,
-  MonthlyChartPoint,
-  WeeklyChartPoint,
-} from '@/pages/dashboard/dashboard.contracts.ts';
 import type { AuthTokenResponse, AuthUser } from '@/shared/auth/types.ts';
 
 /** Base64 to base64url (replace +/ and strip trailing =) without backtracking regex. */
@@ -39,102 +33,13 @@ export const mockApiResponses = {
       id: 'test-user-id',
       email: 'test@example.com',
       role: 'admin',
-      tenantId: 'test-tenant',
+      organizationId: 'test-tenant',
       name: 'Test User',
     }),
     logout: (): Record<string, never> => ({}),
   },
-  dashboard: {
-    stats: (): DashboardStat[] => [
-      {
-        id: '1',
-        title: 'Total Users',
-        value: '1,234',
-        valueRaw: 1234,
-        prefix: '',
-        change: '+12.5%',
-        trend: 'up',
-        description: 'From last month',
-        spark: [900, 1000, 1120, 1234],
-      },
-      {
-        id: '2',
-        title: 'Active Sessions',
-        value: '567',
-        valueRaw: 567,
-        prefix: '',
-        change: '-3.2%',
-        trend: 'down',
-        description: 'From last week',
-        spark: [620, 600, 580, 567],
-      },
-      {
-        id: '3',
-        title: 'Revenue',
-        value: '$45,678',
-        valueRaw: 45678,
-        prefix: '$',
-        change: '+8.1%',
-        trend: 'up',
-        description: 'From last quarter',
-        spark: [38000, 41000, 43500, 45678],
-      },
-      {
-        id: '4',
-        title: 'Conversion Rate',
-        value: '3.2%',
-        valueRaw: 3.2,
-        prefix: '',
-        change: '+0.5%',
-        trend: 'up',
-        description: 'From last month',
-        spark: [2.4, 2.7, 3.0, 3.2],
-      },
-    ],
-    activity: (): ActivityItem[] => [
-      {
-        id: '1',
-        user: 'John Doe',
-        action: 'created',
-        target: 'Organization ABC',
-        time: '2 hours ago',
-        type: 'create',
-      },
-      {
-        id: '2',
-        user: 'Jane Smith',
-        action: 'upgraded',
-        target: 'Plan Pro',
-        time: '5 hours ago',
-        type: 'upgrade',
-      },
-      {
-        id: '3',
-        user: 'Bob Johnson',
-        action: 'invited',
-        target: 'user@example.com',
-        time: '1 day ago',
-        type: 'invite',
-      },
-    ],
-    monthlyChart: (): MonthlyChartPoint[] => [
-      { name: 'Jan', users: 100, revenue: 5000 },
-      { name: 'Feb', users: 150, revenue: 7500 },
-      { name: 'Mar', users: 200, revenue: 10000 },
-      { name: 'Apr', users: 250, revenue: 12500 },
-      { name: 'May', users: 300, revenue: 15000 },
-      { name: 'Jun', users: 350, revenue: 17500 },
-    ],
-    weeklyChart: (): WeeklyChartPoint[] => [
-      { day: 'Mon', signups: 10 },
-      { day: 'Tue', signups: 15 },
-      { day: 'Wed', signups: 12 },
-      { day: 'Thu', signups: 18 },
-      { day: 'Fri', signups: 20 },
-      { day: 'Sat', signups: 8 },
-      { day: 'Sun', signups: 5 },
-    ],
-  },
+  // Dashboard mocks removed with the module — it is a placeholder until the
+  // module is rebuilt after auth (REPLACE_WITH_MODULE).
 };
 
 /**
@@ -157,20 +62,6 @@ export function getMockResponse(
   }
   if (method === 'post' && url.includes(API_ENDPOINTS.AUTH.LOGOUT)) {
     return Promise.resolve({ data: mockApiResponses.auth.logout() });
-  }
-
-  // Dashboard endpoints
-  if (url.includes('/api/dashboard/stats')) {
-    return Promise.resolve({ data: mockApiResponses.dashboard.stats() });
-  }
-  if (url.includes('/api/dashboard/activity')) {
-    return Promise.resolve({ data: mockApiResponses.dashboard.activity() });
-  }
-  if (url.includes('/api/dashboard/charts/monthly')) {
-    return Promise.resolve({ data: mockApiResponses.dashboard.monthlyChart() });
-  }
-  if (url.includes('/api/dashboard/charts/weekly')) {
-    return Promise.resolve({ data: mockApiResponses.dashboard.weeklyChart() });
   }
 
   // Default fallback

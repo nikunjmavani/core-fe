@@ -64,7 +64,7 @@ Full tree + rules: [`agent-os/rules/file-structure.mdc`](file-structure.mdc) (co
 
 ```
 pages/<page>/
-├── OVERVIEW.md                       # required — AI/human entry doc
+├── <PAGE>.OVERVIEW.md                # required — AI/human entry doc
 ├── <page>.route.tsx                  # required — lazy boundary
 ├── <page>.page.ts                    # required — manifest (path, RBAC, testId, kind, children)
 ├── <Page>Page.tsx | <Page>Layout.tsx # required — top-level UI
@@ -74,7 +74,7 @@ pages/<page>/
 ├── forms/<Name>Form/                 # folder-per-unit
 ├── hooks/use<Name>/                  # folder-per-unit
 ├── __tests__/integration/            # cross-component flows
-└── sub-pages/<child>/                # nested routes (recursive)
+└── <child>/                          # nested routes — direct children (recursive)
 ```
 
 ## Routing

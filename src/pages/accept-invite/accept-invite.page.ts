@@ -1,9 +1,9 @@
-import type { PageManifest } from '@/lib/route-island/page-manifest.ts';
+import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
 /**
  * Accept-invite — leaf island (`/accept-invite/$invitationId`).
  * Public entry point reached from an invitation email link. Accepts the
- * invite, auto-logs the user in, sets tenant context, and redirects.
+ * invite, auto-logs the user in, persists the joined organization, and redirects.
  */
 export const page = {
   segment: 'accept-invite',

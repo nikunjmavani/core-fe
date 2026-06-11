@@ -25,7 +25,7 @@ When implementing any task, complete **all dependent work** as part of the same 
    When adding a new route, feature, or changing project structure in a way that affects README or CLAUDE.md, update those docs as needed. When adding or changing docs, keep **docs/** structure and README/CLAUDE links in sync; see README "Documentation" section, CLAUDE "Documentation" section, and **docs/README.md** (index by use case). For when to update which doc, use the **documentation-maintenance** skill. Do not ask "Should I update the README?" — update if relevant.
 
 6. **Infer or use defaults**  
-   If the user's request is slightly ambiguous (e.g. "add a settings page"), infer sensible defaults (e.g. path `/settings`, protected, DashboardLayout) and proceed. Only ask when the requirement is genuinely unclear and cannot be inferred (e.g. conflicting or missing URL path).
+   If the user's request is slightly ambiguous (e.g. "add a settings page"), infer sensible defaults (e.g. path `/settings`, protected, AppShell) and proceed. Only ask when the requirement is genuinely unclear and cannot be inferred (e.g. conflicting or missing URL path).
 
 7. **Skill invocation**  
    Before implementing, check `agent-os/rules/skill-router.mdc` for the matching skill. Read and follow that skill. Complete every step in the skill (including tests, route registration, data-testid) without asking the user to confirm.

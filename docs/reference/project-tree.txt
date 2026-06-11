@@ -10,7 +10,7 @@ Regenerate: python3 scripts/reports/generate-project-tree.py
 §1  ARCHITECTURE
 ================================================================================
 
-Dependency flow:  shared/ ← pages/ ← core/   (+ lib/, app/)
+Dependency flow:  ui → lib → core → shared → pages → app (one-way)
 
 Layer          Purpose
 ─────────────  ─────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ src/shared/    UI, auth, api, errors, forms, hooks, layouts, store (Zustand)
 src/lib/       Pure utilities, animations, route-island helpers
 tests/         E2E, load, utils (project root)
 
-Stats: ~222 src files · ~81 tests in src/ · 5 E2E specs · 21 shadcn UI primitives
+Stats: ~261 src files · ~99 tests in src/ · 9 E2E specs · 21 shadcn UI primitives
 
 ================================================================================
 §2  FULL DIRECTORY TREE
@@ -99,6 +99,7 @@ core-fe/
 │   │   ├── project-tree.txt
 │   │   ├── route-island-structure.md
 │   │   ├── routes-and-ui.md
+│   │   ├── routing-and-tenancy.md
 │   │   ├── third-party-comparison.md
 │   │   ├── tools-and-usage.md
 │   │   └── ui-components-sourcing.md
@@ -150,9 +151,10 @@ core-fe/
 │   │   │   ├── posthog.ts
 │   │   │   └── [2 test files]
 │   │   ├── guards/
-│   │   │   ├── OVERVIEW.md
+│   │   │   ├── GUARDS.OVERVIEW.md
 │   │   │   ├── RBACGuard.tsx
-│   │   │   └── [1 test file]
+│   │   │   ├── route-guards.ts
+│   │   │   └── [2 test files]
 │   │   ├── observability/
 │   │   │   ├── performance.ts
 │   │   │   ├── sentry.ts
@@ -214,12 +216,12 @@ core-fe/
 │   │   │   ├── useAutoAnimate.ts
 │   │   │   ├── useCountUp.ts
 │   │   │   └── [2 test files]
-│   │   ├── route-island/
-│   │   │   ├── __tests__/
-│   │   │   │   └── README.md
+│   │   ├── routes/
+│   │   │   ├── builders.ts
+│   │   │   ├── index.ts
 │   │   │   ├── page-manifest.ts
-│   │   │   ├── paths.ts
-│   │   │   └── [2 test files]
+│   │   │   ├── params.ts
+│   │   │   └── [3 test files]
 │   │   ├── csp-api-origin.ts
 │   │   ├── csv.ts
 │   │   ├── utils.ts
@@ -228,157 +230,160 @@ core-fe/
 │   │   ├── accept-invite/
 │   │   │   ├── accept-invite.page.ts
 │   │   │   ├── accept-invite.route.tsx
-│   │   │   ├── AcceptInvitePage.tsx
-│   │   │   └── OVERVIEW.md
-│   │   ├── auth/
-│   │   │   ├── callback/
-│   │   │   │   ├── callback.page.ts
-│   │   │   │   ├── callback.route.tsx
-│   │   │   │   ├── CallbackPage.tsx
-│   │   │   │   └── OVERVIEW.md
-│   │   │   ├── forgot-password/
-│   │   │   │   ├── forms/
-│   │   │   │   │   └── ForgotPasswordForm/
-│   │   │   │   │       ├── ForgotPasswordForm.tsx
-│   │   │   │   │       ├── index.ts
-│   │   │   │   │       └── [1 test file]
-│   │   │   │   ├── forgot-password.page.ts
-│   │   │   │   ├── forgot-password.route.tsx
-│   │   │   │   ├── ForgotPasswordPage.tsx
-│   │   │   │   └── OVERVIEW.md
-│   │   │   ├── login/
-│   │   │   │   ├── forms/
-│   │   │   │   │   ├── LoginForm/
-│   │   │   │   │   │   ├── index.ts
-│   │   │   │   │   │   ├── LoginForm.tsx
-│   │   │   │   │   │   └── [1 test file]
-│   │   │   │   │   └── PasswordlessOptions/
-│   │   │   │   │       ├── index.ts
-│   │   │   │   │       └── PasswordlessOptions.tsx
-│   │   │   │   ├── hooks/
-│   │   │   │   │   └── useCooldownClock/
-│   │   │   │   │       ├── index.ts
-│   │   │   │   │       ├── useCooldownClock.ts
-│   │   │   │   │       └── [1 test file]
-│   │   │   │   ├── login.page.ts
-│   │   │   │   ├── login.route.tsx
-│   │   │   │   ├── LoginPage.tsx
-│   │   │   │   └── OVERVIEW.md
-│   │   │   ├── mfa/
-│   │   │   │   ├── forms/
-│   │   │   │   │   └── MfaForm/
-│   │   │   │   │       ├── index.ts
-│   │   │   │   │       ├── MfaForm.tsx
-│   │   │   │   │       └── [1 test file]
-│   │   │   │   ├── mfa.page.ts
-│   │   │   │   ├── mfa.route.tsx
-│   │   │   │   ├── MfaPage.tsx
-│   │   │   │   └── OVERVIEW.md
-│   │   │   ├── register/
-│   │   │   │   ├── forms/
-│   │   │   │   │   └── RegisterForm/
-│   │   │   │   │       ├── index.ts
-│   │   │   │   │       ├── RegisterForm.tsx
-│   │   │   │   │       └── [1 test file]
-│   │   │   │   ├── OVERVIEW.md
-│   │   │   │   ├── register.page.ts
-│   │   │   │   ├── register.route.tsx
-│   │   │   │   └── RegisterPage.tsx
-│   │   │   ├── reset-password/
-│   │   │   │   ├── forms/
-│   │   │   │   │   └── ResetPasswordForm/
-│   │   │   │   │       ├── index.ts
-│   │   │   │   │       ├── ResetPasswordForm.tsx
-│   │   │   │   │       └── [1 test file]
-│   │   │   │   ├── OVERVIEW.md
-│   │   │   │   ├── reset-password.page.ts
-│   │   │   │   ├── reset-password.route.tsx
-│   │   │   │   └── ResetPasswordPage.tsx
-│   │   │   ├── verify-email/
-│   │   │   │   ├── forms/
-│   │   │   │   │   └── VerifyEmailForm/
-│   │   │   │   │       ├── index.ts
-│   │   │   │   │       └── VerifyEmailForm.tsx
-│   │   │   │   ├── OVERVIEW.md
-│   │   │   │   ├── verify-email.page.ts
-│   │   │   │   ├── verify-email.route.tsx
-│   │   │   │   └── VerifyEmailPage.tsx
-│   │   │   ├── auth.api.ts
-│   │   │   ├── auth.contracts.ts
-│   │   │   └── [1 test file]
-│   │   ├── dashboard/
-│   │   │   ├── __tests__/
-│   │   │   │   ├── integration/
-│   │   │   │   │   └── [1 test file]
-│   │   │   │   └── README.md
-│   │   │   ├── components/
-│   │   │   │   ├── ActivityFeed/
-│   │   │   │   │   ├── ActivityFeed.tsx
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   └── [1 test file]
-│   │   │   │   ├── ActivityHeatmap/
-│   │   │   │   │   ├── ActivityHeatmap.tsx
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   └── [1 test file]
-│   │   │   │   ├── DashboardCharts/
-│   │   │   │   │   ├── DashboardCharts.tsx
-│   │   │   │   │   └── index.ts
-│   │   │   │   ├── MonthlyTargets/
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── MonthlyTargets.tsx
-│   │   │   │   │   └── [1 test file]
-│   │   │   │   ├── Sparkline/
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── Sparkline.tsx
-│   │   │   │   │   └── [1 test file]
-│   │   │   │   ├── StatCards/
-│   │   │   │   │   ├── index.ts
-│   │   │   │   │   ├── StatCards.tsx
-│   │   │   │   │   └── [1 test file]
-│   │   │   │   └── TeamSection/
+│   │   │   ├── ACCEPT_INVITE.OVERVIEW.md
+│   │   │   └── AcceptInvitePage.tsx
+│   │   ├── callback/
+│   │   │   ├── CALLBACK.OVERVIEW.md
+│   │   │   ├── callback.page.ts
+│   │   │   ├── callback.route.tsx
+│   │   │   └── CallbackPage.tsx
+│   │   ├── forgot-password/
+│   │   │   ├── forms/
+│   │   │   │   └── ForgotPasswordForm/
+│   │   │   │       ├── ForgotPasswordForm.tsx
 │   │   │   │       ├── index.ts
-│   │   │   │       └── TeamSection.tsx
+│   │   │   │       └── [1 test file]
+│   │   │   ├── forgot-password.page.ts
+│   │   │   ├── forgot-password.route.tsx
+│   │   │   ├── FORGOT_PASSWORD.OVERVIEW.md
+│   │   │   └── ForgotPasswordPage.tsx
+│   │   ├── login/
+│   │   │   ├── forms/
+│   │   │   │   ├── LoginForm/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── LoginForm.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   └── PasswordlessOptions/
+│   │   │   │       ├── index.ts
+│   │   │   │       └── PasswordlessOptions.tsx
 │   │   │   ├── hooks/
-│   │   │   │   └── useDashboard/
+│   │   │   │   └── useCooldownClock/
 │   │   │   │       ├── index.ts
-│   │   │   │       └── useDashboard.ts
-│   │   │   ├── dashboard.api.ts
-│   │   │   ├── dashboard.contracts.ts
-│   │   │   ├── dashboard.fixtures.ts
-│   │   │   ├── dashboard.page.ts
-│   │   │   ├── dashboard.route.tsx
-│   │   │   ├── dashboard.search.ts
-│   │   │   ├── DashboardPage.tsx
-│   │   │   ├── OVERVIEW.md
-│   │   │   └── [1 test file]
-│   │   └── onboarding/
-│   │       ├── onboarding.page.ts
-│   │       ├── onboarding.route.tsx
-│   │       ├── OnboardingPage.tsx
-│   │       └── OVERVIEW.md
+│   │   │   │       ├── useCooldownClock.ts
+│   │   │   │       └── [1 test file]
+│   │   │   ├── LOGIN.OVERVIEW.md
+│   │   │   ├── login.page.ts
+│   │   │   ├── login.route.tsx
+│   │   │   └── LoginPage.tsx
+│   │   ├── mfa/
+│   │   │   ├── forms/
+│   │   │   │   └── MfaForm/
+│   │   │   │       ├── index.ts
+│   │   │   │       ├── MfaForm.tsx
+│   │   │   │       └── [1 test file]
+│   │   │   ├── MFA.OVERVIEW.md
+│   │   │   ├── mfa.page.ts
+│   │   │   ├── mfa.route.tsx
+│   │   │   └── MfaPage.tsx
+│   │   ├── onboarding/
+│   │   │   ├── components/
+│   │   │   │   ├── DoneStep/
+│   │   │   │   │   ├── DoneStep.tsx
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── InviteStep/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── InviteStep.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── ProfileStep/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── ProfileStep.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── StepIndicator/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── StepIndicator.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── WelcomeStep/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── WelcomeStep.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   └── WorkspaceStep/
+│   │   │   │       ├── index.ts
+│   │   │   │       ├── WorkspaceStep.tsx
+│   │   │   │       └── [1 test file]
+│   │   │   ├── ONBOARDING.OVERVIEW.md
+│   │   │   ├── onboarding.page.ts
+│   │   │   ├── onboarding.route.tsx
+│   │   │   └── OnboardingPage.tsx
+│   │   ├── organization/
+│   │   │   ├── $organizationId/
+│   │   │   │   ├── dashboard/
+│   │   │   │   │   ├── DASHBOARD.OVERVIEW.md
+│   │   │   │   │   ├── dashboard.page.ts
+│   │   │   │   │   ├── dashboard.route.tsx
+│   │   │   │   │   └── DashboardPage.tsx
+│   │   │   │   ├── suspended/
+│   │   │   │   │   ├── SUSPENDED.OVERVIEW.md
+│   │   │   │   │   ├── suspended.page.ts
+│   │   │   │   │   ├── suspended.route.tsx
+│   │   │   │   │   └── SuspendedPage.tsx
+│   │   │   │   ├── organization-id.page.ts
+│   │   │   │   ├── organization-id.route.tsx
+│   │   │   │   ├── ORGANIZATION_ID.OVERVIEW.md
+│   │   │   │   └── OrganizationLayout.tsx
+│   │   │   ├── ORGANIZATION.OVERVIEW.md
+│   │   │   ├── organization.page.ts
+│   │   │   ├── organization.route.tsx
+│   │   │   └── OrganizationPickerPage.tsx
+│   │   ├── register/
+│   │   │   ├── forms/
+│   │   │   │   └── RegisterForm/
+│   │   │   │       ├── index.ts
+│   │   │   │       ├── RegisterForm.tsx
+│   │   │   │       └── [1 test file]
+│   │   │   ├── REGISTER.OVERVIEW.md
+│   │   │   ├── register.page.ts
+│   │   │   ├── register.route.tsx
+│   │   │   └── RegisterPage.tsx
+│   │   ├── reset-password/
+│   │   │   ├── forms/
+│   │   │   │   └── ResetPasswordForm/
+│   │   │   │       ├── index.ts
+│   │   │   │       ├── ResetPasswordForm.tsx
+│   │   │   │       └── [1 test file]
+│   │   │   ├── reset-password.page.ts
+│   │   │   ├── reset-password.route.tsx
+│   │   │   ├── RESET_PASSWORD.OVERVIEW.md
+│   │   │   └── ResetPasswordPage.tsx
+│   │   └── verify-email/
+│   │       ├── forms/
+│   │       │   └── VerifyEmailForm/
+│   │       │       ├── index.ts
+│   │       │       └── VerifyEmailForm.tsx
+│   │       ├── verify-email.page.ts
+│   │       ├── verify-email.route.tsx
+│   │       ├── VERIFY_EMAIL.OVERVIEW.md
+│   │       └── VerifyEmailPage.tsx
 │   ├── shared/
 │   │   ├── api/
-│   │   │   ├── my-orgs.ts
+│   │   │   ├── API.OVERVIEW.md
+│   │   │   ├── auth-api.ts
+│   │   │   ├── auth-contracts.ts
 │   │   │   ├── organization-api.ts
 │   │   │   ├── organization-contracts.ts
 │   │   │   ├── organization-fixtures.ts
 │   │   │   ├── organization-mock-store.ts
-│   │   │   ├── OVERVIEW.md
-│   │   │   ├── tenancy-service.ts
+│   │   │   ├── organization-query-keys.ts
 │   │   │   └── [3 test files]
 │   │   ├── auth/
+│   │   │   ├── AUTH.OVERVIEW.md
 │   │   │   ├── idle-timeout.ts
 │   │   │   ├── mock-auth.ts
 │   │   │   ├── mock-credentials.ts
-│   │   │   ├── OVERVIEW.md
 │   │   │   ├── refresh-timer.ts
 │   │   │   ├── service.ts
 │   │   │   ├── token.ts
 │   │   │   ├── types.ts
 │   │   │   └── [6 test files]
 │   │   ├── components/
-│   │   │   ├── AccountSettings/
-│   │   │   │   ├── AccountSettings.tsx
+│   │   │   ├── CommandPalette/
+│   │   │   │   ├── CommandPalette.tsx
+│   │   │   │   ├── CommandPaletteLazy.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── preload-command-palette.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── CreateOrganizationDialog/
+│   │   │   │   ├── CreateOrganizationDialog.tsx
 │   │   │   │   ├── index.ts
 │   │   │   │   └── [1 test file]
 │   │   │   ├── data-table/
@@ -386,113 +391,189 @@ core-fe/
 │   │   │   │   ├── DataTableColumnHeader.tsx
 │   │   │   │   ├── DataTablePagination.tsx
 │   │   │   │   └── DataTableToolbar.tsx
-│   │   │   ├── SecuritySettings/
+│   │   │   ├── FullPageSpinner/
+│   │   │   │   ├── FullPageSpinner.tsx
 │   │   │   │   ├── index.ts
-│   │   │   │   ├── SecuritySettings.tsx
 │   │   │   │   └── [1 test file]
-│   │   │   ├── SettingsDialog/
-│   │   │   │   ├── sections/
-│   │   │   │   │   ├── AccountSection.tsx
-│   │   │   │   │   ├── AppearanceSection.tsx
-│   │   │   │   │   ├── NotificationsSection.tsx
-│   │   │   │   │   ├── OrgGeneralSection.tsx
-│   │   │   │   │   ├── ProfileSection.tsx
-│   │   │   │   │   ├── SectionHeader.tsx
-│   │   │   │   │   └── SecuritySection.tsx
+│   │   │   ├── InvitationsTable/
 │   │   │   │   ├── index.ts
-│   │   │   │   ├── nav-items.ts
-│   │   │   │   ├── settings-paths.ts
-│   │   │   │   ├── SettingsDialog.tsx
+│   │   │   │   ├── InvitationsTable.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── InviteMemberDialog/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── InviteMemberDialog.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── MembersTable/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── MembersTable.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── OfflineIndicator/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── OfflineIndicator.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── OptimizedImage/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── OptimizedImage.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── OrganizationBadges/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── OrganizationBadges.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── OrganizationSwitcher/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── OrganizationSwitcher.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── PermissionGuard/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── PermissionGuard.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── QueryBoundary/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── QueryBoundary.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── RetryError/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── RetryError.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── SessionTimeoutDialog/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── SessionTimeoutDialog.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── SettingsModal/
+│   │   │   │   ├── account/
+│   │   │   │   │   ├── AccountAppearancePanel.tsx
+│   │   │   │   │   ├── AccountNotificationsPanel.tsx
+│   │   │   │   │   ├── AccountPanel.tsx
+│   │   │   │   │   ├── AccountProfilePanel.tsx
+│   │   │   │   │   ├── AccountSecurityPanel.tsx
+│   │   │   │   │   ├── AccountSessionsPanel.tsx
+│   │   │   │   │   └── [2 test files]
+│   │   │   │   ├── organization/
+│   │   │   │   │   ├── OrganizationBillingPanel.tsx
+│   │   │   │   │   ├── OrganizationBranchesPanel.tsx
+│   │   │   │   │   ├── OrganizationGeneralPanel.tsx
+│   │   │   │   │   ├── OrganizationIntegrationsPanel.tsx
+│   │   │   │   │   ├── OrganizationMembersPanel.tsx
+│   │   │   │   │   └── OrganizationRolesPanel.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── settings-hash.ts
+│   │   │   │   ├── settings-permissions.ts
+│   │   │   │   ├── settings-sections.ts
+│   │   │   │   ├── SettingsModal.tsx
 │   │   │   │   ├── SettingsNav.tsx
-│   │   │   │   └── [3 test files]
+│   │   │   │   ├── SettingsPanelShell.tsx
+│   │   │   │   └── [4 test files]
 │   │   │   ├── ui/
-│   │   │   ├── command-palette.tsx
-│   │   │   ├── CommandPaletteLazy.tsx
-│   │   │   ├── CreateOrganizationDialog.tsx
-│   │   │   ├── FullPageSpinner.tsx
-│   │   │   ├── InvitationsTable.tsx
-│   │   │   ├── InviteMemberDialog.tsx
-│   │   │   ├── MembersTable.tsx
-│   │   │   ├── OfflineIndicator.tsx
-│   │   │   ├── OptimizedImage.tsx
-│   │   │   ├── OrgBadges.tsx
-│   │   │   ├── OrgSwitcher.tsx
-│   │   │   ├── PermissionGuard.tsx
-│   │   │   ├── preload-command-palette.ts
-│   │   │   ├── QueryBoundary.tsx
-│   │   │   ├── RetryError.tsx
-│   │   │   ├── SessionTimeoutDialog.tsx
-│   │   │   ├── WidgetErrorBoundary.tsx
-│   │   │   └── [9 test files]
+│   │   │   └── WidgetErrorBoundary/
+│   │   │       ├── index.ts
+│   │   │       ├── WidgetErrorBoundary.tsx
+│   │   │       └── [1 test file]
 │   │   ├── errors/
 │   │   │   ├── AppError.ts
 │   │   │   ├── errorHandler.ts
 │   │   │   ├── HttpError.ts
 │   │   │   └── [3 test files]
 │   │   ├── forms/
-│   │   │   ├── ProfileForm/
-│   │   │   │   ├── contracts.ts
+│   │   │   ├── FormError/
+│   │   │   │   ├── FormError.tsx
 │   │   │   │   ├── index.ts
-│   │   │   │   ├── ProfileForm.tsx
-│   │   │   │   └── [2 test files]
-│   │   │   ├── FormError.tsx
-│   │   │   ├── FormField.tsx
-│   │   │   └── [2 test files]
+│   │   │   │   └── [1 test file]
+│   │   │   ├── FormField/
+│   │   │   │   ├── FormField.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   └── [1 test file]
+│   │   │   └── ProfileForm/
+│   │   │       ├── contracts.ts
+│   │   │       ├── index.ts
+│   │   │       ├── ProfileForm.tsx
+│   │   │       └── [2 test files]
 │   │   ├── hooks/
+│   │   │   ├── useApiKeys/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useApiKeys.ts
+│   │   │   │   └── [1 test file]
 │   │   │   ├── useCreate/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useCreate.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useDataTableUrlState/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useDataTableUrlState.ts
 │   │   │   │   └── [1 test file]
 │   │   │   ├── useDelete/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useDelete.ts
 │   │   │   │   └── [1 test file]
+│   │   │   ├── useInvitations/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useInvitations.ts
+│   │   │   │   └── [1 test file]
 │   │   │   ├── useList/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useList.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useMembers/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useMembers.ts
 │   │   │   │   └── [1 test file]
 │   │   │   ├── useOne/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useOne.ts
 │   │   │   │   └── [1 test file]
-│   │   │   ├── useUpdate/
+│   │   │   ├── useRBAC/
 │   │   │   │   ├── index.ts
-│   │   │   │   ├── useUpdate.ts
+│   │   │   │   ├── useRBAC.ts
 │   │   │   │   └── [1 test file]
-│   │   │   ├── useDataTableUrlState.ts
-│   │   │   ├── useOrganization.ts
-│   │   │   ├── useRBAC.ts
-│   │   │   └── [1 test file]
+│   │   │   ├── useRoles/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useRoles.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useSubscription/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useSubscription.ts
+│   │   │   │   └── [1 test file]
+│   │   │   └── useUpdate/
+│   │   │       ├── index.ts
+│   │   │       ├── useUpdate.ts
+│   │   │       └── [1 test file]
 │   │   ├── layouts/
-│   │   │   ├── AuthLayout/
-│   │   │   │   ├── AuthLayout.tsx
+│   │   │   ├── AppShell/
+│   │   │   │   ├── AppShell.tsx
 │   │   │   │   ├── index.ts
 │   │   │   │   └── [1 test file]
-│   │   │   └── DashboardLayout/
-│   │   │       ├── DashboardLayout.tsx
+│   │   │   └── AuthLayout/
+│   │   │       ├── AuthLayout.tsx
 │   │   │       ├── index.ts
 │   │   │       └── [1 test file]
-│   │   └── store/
-│   │       ├── useAuthStore/
-│   │       │   ├── index.ts
-│   │       │   ├── useAuthStore.ts
-│   │       │   └── [1 test file]
-│   │       ├── useOnboardingStore/
-│   │       │   ├── index.ts
-│   │       │   ├── useOnboardingStore.ts
-│   │       │   └── [1 test file]
-│   │       ├── useTenantStore/
-│   │       │   ├── index.ts
-│   │       │   ├── useTenantStore.ts
-│   │       │   └── [1 test file]
-│   │       ├── useThemeStore/
-│   │       │   ├── index.ts
-│   │       │   ├── useThemeStore.ts
-│   │       │   └── [1 test file]
-│   │       └── useUIStore/
-│   │           ├── index.ts
-│   │           ├── useUIStore.ts
-│   │           └── [1 test file]
+│   │   ├── store/
+│   │   │   ├── useAuthStore/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useAuthStore.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useOnboardingStore/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useOnboardingStore.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useOrganizationStore/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useOrganizationStore.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useThemeStore/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useThemeStore.ts
+│   │   │   │   └── [1 test file]
+│   │   │   └── useUIStore/
+│   │   │       ├── index.ts
+│   │   │       ├── useUIStore.ts
+│   │   │       └── [1 test file]
+│   │   └── tenancy/
+│   │       ├── my-organizations.ts
+│   │       ├── organization-context.ts
+│   │       ├── organization-membership.ts
+│   │       ├── organization-resolver.ts
+│   │       ├── tenancy-service.ts
+│   │       ├── TENANCY.OVERVIEW.md
+│   │       └── [5 test files]
 │   ├── App.tsx
 │   ├── index.css
 │   ├── main.tsx
@@ -500,7 +581,11 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── e2e/
-│   │   └── [5 test files]
+│   │   ├── visual.spec.ts-snapshots/
+│   │   │   ├── dashboard-chromium-darwin.png
+│   │   │   ├── login-dark-chromium-darwin.png
+│   │   │   └── login-light-chromium-darwin.png
+│   │   └── [6 test files]
 │   ├── factories/
 │   │   └── README.md
 │   ├── load/
@@ -563,14 +648,14 @@ core-fe/
 ================================================================================
 
 Route island (pages/<name>/):
-  *.page.ts | *.route.tsx | OVERVIEW.md | components/<Unit>/ | hooks/<hook>/ | forms/<Form>/
-  api.ts | contracts.ts | __tests__/unit/
+  *.page.ts | *.route.tsx | *.OVERVIEW.md | components/<Unit>/ | hooks/<hook>/ | forms/<Form>/
+  <page>.api.ts | <page>.contracts.ts | __tests__/integration/
 
 Shared folder-per-unit:
   components/<Name>/index.tsx   hooks/useList/   forms/ProfileForm/
   store/useThemeStore/          api/             auth/
 
 Tests:
-  pages/**     → __tests__/unit/ (mirrors source dirs)
+  everywhere    → colocated *.test.ts(x) next to source (folder-per-unit)
   shared/core  → colocated *.test.ts(x) next to source OR in unit folder
 

@@ -1,20 +1,23 @@
-import { OrgId, TenantId, UserId } from './branded.ts';
+import {
+  AppointmentPublicId,
+  InvoicePublicId,
+  OrganizationPublicId,
+  PatientPublicId,
+  UserPublicId,
+} from './branded.ts';
 
-describe('branded types', () => {
-  it('UserId("abc") returns "abc" at runtime', () => {
-    expect(UserId('abc')).toBe('abc');
+describe('branded public-id types', () => {
+  it('OrganizationPublicId("org_8fK2x") returns the input at runtime', () => {
+    expect(OrganizationPublicId('org_8fK2x')).toBe('org_8fK2x');
   });
 
-  it('TenantId("xyz") returns "xyz" at runtime', () => {
-    expect(TenantId('xyz')).toBe('xyz');
+  it('UserPublicId("usr_9aB3c") returns the input at runtime', () => {
+    expect(UserPublicId('usr_9aB3c')).toBe('usr_9aB3c');
   });
 
-  it('OrgId("123") returns "123" at runtime', () => {
-    expect(OrgId('123')).toBe('123');
-  });
-
-  it('factory functions return the input string', () => {
-    const id = 'user-123';
-    expect(UserId(id)).toBe(id);
+  it('factory functions are identity at runtime', () => {
+    expect(PatientPublicId('pat_x9Q2m')).toBe('pat_x9Q2m');
+    expect(AppointmentPublicId('apt_k4Lp7')).toBe('apt_k4Lp7');
+    expect(InvoicePublicId('inv_t2Rw8')).toBe('inv_t2Rw8');
   });
 });

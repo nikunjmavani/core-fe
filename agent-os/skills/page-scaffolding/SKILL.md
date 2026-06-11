@@ -24,8 +24,8 @@ From the user's request:
 
 - **Page name** — lowercase kebab-case (e.g., "Settings page" → `settings`; "create org" → `create-organization`)
 - **URL path** — default `/<name>`; verify with route tree if ambiguous
-- **`kind`** — `leaf` (no children) or `layout` (has sub-pages)
-- **Protected?** — yes for pages under `DashboardLayout`; no for auth pages
+- **`kind`** — `leaf` (no children) or `layout` (has child routes)
+- **Protected?** — yes for pages under `AppShell`; no for auth pages
 - **Permission** — e.g., `organization:read`; `null` if just auth-gated
 - **Resource vs custom?** — resource page if it maps to a backend CRUD entity (organizations, members, etc.); custom otherwise
 
@@ -36,19 +36,20 @@ Only ask the user when genuinely ambiguous. Never ask "Do you want tests?" — t
 ```bash
 PAGE=<name>            # kebab-case
 PASCAL=<Name>          # PascalCase
+UPPER=$(printf '%s' "$PAGE" | tr 'a-z-' 'A-Z_')   # FORGOT_PASSWORD style
 
 mkdir -p src/pages/$PAGE/{components,forms,hooks,__tests__/integration}
-touch src/pages/$PAGE/OVERVIEW.md
+touch src/pages/$PAGE/${UPPER}.OVERVIEW.md
 ```
 
-For a layout island, add `sub-pages/<child>/` directories per child (each is a full island).
+For a layout island, add `<child>/` directories per child — DIRECT children, each a full island (`$param/` folders for dynamic segments).
 
 ### 3. Create the role files
 
 #### `src/pages/<name>/<name>.page.ts` — manifest
 
 ```ts
-import type { PageManifest } from '@/lib/route-island/page-manifest.ts';
+import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
 export const page = {
   segment: '<name>',
@@ -56,7 +57,7 @@ export const page = {
   testId: '<name>-page',
   permission: null, // or 'resource:action'
   kind: 'leaf', // 'leaf' | 'layout'
-  children: [], // sub-pages segments when kind: 'layout'
+  children: [], // child URL segments when kind: 'layout' (disk: <segment>/ directly)
 } as const satisfies PageManifest;
 ```
 
@@ -165,7 +166,7 @@ export function loader() {
 }
 ```
 
-#### `src/pages/<name>/OVERVIEW.md`
+#### `src/pages/<name>/<NAME>.OVERVIEW.md`
 
 ```markdown
 # <Name> — Route island
@@ -242,7 +243,7 @@ Each test:
 - Uses `data-testid` for selectors
 - Wraps with `renderWithProviders` from `@/tests/utils/renderWithProviders.tsx`
 
-**No test file required for:** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `OVERVIEW.md`, `index.ts` (barrel).
+**No test file required for:** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
 
 ### 7. Update test-id inventory
 
@@ -252,8 +253,8 @@ Edit [`docs/reference/e2e-testids-inventory.md`](../../../docs/reference/e2e-tes
 
 When the user mentions sub-paths under this page:
 
-- **Quick action** (create, edit, confirm) → handle as a dialog. For resource pages, follow the URL-driven dialog pattern (sub-pages/create/, sub-pages/$id-edit/) — see route-island skill.
-- **Complex view** (detail page, settings) → full page; create `sub-pages/<segment>/` with its own `<segment>.route.tsx`.
+- **Quick action** (create, edit, confirm) → handle as a dialog. For resource pages, follow the URL-driven dialog pattern (direct children `create/`, `$<resource>Id/edit/`) — see route-island skill.
+- **Complex view** (detail page, settings) → full page; create a direct child `<segment>/` with its own `<segment>.route.tsx`.
 
 ### 9. Verify
 
@@ -271,7 +272,7 @@ For pages mapping to a backend resource (organizations, members, roles, invitati
 
 - `<resource>.resource.ts` — resource manifest (endpoint, schema, permissions)
 - `dialogs/Create<Resource>Dialog/`, `dialogs/Edit<Resource>Dialog/`
-- `sub-pages/{create, $id, $id-edit}/` — URL-driven dialog routes (each renders `null`; list page reads URL)
+- `create/` + `$<resource>Id/edit/` — URL-driven dialog routes, direct children (each renders `null`; list page reads URL)
 - Use shared CRUD hooks from `shared/hooks/use{List,One,Create,Update,Delete}/`
 
 ## Related

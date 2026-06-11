@@ -26,14 +26,13 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   const sorted = column.getIsSorted();
-  let ariaSortValue: 'ascending' | 'descending' | 'none' = 'none';
-  if (sorted === 'asc') ariaSortValue = 'ascending';
-  else if (sorted === 'desc') ariaSortValue = 'descending';
 
   let SortIcon = ChevronsUpDown;
   if (sorted === 'desc') SortIcon = ArrowDown;
   else if (sorted === 'asc') SortIcon = ArrowUp;
 
+  // Sort state lives on the <th> as aria-sort (set by DataTable); aria-sort is
+  // not a valid attribute on the menu-trigger button.
   return (
     <div className={cn('flex items-center space-x-2', className)}>
       <DropdownMenu>
@@ -42,7 +41,6 @@ export function DataTableColumnHeader<TData, TValue>({
             variant="ghost"
             size="sm"
             className="data-[state=open]:bg-accent -ml-3 h-8"
-            aria-sort={ariaSortValue}
           >
             <span>{title}</span>
             <SortIcon className="ml-2 h-4 w-4" />

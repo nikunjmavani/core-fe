@@ -1,5 +1,5 @@
 import { mockResponse } from '@/core/http/mock.ts';
-import type { OrgPermission } from '@/core/rbac/policies.ts';
+import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 import type {
   ApiKey,
   ApiKeyWithSecret,
@@ -16,7 +16,7 @@ import { MY_PERMISSIONS_FIXTURE } from './organization-fixtures.ts';
 import { orgMockStore } from './organization-mock-store.ts';
 
 /** The signed-in user's permissions in the active organization. */
-export function getMyPermissions(): Promise<OrgPermission[]> {
+export function getMyPermissions(): Promise<OrganizationPermission[]> {
   // REPLACE_WITH_API: GET /api/v1/tenancy/organizations/{orgId}/memberships/me
   return mockResponse(MY_PERMISSIONS_FIXTURE, { delayMs: 0 });
 }

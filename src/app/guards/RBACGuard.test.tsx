@@ -9,7 +9,7 @@ import {
 import { render, screen } from '@testing-library/react';
 
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import { useTenantStore } from '@/shared/store/useTenantStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { RBACGuard } from './RBACGuard.tsx';
 
@@ -52,7 +52,11 @@ describe('RBACGuard', () => {
       isAuthenticated: false,
       isLoading: false,
     });
-    useTenantStore.setState({ tenantId: null, tenantSlug: null, permissions: [] });
+    useOrganizationStore.setState({
+      organizationId: null,
+      organizationSlug: null,
+      permissions: [],
+    });
   });
 
   it('redirects to /unauthorized when no user', async () => {
@@ -66,7 +70,7 @@ describe('RBACGuard', () => {
       isAuthenticated: true,
       isLoading: false,
     });
-    useTenantStore.setState({ permissions: ['organization:read'] });
+    useOrganizationStore.setState({ permissions: ['organization:read'] });
 
     render(<TestApp permission={'organization:read' as Permission} />);
     expect(await screen.findByTestId('guarded-page')).toBeInTheDocument();
@@ -78,7 +82,7 @@ describe('RBACGuard', () => {
       isAuthenticated: true,
       isLoading: false,
     });
-    useTenantStore.setState({ permissions: ['organization:read'] });
+    useOrganizationStore.setState({ permissions: ['organization:read'] });
 
     render(<TestApp permission={'membership:manage' as Permission} />);
     expect(await screen.findByTestId('unauthorized-page')).toBeInTheDocument();

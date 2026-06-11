@@ -4,7 +4,7 @@ const mockUser = {
   id: 'user-1',
   email: 'test@example.com',
   role: 'admin' as const,
-  tenantId: 'tenant-1',
+  organizationId: 'org_test1',
   name: 'Test User',
 };
 

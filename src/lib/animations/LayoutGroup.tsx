@@ -66,9 +66,15 @@ export function AnimatedTabs({
           key={tab.id}
           onClick={() => onTabChange(tab.id)}
           onKeyDown={(e) => handleKeyDown(e, index)}
-          className="text-muted-foreground hover:text-foreground relative px-4 py-2 text-sm font-medium transition-colors"
+          className={cn(
+            'hover:text-foreground relative px-4 py-2 text-sm font-medium transition-colors',
+            // foreground/70 (not muted-foreground) keeps WCAG AA contrast on card backgrounds.
+            activeTab === tab.id ? 'text-foreground' : 'text-foreground/70',
+          )}
           aria-selected={activeTab === tab.id}
-          aria-controls={`tabpanel-${tab.id}`}
+          // Inactive panels are unmounted — aria-controls must only reference
+          // elements that exist in the DOM.
+          {...(activeTab === tab.id ? { 'aria-controls': `tabpanel-${tab.id}` } : {})}
           role="tab"
           tabIndex={activeTab === tab.id ? 0 : -1}
           id={`tab-${tab.id}`}

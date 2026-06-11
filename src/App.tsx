@@ -4,7 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 
 import { AppProviders } from '@/app/providers/AppProviders.tsx';
 import { router } from '@/app/routes/routeTree.tsx';
-import { FullPageSpinner } from '@/shared/components/FullPageSpinner.tsx';
+import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 
 function GlobalErrorFallback({
   error,

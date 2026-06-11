@@ -34,7 +34,7 @@ export const HTTP = {
   STALE_TIME: 1000 * 60 * 5, // 5 minutes
 } as const;
 
-export const TENANT = {
-  HEADER: 'X-Tenant-ID',
+export const ORGANIZATION = {
+  HEADER: 'X-Organization-ID',
   LOCALHOST_FALLBACK: 'default',
 } as const;

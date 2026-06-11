@@ -12,7 +12,7 @@ import { z } from 'zod';
  * route-island page manifest — can reference the permission type without
  * importing the RBAC engine (see file-structure.mdc → Import Rules).
  */
-export const orgPermissionSchema = z.enum([
+export const organizationPermissionSchema = z.enum([
   'organization:read',
   'organization:update',
   'organization:delete',
@@ -32,4 +32,4 @@ export const orgPermissionSchema = z.enum([
   'audit-log:read',
 ]);
 
-export type OrgPermission = z.infer<typeof orgPermissionSchema>;
+export type OrganizationPermission = z.infer<typeof organizationPermissionSchema>;

@@ -25,24 +25,24 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 
 ## Naming patterns
 
-| Element              | Pattern                                 | Example                           |
-| -------------------- | --------------------------------------- | --------------------------------- |
-| Page container       | `<route>-page`                          | `dashboard-page`                  |
-| Page heading         | `<route>-heading` or `<route>-greeting` | `dashboard-greeting`              |
-| Layout shell         | `<layout>-layout`                       | `auth-layout`, `dashboard-layout` |
-| Form wrapper         | `<form>-form`                           | `login-form`                      |
-| Form field           | `<form>-<field>`                        | `login-email`                     |
-| Submit               | `<form>-submit`                         | `register-submit`                 |
-| API / server error   | `<form>-error`                          | `login-error`, `form-error`       |
-| Field validation     | `<form>-<field>-error`                  | `login-email-error`               |
-| Link (auth switch)   | `<context>-link-<action>`               | `login-link-sign-up`              |
-| Nav (sidebar/mobile) | `nav-<slug>`                            | `nav-dashboard`, `nav-settings`   |
-| Tab                  | `<section>-tab-<slug>`                  | `team-tab-members`                |
-| Card / widget        | `<name>-card` or `<name>-section`       | `team-section`                    |
-| Stat                 | `stat-card-<slug>`                      | `stat-card-users`                 |
-| Dialog               | `<name>-dialog`                         | `create-org-dialog`               |
-| Table                | `<name>-table`                          | `members-table`                   |
-| Loading              | `<context>-loading`                     | `accept-invite-loading`           |
+| Element              | Pattern                                 | Example                         |
+| -------------------- | --------------------------------------- | ------------------------------- |
+| Page container       | `<route>-page`                          | `dashboard-page`                |
+| Page heading         | `<route>-heading` or `<route>-greeting` | `dashboard-greeting`            |
+| Layout shell         | `<layout>-layout`                       | `auth-layout`, `app-shell`      |
+| Form wrapper         | `<form>-form`                           | `login-form`                    |
+| Form field           | `<form>-<field>`                        | `login-email`                   |
+| Submit               | `<form>-submit`                         | `register-submit`               |
+| API / server error   | `<form>-error`                          | `login-error`, `form-error`     |
+| Field validation     | `<form>-<field>-error`                  | `login-email-error`             |
+| Link (auth switch)   | `<context>-link-<action>`               | `login-link-sign-up`            |
+| Nav (sidebar/mobile) | `nav-<slug>`                            | `nav-dashboard`, `nav-settings` |
+| Tab                  | `<section>-tab-<slug>`                  | `team-tab-members`              |
+| Card / widget        | `<name>-card` or `<name>-section`       | `team-section`                  |
+| Stat                 | `stat-card-<slug>`                      | `stat-card-users`               |
+| Dialog               | `<name>-dialog`                         | `create-org-dialog`             |
+| Table                | `<name>-table`                          | `members-table`                 |
+| Loading              | `<context>-loading`                     | `accept-invite-loading`         |
 
 **Slug rule:** lowercase, hyphens only; derive from route path (`/organization/members` → `organization-members` when needed).
 

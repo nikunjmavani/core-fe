@@ -31,7 +31,7 @@ const MOCK_USER: AuthUser = {
   id: 'user-1',
   email: 'test@example.com',
   role: 'admin',
-  tenantId: 'tenant-1',
+  organizationId: 'org_test1',
   name: 'Test User',
 };
 

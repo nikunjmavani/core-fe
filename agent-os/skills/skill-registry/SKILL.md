@@ -263,7 +263,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 **Project-specific implementations:**
 
-- Skip-navigation links in AuthLayout and DashboardLayout
+- Skip-navigation links in AuthLayout and AppShell
 - `aria-sort` on DataTableColumnHeader
 - `scope="col"` on TableHead
 - `aria-label` on OTP inputs, dialog close buttons, pagination selects
@@ -388,7 +388,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 ### 6a. route-island
 
 **Path:** `agent-os/skills/route-island/SKILL.md`
-**Purpose:** Identical directory structure for every route and sub-route (`page.ts`, `sub-pages/`, `__tests__/unit/`); feature code stays inside the island; `OVERVIEW.md` as AI entry; import boundaries.
+**Purpose:** Identical directory structure for every route and sub-route (`page.ts`, direct child folders, colocated tests); feature code stays inside the island; `<PAGE>.OVERVIEW.md` as AI entry; import boundaries.
 
 **Trigger keywords:** "route island", "self-contained route", "sub-route folder", "everything under this path", "same directory structure per route"
 
@@ -397,7 +397,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Skill: `agent-os/skills/route-island/SKILL.md`
 - Reference: `docs/reference/route-island-structure.md`
 - Template: `docs/getting-started/route-island-template.md`
-- Examples: `src/pages/dashboard/`, `src/pages/organization/sub-pages/members/`
+- Examples: `src/pages/organization/$organizationId/dashboard/`, `src/pages/login/`
 
 ---
 

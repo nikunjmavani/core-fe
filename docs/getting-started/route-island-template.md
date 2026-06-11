@@ -1,12 +1,12 @@
 # Route island template
 
-Copy for **`pages/<page-name>/`** or **`pages/.../sub-pages/<sub-page-name>/`**. Rules: [route-island-structure.md](../reference/route-island-structure.md).
+Copy for **`pages/<page-name>/`** or any nested **`pages/.../<child-segment>/`**. Rules: [route-island-structure.md](../reference/route-island-structure.md).
 
 ## Tree
 
 ```text
 pages/<page-name>/
-├── OVERVIEW.md
+├── <PAGE>.OVERVIEW.md
 ├── page.ts
 ├── route.tsx
 ├── contracts.ts
@@ -24,14 +24,13 @@ pages/<page-name>/
 │   │   ├── api.test.ts
 │   │   └── page.test.tsx
 │   └── integration/       # optional
-└── sub-pages/             # layout only — recursive full tree
-    └── <sub-page-name>/
+└── <child-segment>/       # layout only — DIRECT child, recursive full tree
 ```
 
 ## `page.ts`
 
 ```ts
-import type { PageManifest } from '@/lib/route-island/page-manifest.ts';
+import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
 export const page = {
   segment: '<page-name>',
@@ -101,5 +100,5 @@ describe('ExamplePage', () => {
 
 ```ts
 lazy: () => import('@/pages/<page-name>/route.tsx'),
-// child: lazy: () => import('@/pages/<page-name>/sub-pages/<sub>/route.tsx'),
+// child: lazy: () => import('@/pages/<page-name>/<child>/<child>.route.tsx'),
 ```

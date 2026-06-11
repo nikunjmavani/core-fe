@@ -49,7 +49,7 @@ Copy the block below, fill in the sections, and paste into your request (e.g. in
 
 ### UI / Behavior (if applicable)
 
-- **Layout:** [e.g. "DashboardLayout, same as dashboard"]
+- **Layout:** [e.g. "AppShell, same as dashboard"]
 - **Forms/inputs:** [e.g. "None" or "Filter by read/unread dropdown"]
 - **Actions:** [e.g. "Mark all read (button), row click marks single as read"]
 - **Validation / errors:** [e.g. "Show toast on error; retry button"]
