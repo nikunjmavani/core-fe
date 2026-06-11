@@ -323,6 +323,7 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 - **E2E:** `tests/e2e/` (Playwright)
 - **Load (k6):** `tests/load/` (e.g. `tests/load/k6/scenarios/` when multiple scenarios)
 - Unit/integration run with Vitest; E2E with Playwright; load with k6
+- **Strict test colocation (validator-enforced):** every component (incl. each island's `<Page>Page/Layout.tsx` and flat-group files) and every hook ships a colocated `*.test.ts(x)` — `pnpm validate:structure` fails without it. Exemptions: route/manifest/contracts/search/fixtures/constants, barrels, OVERVIEW docs.
 
 **Mock map** (every mock is tagged `REPLACE_WITH_API`; dev-only — production builds reject mock mode):
 

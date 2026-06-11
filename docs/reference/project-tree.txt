@@ -21,7 +21,7 @@ src/shared/    UI, auth, api, errors, forms, hooks, layouts, store (Zustand)
 src/lib/       Pure utilities, animations, route-island helpers
 tests/         E2E, load, utils (project root)
 
-Stats: ~261 src files · ~99 tests in src/ · 9 E2E specs · 21 shadcn UI primitives
+Stats: ~261 src files · ~130 tests in src/ · 9 E2E specs · 21 shadcn UI primitives
 
 ================================================================================
 §2  FULL DIRECTORY TREE
@@ -231,12 +231,14 @@ core-fe/
 │   │   │   ├── accept-invite.manifest.ts
 │   │   │   ├── accept-invite.route.tsx
 │   │   │   ├── ACCEPT_INVITE.OVERVIEW.md
-│   │   │   └── AcceptInvitePage.tsx
+│   │   │   ├── AcceptInvitePage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── callback/
 │   │   │   ├── callback.manifest.ts
 │   │   │   ├── CALLBACK.OVERVIEW.md
 │   │   │   ├── callback.route.tsx
-│   │   │   └── CallbackPage.tsx
+│   │   │   ├── CallbackPage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── forgot-password/
 │   │   │   ├── forms/
 │   │   │   │   └── ForgotPasswordForm/
@@ -246,7 +248,8 @@ core-fe/
 │   │   │   ├── forgot-password.manifest.ts
 │   │   │   ├── forgot-password.route.tsx
 │   │   │   ├── FORGOT_PASSWORD.OVERVIEW.md
-│   │   │   └── ForgotPasswordPage.tsx
+│   │   │   ├── ForgotPasswordPage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── login/
 │   │   │   ├── forms/
 │   │   │   │   ├── LoginForm/
@@ -255,7 +258,8 @@ core-fe/
 │   │   │   │   │   └── [1 test file]
 │   │   │   │   └── PasswordlessOptions/
 │   │   │   │       ├── index.ts
-│   │   │   │       └── PasswordlessOptions.tsx
+│   │   │   │       ├── PasswordlessOptions.tsx
+│   │   │   │       └── [1 test file]
 │   │   │   ├── hooks/
 │   │   │   │   └── useCooldownClock/
 │   │   │   │       ├── index.ts
@@ -264,7 +268,8 @@ core-fe/
 │   │   │   ├── login.manifest.ts
 │   │   │   ├── LOGIN.OVERVIEW.md
 │   │   │   ├── login.route.tsx
-│   │   │   └── LoginPage.tsx
+│   │   │   ├── LoginPage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── mfa/
 │   │   │   ├── forms/
 │   │   │   │   └── MfaForm/
@@ -274,7 +279,8 @@ core-fe/
 │   │   │   ├── mfa.manifest.ts
 │   │   │   ├── MFA.OVERVIEW.md
 │   │   │   ├── mfa.route.tsx
-│   │   │   └── MfaPage.tsx
+│   │   │   ├── MfaPage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── onboarding/
 │   │   │   ├── components/
 │   │   │   │   ├── DoneStep/
@@ -304,27 +310,32 @@ core-fe/
 │   │   │   ├── onboarding.manifest.ts
 │   │   │   ├── ONBOARDING.OVERVIEW.md
 │   │   │   ├── onboarding.route.tsx
-│   │   │   └── OnboardingPage.tsx
+│   │   │   ├── OnboardingPage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── organization/
 │   │   │   ├── $organizationId/
 │   │   │   │   ├── dashboard/
 │   │   │   │   │   ├── dashboard.manifest.ts
 │   │   │   │   │   ├── DASHBOARD.OVERVIEW.md
 │   │   │   │   │   ├── dashboard.route.tsx
-│   │   │   │   │   └── DashboardPage.tsx
+│   │   │   │   │   ├── DashboardPage.tsx
+│   │   │   │   │   └── [1 test file]
 │   │   │   │   ├── suspended/
 │   │   │   │   │   ├── suspended.manifest.ts
 │   │   │   │   │   ├── SUSPENDED.OVERVIEW.md
 │   │   │   │   │   ├── suspended.route.tsx
-│   │   │   │   │   └── SuspendedPage.tsx
+│   │   │   │   │   ├── SuspendedPage.tsx
+│   │   │   │   │   └── [1 test file]
 │   │   │   │   ├── organization-id.manifest.ts
 │   │   │   │   ├── organization-id.route.tsx
 │   │   │   │   ├── ORGANIZATION_ID.OVERVIEW.md
-│   │   │   │   └── OrganizationLayout.tsx
+│   │   │   │   ├── OrganizationLayout.tsx
+│   │   │   │   └── [1 test file]
 │   │   │   ├── organization.manifest.ts
 │   │   │   ├── ORGANIZATION.OVERVIEW.md
 │   │   │   ├── organization.route.tsx
-│   │   │   └── OrganizationPickerPage.tsx
+│   │   │   ├── OrganizationPickerPage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── register/
 │   │   │   ├── forms/
 │   │   │   │   └── RegisterForm/
@@ -334,7 +345,8 @@ core-fe/
 │   │   │   ├── register.manifest.ts
 │   │   │   ├── REGISTER.OVERVIEW.md
 │   │   │   ├── register.route.tsx
-│   │   │   └── RegisterPage.tsx
+│   │   │   ├── RegisterPage.tsx
+│   │   │   └── [1 test file]
 │   │   ├── reset-password/
 │   │   │   ├── forms/
 │   │   │   │   └── ResetPasswordForm/
@@ -344,16 +356,19 @@ core-fe/
 │   │   │   ├── reset-password.manifest.ts
 │   │   │   ├── reset-password.route.tsx
 │   │   │   ├── RESET_PASSWORD.OVERVIEW.md
-│   │   │   └── ResetPasswordPage.tsx
+│   │   │   ├── ResetPasswordPage.tsx
+│   │   │   └── [1 test file]
 │   │   └── verify-email/
 │   │       ├── forms/
 │   │       │   └── VerifyEmailForm/
 │   │       │       ├── index.ts
-│   │       │       └── VerifyEmailForm.tsx
+│   │       │       ├── VerifyEmailForm.tsx
+│   │       │       └── [1 test file]
 │   │       ├── verify-email.manifest.ts
 │   │       ├── verify-email.route.tsx
 │   │       ├── VERIFY_EMAIL.OVERVIEW.md
-│   │       └── VerifyEmailPage.tsx
+│   │       ├── VerifyEmailPage.tsx
+│   │       └── [1 test file]
 │   ├── shared/
 │   │   ├── api/
 │   │   │   ├── API.OVERVIEW.md
@@ -390,7 +405,8 @@ core-fe/
 │   │   │   │   ├── DataTable.tsx
 │   │   │   │   ├── DataTableColumnHeader.tsx
 │   │   │   │   ├── DataTablePagination.tsx
-│   │   │   │   └── DataTableToolbar.tsx
+│   │   │   │   ├── DataTableToolbar.tsx
+│   │   │   │   └── [4 test files]
 │   │   │   ├── FullPageSpinner/
 │   │   │   │   ├── FullPageSpinner.tsx
 │   │   │   │   ├── index.ts
@@ -447,14 +463,15 @@ core-fe/
 │   │   │   │   │   ├── AccountProfilePanel.tsx
 │   │   │   │   │   ├── AccountSecurityPanel.tsx
 │   │   │   │   │   ├── AccountSessionsPanel.tsx
-│   │   │   │   │   └── [2 test files]
+│   │   │   │   │   └── [6 test files]
 │   │   │   │   ├── organization/
 │   │   │   │   │   ├── OrganizationBillingPanel.tsx
 │   │   │   │   │   ├── OrganizationBranchesPanel.tsx
 │   │   │   │   │   ├── OrganizationGeneralPanel.tsx
 │   │   │   │   │   ├── OrganizationIntegrationsPanel.tsx
 │   │   │   │   │   ├── OrganizationMembersPanel.tsx
-│   │   │   │   │   └── OrganizationRolesPanel.tsx
+│   │   │   │   │   ├── OrganizationRolesPanel.tsx
+│   │   │   │   │   └── [6 test files]
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── settings-hash.ts
 │   │   │   │   ├── settings-permissions.ts
@@ -462,7 +479,7 @@ core-fe/
 │   │   │   │   ├── SettingsModal.tsx
 │   │   │   │   ├── SettingsNav.tsx
 │   │   │   │   ├── SettingsPanelShell.tsx
-│   │   │   │   └── [4 test files]
+│   │   │   │   └── [6 test files]
 │   │   │   ├── ui/
 │   │   │   └── WidgetErrorBoundary/
 │   │   │       ├── index.ts

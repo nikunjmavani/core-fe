@@ -167,7 +167,9 @@ Established cases:
 | Cross-component integration in this island | `__tests__/integration/`                        |
 | Browser E2E (full app, cross-page)         | Project `tests/e2e/` (Playwright)               |
 
-**No test required for:** `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
+**Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
+
+**No test required for (the only exemptions):** `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<page>.search.ts`, `<page>.fixtures.ts`, `<page>.constants.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
 
 Vitest globs cover both `src/**/*.test.{ts,tsx}` and `src/**/__tests__/**/*.test.{ts,tsx}`.
 

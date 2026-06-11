@@ -349,10 +349,13 @@ Auth infrastructure (token storage, refresh timer, idle timeout, login/logout se
 | E2E (full browser, cross-page) | `tests/e2e/` at project root (Playwright) |
 | Load | `tests/load/` (k6) |
 
-**No test file required for:**
+**Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
+
+**No test file required for (the only exemptions):**
 - `<page>.route.tsx` (thin wrapper)
 - `<page>.manifest.ts` (declarative manifest)
 - `<page>.contracts.ts` (Zod — type-checked at compile, exercised where used)
+- `<page>.search.ts`, `<page>.fixtures.ts`, `<page>.constants.ts` (declarative schemas / data)
 - `<PAGE>.OVERVIEW.md`, `index.ts` (barrel re-exports)
 
 ## Import Rules

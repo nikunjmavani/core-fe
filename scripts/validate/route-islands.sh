@@ -44,6 +44,13 @@ for route in $(find src/pages -name '*.route.tsx' | sort); do
   if ! ls "$dir"/*Page.tsx >/dev/null 2>&1 && ! ls "$dir"/*Layout.tsx >/dev/null 2>&1; then
     fail "$dir: missing top-level <Page>Page.tsx or <Page>Layout.tsx"
   fi
+  # Strict test rule: the island's top-level UI component ships a colocated test.
+  for ui in "$dir"/*Page.tsx "$dir"/*Layout.tsx; do
+    [ -f "$ui" ] || continue
+    case "$ui" in *.test.tsx) continue ;; esac
+    [ -f "${ui%.tsx}.test.tsx" ] ||
+      fail "$ui: missing sibling $(basename "${ui%.tsx}").test.tsx (strict test rule)"
+  done
 done
 
 # ── 2. Overview references resolve ──
@@ -99,7 +106,29 @@ for d in src/shared/components/*/ src/shared/hooks/*/ src/shared/forms/*/ src/sh
     fail "$d: missing index.ts barrel (folder-per-unit)"
 done
 
-# ── 5. Duplicate island prefixes (notice, not failure) ──
+# ── 5. Strict test colocation: every unit folder ships a test ──
+# Components, forms, hooks, dialogs, and stores are folder-per-unit; the unit
+# is incomplete without its colocated *.test.* (file-structure.mdc).
+for unit in $(find src/pages src/shared -type d 2>/dev/null | sort); do
+  case "$(basename "$(dirname "$unit")")" in
+    components|forms|hooks|dialogs|store) : ;;
+    *) continue ;;
+  esac
+  case "$(basename "$unit")" in
+    ui|data-table) continue ;;  # flat groups — covered per-file below
+  esac
+  ls "$unit"/*.test.* >/dev/null 2>&1 ||
+    fail "$unit: unit folder missing colocated *.test.* (strict test rule)"
+done
+
+# Flat component groups (data-table, SettingsModal tree): every component
+# file ships a sibling test.
+for f in $(find src/shared/components/data-table src/shared/components/SettingsModal -name '*.tsx' ! -name '*.test.tsx' 2>/dev/null | sort); do
+  [ -f "${f%.tsx}.test.tsx" ] ||
+    fail "$f: missing sibling $(basename "${f%.tsx}").test.tsx (strict test rule)"
+done
+
+# ── 6. Duplicate island prefixes (notice, not failure) ──
 # The same URL segment may repeat at different depths (e.g. two appointments/
 # islands) and is disambiguated by path; avoidable parent/child collisions are
 # designed out by the $param strip rule — docs/reference/routing-and-tenancy.md.
