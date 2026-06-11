@@ -1,0 +1,283 @@
+---
+name: page-scaffolding
+description: Scaffold a complete page directory following the route-island spec. Use when the user asks to create a new page, route, or feature page. Always generate tests; do not ask the user for them.
+---
+
+# Page Scaffolding
+
+Scaffolds a complete route island with page-prefixed role files, folder-per-unit sub-units, and tests.
+
+Contract: [`agent-os/rules/file-structure.mdc`](../../rules/file-structure.mdc). Shape reference: [`agent-os/skills/route-island/SKILL.md`](../route-island/SKILL.md).
+
+## Triggers
+
+- "Create a new page"
+- "Add a route for X"
+- "Scaffold page"
+- "Add [feature] page"
+
+## Steps
+
+### 1. Gather requirements (infer; do not ask)
+
+From the user's request:
+
+- **Page name** — lowercase kebab-case (e.g., "Settings page" → `settings`; "create org" → `create-organization`)
+- **URL path** — default `/<name>`; verify with route tree if ambiguous
+- **`kind`** — `leaf` (no children) or `layout` (has sub-pages)
+- **Protected?** — yes for pages under `DashboardLayout`; no for auth pages
+- **Permission** — e.g., `organization:read`; `null` if just auth-gated
+- **Resource vs custom?** — resource page if it maps to a backend CRUD entity (organizations, members, etc.); custom otherwise
+
+Only ask the user when genuinely ambiguous. Never ask "Do you want tests?" — tests are always generated (step 6).
+
+### 2. Create directory tree
+
+```bash
+PAGE=<name>            # kebab-case
+PASCAL=<Name>          # PascalCase
+
+mkdir -p src/pages/$PAGE/{components,forms,hooks,__tests__/integration}
+touch src/pages/$PAGE/OVERVIEW.md
+```
+
+For a layout island, add `sub-pages/<child>/` directories per child (each is a full island).
+
+### 3. Create the role files
+
+#### `src/pages/<name>/<name>.page.ts` — manifest
+
+```ts
+import type { PageManifest } from '@/lib/route-island/page-manifest.ts';
+
+export const page = {
+  segment: '<name>',
+  path: '/<name>',
+  testId: '<name>-page',
+  permission: null, // or 'resource:action'
+  kind: 'leaf', // 'leaf' | 'layout'
+  children: [], // sub-pages segments when kind: 'layout'
+} as const satisfies PageManifest;
+```
+
+#### `src/pages/<name>/<name>.contracts.ts` — Zod schemas
+
+```ts
+import { z } from 'zod';
+
+export const <entity>Schema = z.object({
+  id: z.string(),
+  createdAt: z.string(),
+  // ...domain fields
+});
+
+export type <Entity> = z.infer<typeof <entity>Schema>;
+```
+
+#### `src/pages/<name>/<name>.api.ts` — fetchers
+
+```ts
+import { z } from 'zod';
+
+import { apiClient } from '@/core/http/fetch-client.ts';
+
+import { <entity>Schema, type <Entity> } from './<name>.contracts.ts';
+
+export const <name>Api = {
+  list: (): Promise<<Entity>[]> =>
+    apiClient.get('/api/<name>').then((r) => z.array(<entity>Schema).parse(r.data)),
+  getById: (id: string): Promise<<Entity>> =>
+    apiClient.get(`/api/<name>/${id}`).then((r) => <entity>Schema.parse(r.data)),
+  create: (data: Omit<<Entity>, 'id' | 'createdAt'>) =>
+    apiClient.post<<Entity>>('/api/<name>', data).then((r) => r.data),
+  update: (id: string, data: Partial<<Entity>>) =>
+    apiClient.patch<<Entity>>(`/api/<name>/${id}`, data).then((r) => r.data),
+  delete: (id: string) => apiClient.delete(`/api/<name>/${id}`),
+};
+```
+
+Always validate API responses with Zod `.parse()` for runtime safety.
+
+#### `src/pages/<name>/hooks/use<Name>/use<Name>.ts` — TanStack Query
+
+```ts
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { <name>Api } from '../../<name>.api.ts';
+
+const KEYS = {
+  all: ['<name>'] as const,
+  list: () => [...KEYS.all, 'list'] as const,
+  detail: (id: string) => [...KEYS.all, 'detail', id] as const,
+};
+
+export function use<Name>() {
+  return useQuery({ queryKey: KEYS.list(), queryFn: <name>Api.list });
+}
+```
+
+Then `src/pages/<name>/hooks/use<Name>/index.ts`:
+
+```ts
+export { use<Name> } from './use<Name>.ts';
+```
+
+#### `src/pages/<name>/<Name>Page.tsx` — top-level UI
+
+```tsx
+import { Button } from '@/shared/components/ui/button.tsx';
+
+export function <Name>Page() {
+  return (
+    <div data-testid="<name>-page" className="space-y-6">
+      <header>
+        <h1 className="text-3xl font-bold tracking-tight">
+          <Title>
+        </h1>
+        <p className="mt-1 text-muted-foreground">
+          <Description>
+        </p>
+      </header>
+
+      {/* Page content */}
+    </div>
+  );
+}
+```
+
+**Always** add `data-testid="<name>-page"` to the container.
+
+#### `src/pages/<name>/<name>.route.tsx` — lazy boundary
+
+```tsx
+import { requirePermission } from '@/core/rbac/guards.ts';
+
+import { <Name>Page } from './<Name>Page.tsx';
+import { page } from './<name>.page.ts';
+
+export function Component() {
+  return <<Name>Page />;
+}
+
+export function loader() {
+  if (page.permission) requirePermission(page.permission);
+  return null;
+}
+```
+
+#### `src/pages/<name>/OVERVIEW.md`
+
+```markdown
+# <Name> — Route island
+
+- **URL:** /<name>
+- **Permission:** <none | resource:action>
+- **Kind:** leaf
+
+## Files
+
+| File                  | Role                |
+| --------------------- | ------------------- |
+| `<name>.page.ts`      | Manifest            |
+| `<name>.route.tsx`    | Lazy boundary       |
+| `<Name>Page.tsx`      | Top-level UI        |
+| `<name>.contracts.ts` | Zod schemas         |
+| `<name>.api.ts`       | Fetchers            |
+| `hooks/use<Name>/`    | TanStack Query hook |
+
+## Test IDs
+
+`<name>-page`, `<name>-create`, `<name>-table`, … — see `docs/reference/e2e-testids-inventory.md`.
+```
+
+### 4. Register the route
+
+Add to [`src/app/routes/routeTree.tsx`](../../../src/app/routes/routeTree.tsx):
+
+```tsx
+const <Name>Page = lazy(() =>
+  import('@/pages/<name>/<name>.route.tsx').then((m) => ({ default: m.Component })),
+);
+
+const <name>Route = createRoute({
+  getParentRoute: () => dashboardLayoutRoute,    // or rootRoute for public pages
+  path: '<name>',
+  component: () => <Lazy C={<Name>Page} />,
+});
+
+// ...add to routeTree.addChildren([...])
+```
+
+### 5. Sub-units (components, forms, hooks)
+
+Each sub-unit is **folder-per-unit + barrel**:
+
+```
+components/<WidgetName>/
+├── <WidgetName>.tsx
+├── <WidgetName>.test.tsx
+└── index.ts                       export { <WidgetName> } from './<WidgetName>.tsx';
+```
+
+Same pattern for `forms/<Name>Form/` and `hooks/use<Name>/`.
+
+**Exception:** shadcn primitives in `shared/components/ui/` stay flat.
+
+### 6. Generate tests (auto-invoked)
+
+Beside every new source file:
+
+| Source                      | Test                                              |
+| --------------------------- | ------------------------------------------------- |
+| `<Name>Page.tsx`            | `<Name>Page.test.tsx` (next to it at island root) |
+| `components/<X>/<X>.tsx`    | `components/<X>/<X>.test.tsx`                     |
+| `forms/<X>Form/<X>Form.tsx` | `forms/<X>Form/<X>Form.test.tsx`                  |
+| `hooks/use<X>/use<X>.ts`    | `hooks/use<X>/use<X>.test.ts`                     |
+
+Each test:
+
+- Render/existence assertions
+- `vitest-axe` (`toHaveNoViolations()`) on components
+- Key interaction tests (forms, buttons)
+- Uses `data-testid` for selectors
+- Wraps with `renderWithProviders` from `@/tests/utils/renderWithProviders.tsx`
+
+**No test file required for:** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `OVERVIEW.md`, `index.ts` (barrel).
+
+### 7. Update test-id inventory
+
+Edit [`docs/reference/e2e-testids-inventory.md`](../../../docs/reference/e2e-testids-inventory.md) with the new route's IDs.
+
+### 8. Dialog vs full page (when there's a sub-path)
+
+When the user mentions sub-paths under this page:
+
+- **Quick action** (create, edit, confirm) → handle as a dialog. For resource pages, follow the URL-driven dialog pattern (sub-pages/create/, sub-pages/$id-edit/) — see route-island skill.
+- **Complex view** (detail page, settings) → full page; create `sub-pages/<segment>/` with its own `<segment>.route.tsx`.
+
+### 9. Verify
+
+```bash
+pnpm tsc --noEmit
+pnpm exec eslint src/pages/<name>
+pnpm exec vitest run src/pages/<name>
+```
+
+All three must pass before reporting complete.
+
+## Resource page variant
+
+For pages mapping to a backend resource (organizations, members, roles, invitations, api-keys), add:
+
+- `<resource>.resource.ts` — resource manifest (endpoint, schema, permissions)
+- `dialogs/Create<Resource>Dialog/`, `dialogs/Edit<Resource>Dialog/`
+- `sub-pages/{create, $id, $id-edit}/` — URL-driven dialog routes (each renders `null`; list page reads URL)
+- Use shared CRUD hooks from `shared/hooks/use{List,One,Create,Update,Delete}/`
+
+## Related
+
+- [`agent-os/rules/file-structure.mdc`](../../rules/file-structure.mdc) — canonical contract
+- [`agent-os/skills/route-island/SKILL.md`](../route-island/SKILL.md) — full shape spec
+- [`agent-os/skills/code-structure/SKILL.md`](../code-structure/SKILL.md) — placement decisions
+- [`agent-os/skills/test-generation/SKILL.md`](../test-generation/SKILL.md) — test templates
+- [`agent-os/skills/e2e-testids/SKILL.md`](../e2e-testids/SKILL.md) — testid conventions

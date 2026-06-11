@@ -1,0 +1,62 @@
+# Build and deploy to Netlify. Build runs only on GitHub; Netlify receives pre-built dist/.
+# Requires: VITE_API_BASE_URL, NODE_VERSION, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID in repo secrets.
+# Optional: VITE_SENTRY_DSN, SENTRY_AUTH_TOKEN, etc.
+# In Netlify: disable "Build" from Git (or use a no-op) so this is the only deploy path.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  gate:
+    name: Check deploy secrets
+    runs-on: ubuntu-latest
+    outputs:
+      should_deploy: ${{ steps.check.outputs.should_deploy }}
+    steps:
+      - id: check
+        env:
+          API_URL: ${{ secrets.VITE_API_BASE_URL }}
+          NODE_VER: ${{ secrets.NODE_VERSION }}
+          NETLIFY_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -n "$API_URL" ] && [ -n "$NODE_VER" ] && [ -n "$NETLIFY_TOKEN" ] && [ -n "$NETLIFY_SITE" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping deploy — one or more required secrets are unset."
+          fi
+
+  build-and-deploy:
+    name: Build and deploy to Netlify
+    needs: gate
+    if: needs.gate.outputs.should_deploy == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ secrets.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+
+      - name: Deploy to Netlify
+        run: pnpm exec netlify deploy --prod --dir=dist
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}

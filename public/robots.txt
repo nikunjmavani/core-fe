@@ -1,0 +1,3 @@
+# Core Admin — allow crawlers; adjust if you add a sitemap or need to disallow paths
+User-agent: *
+Allow: /

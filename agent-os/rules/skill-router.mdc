@@ -1,0 +1,78 @@
+---
+description: Route tasks to the correct skill; auto-invoke skills for requirements, pages, tests, promotion; complete all steps without asking
+alwaysApply: true
+---
+
+# Skill Router
+
+When a task matches a pattern below, read the corresponding SKILL.md **before** starting work. Complete every step in that skill (including tests, route registration, RBAC, data-testid) **without asking the user for confirmation**. See `agent-os/rules/agent-behavior.mdc` for the no-confirmation rule. Skills contain step-by-step instructions, conventions, and checklists specific to this project.
+
+| Task Pattern | Skill | Path |
+|---|---|---|
+| **Any requirement** (feature, page, component, API) — master orchestrator | auto-implement | `agent-os/skills/auto-implement/SKILL.md` |
+| Implement requirement, add feature, where to put code | code-structure | `agent-os/skills/code-structure/SKILL.md` |
+| Vague/feature-sized request; requirement in standard format; "use requirement format" | requirement-format | `agent-os/skills/requirement-format/SKILL.md` |
+| New page, route, scaffold, nested sub-route, self-contained path | route-island | `agent-os/skills/route-island/SKILL.md` |
+| New page, route, scaffold | page-scaffolding | `agent-os/skills/page-scaffolding/SKILL.md` |
+| Move component to shared, promote | component-promotion | `agent-os/skills/component-promotion/SKILL.md` |
+| React performance, re-renders, bundle size | react-best-practices | `agent-os/skills/react-best-practices/SKILL.md` |
+| UI review, accessibility, focus, forms | web-design-guidelines | `agent-os/skills/web-design-guidelines/SKILL.md` |
+| Build/style/beautify a UI, page, component, or interface; make it distinctive/polished | frontend-design | `agent-os/skills/frontend-design/SKILL.md` |
+| Look up design intelligence — styles, color palettes, font pairings, UX/stack guidelines (incl. shadcn), chart choice | ui-ux-pro-max | `agent-os/skills/ui-ux-pro-max/SKILL.md` |
+| Component API, compound components, boolean props | composition-patterns | `agent-os/skills/composition-patterns/SKILL.md` |
+| Lint rules, security scan, pre-commit, CI pipeline | code-quality-security | `agent-os/skills/code-quality-security/SKILL.md` |
+| Commit checks, before-commit guard, pre-commit failures | before-commit-guard | `agent-os/skills/before-commit-guard/SKILL.md` |
+| Lint/type-check failures after implementation | lint-guard | `agent-os/skills/lint-guard/SKILL.md` |
+| Code smells, best practices, live-code review when code added/changed | code-smells-best-practices | `agent-os/skills/code-smells-best-practices/SKILL.md` |
+| New test, add test, test coverage, missing tests | test-generation | `agent-os/skills/test-generation/SKILL.md` |
+| E2E selectors, data-testid, test ids for Playwright, audit test hooks | e2e-testids | `agent-os/skills/e2e-testids/SKILL.md` |
+| **Any shadcn/ui work** — adding, fixing, debugging, styling, composing, CLI, `components.json`, presets, **and choosing which component/block** to use | shadcn (single skill) | `agent-os/skills/shadcn/SKILL.md` |
+| (merged) "which component for X", use shadcn only — now folded into the single skill above | shadcn-component-selection (pointer) | `agent-os/skills/shadcn-component-selection/SKILL.md` |
+| Which skill to use, list skills, help me find | skill-registry | `agent-os/skills/skill-registry/SKILL.md` |
+| "Is there a skill for X", discover/install a new skill from the ecosystem | find-skills | `agent-os/skills/find-skills/SKILL.md` |
+| Add/change docs, where to document, keep README/CLAUDE in sync | documentation-maintenance | `agent-os/skills/documentation-maintenance/SKILL.md` |
+| Extension/settings recommendations, productivity setup, recommend extensions, new tooling | extension-settings-recommendations | `agent-os/skills/extension-settings-recommendations/SKILL.md` |
+| Full project health check, verify everything works, post-major-change audit | project-health-check | `agent-os/skills/project-health-check/SKILL.md` |
+| Full code review report, generate code review | full-code-review | `agent-os/skills/full-code-review/SKILL.md` |
+
+## Auto-Invocation Rules
+
+0. **Auto-Implement (Master)**: When the user provides **any** requirement (short sentence, standard format, or feature-sized request), invoke the `auto-implement` skill. It orchestrates the full pipeline: parse → implement → route → RBAC → test → lint → docs → verify. The user provides only the requirement; everything else is background work.
+
+1. **Code Structure**: When implementing any requirement (new feature, page, component, API), read the `code-structure` skill first for placement and dependency rules; then add or update tests automatically (do not wait for the user to ask for tests).
+
+2. **Test Generation**: When a new `.tsx` or `.ts` source file is created under `src/`, check if a colocated test file exists. If not, invoke the `test-generation` skill to create one. Exceptions: `types.ts`, `branded.ts`, `index.ts` (barrel), `<page>.contracts.ts`, `<page>.constants.ts`, `<page>.route.tsx`, `<page>.page.ts`, `OVERVIEW.md`. Do not ask the user whether to add tests — generate them as part of the implementation.
+
+2b. **E2E Test IDs**: When adding or changing interactive UI, or when the user wants Playwright-ready selectors, invoke the `e2e-testids` skill: apply naming conventions, add `data-testid` on pages/forms/nav, and update `docs/reference/e2e-testids-inventory.md`.
+
+3. **Route island**: When creating or refactoring any route or sub-route, invoke `route-island` first: identical directory tree, `OVERVIEW.md`, imports stay inside the island (+ core/shared/lib/stores only).
+
+4. **Page Scaffolding**: When creating a new page, invoke `page-scaffolding` (after `route-island`) to ensure all standard files are created and `data-testid` attributes are placed (via `e2e-testids` skill).
+
+5. **Component Promotion**: When importing a page-specific component into a second page, invoke the `component-promotion` skill to move it to `shared/`.
+
+6. **Code Quality**: When modifying `eslint.config.mjs`, `.husky/*`, or `.github/workflows/ci.yml`, invoke the `code-quality-security` skill for consistency checks.
+
+7. **Lint Guard**: After every implementation that adds or changes source files, invoke the `lint-guard` skill to fix all ESLint and TypeScript errors before responding. Do not announce this step — just ensure zero errors.
+
+8. **Code Smells / Best Practices**: When any code is added or changed under `src/`, invoke the `code-smells-best-practices` skill on the **modified/live code only**. Check dependency rules (app not importing from pages), import formatting, no inline styles, no `any`, apiClient from fetch-client, form-error testid consistency. Fix issues in the same change set without asking.
+
+9. **Requirement Format**: When the user's request is vague or feature-sized (e.g. "we need notifications", "add the billing feature") and they have **not** provided a requirement doc in the standard format (What, Where, Acceptance criteria), invoke the `requirement-format` skill: ask them to fill the template from `docs/getting-started/requirement-format.md` (or paste it) and point to `docs/getting-started/requirements/sample-requirement.md`. Full intake (types, skills, rules): **docs/getting-started/requirement-intake.md**. When they **do** provide a requirement in that format, parse it and implement fully (code-structure + page-scaffolding + tests + route + RBAC) without asking.
+
+10. **Documentation Maintenance**: When adding a new doc, moving/renaming docs, or changing project structure that affects README/CLAUDE or doc links, invoke the `documentation-maintenance` skill to place the doc correctly and keep README, CLAUDE, and docs/README.md in sync.
+
+11. **Extension/Settings Recommendations**: When the user asks about extensions, IDE setup, or productivity, invoke the `extension-settings-recommendations` skill. When adding or changing tooling that affects the IDE (new test framework, new linter, new language, new config file), consider invoking it to suggest or update workspace extensions and settings; apply updates if clearly beneficial and non-intrusive.
+
+12. **Project Health Check**: When the user asks to "check everything", "run health check", "verify the project", "make sure everything works", or after a major code change involving 10+ files, invoke the `project-health-check` skill to audit docs, tests, lint, build, and bundle.
+
+13. **Full Code Review**: When the user asks to "run code review", "generate code review report", "full code review", or "code review report", invoke the `full-code-review` skill. Run `pnpm report:code-review` to generate the report; the skill guides the AI when the user wants the AI to produce it.
+
+14. **shadcn/ui (single skill)**: For **any** shadcn/ui work — building, adding, fixing, debugging, styling, composing, running the CLI, touching `components.json`/presets, **and choosing which component/block to use** — read **`agent-os/skills/shadcn/SKILL.md`** first and follow its workflow + Critical Rules + its **"Project rules — core-fe"** section (allowed 20 sources + selection flow). This is now the **one canonical shadcn skill** (the former `shadcn-component-selection` is merged into it and is just a pointer). Use the project runner (`pnpm dlx shadcn@latest …`); check installed components and `search`/`docs` before writing custom markup. Enforce semantic tokens, `gap-*` not `space-*`, `size-*` for equal w/h, `cn()`, `data-icon` on button icons, full Card/Tabs/Avatar composition. Do not announce reading it — just follow it.
+
+15. **frontend-design (installed skill)**: When **building, styling, or beautifying any UI** (page, component, layout, interface), read **`agent-os/skills/frontend-design/SKILL.md`** for design-thinking and aesthetic quality (typography hierarchy, color/theme intent, motion on high-impact moments, spatial composition, depth/atmosphere, memorable details — avoid generic "AI slop"). **Apply it *within* this project's guardrails — those take precedence:** components come from shadcn via `agent-os/skills/shadcn/SKILL.md` + the 20 allowed sources (`agent-os/rules/ui-sources.mdc`); colors use the neutral semantic tokens in `src/index.css` (no raw colors, no purple-on-white); fonts and brand stay as configured unless the user asks to change them; accessibility/UX follows `web-design-guidelines`. Use `frontend-design` to elevate craft and polish, **not** to override the component library, design tokens, or brand. For ad-hoc standalone artifacts the user may grant more creative latitude.
+
+16. **find-skills (installed skill)**: When the user asks "is there a skill for X", wants to discover/install new capabilities, or a task has **no matching skill in this router or skill-registry**, read **`agent-os/skills/find-skills/SKILL.md`** and use the Skills CLI (`npx skills find <query>`, `npx skills add <owner/repo@skill>`). Prefer reputable, high-install skills; present options before installing. Install into `agent-os/skills/` (tracked in `skills-lock.json`), then **wire the new skill into this router, `skill-registry`, and docs** (as done for `shadcn`, `frontend-design`, `find-skills`).
+
+17. **ui-ux-pro-max (installed skill)**: A searchable design-intelligence DB (50+ styles, 161 palettes, 57 font pairings, 161 product types, 99 UX guidelines, charts, and per-stack rules incl. shadcn). When making design decisions or reviewing UI, **query it for guidance** via Python: `python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <style|color|ux|typography|chart|product|icons> [--stack shadcn]` (requires `python3`; scripts are local-only — BM25 over bundled CSVs, no network). Use its `--stack shadcn` and `ux` guidance most. **Project guardrails win:** do **not** apply its palette/font/style suggestions in a way that overrides our neutral semantic tokens (`src/index.css`), configured fonts/brand, or shadcn component choices — treat it as advisory; the authoritative skills remain `shadcn` (components/tokens), `frontend-design` (craft), and `web-design-guidelines` (a11y). Don't run `--persist` (writes `design-system/` files) unless the user asks.
+
+If multiple skills match, read the most specific one first. For broad questions about available skills, use skill-registry. **For any shadcn component work, read `agent-os/skills/shadcn/SKILL.md`.**

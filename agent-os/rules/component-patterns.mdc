@@ -1,0 +1,191 @@
+---
+description: Patterns for creating React components, forms, and page modules in core-fe
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# Component & Form Patterns
+
+## Creating a shadcn/ui Component
+
+All shared UI components live in `src/shared/components/ui/` and follow this pattern:
+
+```tsx
+import { cva, type VariantProps } from 'class-variance-authority';
+import { cn } from '@/lib/utils.ts';
+
+const myComponentVariants = cva(
+  'base-classes-here',
+  {
+    variants: {
+      variant: { default: '...', secondary: '...' },
+      size: { default: '...', sm: '...', lg: '...' },
+    },
+    defaultVariants: { variant: 'default', size: 'default' },
+  },
+);
+
+function MyComponent({
+  className,
+  variant,
+  size,
+  ...props
+}: React.ComponentProps<'div'> & VariantProps<typeof myComponentVariants>) {
+  return (
+    <div
+      data-slot="my-component"
+      className={cn(myComponentVariants({ variant, size, className }))}
+      {...props}
+    />
+  );
+}
+
+export { MyComponent, myComponentVariants };
+```
+
+Key rules:
+- Use **plain functions** (not `React.forwardRef`) — React 19 forwards refs automatically
+- Add `data-slot` attribute for styling hooks
+- Import from `radix-ui` monorepo (not individual `@radix-ui/react-*` packages)
+- Always accept and merge `className` via `cn()`
+- Export both the component and its variants
+
+## Creating a Form with Validation
+
+Forms use react-hook-form + zod + shadcn/ui components:
+
+```tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { mySchema, type MyInput } from './contracts.ts';
+import { Button } from '@/shared/components/ui/button.tsx';
+import { Input } from '@/shared/components/ui/input.tsx';
+import { Label } from '@/shared/components/ui/label.tsx';
+import { FormError } from '@/shared/forms/FormError.tsx';
+
+function MyForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<MyInput>({
+    resolver: zodResolver(mySchema),
+    defaultValues: { field: '' },
+  });
+
+  const onSubmit = async (data: MyInput) => {
+    // Call API via TanStack mutation, never raw fetch
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <FormError message={apiError} />
+      <Label htmlFor="field">Field</Label>
+      <Input {...register('field')} aria-invalid={!!errors.field} />
+      {errors.field && (
+        <p className="text-xs text-destructive" role="alert">
+          {errors.field.message}
+        </p>
+      )}
+      <Button type="submit" isLoading={isSubmitting}>
+        Submit
+      </Button>
+    </form>
+  );
+}
+```
+
+Key rules:
+- Zod schema is the single source of truth (defined in `contracts.ts`)
+- Always use `aria-invalid` on invalid inputs
+- Always use `role="alert"` on error messages
+- Use Button's `isLoading` prop during submission
+
+## Creating a Page Contracts File
+
+```ts
+import { z } from 'zod';
+
+// Define the full entity schema
+export const entitySchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(1, 'Name is required'),
+  status: z.enum(['active', 'inactive']),
+  createdAt: z.string(),
+});
+
+export type Entity = z.infer<typeof entitySchema>;
+
+// Define input schemas (omit server-generated fields)
+export const createEntitySchema = entitySchema.omit({
+  id: true,
+  createdAt: true,
+});
+
+export type CreateEntityInput = z.infer<typeof createEntitySchema>;
+```
+
+## Creating a Page Route Module
+
+```tsx
+// src/pages/<name>/route.tsx
+import { requirePermission } from '@/core/rbac/guards.ts';
+import { MyPage } from './MyPage.tsx';
+
+// Loader runs before component renders — handles RBAC + data fetching
+export function loader() {
+  requirePermission('entities.read');
+  return null;
+}
+
+// Component is the page — lazy loaded by React Router
+export function Component() {
+  return <MyPage />;
+}
+```
+
+## Animation Patterns
+
+Use the animation kit from `@/lib/animations/`:
+
+```tsx
+import { AnimatedSection, StaggerList, StaggerItem } from '@/lib/animations/index.ts';
+import { hoverLift } from '@/lib/animations/interactions.ts';
+
+// Scroll-triggered section
+<AnimatedSection>
+  <Card>...</Card>
+</AnimatedSection>
+
+// Staggered list
+<StaggerList className="grid gap-4 sm:grid-cols-3">
+  {items.map(item => (
+    <StaggerItem key={item.id}>
+      <motion.div {...hoverLift}>
+        <Card>...</Card>
+      </motion.div>
+    </StaggerItem>
+  ))}
+</StaggerList>
+
+// Auto-animate for dynamic lists
+const [animateRef] = useAutoAnimate();
+<tbody ref={animateRef}>
+  {filteredItems.map(item => <tr key={item.id}>...</tr>)}
+</tbody>
+```
+
+All animation components automatically respect `prefers-reduced-motion`.
+
+## React Performance (Vite SPA)
+
+This project uses **React 18 + Vite + React Router** (not Next.js). Apply these patterns in `src/**/*.tsx`:
+
+- **Code splitting:** Routes are lazy-loaded via `route.tsx` and `routeTree.tsx`; use `React.lazy` for heavy page-specific UI when needed.
+- **Server state:** Use TanStack Query hooks in `pages/<name>/hooks/` — not `useEffect` + manual fetch.
+- **RBAC pre-checks:** Use route `loader` with `requirePermission` before the page renders (see route module pattern above).
+- **Local state:** Keep UI state local; use react-hook-form for forms; Zustand only for theme/UI (see `project-conventions.mdc`).
+- **Derived state:** Prefer computing values during render over duplicating state in `useEffect`.
+- **Memoization:** Default to no `memo` / `useMemo` / `useCallback` unless profiling shows a benefit.
+- **Loading / error / empty:** Handle `isPending`, `isError`, and empty data in page components — never leave ambiguous blank screens.
+- **Bundle size:** Import shadcn primitives from `@/shared/components/ui/`; avoid barrel re-exports in pages; do not add dependencies without justification (see `engineering-principles.mdc`).

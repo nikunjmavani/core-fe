@@ -1,0 +1,43 @@
+name: Preview Deploy
+
+on:
+  pull_request:
+    branches: [main, dev, qa]
+
+concurrency:
+  group: preview-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: Build & Deploy Preview
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      # Upload build artifact for preview
+      - uses: actions/upload-artifact@v4
+        with:
+          name: preview-build-${{ github.event.pull_request.number }}
+          path: dist/
+          retention-days: 7
+
+      # Comment on PR with preview info
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: preview
+          message: |
+            ## Preview Build Ready
+
+            Build artifact uploaded for PR #${{ github.event.pull_request.number }}.
+
+            **Commit:** ${{ github.event.pull_request.head.sha }}

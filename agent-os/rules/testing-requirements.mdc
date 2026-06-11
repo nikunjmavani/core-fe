@@ -1,0 +1,68 @@
+---
+description: Auto-generate colocated tests when new source files are created; no user input required
+globs: src/**/*.{ts,tsx}
+alwaysApply: true
+---
+
+# Testing Requirements
+
+**Automatic test generation:** When creating or modifying source files under `src/`, always create or update the corresponding colocated test file(s) **without waiting for the user to ask**. Use the test-generation skill (`agent-os/skills/test-generation/SKILL.md`) for templates. The code-structure skill (`agent-os/skills/code-structure/SKILL.md`) also requires tests to be added as part of any requirement implementation.
+
+When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if a colocated test file exists. If not, create one using the test-generation skill.
+
+## Rules
+
+1. Every component (`*.tsx`) in `src/shared/components/`, `src/shared/forms/`, `src/shared/layouts/` MUST have a colocated `*.test.tsx` file
+2. Every component/hook/form under **`src/pages/**` route islands** MUST have a test under that island’s **`__tests__/unit/`** mirroring `components/`, `hooks/`, `forms/` (see `route-island` skill). Main page: `__tests__/unit/page.test.tsx`
+3. Every service/utility (`*.ts`) in `src/core/`, `src/lib/`, `src/stores/` MUST have a colocated `*.test.ts` file
+4. Every TanStack Query hook in **shared/core** MUST have colocated `*.test.ts`; in **pages** islands use `__tests__/unit/hooks/`
+5. Component tests MUST include `vitest-axe` accessibility assertions (`toHaveNoViolations()`)
+6. **Colocated** (same directory as source): `shared/`, `core/`, `lib/`, `stores/`. **Not** beside sources in `pages/` islands — use `__tests__/unit/`
+6. All components MUST have `data-testid` attributes following the naming convention below
+7. Coverage thresholds: 80% branches, functions, lines, statements (enforced in `vitest.config.ts`)
+8. Vitest includes `src/**/__tests__/**/*.{test,spec}.{ts,tsx}` (see `vitest.config.ts`)
+
+## data-testid Convention
+
+| Element        | Pattern          | Example                        |
+| -------------- | ---------------- | ------------------------------ |
+| Page container | `<name>-page`    | `data-testid="dashboard-page"` |
+| Form           | `<name>-form`    | `data-testid="login-form"`     |
+| Form input     | `<form>-<field>` | `data-testid="login-email"`    |
+| Submit button  | `<form>-submit`  | `data-testid="login-submit"`   |
+| Error message  | `form-error`     | `data-testid="form-error"`     |
+
+## Naming Convention
+
+| Source File        | Test File (shared/core/lib/stores) | Test file (pages island) |
+| ------------------ | ---------------------------------- | -------------------------- |
+| `Button.tsx`       | `Button.test.tsx` (colocated)      | `__tests__/unit/components/Button.test.tsx` |
+| `useThemeStore.ts` | `useThemeStore.test.ts`            | `__tests__/unit/hooks/useFoo.test.ts` |
+| `DashboardPage.tsx`| —                                  | `__tests__/unit/page.test.tsx` |
+
+## Exceptions (no test required)
+
+- Type definition files (`types.ts`, `contracts.ts`)
+- Re-export barrel files (`index.ts`)
+- Route marker files (`route.tsx`, `page.ts`)
+- Configuration files (`constants.ts`)
+- CSS files
+- Branded type definition files (e.g., `branded.ts`)
+
+## Test Infrastructure
+
+| Tool                        | Purpose                                              |
+| --------------------------- | ---------------------------------------------------- |
+| Vitest                      | Unit test runner (globals enabled)                   |
+| React Testing Library       | Component rendering + queries                        |
+| vitest-axe                  | Accessibility assertions (auto-extended in setup)    |
+| @testing-library/user-event | Realistic user interactions                          |
+| @axe-core/playwright        | E2E accessibility scanning                           |
+| Playwright                  | E2E browser tests (Chromium, Firefox, Mobile Safari) |
+| Stryker                     | Mutation testing (CI-only, weekly)                   |
+
+## Auto-Trigger (No User Input Required)
+
+- When creating a **new** source file under `src/`, **immediately** generate the corresponding test file using the test-generation skill (`agent-os/skills/test-generation/SKILL.md`). Do not ask the user whether to add tests.
+- When implementing any requirement (new page, component, hook, service), add or update tests as part of the same change set. See `agent-os/skills/code-structure/SKILL.md` for the full implementation checklist.
+- Tests are mandatory for all non-exception files; generating them is part of the implementation, not an optional follow-up.

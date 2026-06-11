@@ -1,0 +1,113 @@
+---
+description: Patterns for API calls, data fetching, and server state management in core-fe
+globs: src/pages/**/*.ts,src/core/http/**/*.ts
+alwaysApply: false
+---
+
+# API & Data Patterns
+
+## HTTP Client
+
+Use `apiClient` from `@/core/http/fetch-client.ts` for ALL API calls:
+
+```ts
+import { apiClient } from '@/core/http/fetch-client.ts';
+
+export const usersApi = {
+  list: () => apiClient.get<User[]>('/api/users').then(r => r.data),
+  getById: (id: string) => apiClient.get<User>(`/api/users/${id}`).then(r => r.data),
+  create: (data: CreateUserInput) => apiClient.post<User>('/api/users', data).then(r => r.data),
+  update: (id: string, data: Partial<User>) => apiClient.patch<User>(`/api/users/${id}`, data).then(r => r.data),
+  delete: (id: string) => apiClient.delete(`/api/users/${id}`),
+};
+```
+
+**Exception:** Auth service (`core/auth/service.ts`) and auth API (`pages/auth/api.ts`) use raw `fetch` to avoid interceptor recursion.
+
+## TanStack Query Hooks
+
+Create query hooks in `pages/<name>/hooks/`:
+
+```ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { usersApi } from '../api.ts';
+
+const QUERY_KEYS = {
+  all: ['users'] as const,
+  list: () => [...QUERY_KEYS.all, 'list'] as const,
+  detail: (id: string) => [...QUERY_KEYS.all, 'detail', id] as const,
+};
+
+export function useUsers() {
+  return useQuery({
+    queryKey: QUERY_KEYS.list(),
+    queryFn: usersApi.list,
+  });
+}
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: usersApi.create,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.all });
+    },
+  });
+}
+```
+
+## Data Flow
+
+```
+Component (useUsers hook)
+    → TanStack Query (cache, dedup, retry)
+        → apiClient (Axios instance)
+            → Request interceptor (Bearer + X-Tenant-ID)
+            → axios-retry (backoff for 429/5xx)
+            → Vite proxy (/api → backend)
+            → Response interceptor (401 refresh + replay)
+        → TanStack Query (cache update)
+    → Component (re-render with data)
+```
+
+## Error Handling
+
+- **401 errors**: Handled exclusively by Axios response interceptor (refresh + replay)
+- **Network/5xx errors**: Retried by axios-retry (exponential backoff, max 3)
+- **Validation errors**: Returned in response body, handled by mutation onError
+- **Query errors**: Logged by QueryCache.onError (non-401 only)
+
+Never catch 401 in components — the interceptor handles it.
+
+## Zod Validation
+
+Always validate API responses with Zod when data integrity is critical:
+
+```ts
+import { z } from 'zod';
+
+const userSchema = z.object({ ... });
+
+export async function getUser(id: string) {
+  const data = await apiClient.get(`/api/users/${id}`).then(r => r.data);
+  return userSchema.parse(data); // Throws if shape is wrong
+}
+```
+
+## Query Configuration
+
+Default settings (in `queryClient.ts`):
+- `staleTime`: 5 minutes
+- `retry`: 2 attempts (skips 401)
+- `refetchOnWindowFocus`: false
+- Mutations: no retry
+
+## Security and Validation (Client)
+
+Client-side checks improve UX but **do not replace server validation** — never trust data because it passed the browser.
+
+- **Input:** Define Zod schemas in `contracts.ts`; validate forms with react-hook-form + zodResolver before mutations.
+- **Responses:** Use `schema.parse()` on critical API responses when data integrity matters (see Zod Validation above).
+- **Authorization:** Enforce RBAC in route loaders via `requirePermission` (see `component-patterns.mdc` route module pattern) — do not rely on hiding UI alone.
+- **Secrets:** Never put API keys or secrets in `VITE_*` env vars (they are bundled). Access tokens stay in memory only; never use localStorage/sessionStorage for tokens (see `project-conventions.mdc` Auth & Security).
+- **XSS:** Avoid `dangerouslySetInnerHTML`; if unavoidable, sanitize content first. Follow OWASP-minded defaults for user-generated content.

@@ -1,0 +1,36 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: core-fe
+  title: Core Frontend
+  description: Enterprise multi-tenant admin dashboard (React + TypeScript + Vite)
+  annotations:
+    github.com/project-slug: core/core-fe
+    backstage.io/techdocs-ref: dir:.
+    backstage.io/source-location: url:https://github.com/core/core-fe
+    sentry.io/project-slug: core-fe
+    lighthouse.com/website-url: https://app.example.com
+  tags:
+    - react
+    - typescript
+    - vite
+    - tailwindcss
+    - enterprise
+  links:
+    - url: https://app.example.com
+      title: Production
+      icon: web
+    - url: https://staging.app.example.com
+      title: Staging
+      icon: web
+    - url: https://github.com/core/core-fe/actions
+      title: CI/CD
+      icon: github
+spec:
+  type: website
+  lifecycle: production
+  owner: team-frontend
+  system: core-platform
+  dependsOn:
+    - component:core-api
+  providesApis: []

@@ -1,0 +1,15 @@
+import type { PageManifest } from '@/lib/route-island/page-manifest.ts';
+
+/**
+ * Reset password — leaf island (`/reset-password`).
+ * Public page reached from the password-reset email link; reads the `token`
+ * query param and updates the user's password.
+ */
+export const page = {
+  segment: 'reset-password',
+  path: '/reset-password',
+  testId: 'reset-password-page',
+  permission: null,
+  kind: 'leaf',
+  children: [],
+} as const satisfies PageManifest;

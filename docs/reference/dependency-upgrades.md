@@ -1,0 +1,41 @@
+# Dependency upgrades and audits
+
+Use this as the **operational checklist** when triaging versions and security reports.
+
+## Commands
+
+| Command           | Purpose                                                                                                                 |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `pnpm deps:check` | Lists outdated direct dependencies (`pnpm outdated`). Exit code `1` when anything is outdated — expected during triage. |
+| `pnpm deps:audit` | Reports known vulnerabilities (`pnpm audit --audit-level=high`).                                                        |
+| `pnpm validate`   | Run after bumping packages: lint, type-check, unit tests.                                                               |
+
+## Dependabot
+
+Weekly npm updates are configured in [`.github/dependabot.yml`](../../.github/dependabot.yml) (grouped devDependency patches/minors). **Prefer merging Dependabot PRs** over ad-hoc bumps, then run `pnpm validate` on the branch.
+
+## Node.js (runtime)
+
+- **`package.json` → `engines.node`:** `>=24` — **Active LTS** only (currently the **24.x** line). Do not target odd/current non-LTS releases for CI or deploy defaults.
+- **`.nvmrc` / `.node-version`:** major `24` — use `nvm install` / your version manager so local patch versions stay on that LTS line.
+
+## pnpm overrides (transitive CVEs)
+
+[`package.json`](../../package.json) defines `pnpm.overrides` to force patched versions where upstream has not yet bumped:
+
+| Override               | Why                                                                                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `protobufjs` **7.5.6** | `posthog-js` → OpenTelemetry OTLP stack previously pulled **7.5.5** (multiple high advisories).                                                         |
+| `basic-ftp` **5.3.1**  | `@size-limit/preset-app` → puppeteer → `get-uri` pulled older `basic-ftp` (path traversal / DoS advisories).                                            |
+| `minimatch` **10.2.5** | `eslint-plugin-sonarjs` v3 pulled vulnerable `minimatch@10.1.x` (ReDoS). **v4** of the plugin is now direct; override keeps the tree on a patched line. |
+
+Revisit these when Dependabot or direct dependency upgrades remove the need.
+
+## Pins and known constraints
+
+- **`@tanstack/react-router`** is pinned to the **1.160.x** line (`~1.160.0` in [`package.json`](../../package.json)). Newer **1.169+** minors caused unhandled navigation rejections and maximum update depth in guard tests; revisit in a dedicated spike before widening the range.
+- **React 19**, **Vite 8**, **ESLint 10**, **lucide-react 1.x**, and similar **majors** are intentionally **not** part of routine bumps — schedule separately with full `pnpm validate` and E2E. **`netlify-cli`** is kept current on the **v26** line (dev-only CLI).
+
+## Audit noise
+
+`pnpm audit --audit-level=high` should report **no high/critical** after overrides; **moderate** issues may remain in dev-only trees. Treat **production `dependencies`** first; document accepted risk for dev-only transitives if no patched upgrade exists yet.

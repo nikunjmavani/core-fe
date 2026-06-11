@@ -1,0 +1,102 @@
+---
+description: Tailwind CSS v4 styling conventions and design token usage for core-fe
+globs: src/**/*.{tsx,css}
+alwaysApply: false
+---
+
+# Tailwind CSS v4 Styling Guide
+
+## Configuration
+
+This project uses **Tailwind CSS v4** with CSS-first configuration. There is NO `tailwind.config.ts` file.
+
+- All design tokens are defined in `src/index.css` via the `@theme` directive
+- The Vite plugin `@tailwindcss/vite` handles processing
+- Colors use the **OKLCH** color space for perceptual uniformity
+
+## Design Tokens
+
+Use these semantic color tokens (not raw colors):
+
+| Token                    | Usage                                |
+| ------------------------ | ------------------------------------ |
+| `bg-background`          | Page background                      |
+| `text-foreground`        | Primary text                         |
+| `bg-card` / `text-card-foreground` | Card surfaces              |
+| `bg-primary` / `text-primary-foreground` | Primary buttons, links |
+| `bg-secondary`           | Secondary buttons, subtle backgrounds|
+| `bg-destructive`         | Delete buttons, error states         |
+| `bg-muted` / `text-muted-foreground` | Disabled, subtle text     |
+| `bg-accent`              | Hover states, highlights             |
+| `border-border`          | Default borders                      |
+| `ring-ring`              | Focus rings                          |
+| `bg-sidebar`             | Sidebar background                   |
+
+## Dark Mode
+
+- Dark mode is toggled via `.dark` class on `<html>`
+- Managed by `useThemeStore` (persisted to localStorage)
+- Dark overrides are defined in `src/index.css` under `.dark { ... }`
+- **Never use** `dark:` variant in component code — the CSS variables handle it automatically
+
+## Class Merging
+
+Always use `cn()` from `@/lib/utils.ts` to merge Tailwind classes:
+
+```tsx
+import { cn } from '@/lib/utils.ts';
+
+<div className={cn('base-classes', isActive && 'active-classes', className)} />
+```
+
+This correctly handles Tailwind class conflicts (e.g., `p-2` vs `p-4`).
+
+## Responsive Design
+
+Use Tailwind's mobile-first breakpoints:
+
+```tsx
+<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+```
+
+Standard breakpoints: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px).
+
+## Typography
+
+- Font family: Inter (sans), JetBrains Mono (mono) — defined in `@theme`
+- Use Tailwind's `text-*` utilities for sizing
+- Heading pattern: `text-3xl font-bold tracking-tight text-foreground`
+- Body pattern: `text-sm text-muted-foreground`
+
+## Spacing Conventions
+
+- Page padding: `p-6`
+- Section gaps: `space-y-6` or `space-y-8`
+- Card internal padding: handled by shadcn Card components
+- Grid gaps: `gap-4` (standard), `gap-6` (sections)
+
+## Component Styling with CVA
+
+Use `class-variance-authority` for components with variants:
+
+```tsx
+const variants = cva('base', {
+  variants: {
+    variant: { default: '...', destructive: '...' },
+    size: { sm: '...', default: '...', lg: '...' },
+  },
+  defaultVariants: { variant: 'default', size: 'default' },
+});
+```
+
+## shadcn/ui Components
+
+All shadcn/ui primitives live in `src/shared/components/ui/`. When adding new components via the shadcn CLI, they will be placed there automatically (configured in `components.json`).
+
+## Forbidden Patterns
+
+- Never use inline `style={}` attributes
+- Never use `@apply` in component files (only in `index.css` base layer)
+- Never use `dark:` variant in components — rely on CSS variable overrides
+- Never hardcode colors — always use design tokens
+- Never use `!important`

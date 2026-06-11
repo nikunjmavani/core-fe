@@ -1,0 +1,348 @@
+---
+description: Canonical file structure — page/resource shapes, naming, folder-per-unit, URL-driven CRUD, sub-pages, redirects, state, tests, imports
+globs:
+alwaysApply: true
+---
+
+# File Structure Convention
+
+Canonical layout for everything under `src/`. Read before adding any file. The route-island skill ([`agent-os/skills/route-island/SKILL.md`](../skills/route-island/SKILL.md)) implements these rules step-by-step; this is the contract.
+
+## Top-Level Layout
+
+```
+tests/                                  At project root: e2e/, load/, factories/, utils/
+src/
+├── app/                                Application shell: route tree, guards, providers, error boundaries
+├── core/                               Framework-agnostic services
+├── pages/                              Page-first feature directories (each = a frontend route)
+├── shared/                             Cross-page reusables: components, forms, hooks, layouts, store
+├── lib/                                Pure utilities (no side effects)
+├── App.tsx
+├── main.tsx
+└── index.css
+```
+
+**`src/core/`** is the irreducible platform kernel — only framework-agnostic, app-state-free services: `http/`, `rbac/`, `config/`, `data-provider/`, `resources/`, `types/`, `version/`. **Anything app-shell-y, React-Provider-y, or app-state-dependent lives outside `core/`:**
+- App-shell bootstrap (Sentry init, web-vitals, PostHog setup) → **`src/app/`** (`app/analytics/`, `app/observability/`)
+- Runtime infrastructure used by every layer (auth token + service, errors handling) → **`src/shared/`** (`shared/auth/`, `shared/errors/`)
+- Zustand client state → **`src/shared/store/<X>Store/`** (folder-per-unit) — all 5 stores including `useAuthStore` and `useTenantStore`
+- Cross-page API helpers → **`src/shared/api/`** (`organization-*`, `my-orgs`, `tenancy-service`)
+
+## Naming — three categories
+
+### 1. Role files — page-prefixed, lowercase-dotted
+
+One per page. The prefix makes them globally unique → AI agents, grep, and IDE quick-open all resolve without ambiguity.
+
+| File | Required? | Purpose |
+|------|-----------|---------|
+| `<page>.route.tsx` | ✓ | Lazy boundary (`Component`, `loader`, `ErrorBoundary`) |
+| `<page>.page.ts` | ✓ | Manifest: `path`, `testId`, `permission`, `kind`, `children` |
+| `<page>.contracts.ts` | optional | Zod schemas + inferred TS types |
+| `<page>.api.ts` | optional | Fetcher functions for this page |
+| `<page>.search.ts` | optional | URL search-param schema (TanStack Router `validateSearch`) |
+| `<page>.fixtures.ts` | optional | Mock generators (marked `REPLACE_WITH_API`) |
+| `<page>.constants.ts` | optional | Page-scoped constants |
+| `<page>.resource.ts` | resource pages only | Resource manifest (endpoint, schema, permissions) |
+
+### 2. Identity files — generic, uppercase
+
+| File | Purpose |
+|------|---------|
+| `OVERVIEW.md` | AI/human entry doc — first file an agent reads on this island |
+
+### 3. UI files — PascalCase
+
+| File | When |
+|------|------|
+| `<Page>Page.tsx` | Top-level UI; manifest `kind: 'leaf'` |
+| `<Page>Layout.tsx` | Top-level UI; manifest `kind: 'layout'` (mounts `<Outlet />`) |
+| Sub-units in `components/`, `forms/`, `hooks/`, `dialogs/`, `store/` | See "Folder-per-unit" below |
+
+## Folder-per-unit (components, forms, hooks, dialogs, store)
+
+Every component / form / hook / dialog / store lives in its own folder with three files:
+
+```
+<Name>/
+├── <Name>.tsx              source (or .ts for hooks/store)
+├── <Name>.test.tsx         test (or .ts)
+└── index.ts                export { <Name> } from './<Name>.tsx';
+```
+
+Apply to:
+- `components/<Name>/`
+- `forms/<Name>Form/`
+- `hooks/use<Name>/`
+- `dialogs/<Name>Dialog/`
+- `store/use<X>Store/`
+
+**Sub-unit names are not page-prefixed** — the path already provides context:
+- ✓ `pages/dashboard/components/ActivityFeed/`
+- ✗ `pages/dashboard/components/DashboardActivityFeed/`
+
+**Exception — shadcn primitives stay flat.** `src/shared/components/ui/` keeps the shadcn convention (`button.tsx`, `card.tsx`, etc.) — no folder-per-unit. Other shared components follow folder-per-unit.
+
+## Page Naming (directory)
+
+| Pattern | Use for | Example |
+|---------|---------|---------|
+| **Plural noun** | Collection / list view | `pages/organizations/` → `/organizations` |
+| **Singular noun** | Single resource (current context) | `pages/organization/` → `/organization` (user's current org) |
+| **kebab-case verb-noun** | Action / workflow | `pages/create-organization/` → `/create-organization` |
+| **kebab-case noun** | Multi-word concept | `pages/accept-invite/` → `/accept-invite` |
+
+Page directory names are **lowercase kebab-case**. Sub-pages under a layout follow the same rules (`organization/sub-pages/api-keys/`, etc.).
+
+## Two page shapes — custom and resource
+
+### Custom page
+
+For pages that aren't a backend resource (dashboard, settings, auth, onboarding, accept-invite):
+
+```
+src/pages/<page>/
+├── OVERVIEW.md
+├── <page>.route.tsx
+├── <page>.page.ts
+├── <Page>Page.tsx | <Page>Layout.tsx
+├── <page>.contracts.ts                    if has data shapes
+├── <page>.api.ts                          if talks to backend
+├── <page>.search.ts                       if has URL search params
+├── <page>.fixtures.ts                     if mocked
+├── <page>.constants.ts                    optional
+├── store/                                 RARE — only when page-local UI state exists
+│   └── use<X>Store/{use<X>Store.ts, use<X>Store.test.ts, index.ts}
+├── components/<Name>/{...}                page-specific sub-widgets
+├── forms/<Name>Form/{...}                 page-specific forms
+├── hooks/use<Name>/{...}                  page-specific hooks (TanStack Query, etc.)
+├── __tests__/integration/                 cross-component flows in this island
+└── sub-pages/<child>/                     nested route, full recursive copy
+```
+
+### Resource page
+
+For pages that map to a backend resource (organizations, members, roles, invitations, api-keys, billing):
+
+```
+src/pages/<resource>/
+├── OVERVIEW.md
+├── <resource>.route.tsx                   parent route — renders the list
+├── <resource>.page.ts                     kind: 'layout', children: ['create', '$id', '$id-edit']
+├── <resource>.resource.ts                 resource manifest (endpoint, schema, permissions)
+├── <resource>.contracts.ts                Zod — shared across all CRUD views
+├── <resource>.api.ts                      optional; most resources use shared CRUD hooks
+├── <Resource>ListPage.tsx                 top-level UI — the list
+├── components/<Name>/{...}                list widgets (Table, Filters, EmptyState)
+├── forms/<Name>Form/{...}                 reusable forms consumed by dialogs
+├── dialogs/<Name>Dialog/{...}             URL-driven action dialogs
+├── hooks/use<Name>/{...}                  resource-specific hooks (most use shared CRUD)
+└── sub-pages/                             URL-driven dialog placeholders (each renders null)
+    ├── create/                            → /<resource>/create
+    ├── $id/                               → /<resource>/[id]      (show)
+    └── $id-edit/                          → /<resource>/[id]/edit (edit)
+```
+
+Resource pages use `<Resource>ListPage.tsx` (PascalCase, page-prefixed) as the top-level UI. The list page mounts the action dialogs and reads URL to open them.
+
+## CRUD UX convention — URL-driven dialogs
+
+For resource pages, the standard mapping:
+
+| Action | URL | Renders | Why URL? |
+|--------|-----|---------|----------|
+| **List** | `/<resource>` | Page | Destination; must be shareable |
+| **Create** | `/<resource>/create` | Dialog over list | Refresh-safe, deep-linkable |
+| **Show** | `/<resource>/[id]` | Page or dialog over list | Shareable detail link |
+| **Edit** | `/<resource>/[id]/edit` | Dialog over list | Refresh-safe, deep-linkable; `[id]` loads the row |
+| **Delete** | *(no URL)* | Inline `AlertDialog` confirm | Transient one-click destructive action |
+| **Quick toggles** | *(no URL)* | Inline button / dropdown | Transient |
+
+On disk, `[id]` is the folder `$id` (TanStack Router convention).
+
+**Implementation pattern.** Parent `<Resource>ListPage.tsx` reads `useRouterState({ select: s => s.location.pathname })`, computes which dialog (if any) the URL implies, and renders it open. The list stays mounted behind the dialog backdrop.
+
+**Forward compatibility — promoting dialog → full page.** When a Create/Edit dialog outgrows the modal (multi-step wizard, >15 fields, file uploads, shareable drafts):
+1. URL stays the same (`/<resource>/create` or `/<resource>/[id]/edit`)
+2. Replace the dialog mount in the list page with the sub-page's `route.tsx` rendering a full `<X>Page.tsx`
+3. No URL break, no bookmark break
+
+## Index redirects
+
+When a layout has children, its index route (`/`) **redirects to the default child** via `beforeLoad`:
+
+```ts
+const indexRoute = createRoute({
+  getParentRoute: () => parentRoute,
+  path: '/',
+  beforeLoad: () => { throw redirect({ to: '/parent/default-child' }); },
+  component: () => null,
+});
+```
+
+Established cases:
+- `/settings` → `/settings/profile`
+- `/settings/organization` → `/settings/organization/general`
+- Future resource pages with multiple sub-pages
+
+## Nested routes (`sub-pages/`)
+
+When a page is `kind: 'layout'`, child routes live in `sub-pages/<child>/` as a full recursive copy of the same shape:
+
+```
+pages/organization/                       → /organization
+├── organization.route.tsx
+├── organization.page.ts                  kind: 'layout', children: [...]
+├── OrganizationLayout.tsx
+├── components/...
+└── sub-pages/
+    ├── general/
+    │   ├── general.route.tsx
+    │   ├── general.page.ts
+    │   ├── GeneralPage.tsx
+    │   ├── components/...
+    │   └── ...                           full island shape, recursively
+    └── ...
+```
+
+## Dialog vs full page — decision tree
+
+When a sub-path exists under a page:
+
+1. **Does it need a URL?**
+   - YES → either URL-driven dialog (sub-page renders null, parent shows dialog) or full page (sub-page renders Page UI)
+   - NO → local state (`useState` in parent's component)
+2. **Page or dialog?**
+   - **Page** when: complex, table-heavy, multi-step, mobile real estate matters, deep-link to detail context
+   - **Dialog** when: form fits in modal, action stays in list context, transient
+3. **Rule.** Everything between two `<page>.route.tsx` files belongs to the parent route's component.
+
+## Component Promotion
+
+Components start **colocated** with their page directory.
+
+**Move to `shared/components/<Name>/` when:**
+- Used by **2+ different page groups**
+- Example: `StatusBadge` used in `pages/users/` AND `pages/organizations/` → move to `src/shared/components/StatusBadge/`
+
+**Never move to `shared/` when:**
+- Only one page uses it (even if it looks "generic")
+- It contains page-specific business logic
+
+Promotion: copy to `shared/components/<Name>/`, update imports project-wide, delete the original.
+
+## Shared Layer
+
+```
+src/shared/
+├── components/
+│   ├── ui/                                 shadcn primitives — FLAT (button.tsx, card.tsx, ...)
+│   ├── <Name>/{...}                        cross-page components — folder-per-unit
+│   └── ...
+├── forms/<Name>/{...}                      cross-page forms
+├── hooks/
+│   ├── use<X>/                             cross-page custom hooks
+│   ├── useList/, useOne/                   standard CRUD hooks (Refine-style)
+│   ├── useCreate/, useUpdate/, useDelete/
+├── layouts/<Name>/{...}                    RootLayout, DashboardLayout, AuthLayout
+└── store/                                  GLOBAL Zustand stores
+    ├── useThemeStore/{...}
+    ├── useUIStore/{...}
+    └── useOnboardingStore/{...}
+```
+
+## Core Layer
+
+Framework-agnostic services, one subfolder per domain:
+
+```
+src/core/
+├── auth/                                   store, service, token, guards
+├── http/                                   apiClient (axios), retry, queryClient
+├── rbac/                                   policies + guards (requirePermission)
+├── tenancy/                                current tenant + permissions
+├── data-provider/                          CRUD abstraction (REST adapter, mock adapter)
+├── resources/                              resource registry (central manifest)
+├── analytics/                              PostHog
+├── observability/                          Sentry, web vitals
+├── config/                                 env schema, constants
+├── errors/                                 AppError, HttpError, errorHandler
+├── version/                                new-deployment detection
+└── types/                                  branded types
+```
+
+## State Management
+
+| Scope | Library | Location |
+|-------|---------|----------|
+| Server state | TanStack Query | `pages/<page>/hooks/use<X>/` or `shared/hooks/use{List,One,Create,Update,Delete}/` |
+| Global client state | Zustand | `src/shared/store/use<X>Store/` (incl. `useTenantStore` — current tenant) |
+| Page-local client state | Zustand | `src/pages/<page>/store/use<X>Store/` *(rare)* |
+| Component-local | `useState` / `useReducer` | Inline; extract reducer to `<Component>.reducer.ts` when complex |
+| Form state | react-hook-form + Zod | Inside the form component |
+| URL state | TanStack Router | `<page>.search.ts` (validateSearch schema) |
+
+**All Zustand stores live in `src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useTenantStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`. There is no `core/<feature>/store.ts` pattern.
+
+Cross-page API helpers (functions reused by both `pages/` and `shared/components/`) live in **`src/shared/api/`** (e.g., `shared/api/organization-api.ts`, `shared/api/tenancy-service.ts`).
+
+Auth infrastructure (token storage, refresh timer, idle timeout, login/logout service, mocks) lives in **`src/shared/auth/`** — not in core, because the HTTP client, error handler, shared components, and pages all need it.
+
+**Rules:**
+1. **Server state never goes in Zustand.** TanStack Query owns it.
+2. **Page-local stores are an escape hatch** — try `useState` → `useReducer` → URL search params → shared store FIRST.
+3. **Reducers live next to the component** that uses them. No `reducers/` directory.
+
+## Tests
+
+| Type | Location |
+|------|----------|
+| Unit (component, hook, form, util, store) | Colocated `<Name>.test.{ts,tsx}` next to source |
+| Page integration (cross-component flow in this island) | `pages/<page>/__tests__/integration/` |
+| E2E (full browser, cross-page) | `tests/e2e/` at project root (Playwright) |
+| Load | `tests/load/` (k6) |
+
+**No test file required for:**
+- `<page>.route.tsx` (thin wrapper)
+- `<page>.page.ts` (declarative manifest)
+- `<page>.contracts.ts` (Zod — type-checked at compile, exercised where used)
+- `OVERVIEW.md`, `index.ts` (barrel re-exports)
+
+## Import Rules
+
+- Always use `@/` alias for imports from `src/`
+- Always include `.ts`/`.tsx` extensions: `import { Button } from '@/shared/components/Button/index.ts'`
+- Type-only imports: `import type { Org } from './<resource>.contracts.ts'`
+
+**Dependency direction (one-way, with one documented exception):**
+
+```
+shared/components/ui ─── may import other ui primitives + lib
+lib                  ─── may import from lib, core/types only
+core                 ─── may import from lib, core/types (+ runtime trio, see below)
+shared               ─── may import from core, lib, types
+pages                ─── may import from shared, core, lib, types
+app                  ─── may import from everything
+```
+
+**Runtime-trio exception (the only one):** the core kernel (`core/http`, `core/rbac`) may
+import `shared/auth/`, `shared/errors/`, `useAuthStore`, and `useTenantStore`. Token
+handling, error reporting, and permission checks are runtime services the kernel provides,
+but that infrastructure is app-state- and SDK-dependent (Zustand, `@sentry/react`) so it
+lives in `shared` (see Top-Level Layout). Core must never import any other `shared`
+module. Enforced precisely by `no-restricted-imports` in `eslint.config.mjs`.
+
+**Never:**
+- Page imports another page (`pages/A/` ↛ `pages/B/`)
+- Shared imports from pages
+- Core imports from pages, app, or any shared module outside the runtime trio
+- UI primitives (`shared/components/ui/`) import anything internal except other ui primitives and `lib`
+
+## Related skills
+
+- [`agent-os/skills/route-island/SKILL.md`](../skills/route-island/SKILL.md) — full route-island scaffolding
+- [`agent-os/skills/code-structure/SKILL.md`](../skills/code-structure/SKILL.md) — placement decisions
+- [`agent-os/skills/page-scaffolding/SKILL.md`](../skills/page-scaffolding/SKILL.md) — creating new pages
+- [`agent-os/skills/component-promotion/SKILL.md`](../skills/component-promotion/SKILL.md) — moving to shared
+- [`agent-os/skills/test-generation/SKILL.md`](../skills/test-generation/SKILL.md) — adding tests

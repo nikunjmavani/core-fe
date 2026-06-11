@@ -1,0 +1,5 @@
+# Required env var names (one per line). .env.example must document all of these.
+# Set values in GitHub Actions secrets (Settings → Secrets and variables → Actions).
+# When adding a new required var: add here, add to .env.example, set in GitHub.
+VITE_API_BASE_URL
+NODE_VERSION

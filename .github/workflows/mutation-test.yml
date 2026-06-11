@@ -1,0 +1,33 @@
+name: Mutation Test (Stryker)
+
+on:
+  schedule:
+    - cron: '0 4 * * 0' # Every Sunday at 4am UTC
+  workflow_dispatch:
+
+jobs:
+  mutation:
+    name: Stryker Mutation Testing
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Install Stryker (not a regular dev dep — too heavy)
+      - run: pnpm add -D @stryker-mutator/core @stryker-mutator/vitest-runner
+
+      # Run mutation tests
+      - run: npx stryker run
+
+      # Upload report
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: stryker-report
+          path: reports/mutation/
+          retention-days: 30

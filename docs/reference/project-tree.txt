@@ -1,0 +1,576 @@
+# core-fe — Project File Tree
+Generated: auto (python3 scripts/reports/generate-project-tree.py)
+Regenerate: python3 scripts/reports/generate-project-tree.py
+
+> Architecture reference. Live routes: docs/reference/routes-and-ui.md
+> Excluded: node_modules, .git, dist, coverage, .pnpm-store, test-results, __pycache__
+> .cursor/ and .claude/ symlink to agent-os/ (listed once)
+
+================================================================================
+§1  ARCHITECTURE
+================================================================================
+
+Dependency flow:  shared/ ← pages/ ← core/   (+ lib/, app/)
+
+Layer          Purpose
+─────────────  ─────────────────────────────────────────────────────────
+src/app/       Route tree, guards, providers, observability, analytics
+src/core/      HTTP, RBAC, config, data-provider, resources, version
+src/pages/     Route islands (folder-per-unit: Component/, hooks/, forms/)
+src/shared/    UI, auth, api, errors, forms, hooks, layouts, store (Zustand)
+src/lib/       Pure utilities, animations, route-island helpers
+tests/         E2E, load, utils (project root)
+
+Stats: ~222 src files · ~81 tests in src/ · 5 E2E specs · 21 shadcn UI primitives
+
+================================================================================
+§2  FULL DIRECTORY TREE
+================================================================================
+
+core-fe/
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml
+│   │   ├── deploy.yml
+│   │   ├── load-test.yml
+│   │   ├── mutation-test.yml
+│   │   ├── preview.yml
+│   │   └── release.yml
+│   └── dependabot.yml
+├── .husky/
+│   ├── commit-msg
+│   └── pre-commit
+├── .netlify/
+│   └── netlify.toml
+├── .vscode/
+│   ├── extensions.json
+│   └── settings.json
+├── agent-os/
+│   ├── agents/
+│   │   └── README.md
+│   ├── docs/
+│   │   ├── cursor-agent-environments.md
+│   │   ├── cursor-backend-mcp.md
+│   │   └── cursor-mcp-setup.md
+│   ├── hooks/
+│   │   └── README.md
+│   ├── mcp/
+│   │   ├── mcp.example.json
+│   │   └── mcp.json
+│   ├── rules/
+│   │   ├── agent-behavior.mdc
+│   │   ├── api-data-patterns.mdc
+│   │   ├── component-patterns.mdc
+│   │   ├── context7-libraries.mdc
+│   │   ├── engineering-principles.mdc
+│   │   ├── file-structure.mdc
+│   │   ├── project-conventions.mdc
+│   │   ├── skill-router.mdc
+│   │   ├── tailwind-styling.mdc
+│   │   ├── testing-requirements.mdc
+│   │   └── ui-sources.mdc
+│   ├── skills/  (25 skills: auto-implement, shadcn, route-island, …)
+│   └── skills-lock.json
+├── docs/
+│   ├── deployment/
+│   │   ├── cicd-and-netlify.md
+│   │   ├── deployment-and-pre-launch.md
+│   │   ├── netlify-cli-setup.md
+│   │   ├── path-to-production.md
+│   │   └── runbook-dev-to-production.md
+│   ├── getting-started/
+│   │   ├── requirements/
+│   │   │   └── sample-requirement.md
+│   │   ├── requirement-format.md
+│   │   ├── requirement-intake.md
+│   │   ├── route-island-template.md
+│   │   ├── setup-detailed.md
+│   │   └── setup.md
+│   ├── integrations/
+│   │   ├── credentials-and-env.md
+│   │   └── sentry-sourcemaps.md
+│   ├── process/
+│   │   └── git-workflow.md
+│   ├── reference/
+│   │   ├── csrf-mitigation.md
+│   │   ├── dependency-upgrades.md
+│   │   ├── e2e-testids-inventory.md
+│   │   ├── internationalization.md
+│   │   ├── project-tree.txt
+│   │   ├── route-island-structure.md
+│   │   ├── routes-and-ui.md
+│   │   ├── third-party-comparison.md
+│   │   ├── tools-and-usage.md
+│   │   └── ui-components-sourcing.md
+│   └── README.md
+├── plugins/
+│   ├── csp-api-origin.ts
+│   └── version-json.ts
+├── public/
+│   ├── _headers
+│   ├── config.js
+│   ├── manifest.webmanifest
+│   ├── offline.html
+│   ├── pwa-192x192.png
+│   ├── pwa-512x512.png
+│   ├── README.md
+│   ├── robots.txt
+│   ├── theme-init.js
+│   └── vite.svg
+├── reports/
+│   └── code-review/
+│       └── full-code-review-report.md
+├── scripts/
+│   ├── live/
+│   │   ├── config.mjs
+│   │   ├── github.mjs
+│   │   ├── index.mjs
+│   │   ├── netlify.mjs
+│   │   ├── prompts.mjs
+│   │   └── README.md
+│   ├── reports/
+│   │   ├── code-review-report.mjs
+│   │   └── generate-project-tree.py
+│   ├── setup/
+│   │   ├── github-secrets.sh
+│   │   └── netlify.sh
+│   ├── validate/
+│   │   ├── before-commit-guard.sh
+│   │   ├── env-example.sh
+│   │   ├── health-check.sh
+│   │   ├── public-assets.sh
+│   │   └── route-islands.sh
+│   ├── README.md
+│   ├── required-env.txt
+│   └── screenshot-auth-pages.mjs
+├── src/
+│   ├── app/
+│   │   ├── analytics/
+│   │   │   ├── FeatureFlagProvider.tsx
+│   │   │   ├── posthog.ts
+│   │   │   └── [2 test files]
+│   │   ├── guards/
+│   │   │   ├── OVERVIEW.md
+│   │   │   ├── RBACGuard.tsx
+│   │   │   └── [1 test file]
+│   │   ├── observability/
+│   │   │   ├── performance.ts
+│   │   │   ├── sentry.ts
+│   │   │   └── [2 test files]
+│   │   ├── providers/
+│   │   │   ├── AppProviders.tsx
+│   │   │   └── QueryProvider.tsx
+│   │   └── routes/
+│   │       ├── ErrorBoundary.tsx
+│   │       ├── NotFoundPage.tsx
+│   │       ├── routeTree.tsx
+│   │       ├── UnauthorizedPage.tsx
+│   │       └── [1 test file]
+│   ├── core/
+│   │   ├── config/
+│   │   │   ├── constants.ts
+│   │   │   ├── env.ts
+│   │   │   └── [1 test file]
+│   │   ├── data-provider/
+│   │   │   ├── http-data-provider/
+│   │   │   │   ├── http-data-provider.ts
+│   │   │   │   └── index.ts
+│   │   │   ├── mock-data-provider/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── mock-data-provider.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── dataProvider.ts
+│   │   │   └── index.ts
+│   │   ├── http/
+│   │   │   ├── axios-client.ts
+│   │   │   ├── fetch-client.ts
+│   │   │   ├── mock.ts
+│   │   │   ├── queryClient.ts
+│   │   │   └── [3 test files]
+│   │   ├── rbac/
+│   │   │   ├── guards.ts
+│   │   │   ├── policies.ts
+│   │   │   └── [2 test files]
+│   │   ├── resources/
+│   │   │   ├── index.ts
+│   │   │   ├── resource-registry.ts
+│   │   │   ├── types.ts
+│   │   │   └── [1 test file]
+│   │   ├── types/
+│   │   │   ├── branded.ts
+│   │   │   ├── permissions.ts
+│   │   │   └── [2 test files]
+│   │   └── version/
+│   │       ├── check.ts
+│   │       └── [1 test file]
+│   ├── lib/
+│   │   ├── animations/
+│   │   │   ├── AnimatedSection.tsx
+│   │   │   ├── index.ts
+│   │   │   ├── LayoutGroup.tsx
+│   │   │   ├── PageTransition.tsx
+│   │   │   ├── Skeleton.tsx
+│   │   │   ├── StaggerList.tsx
+│   │   │   ├── useAutoAnimate.ts
+│   │   │   ├── useCountUp.ts
+│   │   │   └── [2 test files]
+│   │   ├── route-island/
+│   │   │   ├── __tests__/
+│   │   │   │   └── README.md
+│   │   │   ├── page-manifest.ts
+│   │   │   ├── paths.ts
+│   │   │   └── [2 test files]
+│   │   ├── csp-api-origin.ts
+│   │   ├── csv.ts
+│   │   ├── utils.ts
+│   │   └── [3 test files]
+│   ├── pages/
+│   │   ├── accept-invite/
+│   │   │   ├── accept-invite.page.ts
+│   │   │   ├── accept-invite.route.tsx
+│   │   │   ├── AcceptInvitePage.tsx
+│   │   │   └── OVERVIEW.md
+│   │   ├── auth/
+│   │   │   ├── callback/
+│   │   │   │   ├── callback.page.ts
+│   │   │   │   ├── callback.route.tsx
+│   │   │   │   ├── CallbackPage.tsx
+│   │   │   │   └── OVERVIEW.md
+│   │   │   ├── forgot-password/
+│   │   │   │   ├── forms/
+│   │   │   │   │   └── ForgotPasswordForm/
+│   │   │   │   │       ├── ForgotPasswordForm.tsx
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       └── [1 test file]
+│   │   │   │   ├── forgot-password.page.ts
+│   │   │   │   ├── forgot-password.route.tsx
+│   │   │   │   ├── ForgotPasswordPage.tsx
+│   │   │   │   └── OVERVIEW.md
+│   │   │   ├── login/
+│   │   │   │   ├── forms/
+│   │   │   │   │   ├── LoginForm/
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   ├── LoginForm.tsx
+│   │   │   │   │   │   └── [1 test file]
+│   │   │   │   │   └── PasswordlessOptions/
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       └── PasswordlessOptions.tsx
+│   │   │   │   ├── hooks/
+│   │   │   │   │   └── useCooldownClock/
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       ├── useCooldownClock.ts
+│   │   │   │   │       └── [1 test file]
+│   │   │   │   ├── login.page.ts
+│   │   │   │   ├── login.route.tsx
+│   │   │   │   ├── LoginPage.tsx
+│   │   │   │   └── OVERVIEW.md
+│   │   │   ├── mfa/
+│   │   │   │   ├── forms/
+│   │   │   │   │   └── MfaForm/
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       ├── MfaForm.tsx
+│   │   │   │   │       └── [1 test file]
+│   │   │   │   ├── mfa.page.ts
+│   │   │   │   ├── mfa.route.tsx
+│   │   │   │   ├── MfaPage.tsx
+│   │   │   │   └── OVERVIEW.md
+│   │   │   ├── register/
+│   │   │   │   ├── forms/
+│   │   │   │   │   └── RegisterForm/
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       ├── RegisterForm.tsx
+│   │   │   │   │       └── [1 test file]
+│   │   │   │   ├── OVERVIEW.md
+│   │   │   │   ├── register.page.ts
+│   │   │   │   ├── register.route.tsx
+│   │   │   │   └── RegisterPage.tsx
+│   │   │   ├── reset-password/
+│   │   │   │   ├── forms/
+│   │   │   │   │   └── ResetPasswordForm/
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       ├── ResetPasswordForm.tsx
+│   │   │   │   │       └── [1 test file]
+│   │   │   │   ├── OVERVIEW.md
+│   │   │   │   ├── reset-password.page.ts
+│   │   │   │   ├── reset-password.route.tsx
+│   │   │   │   └── ResetPasswordPage.tsx
+│   │   │   ├── verify-email/
+│   │   │   │   ├── forms/
+│   │   │   │   │   └── VerifyEmailForm/
+│   │   │   │   │       ├── index.ts
+│   │   │   │   │       └── VerifyEmailForm.tsx
+│   │   │   │   ├── OVERVIEW.md
+│   │   │   │   ├── verify-email.page.ts
+│   │   │   │   ├── verify-email.route.tsx
+│   │   │   │   └── VerifyEmailPage.tsx
+│   │   │   ├── auth.api.ts
+│   │   │   ├── auth.contracts.ts
+│   │   │   └── [1 test file]
+│   │   ├── dashboard/
+│   │   │   ├── __tests__/
+│   │   │   │   ├── integration/
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   └── README.md
+│   │   │   ├── components/
+│   │   │   │   ├── ActivityFeed/
+│   │   │   │   │   ├── ActivityFeed.tsx
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── ActivityHeatmap/
+│   │   │   │   │   ├── ActivityHeatmap.tsx
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── DashboardCharts/
+│   │   │   │   │   ├── DashboardCharts.tsx
+│   │   │   │   │   └── index.ts
+│   │   │   │   ├── MonthlyTargets/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── MonthlyTargets.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── Sparkline/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── Sparkline.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── StatCards/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── StatCards.tsx
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   └── TeamSection/
+│   │   │   │       ├── index.ts
+│   │   │   │       └── TeamSection.tsx
+│   │   │   ├── hooks/
+│   │   │   │   └── useDashboard/
+│   │   │   │       ├── index.ts
+│   │   │   │       └── useDashboard.ts
+│   │   │   ├── dashboard.api.ts
+│   │   │   ├── dashboard.contracts.ts
+│   │   │   ├── dashboard.fixtures.ts
+│   │   │   ├── dashboard.page.ts
+│   │   │   ├── dashboard.route.tsx
+│   │   │   ├── dashboard.search.ts
+│   │   │   ├── DashboardPage.tsx
+│   │   │   ├── OVERVIEW.md
+│   │   │   └── [1 test file]
+│   │   └── onboarding/
+│   │       ├── onboarding.page.ts
+│   │       ├── onboarding.route.tsx
+│   │       ├── OnboardingPage.tsx
+│   │       └── OVERVIEW.md
+│   ├── shared/
+│   │   ├── api/
+│   │   │   ├── my-orgs.ts
+│   │   │   ├── organization-api.ts
+│   │   │   ├── organization-contracts.ts
+│   │   │   ├── organization-fixtures.ts
+│   │   │   ├── organization-mock-store.ts
+│   │   │   ├── OVERVIEW.md
+│   │   │   ├── tenancy-service.ts
+│   │   │   └── [3 test files]
+│   │   ├── auth/
+│   │   │   ├── idle-timeout.ts
+│   │   │   ├── mock-auth.ts
+│   │   │   ├── mock-credentials.ts
+│   │   │   ├── OVERVIEW.md
+│   │   │   ├── refresh-timer.ts
+│   │   │   ├── service.ts
+│   │   │   ├── token.ts
+│   │   │   ├── types.ts
+│   │   │   └── [6 test files]
+│   │   ├── components/
+│   │   │   ├── AccountSettings/
+│   │   │   │   ├── AccountSettings.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── data-table/
+│   │   │   │   ├── DataTable.tsx
+│   │   │   │   ├── DataTableColumnHeader.tsx
+│   │   │   │   ├── DataTablePagination.tsx
+│   │   │   │   └── DataTableToolbar.tsx
+│   │   │   ├── SecuritySettings/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── SecuritySettings.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── SettingsDialog/
+│   │   │   │   ├── sections/
+│   │   │   │   │   ├── AccountSection.tsx
+│   │   │   │   │   ├── AppearanceSection.tsx
+│   │   │   │   │   ├── NotificationsSection.tsx
+│   │   │   │   │   ├── OrgGeneralSection.tsx
+│   │   │   │   │   ├── ProfileSection.tsx
+│   │   │   │   │   ├── SectionHeader.tsx
+│   │   │   │   │   └── SecuritySection.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── nav-items.ts
+│   │   │   │   ├── settings-paths.ts
+│   │   │   │   ├── SettingsDialog.tsx
+│   │   │   │   ├── SettingsNav.tsx
+│   │   │   │   └── [3 test files]
+│   │   │   ├── ui/
+│   │   │   ├── command-palette.tsx
+│   │   │   ├── CommandPaletteLazy.tsx
+│   │   │   ├── CreateOrganizationDialog.tsx
+│   │   │   ├── FullPageSpinner.tsx
+│   │   │   ├── InvitationsTable.tsx
+│   │   │   ├── InviteMemberDialog.tsx
+│   │   │   ├── MembersTable.tsx
+│   │   │   ├── OfflineIndicator.tsx
+│   │   │   ├── OptimizedImage.tsx
+│   │   │   ├── OrgBadges.tsx
+│   │   │   ├── OrgSwitcher.tsx
+│   │   │   ├── PermissionGuard.tsx
+│   │   │   ├── preload-command-palette.ts
+│   │   │   ├── QueryBoundary.tsx
+│   │   │   ├── RetryError.tsx
+│   │   │   ├── SessionTimeoutDialog.tsx
+│   │   │   ├── WidgetErrorBoundary.tsx
+│   │   │   └── [9 test files]
+│   │   ├── errors/
+│   │   │   ├── AppError.ts
+│   │   │   ├── errorHandler.ts
+│   │   │   ├── HttpError.ts
+│   │   │   └── [3 test files]
+│   │   ├── forms/
+│   │   │   ├── ProfileForm/
+│   │   │   │   ├── contracts.ts
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── ProfileForm.tsx
+│   │   │   │   └── [2 test files]
+│   │   │   ├── FormError.tsx
+│   │   │   ├── FormField.tsx
+│   │   │   └── [2 test files]
+│   │   ├── hooks/
+│   │   │   ├── useCreate/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useCreate.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useDelete/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useDelete.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useList/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useList.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useOne/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useOne.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useUpdate/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useUpdate.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useDataTableUrlState.ts
+│   │   │   ├── useOrganization.ts
+│   │   │   ├── useRBAC.ts
+│   │   │   └── [1 test file]
+│   │   ├── layouts/
+│   │   │   ├── AuthLayout/
+│   │   │   │   ├── AuthLayout.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   └── [1 test file]
+│   │   │   └── DashboardLayout/
+│   │   │       ├── DashboardLayout.tsx
+│   │   │       ├── index.ts
+│   │   │       └── [1 test file]
+│   │   └── store/
+│   │       ├── useAuthStore/
+│   │       │   ├── index.ts
+│   │       │   ├── useAuthStore.ts
+│   │       │   └── [1 test file]
+│   │       ├── useOnboardingStore/
+│   │       │   ├── index.ts
+│   │       │   ├── useOnboardingStore.ts
+│   │       │   └── [1 test file]
+│   │       ├── useTenantStore/
+│   │       │   ├── index.ts
+│   │       │   ├── useTenantStore.ts
+│   │       │   └── [1 test file]
+│   │       ├── useThemeStore/
+│   │       │   ├── index.ts
+│   │       │   ├── useThemeStore.ts
+│   │       │   └── [1 test file]
+│   │       └── useUIStore/
+│   │           ├── index.ts
+│   │           ├── useUIStore.ts
+│   │           └── [1 test file]
+│   ├── App.tsx
+│   ├── index.css
+│   ├── main.tsx
+│   ├── sw.ts
+│   └── vite-env.d.ts
+├── tests/
+│   ├── e2e/
+│   │   └── [5 test files]
+│   ├── factories/
+│   │   └── README.md
+│   ├── load/
+│   │   ├── README.md
+│   │   └── smoke.js
+│   ├── performance/
+│   │   └── README.md
+│   ├── security/
+│   │   └── README.md
+│   ├── utils/
+│   │   ├── apiMocks.ts
+│   │   ├── e2e-auth.ts
+│   │   ├── mockApiClient.ts
+│   │   ├── README.md
+│   │   ├── renderWithProviders.tsx
+│   │   └── setup.ts
+│   └── README.md
+├── .commitlintrc.json
+├── .cursorignore
+├── .env
+├── .env.development
+├── .env.example
+├── .env.local
+├── .env.production
+├── .env.staging
+├── .gitignore
+├── .gitleaks.toml
+├── .lighthouserc.cjs
+├── .mcp.json
+├── .node-version
+├── .nvmrc
+├── .prettierignore
+├── .prettierrc
+├── .release-please-manifest.json
+├── .releaserc.json
+├── .semgrepignore
+├── .size-limit.json
+├── AGENTS.md
+├── catalog-info.yaml
+├── CLAUDE.md
+├── components.json
+├── config.setup.env
+├── context7.json
+├── CONTRIBUTING.md
+├── eslint.config.mjs
+├── index.html
+├── Makefile
+├── netlify.toml
+├── package.json
+├── playwright.config.ts
+├── README.md
+├── stryker.config.mjs
+├── tsconfig.app.json
+├── tsconfig.json
+├── tsconfig.node.json
+├── vite.config.ts
+└── vitest.config.ts
+================================================================================
+§3  KEY CONVENTIONS
+================================================================================
+
+Route island (pages/<name>/):
+  *.page.ts | *.route.tsx | OVERVIEW.md | components/<Unit>/ | hooks/<hook>/ | forms/<Form>/
+  api.ts | contracts.ts | __tests__/unit/
+
+Shared folder-per-unit:
+  components/<Name>/index.tsx   hooks/useList/   forms/ProfileForm/
+  store/useThemeStore/          api/             auth/
+
+Tests:
+  pages/**     → __tests__/unit/ (mirrors source dirs)
+  shared/core  → colocated *.test.ts(x) next to source OR in unit folder
+
