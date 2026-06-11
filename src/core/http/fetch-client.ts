@@ -256,7 +256,7 @@ async function request<T>(
       return { data: undefined as T };
     }
     const contentType = response.headers.get('Content-Type') ?? '';
-    if (!contentType.includes('application/json') && !contentType.includes('+json')) {
+    if (!(contentType.includes('application/json') || contentType.includes('+json'))) {
       throw new HttpError(
         'Expected JSON response',
         response.status,

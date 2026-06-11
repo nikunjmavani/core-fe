@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Full project health check: format, lint, type-check, tests, build, size, env, public.
+# Full project health check: format, lint, biome, type-check, tests, build, size, env, public.
 # Run from project root: pnpm health  or  pnpm health:fix
 # --fix: run pnpm lint:fix and pnpm format before checks (report-only otherwise).
 set -e
@@ -37,8 +37,9 @@ echo "======================="
 
 if [ "$FIX_MODE" = 1 ]; then
   echo ""
-  echo "Auto-fix mode: running lint:fix and format..."
+  echo "Auto-fix mode: running lint:fix, biome:fix and format..."
   pnpm lint:fix >/dev/null 2>&1 || true
+  pnpm biome:fix >/dev/null 2>&1 || true
   pnpm format >/dev/null 2>&1 || true
   echo ""
 fi
@@ -62,7 +63,16 @@ else
 fi
 
 echo ""
-echo "Phase 3: Type check"
+echo "Phase 3: Biome"
+if pnpm biome:check >/dev/null 2>&1; then
+  echo "  $PASS  pnpm biome:check"
+else
+  echo "  $FAIL  pnpm biome:check"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+echo ""
+echo "Phase 4: Type check"
 if pnpm type-check >/dev/null 2>&1; then
   echo "  $PASS  pnpm type-check"
 else
@@ -71,7 +81,7 @@ else
 fi
 
 echo ""
-echo "Phase 4: Unit tests"
+echo "Phase 5: Unit tests"
 if pnpm test >/dev/null 2>&1; then
   echo "  $PASS  pnpm test"
 else
@@ -80,7 +90,7 @@ else
 fi
 
 echo ""
-echo "Phase 5: Build"
+echo "Phase 6: Build"
 if pnpm build >/dev/null 2>&1; then
   echo "  $PASS  pnpm build"
 else
@@ -89,7 +99,7 @@ else
 fi
 
 echo ""
-echo "Phase 6: Bundle size"
+echo "Phase 7: Bundle size"
 if pnpm size >/dev/null 2>&1; then
   echo "  $PASS  pnpm size"
 else
@@ -98,7 +108,7 @@ else
 fi
 
 echo ""
-echo "Phase 7: Env validation"
+echo "Phase 8: Env validation"
 if pnpm validate:env-example >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:env-example"
 else
@@ -107,7 +117,7 @@ else
 fi
 
 echo ""
-echo "Phase 8: Public assets"
+echo "Phase 9: Public assets"
 if pnpm validate:public >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:public"
 else
@@ -116,7 +126,7 @@ else
 fi
 
 echo ""
-echo "Phase 9: Route-island structure"
+echo "Phase 10: Route-island structure"
 if pnpm validate:structure >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:structure"
 else

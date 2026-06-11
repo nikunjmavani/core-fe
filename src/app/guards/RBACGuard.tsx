@@ -28,7 +28,7 @@ export function RBACGuard({ permission }: RBACGuardProps) {
     return null;
   }
 
-  if (!user || !hasPermission({ role: user.role, permissions }, permission)) {
+  if (!(user && hasPermission({ role: user.role, permissions }, permission))) {
     return <Navigate to={AUTH_ROUTES.UNAUTHORIZED} replace />;
   }
 

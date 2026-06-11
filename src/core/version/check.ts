@@ -40,7 +40,7 @@ function shouldReload(
   latest: VersionPayload | null,
   current: string | undefined,
 ): boolean {
-  if (!latest || !current) return false;
+  if (!(latest && current)) return false;
   return latest.buildId !== current;
 }
 
@@ -92,7 +92,7 @@ export function startVersionCheck(): (() => void) | undefined {
   // Check immediately when user returns to tab
   const onVisibility = () => {
     if (document.visibilityState === 'visible') {
-      checkAndReload();
+      void checkAndReload();
       schedulePoll();
     } else {
       stopPoll();

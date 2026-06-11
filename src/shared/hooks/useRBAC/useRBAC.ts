@@ -24,8 +24,8 @@ export function useRequirePermission(permission: OrganizationPermission): void {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || !hasPermission({ role: user.role, permissions }, permission)) {
-      navigate({ to: AUTH_ROUTES.UNAUTHORIZED, replace: true });
+    if (!(user && hasPermission({ role: user.role, permissions }, permission))) {
+      void navigate({ to: AUTH_ROUTES.UNAUTHORIZED, replace: true });
     }
   }, [user, permissions, permission, navigate]);
 }

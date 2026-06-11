@@ -17,7 +17,10 @@ function buildQuery(params?: ListParams): string {
   if (params.filters) {
     for (const [key, value] of Object.entries(params.filters)) {
       if (value === undefined || value === null || value === '') continue;
-      search.set(key, String(value));
+      if (typeof value === 'string') search.set(key, value);
+      else if (typeof value === 'number' || typeof value === 'boolean')
+        search.set(key, String(value));
+      else search.set(key, JSON.stringify(value) ?? '');
     }
   }
 

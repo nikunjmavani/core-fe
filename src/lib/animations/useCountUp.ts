@@ -42,7 +42,7 @@ export function useCountUp(target: number, durationMs = 900): number {
     const start = performance.now();
     const tick = (now: number) => {
       const progress = Math.min(1, (now - start) / durationMs);
-      const eased = 1 - Math.pow(1 - progress, 3);
+      const eased = 1 - (1 - progress) ** 3;
       setValue(progress < 1 ? target * eased : target);
       if (progress < 1) frame.current = requestAnimationFrame(tick);
     };

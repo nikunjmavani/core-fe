@@ -58,6 +58,7 @@ export function ErrorBoundary({ error }: { error?: unknown }) {
         An unexpected error occurred. Please try refreshing the page.
       </p>
       <button
+        type="button"
         onClick={() => window.location.reload()}
         className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 rounded-md px-4 py-2 text-sm font-medium"
       >

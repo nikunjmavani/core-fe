@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 
 import { posthog } from '@/app/analytics/posthog.ts';
 
@@ -48,8 +55,13 @@ export function FeatureFlagProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const contextValue = useMemo(
+    () => ({ isFeatureEnabled, isLoading }),
+    [isFeatureEnabled, isLoading],
+  );
+
   return (
-    <FeatureFlagContext.Provider value={{ isFeatureEnabled, isLoading }}>
+    <FeatureFlagContext.Provider value={contextValue}>
       {children}
     </FeatureFlagContext.Provider>
   );

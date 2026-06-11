@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+# Fast gate before push — full suite runs in CI (.github/workflows/ci.yml).
+
+pnpm biome:check
+pnpm type-check
+pnpm build
+
+# Unit tests (matches the CI unit lane).
+# Run only when pushed commits include unit-relevant files.
+PUSHED_UNIT_RELEVANT=$(git diff --name-only @{u}...HEAD 2>/dev/null | grep -E \
+  '^(src/|tests/utils/|vitest\.config\.ts$|package\.json$|pnpm-lock\.yaml$)' || true)
+if [ -n "$PUSHED_UNIT_RELEVANT" ]; then
+  pnpm test
+else
+  echo "Skipping unit tests on pre-push (no unit-relevant changes)."
+fi
+
+# SonarQube quality gate — scans against the local SonarQube server and BLOCKS the push if any
+# unresolved Sonar issue exists. Runs only when the pushed commits touch deployed-surface code
+# (src/ runtime — the only thing Sonar analyzes; tests/mocks/fixtures/scripts are excluded). The
+# gate auto-starts the server on first use (first boot ~2 min) and provisions a token in
+# .env.local. Skip with SKIP_SONAR=1, or `git push --no-verify` to skip all hooks.
+SONAR_BASE=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo origin/main)
+PUSHED_RUNTIME=$(git diff --name-only "$SONAR_BASE"...HEAD 2>/dev/null | grep -E '^src/.*\.(ts|tsx)$' | \
+  grep -Ev '(__tests__/|\.test\.tsx?$|\.spec\.tsx?$|\.fixtures\.ts$|/mock-[^/]*\.ts$|\.d\.ts$)' || true)
+if [ "${SKIP_SONAR:-0}" = "1" ]; then
+  echo "Skipping SonarQube gate on pre-push (SKIP_SONAR=1)."
+elif [ -n "$PUSHED_RUNTIME" ]; then
+  pnpm sonar:scan
+else
+  echo "Skipping SonarQube gate on pre-push (no deployed-surface code changes)."
+fi

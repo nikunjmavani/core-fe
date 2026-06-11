@@ -19,10 +19,10 @@ export const memberSchema = z.object({
   id: z.string(),
   userId: z.string(),
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   role: orgRoleSchema,
   status: membershipStatusSchema,
-  avatarUrl: z.string().url().optional(),
+  avatarUrl: z.url().optional(),
   joinedAt: z.string(),
   lastActiveAt: z.string().optional(),
 });
@@ -38,7 +38,7 @@ export type InvitationStatus = z.infer<typeof invitationStatusSchema>;
 
 export const invitationSchema = z.object({
   id: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   role: orgRoleSchema,
   status: invitationStatusSchema,
   invitedByName: z.string(),

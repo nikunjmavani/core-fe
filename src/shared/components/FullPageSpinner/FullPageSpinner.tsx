@@ -5,13 +5,12 @@ import { Loader2 } from 'lucide-react';
  */
 export function FullPageSpinner() {
   return (
-    <div
+    <output
       className="flex min-h-screen items-center justify-center"
-      role="status"
       data-testid="full-page-spinner"
     >
       <Loader2 className="text-primary h-8 w-8 animate-spin" />
       <span className="sr-only">Loading...</span>
-    </div>
+    </output>
   );
 }

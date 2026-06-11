@@ -3,16 +3,18 @@ import { cn } from '@/lib/utils.ts';
 /**
  * Basic pulse skeleton — loading placeholder.
  */
-export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+export function Skeleton({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLOutputElement>) {
   return (
-    <div
-      className={cn('bg-muted animate-pulse rounded-md', className)}
-      role="status"
+    <output
+      className={cn('bg-muted block animate-pulse rounded-md', className)}
       aria-label="Loading"
       {...props}
     >
       <span className="sr-only">Loading...</span>
-    </div>
+    </output>
   );
 }
 
@@ -23,15 +25,14 @@ export function Skeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 export function SkeletonShimmer({
   className,
   ...props
-}: React.HTMLAttributes<HTMLDivElement>) {
+}: React.HTMLAttributes<HTMLOutputElement>) {
   return (
-    <div
-      className={cn('animate-shimmer skeleton-shimmer-bg rounded-md', className)}
-      role="status"
+    <output
+      className={cn('animate-shimmer skeleton-shimmer-bg block rounded-md', className)}
       aria-label="Loading"
       {...props}
     >
       <span className="sr-only">Loading...</span>
-    </div>
+    </output>
   );
 }

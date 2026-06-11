@@ -43,8 +43,10 @@ function ChartContainer({
   const uniqueId = React.useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, '')}`;
 
+  const contextValue = React.useMemo(() => ({ config }), [config]);
+
   return (
-    <ChartContext.Provider value={{ config }}>
+    <ChartContext.Provider value={contextValue}>
       <div
         data-slot="chart"
         data-chart={chartId}
@@ -116,7 +118,7 @@ function ChartTooltipContent({
 }) {
   const { config } = useChart();
 
-  if (!active || !payload?.length) {
+  if (!(active && payload?.length)) {
     return null;
   }
 
@@ -131,7 +133,7 @@ function ChartTooltipContent({
       <div className="grid gap-1.5">
         {payload.map((item) => {
           const key = item.dataKey ?? item.name ?? 'value';
-          const itemConfig = Object.prototype.hasOwnProperty.call(config, key)
+          const itemConfig = Object.hasOwn(config, key)
             ? // eslint-disable-next-line security/detect-object-injection -- guarded by hasOwnProperty
               config[key]
             : undefined;

@@ -11,7 +11,7 @@ import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 export function VerifyEmailForm() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const search = useSearch({ strict: false }) as { token?: string };
+  const search: { token?: string } = useSearch({ strict: false });
   const token = typeof search?.token === 'string' ? search.token : '';
 
   useEffect(() => {

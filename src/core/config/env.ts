@@ -31,7 +31,7 @@ const envSchema = z.object({
 const parsed = envSchema.safeParse(import.meta.env);
 
 if (!parsed.success) {
-  const detail = JSON.stringify(parsed.error.flatten());
+  const detail = JSON.stringify(z.flattenError(parsed.error));
   if (import.meta.env.PROD) {
     throw new Error(`[Config] Invalid environment configuration: ${detail}`);
   }
@@ -123,8 +123,7 @@ if (config.isProduction && !get('API_BASE_URL')) {
 // Reject insecure API base URLs in production (HTTP instead of HTTPS)
 if (
   config.isProduction &&
-  config.apiBaseUrl &&
-  config.apiBaseUrl.startsWith('http://') &&
+  config.apiBaseUrl?.startsWith('http://') &&
   !config.apiBaseUrl.startsWith('http://localhost')
 ) {
   throw new Error(

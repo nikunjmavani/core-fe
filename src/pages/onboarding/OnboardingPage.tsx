@@ -96,7 +96,7 @@ export function OnboardingPage() {
       complete();
       toast.success('Welcome! Your workspace is ready.');
       // The $organizationId guard syncs context, persists, and loads permissions.
-      navigate({ ...organizationDashboard(org.id), replace: true });
+      void navigate({ ...organizationDashboard(org.id), replace: true });
     } catch {
       toast.error('Something went wrong finishing setup. Please try again.');
     } finally {

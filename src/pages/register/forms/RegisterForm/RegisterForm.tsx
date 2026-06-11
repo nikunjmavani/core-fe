@@ -36,7 +36,7 @@ export function RegisterForm() {
       const user = await authApi.me(accessToken);
       useAuthStore.getState().setUser(user);
       scheduleTokenRefresh();
-      navigate({ to: '/', replace: true });
+      void navigate({ to: '/', replace: true });
     } catch (err) {
       setApiError(
         err instanceof Error ? err.message : 'Registration failed. Please try again.',

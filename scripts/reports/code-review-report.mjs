@@ -72,7 +72,7 @@ if (coverageResult.out) {
 
 // Architecture: OK if only routeTree has @/pages (lazy imports) and core/shared have none
 const appOnlyLazy = !appImportsPages || appImportsPages.split('\n').filter(Boolean).length <= 1;
-const archOk = !coreImportsPages && !sharedImportsPages && appOnlyLazy;
+const archOk = !(coreImportsPages || sharedImportsPages ) && appOnlyLazy;
 
 const report = `# Full Code Review Report
 
@@ -159,7 +159,7 @@ const report = `# Full Code Review Report
 | Dimension | Overall | Notes |
 |-----------|---------|------|
 | Security | ${dangerousPatterns ? 'Check' : 'Good'} | ${dangerousPatterns ? 'Review dangerous patterns.' : 'No critical findings.'} |
-| Performance | ${build.ok && sizeResult.ok ? 'Good' : 'Check'} | ${!build.ok || !sizeResult.ok ? 'Build or size failed.' : 'Bundle within limits.'} |
+| Performance | ${build.ok && sizeResult.ok ? 'Good' : 'Check'} | ${!(build.ok && sizeResult.ok ) ? 'Build or size failed.' : 'Bundle within limits.'} |
 | Code quality | ${lint.ok && typeCheck.ok && formatCheck.ok ? 'Good' : 'Check'} | ${!(lint.ok && typeCheck.ok && formatCheck.ok) ? 'Lint, type-check, or format failed.' : 'All pass.'} |
 | Readability | Good | Conventions followed. |
 | Maintainability | ${coverageResult.ok ? 'Good' : 'Gap'} | ${!coverageResult.ok ? 'Coverage below 80%.' : 'Tests and coverage pass.'} |

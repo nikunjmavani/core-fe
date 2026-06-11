@@ -34,7 +34,7 @@ export class WidgetErrorBoundary extends Component<
     }
   }
 
-  private handleRetry = (): void => {
+  private readonly handleRetry = (): void => {
     this.setState({ hasError: false });
   };
 

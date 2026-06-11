@@ -20,7 +20,7 @@ export type Role = z.infer<typeof roleSchema>;
  */
 export const authUserSchema = z.object({
   id: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   role: roleSchema,
   organizationId: z.string().optional(),
   name: z.string().optional(),

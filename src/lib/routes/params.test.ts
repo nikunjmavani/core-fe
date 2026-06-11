@@ -15,7 +15,7 @@ describe('parseOrganizationIdParam', () => {
     'pat_8fK2x',
     'org_with-hyphen',
     'org_…',
-    'org_' + 'a'.repeat(33),
+    `org_${'a'.repeat(33)}`,
   ])('rejects %j with null (guard turns this into a 404)', (raw) => {
     expect(parseOrganizationIdParam(raw)).toBeNull();
   });

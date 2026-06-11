@@ -81,7 +81,7 @@ export function LoginForm() {
   const onSubmitError = () => {
     const count = failureCount + 1;
     setFailureCount(count);
-    const delay = count <= 1 ? 2000 : Math.min(2000 * Math.pow(2, count - 1), 30000);
+    const delay = count <= 1 ? 2000 : Math.min(2000 * 2 ** (count - 1), 30000);
     // eslint-disable-next-line react-hooks/purity -- only called from async onSubmit catch, not during render
     const timestamp = Date.now();
     setCooldownUntil(timestamp + delay);
@@ -98,7 +98,7 @@ export function LoginForm() {
       setFailureCount(0);
       setCooldownUntil(null);
       const from = getRedirectPath(location);
-      navigate({ to: from ?? '/', replace: true });
+      void navigate({ to: from ?? '/', replace: true });
     } catch (err) {
       onSubmitError();
       setApiError(

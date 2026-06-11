@@ -235,7 +235,7 @@ async function runLive(config, netlifyToken) {
 
   const envsToSetup = choice === 'all' ? config.envs : [choice];
 
-  console.log('\n[live] Setup ' + choice + '\n');
+  console.log(`\n[live] Setup ${choice}\n`);
   console.log('=== CONFIGURATION ===\n');
   console.log(formatConfigSummary(config, envsToSetup));
   console.log('\n=== WHAT WILL BE CREATED ===\n');
@@ -266,7 +266,9 @@ async function runLive(config, netlifyToken) {
   }
   if (conflicts.length > 0) {
     console.log('\n[live] The following are already configured:\n');
-    conflicts.forEach((c) => console.log(`  - ${c}`));
+    for (const c of conflicts) {
+      console.log(`  - ${c}`);
+    }
     console.log('\n  Run: pnpm run setup:revert:all (choose same env)');
     console.log('  Then run: pnpm run setup again\n');
     const ok2 = await confirm('Abort and run revert first? (Recommended)');

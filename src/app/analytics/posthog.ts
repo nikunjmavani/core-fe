@@ -25,7 +25,7 @@ export function initPostHog(): void {
 
   try {
     posthog.init(key, {
-      api_host: host || 'https://us.i.posthog.com',
+      api_host: host?.length ? host : 'https://us.i.posthog.com',
       capture_pageview: true,
       capture_pageleave: true,
       persistence: 'localStorage+cookie',

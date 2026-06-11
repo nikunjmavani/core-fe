@@ -3,8 +3,11 @@ import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { acceptInvitation } from '@/shared/api/organization-api.ts';
-import { startMockSession } from '@/shared/auth/mock-auth.ts';
-import { MOCK_ACCESS_TOKEN, MOCK_USER } from '@/shared/auth/mock-auth.ts';
+import {
+  MOCK_ACCESS_TOKEN,
+  MOCK_USER,
+  startMockSession,
+} from '@/shared/auth/mock-auth.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';

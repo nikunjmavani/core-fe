@@ -47,12 +47,13 @@ export function sortingToSearch(sorting: SortingState): string | undefined {
  * @param enabled - When false, returns empty handlers (local-only table state).
  */
 export function useDataTableUrlState(enabled: boolean) {
-  const search = useSearch({ strict: false }) as DataTableSearch;
+  const search: DataTableSearch = useSearch({ strict: false });
   const navigate = useNavigate();
 
+  // Only apply URL sort on first mount
+  // biome-ignore lint/correctness/useExhaustiveDependencies: URL sort seeds initial state once; later changes flow through onSortingChange
   const initialSorting = useMemo(
     () => (enabled ? sortingFromSearch(search.sort) : []),
-    // Only apply URL sort on first mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [enabled],
   );
@@ -81,7 +82,7 @@ export function useDataTableUrlState(enabled: boolean) {
         if (next.sort === undefined) delete next.sort;
         return next;
       };
-      navigate({
+      void navigate({
         to: '.',
         // The router types `search` per route; this hook intentionally works on
         // the structural subset above, on whatever route it is rendered in.
@@ -103,8 +104,8 @@ export function useDataTableUrlState(enabled: boolean) {
       const name = filters.find((f) => f.id === 'name')?.value as string | undefined;
       const role = filters.find((f) => f.id === 'role')?.value as string | undefined;
       patchSearch({
-        q: name || undefined,
-        role: role || undefined,
+        q: name === '' ? undefined : name,
+        role: role === '' ? undefined : role,
         page: 1,
       });
     },

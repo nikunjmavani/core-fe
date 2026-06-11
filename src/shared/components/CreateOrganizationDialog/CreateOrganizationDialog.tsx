@@ -67,15 +67,16 @@ export function CreateOrganizationDialog({
   });
 
   const onSubmit = async (data: CreateOrganizationInput) => {
+    const requestedSlug = data.slug?.trim();
     const org = await createOrganization({
       name: data.name,
-      slug: data.slug?.trim() || undefined,
+      slug: requestedSlug === '' ? undefined : requestedSlug,
     });
     await queryClient.invalidateQueries({ queryKey: ['organizations'] });
     toast.success(`Created ${org.name}`);
     reset();
     setOpen(false);
-    navigate({ ...organizationDashboard(org.id), replace: true });
+    void navigate({ ...organizationDashboard(org.id), replace: true });
   };
 
   return (

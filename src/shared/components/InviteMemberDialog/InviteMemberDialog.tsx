@@ -27,7 +27,7 @@ import {
 import { useCreateInvitation } from '@/shared/hooks/useInvitations/index.ts';
 
 const inviteSchema = z.object({
-  email: z.string().email('Enter a valid email address'),
+  email: z.email('Enter a valid email address'),
   role: orgRoleSchema.exclude(['owner']),
 });
 

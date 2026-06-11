@@ -1,5 +1,13 @@
 name: CI
 
+# Fast merge gate, mirroring core-be's pr-ci shape: a `changes` path-filter job
+# feeds every lane, docs-only PRs short-circuit to the aggregate gate, all code
+# lanes run in parallel off the shared composite setup action, and a single
+# `quality-gate` job (if: always()) is the ONE required status check — it
+# passes when every lane succeeded or was legitimately skipped.
+#
+# Third-party actions are pinned to commit SHAs (same pins as core-be).
+
 on:
   pull_request:
     branches: [main, dev, qa]
@@ -7,154 +15,316 @@ on:
     branches: [main, dev, qa]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: ${{ vars.FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 || 'true' }}
+
 jobs:
-  # ── Quality checks ──
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      src-code: ${{ steps.filter.outputs.src-code }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      ci-config: ${{ steps.filter.outputs.ci-config }}
+      docs-only: ${{ steps.filter.outputs.docs-only-md == 'true' && steps.filter.outputs.src-code == 'false' && steps.filter.outputs.e2e == 'false' && steps.filter.outputs.ci-config == 'false' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
+
+      - name: Path filter
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: filter
+        with:
+          filters: |
+            src-code:
+              - 'src/**'
+              - 'plugins/**'
+              - 'public/**'
+              - 'tests/**'
+              - 'scripts/**'
+              - 'index.html'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'vite.config.ts'
+              - 'vitest.config.ts'
+              - 'tsconfig*.json'
+              - 'biome.json'
+              - 'eslint.config.mjs'
+              - '.prettierrc'
+              - '.env'
+              - '.env.development'
+              - '.env.production'
+              - '.env.example'
+            e2e:
+              - 'src/**'
+              - 'tests/e2e/**'
+              - 'tests/utils/**'
+              - 'playwright.config.ts'
+              - 'index.html'
+              - 'vite.config.ts'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            ci-config:
+              - '.github/**'
+            docs-only-md:
+              - '**/*.md'
+              - 'docs/**'
+              - 'agent-os/**'
+
+  # ── Quality lanes (parallel) ──
+
+  biome:
+    name: Biome
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm biome:check
 
   lint:
     name: ESLint
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm lint
 
   format:
     name: Prettier
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm format:check
 
   typecheck:
     name: TypeScript
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm type-check
 
-  test:
-    name: Vitest
+  unit-tests:
+    name: Vitest + coverage
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test:ci
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Run unit tests with coverage (ratchet thresholds in vitest.config.ts)
+        run: pnpm test:ci
 
-  # ── .env.example documents required vars (runs every time) ──
-  validate-env-example:
-    name: .env.example required vars
+      - name: Coverage summary
+        if: always() && hashFiles('coverage/coverage-summary.json') != ''
+        run: |
+          node -e '
+            const { total } = JSON.parse(require("node:fs").readFileSync("coverage/coverage-summary.json", "utf8"));
+            const row = (label, m) => `| ${label} | ${m.pct}% | ${m.covered}/${m.total} |`;
+            const lines = [
+              "## Coverage",
+              "",
+              "| Metric | Coverage | Covered/Total |",
+              "| --- | --- | --- |",
+              row("Statements", total.statements),
+              row("Branches", total.branches),
+              row("Functions", total.functions),
+              row("Lines", total.lines),
+              "",
+              "Thresholds are a ratchet (vitest.config.ts) — they only move up.",
+            ];
+            require("node:fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, lines.join("\n") + "\n");
+          '
+
+      - name: Upload coverage artifact
+        if: always() && hashFiles('coverage/lcov.info') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: coverage
+          path: |
+            coverage/lcov.info
+            coverage/coverage-summary.json
+          retention-days: 7
+
+  validate-structure:
+    name: Structure validators
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - name: Validate .env.example has required vars
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
+      - name: Route-island structure
+        run: ./scripts/validate/route-islands.sh
+      - name: .env.example required vars
         run: ./scripts/validate/env-example.sh
-
-  # ── public/ required assets (manifest, robots.txt, etc.) ──
-  validate-public:
-    name: Public assets
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate required public assets
+      - name: Public assets
         run: ./scripts/validate/public-assets.sh
 
   build:
-    name: Build
+    name: Build + bundle size
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-
-  size-limit:
-    name: Bundle size
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm build
       - run: pnpm size
 
-  # ── Security checks ──
+  # ── Security ──
 
   gitleaks:
     name: Gitleaks
+    needs: [changes]
+    # Never skipped — secrets can leak in any file type, including docs.
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
+      # TODO: pin to a commit SHA once verified (no pin inherited from core-be).
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   semgrep:
     name: Semgrep SAST
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     container:
       image: semgrep/semgrep
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
       - run: semgrep ci --config auto
         env:
           SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
 
-  # ── E2E tests ──
+  # ── E2E ──
 
   e2e:
     name: Playwright E2E
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true' && needs.changes.outputs.e2e == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm build
       - run: pnpm test:e2e
         env:
           CI: true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: failure()
         with:
           name: playwright-report
           path: test-results/
+          retention-days: 7
+
+  # ── Aggregate gate ──
+  # The single required status check for branch protection. Passes when every
+  # lane succeeded or was legitimately skipped (docs-only fast path); fails on
+  # any failure or cancellation. Adding a lane = add it to `needs` + the list.
+  quality-gate:
+    name: Quality gate
+    needs:
+      [
+        changes,
+        biome,
+        lint,
+        format,
+        typecheck,
+        unit-tests,
+        validate-structure,
+        build,
+        gitleaks,
+        semgrep,
+        e2e,
+      ]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Evaluate lane results
+        env:
+          RESULTS: |
+            biome=${{ needs.biome.result }}
+            lint=${{ needs.lint.result }}
+            format=${{ needs.format.result }}
+            typecheck=${{ needs.typecheck.result }}
+            unit-tests=${{ needs.unit-tests.result }}
+            validate-structure=${{ needs.validate-structure.result }}
+            build=${{ needs.build.result }}
+            gitleaks=${{ needs.gitleaks.result }}
+            semgrep=${{ needs.semgrep.result }}
+            e2e=${{ needs.e2e.result }}
+        run: |
+          FAILED=0
+          echo "## Quality gate" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Lane | Result |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          while IFS='=' read -r lane result; do
+            [ -n "$lane" ] || continue
+            case "$result" in
+              success|skipped) icon="✅" ;;
+              *) icon="❌"; FAILED=1 ;;
+            esac
+            echo "| $lane | $icon $result |" >> "$GITHUB_STEP_SUMMARY"
+            echo "$lane: $result"
+          done <<EOF
+          $RESULTS
+          EOF
+          if [ "$FAILED" -ne 0 ]; then
+            echo "Quality gate: at least one lane failed or was cancelled."
+            exit 1
+          fi
+          echo "Quality gate: all lanes passed (or were legitimately skipped)."

@@ -56,7 +56,9 @@ export async function createOrganization(
 ): Promise<Organization> {
   // REPLACE_WITH_API: POST /api/v1/tenancy/organizations
   const payload = createOrganizationSchema.parse(input);
-  const slug = payload.slug?.trim() || slugifyName(payload.name) || 'org';
+  const requestedSlug = payload.slug?.trim();
+  const derivedSlug = requestedSlug?.length ? requestedSlug : slugifyName(payload.name);
+  const slug = derivedSlug.length ? derivedSlug : 'org';
   if (config.useMockApi) {
     const org: Organization = { id: `org_${Date.now()}`, name: payload.name, slug };
     // Session-persistent like orgMockStore: the new org shows up in listMyOrganizations().

@@ -14,8 +14,10 @@ import {
 import { PageTransition } from '@/lib/animations/PageTransition.tsx';
 import { cn } from '@/lib/utils.ts';
 import { logout } from '@/shared/auth/service.ts';
-import { CommandPaletteLazy } from '@/shared/components/CommandPalette/index.ts';
-import { preloadCommandPalette } from '@/shared/components/CommandPalette/index.ts';
+import {
+  CommandPaletteLazy,
+  preloadCommandPalette,
+} from '@/shared/components/CommandPalette/index.ts';
 import { OrganizationSwitcher } from '@/shared/components/OrganizationSwitcher/index.ts';
 import { SessionTimeoutDialog } from '@/shared/components/SessionTimeoutDialog/index.ts';
 import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
@@ -239,8 +241,6 @@ function Header() {
 
   return (
     <header
-      role="banner"
-      aria-label="Main header"
       className="bg-background flex h-14 items-center gap-4 border-b px-4"
       data-testid="header"
     >

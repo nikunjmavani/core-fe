@@ -20,7 +20,7 @@ import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.
 export function requirePermission(permission: OrganizationPermission): void {
   const { user, isAuthenticated } = useAuthStore.getState();
 
-  if (!isAuthenticated || !user) {
+  if (!(isAuthenticated && user)) {
     throw redirect({ to: AUTH_ROUTES.LOGIN });
   }
 

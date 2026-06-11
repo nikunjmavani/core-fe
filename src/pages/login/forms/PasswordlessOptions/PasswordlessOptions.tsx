@@ -19,7 +19,7 @@ export function PasswordlessOptions() {
   const handleGoogleSignIn = () => {
     // REPLACE_WITH_API: redirect to backend OAuth start; mock returns via /callback
     if (config.useMockApi) {
-      navigate({ to: '/callback' });
+      void navigate({ to: '/callback' });
       return;
     }
     window.location.href = `${config.apiBaseUrl}${API_BASE_PATH}${API_ENDPOINTS.AUTH.GOOGLE}`;
@@ -29,7 +29,7 @@ export function PasswordlessOptions() {
     // REPLACE_WITH_API: navigator.credentials.get() + POST /api/v1/auth/webauthn/login
     if (config.useMockApi) {
       await performMockLogin();
-      navigate({ to: '/', replace: true });
+      void navigate({ to: '/', replace: true });
       return;
     }
     toast.error('Passkeys require a configured backend.');

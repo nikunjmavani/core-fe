@@ -97,17 +97,18 @@ flowchart TB
 
 ## Reference
 
-| Doc                                                              | Purpose                                                                                                   |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| [tools-and-usage.md](reference/tools-and-usage.md)               | Dependency usage table (what each package is used for)                                                    |
-| [third-party-comparison.md](reference/third-party-comparison.md) | Keep/swap verdicts for major dependencies (charts, analytics, routing)                                    |
-| [ui-components-sourcing.md](reference/ui-components-sourcing.md) | shadcn-first UI workflow (`npx shadcn add`, research sites)                                               |
-| [dependency-upgrades.md](reference/dependency-upgrades.md)       | Audits, Dependabot, and intentional version pins                                                          |
-| [route-island-structure.md](reference/route-island-structure.md) | **Per-route folders** — same layout for every route/sub-route; import boundaries                          |
-| [routes-and-ui.md](reference/routes-and-ui.md)                   | **Live frontend routes** (and backend APIs they use) and **UI** (shadcn component library and primitives) |
-| [e2e-testids-inventory.md](reference/e2e-testids-inventory.md)   | Playwright `data-testid` inventory by route (skill: `agent-os/skills/e2e-testids/`)                       |
-| [internationalization.md](reference/internationalization.md)     | i18n status and future client-side i18n                                                                   |
-| **[public/README.md](../public/README.md)** (project root)       | **Static assets** in `public/`: manifest, robots.txt, icons, \_headers; required list and maintenance     |
+| Doc                                                                | Purpose                                                                                                   |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| [tools-and-usage.md](reference/tools-and-usage.md)                 | Dependency usage table (what each package is used for)                                                    |
+| [quality/sonarqube-local.md](reference/quality/sonarqube-local.md) | **SonarQube local quality gate** — Docker server, `pnpm sonar:scan`, pre-push enforcement                 |
+| [third-party-comparison.md](reference/third-party-comparison.md)   | Keep/swap verdicts for major dependencies (charts, analytics, routing)                                    |
+| [ui-components-sourcing.md](reference/ui-components-sourcing.md)   | shadcn-first UI workflow (`npx shadcn add`, research sites)                                               |
+| [dependency-upgrades.md](reference/dependency-upgrades.md)         | Audits, Dependabot, and intentional version pins                                                          |
+| [route-island-structure.md](reference/route-island-structure.md)   | **Per-route folders** — same layout for every route/sub-route; import boundaries                          |
+| [routes-and-ui.md](reference/routes-and-ui.md)                     | **Live frontend routes** (and backend APIs they use) and **UI** (shadcn component library and primitives) |
+| [e2e-testids-inventory.md](reference/e2e-testids-inventory.md)     | Playwright `data-testid` inventory by route (skill: `agent-os/skills/e2e-testids/`)                       |
+| [internationalization.md](reference/internationalization.md)       | i18n status and future client-side i18n                                                                   |
+| **[public/README.md](../public/README.md)** (project root)         | **Static assets** in `public/`: manifest, robots.txt, icons, \_headers; required list and maintenance     |
 
 ---
 

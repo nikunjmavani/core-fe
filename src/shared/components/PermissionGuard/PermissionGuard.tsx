@@ -31,7 +31,7 @@ export function PermissionGuard({
   const user = useAuthStore((s) => s.user);
   const permissions = useOrganizationStore((s) => s.permissions);
 
-  if (!user || !hasPermission({ role: user.role, permissions }, permission)) {
+  if (!(user && hasPermission({ role: user.role, permissions }, permission))) {
     return (
       <span data-testid="permission-guard" className="contents">
         {fallback}

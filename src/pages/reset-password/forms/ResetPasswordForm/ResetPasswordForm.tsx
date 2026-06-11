@@ -18,7 +18,7 @@ export function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const search = useSearch({ strict: false }) as { token?: string };
+  const search: { token?: string } = useSearch({ strict: false });
   const token = typeof search?.token === 'string' ? search.token : '';
 
   const {

@@ -22,7 +22,7 @@ export function CallbackPage() {
       if (config.useMockApi) {
         await performMockLogin();
       }
-      navigate({ to: '/', replace: true });
+      void navigate({ to: '/', replace: true });
     })();
   }, [navigate]);
 

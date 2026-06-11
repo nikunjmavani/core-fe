@@ -17,17 +17,13 @@ export default defineConfig({
   projects: [
     // Use Playwright's bundled Chromium (no dependency on system Google Chrome).
     // Install with: pnpm exec playwright install chromium
+    // Chromium is the single maintained project: visual baselines exist only for
+    // it, and CI installs only this browser. Adding firefox/webkit back is a
+    // deliberate step — install the browser, regenerate per-project baselines,
+    // and extend the CI e2e lane in the same change.
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-    {
-      name: 'Mobile Safari',
-      use: { ...devices['iPhone 13'] },
     },
   ],
   webServer: process.env.CI

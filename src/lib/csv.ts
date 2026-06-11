@@ -5,7 +5,16 @@
 
 /** Escape a single CSV field (quotes, commas, newlines). */
 function escapeField(value: unknown): string {
-  const str = value == null ? '' : String(value);
+  let str: string;
+  if (value == null) str = '';
+  else if (typeof value === 'string') str = value;
+  else if (
+    typeof value === 'number' ||
+    typeof value === 'boolean' ||
+    typeof value === 'bigint'
+  )
+    str = String(value);
+  else str = JSON.stringify(value) ?? '';
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }

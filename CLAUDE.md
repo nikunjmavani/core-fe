@@ -10,9 +10,19 @@ pnpm dev          # Vite dev server on port 5173
 pnpm build        # Production build
 pnpm tsc          # Type check (no emit)
 pnpm lint         # ESLint
+pnpm biome:check  # Biome lint lane (lint-only; Prettier owns formatting)
 pnpm health       # Full project health check (all phases)
 pnpm health:fix   # Auto-fix + full health check
+pnpm quality      # health + local SonarQube gate (Docker)
 ```
+
+**Quality gates (mirrors core-be):** Biome is a second lint lane (`biome.json`; formatter
+disabled — Prettier + `prettier-plugin-tailwindcss` own formatting). SonarQube runs locally in
+Docker and is enforced by `.husky/pre-push` on deployed-surface changes (`pnpm sonar:scan`;
+`SKIP_SONAR=1 git push` to bypass once) — see docs/reference/quality/sonarqube-local.md.
+Coverage thresholds in `vitest.config.ts` are a **ratchet**: pinned just under measured
+coverage, raised as coverage rises, never lowered. CI (`.github/workflows/ci.yml`) runs
+path-filtered parallel lanes with a single aggregate `quality-gate` required check.
 
 ## Documentation
 
@@ -27,6 +37,7 @@ pnpm health:fix   # Auto-fix + full health check
 - **Cursor ↔ backend API (MCP):** agent-os/docs/cursor-backend-mcp.md
 - **Git workflow:** docs/process/git-workflow.md
 - **Routing & tenancy (implemented spec):** docs/reference/routing-and-tenancy.md
+- **SonarQube local quality gate:** docs/reference/quality/sonarqube-local.md
 - **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/dependency-upgrades.md, docs/reference/internationalization.md
 
 ## Architecture Overview

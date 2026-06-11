@@ -36,7 +36,10 @@ function TimezoneField({ control }: { control: Control<ProfileInput> }) {
       control={control}
       name="timezone"
       render={({ field }) => (
-        <Select value={field.value || undefined} onValueChange={field.onChange}>
+        <Select
+          value={field.value === '' ? undefined : field.value}
+          onValueChange={field.onChange}
+        >
           <SelectTrigger
             id="profile-timezone"
             className="w-full"

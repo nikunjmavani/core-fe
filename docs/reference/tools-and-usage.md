@@ -38,6 +38,7 @@ Single reference table for every dependency: whether it's used and where.
 | `@commitlint/cli`                  | Yes             | Commit message lint (with config-conventional).                                                                                                                                        |
 | `@commitlint/config-conventional`  | Yes             | Commitlint rules.                                                                                                                                                                      |
 | `@eslint/js`                       | Yes             | ESLint base config.                                                                                                                                                                    |
+| `@biomejs/biome`                   | Yes             | Second linter lane (`biome:check` / `biome:fix`) — lint-only, formatter disabled (Prettier owns formatting because of `prettier-plugin-tailwindcss`). Config: `biome.json`.            |
 | `@playwright/test`                 | Yes             | E2E tests (auth, dashboard, navigation, visual, accessibility).                                                                                                                        |
 | `@size-limit/file`                 | Yes             | `size` / `size:check` scripts — bundle size limits.                                                                                                                                    |
 | `@size-limit/preset-app`           | Yes             | Size-limit app preset.                                                                                                                                                                 |
@@ -62,7 +63,7 @@ Single reference table for every dependency: whether it's used and where.
 | `globals`                          | Yes             | ESLint env globals.                                                                                                                                                                    |
 | `husky`                            | Yes             | Git hooks (prepare script).                                                                                                                                                            |
 | `jsdom`                            | Yes             | Vitest DOM environment.                                                                                                                                                                |
-| `lint-staged`                      | Yes             | Pre-commit: eslint --fix, prettier on staged files.                                                                                                                                    |
+| `lint-staged`                      | Yes             | Pre-commit: biome check, eslint --fix, prettier on staged files.                                                                                                                       |
 | `prettier`                         | Yes             | Formatting (format, format:check).                                                                                                                                                     |
 | `prettier-plugin-tailwindcss`      | Yes             | Prettier Tailwind class sorting.                                                                                                                                                       |
 | `rollup-plugin-visualizer`         | Yes             | Build analyzer (build:analyze).                                                                                                                                                        |
@@ -74,6 +75,21 @@ Single reference table for every dependency: whether it's used and where.
 | `vitest`                           | Yes             | Unit/integration test runner.                                                                                                                                                          |
 | `vitest-axe`                       | Yes             | a11y assertions (toHaveNoViolations) in tests.                                                                                                                                         |
 | `workbox-*`                        | Yes             | PWA (precaching, routing, strategies, expiration).                                                                                                                                     |
+
+---
+
+## Quality gates — Biome + SonarQube (local)
+
+Two quality layers sit on top of ESLint/Prettier, mirroring core-be:
+
+- **Biome** (`pnpm biome:check` / `pnpm biome:fix`) — a second, fast lint lane (`biome.json`).
+  Lint-only: the formatter is disabled because Prettier owns formatting via
+  `prettier-plugin-tailwindcss` (Biome cannot sort Tailwind classes the same way). Runs in
+  lint-staged, `pnpm health` (phase 3), the pre-push hook, and its own CI lane.
+- **SonarQube** (`pnpm sonar:scan`) — local Docker server + scanner enforced as a pre-push gate;
+  blocks the push on any unresolved issue/hotspot in deployed-surface code. Full guide:
+  [quality/sonarqube-local.md](quality/sonarqube-local.md). Orchestrator: `pnpm quality`
+  (= `pnpm health` + Sonar gate).
 
 ---
 
