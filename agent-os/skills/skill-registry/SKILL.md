@@ -388,7 +388,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 ### 6a. route-island
 
 **Path:** `agent-os/skills/route-island/SKILL.md`
-**Purpose:** Identical directory structure for every route and sub-route (`page.ts`, direct child folders, colocated tests); feature code stays inside the island; `<PAGE>.OVERVIEW.md` as AI entry; import boundaries.
+**Purpose:** Identical directory structure for every route and sub-route (`<page>.manifest.ts`, direct child folders, colocated tests); feature code stays inside the island; `<PAGE>.OVERVIEW.md` as AI entry; import boundaries.
 
 **Trigger keywords:** "route island", "self-contained route", "sub-route folder", "everything under this path", "same directory structure per route"
 

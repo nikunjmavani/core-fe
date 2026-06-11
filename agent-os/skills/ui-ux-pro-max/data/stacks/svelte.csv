@@ -43,7 +43,7 @@ No,Category,Guideline,Description,Do,Don't,Code Good,Code Bad,Severity,Docs URL
 42,SvelteKit,Use +page.js for data loading,Load data before render,load function in +page.js,onMount for data fetching,export function load() {},onMount(() => fetchData()),High,https://kit.svelte.dev/docs/load
 43,SvelteKit,Use +page.server.js for server-only,Server-side data loading,+page.server.js for sensitive data,+page.js for API keys,+page.server.js with DB access,+page.js with DB access,High,
 44,SvelteKit,Use form actions,Server-side form handling,+page.server.js actions,API routes for forms,export const actions = { default },fetch('/api/submit'),Medium,https://kit.svelte.dev/docs/form-actions
-45,SvelteKit,Use $app/stores for app state,$page $navigating $updated,$page for current page data,Manual URL parsing,import { page } from '$app/stores',window.location.pathname,Medium,https://kit.svelte.dev/docs/modules#$app-stores
+45,SvelteKit,Use $app/stores for app state,$page $navigating $updated,$page for current page data,Manual URL parsing,import { manifest } from '$app/stores',window.location.pathname,Medium,https://kit.svelte.dev/docs/modules#$app-stores
 46,Performance,Use {#key} for forced re-render,Reset component state,{#key id} for fresh instance,Manual destroy/create,{#key item.id}<Component/>{/key},on:change={() => component = null},Low,https://svelte.dev/docs/logic-blocks#key
 47,Performance,Avoid unnecessary reactivity,Not everything needs $:,$: only for side effects,$: for simple assignments,$: if (x) console.log(x),$: y = x (when y = x works),Low,
 48,Performance,Use immutable compiler option,Skip equality checks,immutable: true for large lists,Default for all components,<svelte:options immutable/>,Default without immutable,Low,

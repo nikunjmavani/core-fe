@@ -5,7 +5,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * Public page reached from the password-reset email link; reads the `token`
  * query param and updates the user's password.
  */
-export const page = {
+export const manifest = {
   segment: 'reset-password',
   path: '/reset-password',
   testId: 'reset-password-page',

@@ -27,12 +27,12 @@ pages/<page-name>/
 └── <child-segment>/       # layout only — DIRECT child, recursive full tree
 ```
 
-## `page.ts`
+## `<page>.manifest.ts`
 
 ```ts
 import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
-export const page = {
+export const manifest = {
   segment: '<page-name>',
   path: '/<path>',
   testId: '<page-name>-page',
@@ -48,14 +48,14 @@ export const page = {
 import { requirePermission } from '@/core/rbac/guards.ts';
 
 import { ExamplePage } from './components/ExamplePage.tsx';
-import { page } from './page.ts';
+import { manifest } from './page.ts';
 
 export function Component() {
   return <ExamplePage />;
 }
 
 export function loader() {
-  if (page.permission) requirePermission(page.permission);
+  if (manifest.permission) requirePermission(manifest.permission);
   return null;
 }
 ```
@@ -63,7 +63,7 @@ export function loader() {
 ## `components/ExamplePage.tsx`
 
 ```tsx
-import { page } from '../page.ts';
+import { manifest } from '../page.ts';
 
 export function ExamplePage() {
   return (

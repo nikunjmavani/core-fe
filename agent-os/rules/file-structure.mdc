@@ -11,9 +11,9 @@ Canonical layout for everything under `src/`. Read before adding any file. The r
 ## The pages rule in five lines
 
 1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/org_8fK2x/dashboard` → `pages/organization/$organizationId/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders with full-word names. One exception: `/` is a pure resolver route (redirect only, no island).
-2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.page.ts`, `<Page>Page.tsx` (or `<Page>Layout.tsx`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `src/app/routes/routeTree.tsx` and `docs/reference/routes-and-ui.md`. `$param` folders derive their prefix mechanically (strip `$`, kebab-case).
+2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `<Page>Layout.tsx`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `src/app/routes/routeTree.tsx` and `docs/reference/routes-and-ui.md`. `$param` folders derive their prefix mechanically (strip `$`, kebab-case).
 3. **Page shells live in `shared/layouts/`** — `AuthLayout` via the pathless `auth-shell` route; `AppShell` via the `pages/organization/$organizationId/` layout island (the org guard boundary). No grouping directories under `pages/`.
-4. **Code used by 2+ page islands lives in `shared/`** (`shared/api/auth-api.ts`, `shared/tenancy/`, …).
+4. **Promotion ladder:** one page → inside that page; a page + its OWN nested children → that page's `shared/` (family-shared, e.g. `pages/organization/$organizationId/shared/`); pages from different families or any `src/shared` component → root `src/shared/` (`shared/api/auth-api.ts`, `shared/tenancy/`, …).
 5. **Settings is a global hash modal, not a route space** — `#settings/<scope>/<section>` (see "Settings hash modal" below). Full routing/tenancy spec: `docs/reference/routing-and-tenancy.md`.
 
 ## Top-Level Layout
@@ -47,7 +47,7 @@ One per page. The prefix makes them globally unique → AI agents, grep, and IDE
 | File | Required? | Purpose |
 |------|-----------|---------|
 | `<page>.route.tsx` | ✓ | Lazy boundary (`Component`, `loader`, `ErrorBoundary`) |
-| `<page>.page.ts` | ✓ | Manifest: `path`, `testId`, `permission`, `kind`, `children` |
+| `<page>.manifest.ts` | ✓ | Manifest: `path`, `testId`, `permission`, `kind`, `children` |
 | `<page>.contracts.ts` | optional | Zod schemas + inferred TS types |
 | `<page>.api.ts` | optional | Fetcher functions for this page |
 | `<page>.search.ts` | optional | URL search-param schema (TanStack Router `validateSearch`) |
@@ -118,7 +118,7 @@ For pages that aren't a backend resource (dashboard, login, callback, onboarding
 src/pages/<page>/
 ├── <PAGE>.OVERVIEW.md
 ├── <page>.route.tsx
-├── <page>.page.ts
+├── <page>.manifest.ts
 ├── <Page>Page.tsx | <Page>Layout.tsx
 ├── <page>.contracts.ts                    if has data shapes
 ├── <page>.api.ts                          if talks to backend
@@ -131,6 +131,8 @@ src/pages/<page>/
 ├── forms/<Name>Form/{...}                 page-specific forms
 ├── hooks/use<Name>/{...}                  page-specific hooks (TanStack Query, etc.)
 ├── __tests__/integration/                 cross-component flows in this island
+├── shared/                                FAMILY-SHARED (layout pages only) — code used by
+│                                          this page + its children; never by other families
 └── <child>/                               nested route — DIRECT child, full recursive copy
 ```
 
@@ -142,7 +144,7 @@ For pages that map to a backend resource (organizations, members, roles, invitat
 src/pages/<resource>/
 ├── <RESOURCE>.OVERVIEW.md
 ├── <resource>.route.tsx                   parent route — renders the list
-├── <resource>.page.ts                     kind: 'layout', children: ['create', '$id', '$id-edit']
+├── <resource>.manifest.ts                     kind: 'layout', children: ['create', '$id', '$id-edit']
 ├── <resource>.resource.ts                 resource manifest (endpoint, schema, permissions)
 ├── <resource>.contracts.ts                Zod — shared across all CRUD views
 ├── <resource>.api.ts                      optional; most resources use shared CRUD hooks
@@ -201,18 +203,18 @@ Established cases:
 
 When a page is `kind: 'layout'`, child routes nest **directly** as `<segment>/` — the pages tree mirrors the URL tree 1:1; there is no `sub-pages/` bucket. Dynamic segments are `$param` folders with full-word param names (`$organizationId/`, `$patientId/`).
 
-**`$param` naming rule (validator-enforced):** role files in a `$param` folder derive their prefix mechanically — strip the `$`, kebab-case the rest: `$organizationId/` → `organization-id.route.tsx`, `organization-id.page.ts`, `ORGANIZATION_ID.OVERVIEW.md`. Only the UI file stays human-named (`OrganizationLayout.tsx`, `PatientDetailPage.tsx`).
+**`$param` naming rule (validator-enforced):** role files in a `$param` folder derive their prefix mechanically — strip the `$`, kebab-case the rest: `$organizationId/` → `organization-id.route.tsx`, `organization-id.manifest.ts`, `ORGANIZATION_ID.OVERVIEW.md`. Only the UI file stays human-named (`OrganizationLayout.tsx`, `PatientDetailPage.tsx`).
 
-**Reserved segment names (validator-enforced):** `components`, `hooks`, `forms`, `dialogs`, `store`, `__tests__` can never be route folders; `sub-pages` is retired.
+**Reserved segment names (validator-enforced):** `components`, `hooks`, `forms`, `dialogs`, `store`, `shared`, `__tests__` can never be route folders; `sub-pages` is retired. A `shared/` directory inside a layout page is the **family-shared** home (see Promotion ladder).
 
 ```
 pages/organization/                       → /organization (picker)
 ├── organization.route.tsx
-├── organization.page.ts                  kind: 'layout', children: ['$organizationId']
+├── organization.manifest.ts                  kind: 'layout', children: ['$organizationId']
 ├── OrganizationPickerPage.tsx
 └── $organizationId/                      → /organization/$organizationId (org guard boundary)
     ├── organization-id.route.tsx
-    ├── organization-id.page.ts           kind: 'layout', children: ['dashboard', 'suspended']
+    ├── organization-id.manifest.ts           kind: 'layout', children: ['dashboard', 'suspended']
     ├── OrganizationLayout.tsx
     ├── dashboard/                        full island shape, recursively
     └── suspended/
@@ -238,19 +240,30 @@ When a sub-path exists under a page:
    - **Dialog** when: form fits in modal, action stays in list context, transient
 3. **Rule.** Everything between two `<page>.route.tsx` files belongs to the parent route's component.
 
-## Component Promotion
+## Promotion ladder (where code lives, by who uses it)
 
-Components start **colocated** with their page directory.
+Everything starts **colocated** with its page. It climbs exactly one rung per force — never higher:
 
-**Move to `shared/components/<Name>/` when:**
-- Used by **2+ different page groups**
-- Example: `StatusBadge` used in `pages/users/` AND `pages/organizations/` → move to `src/shared/components/StatusBadge/`
+```
+used by…
+  ONE page                                → inside that page (components/, hooks/, <page>.api.ts, …)
+  the page + its OWN nested children      → pages/<parent>/shared/        (family-shared)
+  pages from DIFFERENT families,
+  or any src/shared component             → src/shared/                   (root shared)
+  every layer / platform-level            → src/core/ or src/lib/
+```
 
-**Never move to `shared/` when:**
+**Family-shared (`pages/<parent>/shared/`)** — for layout pages whose children share code:
+- Same unit shapes as root shared: `shared/components/<X>/`, `shared/hooks/use<X>/`, plus plain family modules (`<name>-contracts.ts`, `<name>-api.ts`).
+- Importable by the parent island and its descendants ONLY — never by sibling families.
+- Example: a chart widget used by `$organizationId/dashboard/` AND `$organizationId/reports/` → `pages/organization/$organizationId/shared/components/<X>/` (NOT `src/shared/`).
+- Note: the auth screens (`login/`, `register/`, …) are top-level **siblings** (no parent island — the `auth-shell` is pathless), so their shared code correctly lives in root `shared/api/auth-*` — different families.
+
+**Never promote when:**
 - Only one page uses it (even if it looks "generic")
 - It contains page-specific business logic
 
-Promotion: copy to `shared/components/<Name>/`, update imports project-wide, delete the original.
+Promotion: move to the lowest rung that covers all consumers, update imports project-wide, delete the original — never copy.
 
 ## Shared Layer
 
@@ -324,7 +337,7 @@ Auth infrastructure (token storage, refresh timer, idle timeout, login/logout se
 
 **No test file required for:**
 - `<page>.route.tsx` (thin wrapper)
-- `<page>.page.ts` (declarative manifest)
+- `<page>.manifest.ts` (declarative manifest)
 - `<page>.contracts.ts` (Zod — type-checked at compile, exercised where used)
 - `<PAGE>.OVERVIEW.md`, `index.ts` (barrel re-exports)
 
@@ -352,8 +365,10 @@ but that infrastructure is app-state- and SDK-dependent (Zustand, `@sentry/react
 lives in `shared` (see Top-Level Layout). Core must never import any other `shared`
 module. Enforced precisely by `no-restricted-imports` in `eslint.config.mjs`.
 
+**Family-shared imports:** a page may import its ANCESTOR island's `shared/` (`pages/<parent>/shared/...`) — that folder exists to be shared down the subtree. A parent's role files (`<parent>.api.ts`, …) stay private to the parent; the explicit sharing surface is `shared/`.
+
 **Never:**
-- Page imports another page (`pages/A/` ↛ `pages/B/`)
+- Page imports another page (`pages/A/` ↛ `pages/B/`) — including another family's `shared/`
 - Shared imports from pages
 - Core imports from pages, app, or any shared module outside the runtime trio
 - UI primitives (`shared/components/ui/`) import anything internal except other ui primitives and `lib`

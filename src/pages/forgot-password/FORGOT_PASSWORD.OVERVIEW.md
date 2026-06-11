@@ -5,12 +5,12 @@ to receive a password reset link.
 
 ## Files
 
-| File                        | Responsibility                                                                                                         |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `forgot-password.route.tsx` | Route marker — exports `Component` rendering `ForgotPasswordPage`.                                                     |
-| `forgot-password.page.ts`   | Page manifest (path, testId, RBAC, kind).                                                                              |
-| `ForgotPasswordPage.tsx`    | Thin wrapper that composes `AuthLayout` + `ForgotPasswordForm`.                                                        |
-| `forms/ForgotPasswordForm/` | Folder-per-unit form: collects the email, calls `authApi.forgotPassword`, and renders a confirmation state on success. |
+| File                          | Responsibility                                                                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `forgot-password.route.tsx`   | Route marker — exports `Component` rendering `ForgotPasswordPage`.                                                     |
+| `forgot-password.manifest.ts` | Page manifest (path, testId, RBAC, kind).                                                                              |
+| `ForgotPasswordPage.tsx`      | Thin wrapper that composes `AuthLayout` + `ForgotPasswordForm`.                                                        |
+| `forms/ForgotPasswordForm/`   | Folder-per-unit form: collects the email, calls `authApi.forgotPassword`, and renders a confirmation state on success. |
 
 ## State
 

@@ -1,7 +1,7 @@
 import type { OrganizationPermission } from '@/core/types/permissions.ts';
 
 /**
- * Shape for `page.ts` in every route island (leaf or layout).
+ * Shape for `<page>.manifest.ts` in every route island (leaf or layout).
  * Single manifest for layout vs leaf: path, RBAC, testId, child segments.
  * React UI: `components/<Segment>Layout.tsx` or `components/<Segment>Page.tsx`.
  * Tests: `__tests__/unit/` (not colocated beside source). See route-island skill.

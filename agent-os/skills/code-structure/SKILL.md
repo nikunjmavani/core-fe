@@ -48,7 +48,7 @@ src/
 ├── pages/<page>/                 Route island — see route-island skill
 │   ├── <PAGE>.OVERVIEW.md
 │   ├── <page>.route.tsx          lazy boundary
-│   ├── <page>.page.ts            manifest
+│   ├── <page>.manifest.ts            manifest
 │   ├── <Page>Page.tsx            top-level UI (leaf) or <Page>Layout.tsx (layout)
 │   ├── <page>.contracts.ts       Zod schemas
 │   ├── <page>.api.ts             fetchers
@@ -89,25 +89,25 @@ tests/
 
 ## Placement cheat sheet
 
-| What you're adding                     | Where it goes                                                                                                                   |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| New URL / route                        | `src/pages/<name>/` — `<PAGE>.OVERVIEW.md`, `<name>.route.tsx`, `<name>.page.ts`, `<Name>Page.tsx`; register in `routeTree.tsx` |
-| Page API functions                     | `src/pages/<name>/<name>.api.ts` (uses `apiClient`)                                                                             |
-| Page TanStack Query hooks              | `src/pages/<name>/hooks/use<Name>/` (folder + index.ts)                                                                         |
-| Zod schemas / types for a page         | `src/pages/<name>/<name>.contracts.ts`                                                                                          |
-| URL search params for a page           | `src/pages/<name>/<name>.search.ts` (used by `validateSearch` in the route)                                                     |
-| Component used only on one page        | `src/pages/<name>/components/<Name>/`                                                                                           |
-| Form used only on one page             | `src/pages/<name>/forms/<Name>Form/`                                                                                            |
-| Page-local UI state (rare)             | `src/pages/<name>/store/use<X>Store/`                                                                                           |
-| Component used on 2+ page groups       | `src/shared/components/<Name>/` (see component-promotion)                                                                       |
-| New shadcn-style UI primitive          | `src/shared/components/ui/<name>.tsx` (FLAT — shadcn convention)                                                                |
-| Reusable form field/error              | `src/shared/forms/<Name>/`                                                                                                      |
-| Global UI state (theme, sidebar)       | `src/shared/store/use<X>Store/`                                                                                                 |
-| Auth/HTTP/RBAC/tenant logic            | `src/core/<domain>/`                                                                                                            |
-| Pure helper (no React, no API)         | `src/lib/`                                                                                                                      |
-| Standard CRUD hook (resource-agnostic) | `src/shared/hooks/use{List,One,Create,Update,Delete}/`                                                                          |
-| Resource manifest                      | `src/pages/<resource>/<resource>.resource.ts`                                                                                   |
-| Load tests (k6)                        | `tests/load/`                                                                                                                   |
+| What you're adding                     | Where it goes                                                                                                                       |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| New URL / route                        | `src/pages/<name>/` — `<PAGE>.OVERVIEW.md`, `<name>.route.tsx`, `<name>.manifest.ts`, `<Name>Page.tsx`; register in `routeTree.tsx` |
+| Page API functions                     | `src/pages/<name>/<name>.api.ts` (uses `apiClient`)                                                                                 |
+| Page TanStack Query hooks              | `src/pages/<name>/hooks/use<Name>/` (folder + index.ts)                                                                             |
+| Zod schemas / types for a page         | `src/pages/<name>/<name>.contracts.ts`                                                                                              |
+| URL search params for a page           | `src/pages/<name>/<name>.search.ts` (used by `validateSearch` in the route)                                                         |
+| Component used only on one page        | `src/pages/<name>/components/<Name>/`                                                                                               |
+| Form used only on one page             | `src/pages/<name>/forms/<Name>Form/`                                                                                                |
+| Page-local UI state (rare)             | `src/pages/<name>/store/use<X>Store/`                                                                                               |
+| Component used on 2+ page groups       | `src/shared/components/<Name>/` (see component-promotion)                                                                           |
+| New shadcn-style UI primitive          | `src/shared/components/ui/<name>.tsx` (FLAT — shadcn convention)                                                                    |
+| Reusable form field/error              | `src/shared/forms/<Name>/`                                                                                                          |
+| Global UI state (theme, sidebar)       | `src/shared/store/use<X>Store/`                                                                                                     |
+| Auth/HTTP/RBAC/tenant logic            | `src/core/<domain>/`                                                                                                                |
+| Pure helper (no React, no API)         | `src/lib/`                                                                                                                          |
+| Standard CRUD hook (resource-agnostic) | `src/shared/hooks/use{List,One,Create,Update,Delete}/`                                                                              |
+| Resource manifest                      | `src/pages/<resource>/<resource>.resource.ts`                                                                                       |
+| Load tests (k6)                        | `tests/load/`                                                                                                                       |
 
 ## Route marker rule
 
@@ -147,7 +147,7 @@ When implementing any requirement that adds or changes source files:
 4. Use `data-testid` for stable selectors (`<page>-page`, `<page>-submit`, etc.)
 5. Cross-component island flows go in `pages/<page>/__tests__/integration/`
 
-**Exceptions (no test file):** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
+**Exceptions (no test file):** `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
 
 ## Implementation checklist (every requirement)
 

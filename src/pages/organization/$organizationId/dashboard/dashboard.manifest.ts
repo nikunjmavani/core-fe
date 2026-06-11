@@ -5,7 +5,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * React boundary: `route.tsx` · UI: `DashboardPage.tsx` (placeholder —
  * REPLACE_WITH_MODULE after auth is finalized).
  */
-export const page = {
+export const manifest = {
   segment: 'dashboard',
   path: '/organization/$organizationId/dashboard',
   testId: 'dashboard-page',

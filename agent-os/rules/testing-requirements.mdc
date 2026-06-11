@@ -44,7 +44,7 @@ When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if 
 
 - Type definition files (`types.ts`, `contracts.ts`)
 - Re-export barrel files (`index.ts`)
-- Route marker files (`route.tsx`, `page.ts`)
+- Route marker files (`<page>.route.tsx`, `<page>.manifest.ts`)
 - Configuration files (`constants.ts`)
 - CSS files
 - Branded type definition files (e.g., `branded.ts`)

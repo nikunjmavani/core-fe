@@ -228,13 +228,13 @@ core-fe/
 │   │   └── [3 test files]
 │   ├── pages/
 │   │   ├── accept-invite/
-│   │   │   ├── accept-invite.page.ts
+│   │   │   ├── accept-invite.manifest.ts
 │   │   │   ├── accept-invite.route.tsx
 │   │   │   ├── ACCEPT_INVITE.OVERVIEW.md
 │   │   │   └── AcceptInvitePage.tsx
 │   │   ├── callback/
+│   │   │   ├── callback.manifest.ts
 │   │   │   ├── CALLBACK.OVERVIEW.md
-│   │   │   ├── callback.page.ts
 │   │   │   ├── callback.route.tsx
 │   │   │   └── CallbackPage.tsx
 │   │   ├── forgot-password/
@@ -243,7 +243,7 @@ core-fe/
 │   │   │   │       ├── ForgotPasswordForm.tsx
 │   │   │   │       ├── index.ts
 │   │   │   │       └── [1 test file]
-│   │   │   ├── forgot-password.page.ts
+│   │   │   ├── forgot-password.manifest.ts
 │   │   │   ├── forgot-password.route.tsx
 │   │   │   ├── FORGOT_PASSWORD.OVERVIEW.md
 │   │   │   └── ForgotPasswordPage.tsx
@@ -261,8 +261,8 @@ core-fe/
 │   │   │   │       ├── index.ts
 │   │   │   │       ├── useCooldownClock.ts
 │   │   │   │       └── [1 test file]
+│   │   │   ├── login.manifest.ts
 │   │   │   ├── LOGIN.OVERVIEW.md
-│   │   │   ├── login.page.ts
 │   │   │   ├── login.route.tsx
 │   │   │   └── LoginPage.tsx
 │   │   ├── mfa/
@@ -271,8 +271,8 @@ core-fe/
 │   │   │   │       ├── index.ts
 │   │   │   │       ├── MfaForm.tsx
 │   │   │   │       └── [1 test file]
+│   │   │   ├── mfa.manifest.ts
 │   │   │   ├── MFA.OVERVIEW.md
-│   │   │   ├── mfa.page.ts
 │   │   │   ├── mfa.route.tsx
 │   │   │   └── MfaPage.tsx
 │   │   ├── onboarding/
@@ -301,28 +301,28 @@ core-fe/
 │   │   │   │       ├── index.ts
 │   │   │   │       ├── WorkspaceStep.tsx
 │   │   │   │       └── [1 test file]
+│   │   │   ├── onboarding.manifest.ts
 │   │   │   ├── ONBOARDING.OVERVIEW.md
-│   │   │   ├── onboarding.page.ts
 │   │   │   ├── onboarding.route.tsx
 │   │   │   └── OnboardingPage.tsx
 │   │   ├── organization/
 │   │   │   ├── $organizationId/
 │   │   │   │   ├── dashboard/
+│   │   │   │   │   ├── dashboard.manifest.ts
 │   │   │   │   │   ├── DASHBOARD.OVERVIEW.md
-│   │   │   │   │   ├── dashboard.page.ts
 │   │   │   │   │   ├── dashboard.route.tsx
 │   │   │   │   │   └── DashboardPage.tsx
 │   │   │   │   ├── suspended/
+│   │   │   │   │   ├── suspended.manifest.ts
 │   │   │   │   │   ├── SUSPENDED.OVERVIEW.md
-│   │   │   │   │   ├── suspended.page.ts
 │   │   │   │   │   ├── suspended.route.tsx
 │   │   │   │   │   └── SuspendedPage.tsx
-│   │   │   │   ├── organization-id.page.ts
+│   │   │   │   ├── organization-id.manifest.ts
 │   │   │   │   ├── organization-id.route.tsx
 │   │   │   │   ├── ORGANIZATION_ID.OVERVIEW.md
 │   │   │   │   └── OrganizationLayout.tsx
+│   │   │   ├── organization.manifest.ts
 │   │   │   ├── ORGANIZATION.OVERVIEW.md
-│   │   │   ├── organization.page.ts
 │   │   │   ├── organization.route.tsx
 │   │   │   └── OrganizationPickerPage.tsx
 │   │   ├── register/
@@ -331,8 +331,8 @@ core-fe/
 │   │   │   │       ├── index.ts
 │   │   │   │       ├── RegisterForm.tsx
 │   │   │   │       └── [1 test file]
+│   │   │   ├── register.manifest.ts
 │   │   │   ├── REGISTER.OVERVIEW.md
-│   │   │   ├── register.page.ts
 │   │   │   ├── register.route.tsx
 │   │   │   └── RegisterPage.tsx
 │   │   ├── reset-password/
@@ -341,7 +341,7 @@ core-fe/
 │   │   │   │       ├── index.ts
 │   │   │   │       ├── ResetPasswordForm.tsx
 │   │   │   │       └── [1 test file]
-│   │   │   ├── reset-password.page.ts
+│   │   │   ├── reset-password.manifest.ts
 │   │   │   ├── reset-password.route.tsx
 │   │   │   ├── RESET_PASSWORD.OVERVIEW.md
 │   │   │   └── ResetPasswordPage.tsx
@@ -350,7 +350,7 @@ core-fe/
 │   │       │   └── VerifyEmailForm/
 │   │       │       ├── index.ts
 │   │       │       └── VerifyEmailForm.tsx
-│   │       ├── verify-email.page.ts
+│   │       ├── verify-email.manifest.ts
 │   │       ├── verify-email.route.tsx
 │   │       ├── VERIFY_EMAIL.OVERVIEW.md
 │   │       └── VerifyEmailPage.tsx

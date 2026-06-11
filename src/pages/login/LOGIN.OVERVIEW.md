@@ -10,7 +10,7 @@ or the dashboard (`/`).
 | File                         | Responsibility                                                                                                                              |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `login.route.tsx`            | Route marker — exports `Component` rendering `LoginPage` inside the shared `AuthLayout`, plus a `loader` enforcing the manifest permission. |
-| `login.page.ts`              | Page manifest (`path`, `testId`, `permission`, `kind`).                                                                                     |
+| `login.manifest.ts`          | Page manifest (`path`, `testId`, `permission`, `kind`).                                                                                     |
 | `LoginPage.tsx`              | Thin top-level UI wrapper around `<LoginForm />`. Owns `data-testid="login-page"`.                                                          |
 | `forms/LoginForm/`           | Email + password form with client-side validation, cooldown after repeated failures, and post-login navigation.                             |
 | `forms/PasswordlessOptions/` | Google OAuth + passkey + magic-link buttons shown above the form.                                                                           |

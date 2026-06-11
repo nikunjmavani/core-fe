@@ -4,7 +4,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * Forgot password — leaf island (`/forgot-password`).
  * Public page where a user requests a password reset email.
  */
-export const page = {
+export const manifest = {
   segment: 'forgot-password',
   path: '/forgot-password',
   testId: 'forgot-password-page',

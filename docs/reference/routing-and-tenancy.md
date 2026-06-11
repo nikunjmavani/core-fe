@@ -57,37 +57,37 @@ src/pages/
 └── organization/
     ├── ORGANIZATION.OVERVIEW.md
     ├── organization.route.tsx                   ← /organization (picker)
-    ├── organization.page.ts
+    ├── organization.manifest.ts
     ├── OrganizationPickerPage.tsx
     └── $organizationId/
         ├── ORGANIZATION_ID.OVERVIEW.md
         ├── organization-id.route.tsx            ← layout boundary; org guards in beforeLoad/loader
-        ├── organization-id.page.ts              kind: 'layout', children: [...]
+        ├── organization-id.manifest.ts              kind: 'layout', children: [...]
         ├── OrganizationLayout.tsx               shell UI + <Outlet />
         ├── dashboard/                           4-file island
         ├── patients/
         │   ├── PATIENTS.OVERVIEW.md
-        │   ├── patients.route.tsx  patients.page.ts  PatientsPage.tsx
+        │   ├── patients.route.tsx  patients.manifest.ts  PatientsPage.tsx
         │   └── $patientId/
         │       ├── PATIENT_ID.OVERVIEW.md
-        │       ├── patient-id.route.tsx  patient-id.page.ts  PatientDetailPage.tsx
+        │       ├── patient-id.route.tsx  patient-id.manifest.ts  PatientDetailPage.tsx
         │       └── appointments/
         │           ├── APPOINTMENTS.OVERVIEW.md
-        │           ├── appointments.route.tsx  appointments.page.ts  AppointmentsPage.tsx
+        │           ├── appointments.route.tsx  appointments.manifest.ts  AppointmentsPage.tsx
         │           └── $appointmentId/
         │               ├── APPOINTMENT_ID.OVERVIEW.md
-        │               ├── appointment-id.route.tsx  appointment-id.page.ts
+        │               ├── appointment-id.route.tsx  appointment-id.manifest.ts
         │               └── AppointmentDetailPage.tsx
         ├── appointments/                        org-wide list (4-file island)
         ├── billing/
         │   ├── BILLING.OVERVIEW.md
-        │   ├── billing.route.tsx  billing.page.ts  BillingLayout.tsx
+        │   ├── billing.route.tsx  billing.manifest.ts  BillingLayout.tsx
         │   └── invoices/
         │       ├── INVOICES.OVERVIEW.md
-        │       ├── invoices.route.tsx  invoices.page.ts  InvoicesPage.tsx
+        │       ├── invoices.route.tsx  invoices.manifest.ts  InvoicesPage.tsx
         │       └── $invoiceId/
         │           ├── INVOICE_ID.OVERVIEW.md
-        │           ├── invoice-id.route.tsx  invoice-id.page.ts  InvoiceDetailPage.tsx
+        │           ├── invoice-id.route.tsx  invoice-id.manifest.ts  InvoiceDetailPage.tsx
         ├── reports/                             4-file island
         └── suspended/                           4-file island (status-guard target)
 ```
@@ -96,7 +96,7 @@ src/pages/
 
 1. **Prefix = directory name.** `patients/` → `patients.route.tsx`, `PATIENTS.OVERVIEW.md`.
 2. **`$param` folders strip the `$` and kebab-case the param**: `$organizationId/` →
-   `organization-id.route.tsx`, `organization-id.page.ts`, `ORGANIZATION_ID.OVERVIEW.md`.
+   `organization-id.route.tsx`, `organization-id.manifest.ts`, `ORGANIZATION_ID.OVERVIEW.md`.
    The filename is mechanically derivable from the URL; param names are full words, so derived
    names are too. The UI file alone stays human-named (`PatientDetailPage.tsx`,
    `OrganizationLayout.tsx`) — the validator only requires `*Page.tsx | *Layout.tsx`.
@@ -107,13 +107,17 @@ src/pages/
    different depths (the two `appointments/` islands). The validator reports them as a notice —
    the full path disambiguates. Avoidable collisions (parent/child like
    `organization`/`organization-id`) are designed out by rule 2.
-5. **Every URL folder keeps the same 4-file contract** — `<prefix>.route.tsx`, `<prefix>.page.ts`,
+5. **Every URL folder keeps the same 4-file contract** — `<prefix>.route.tsx`, `<prefix>.manifest.ts`,
    `<Page>Page.tsx | <Page>Layout.tsx`, `<PREFIX>.OVERVIEW.md` — plus optional page-prefixed
    role files (`<prefix>.api.ts`, `<prefix>.contracts.ts`, `<prefix>.search.ts`, `<prefix>.fixtures.ts`)
    and unit folders. **There is no `*.layout.tsx` role file**: checks live in `beforeLoad`/`loader`
    inside `<prefix>.route.tsx`; shared section UI is the island's `<Page>Layout.tsx`
    (`kind: 'layout'` in the manifest).
-6. **No `features/` layer.** Cross-island domain code lives in `shared/` (`shared/api/`,
+6. **Promotion ladder:** one page → inside the page; the page + its OWN nested children →
+   `pages/<parent>/shared/` (family-shared; importable only down that subtree); different
+   families or any `src/shared` component → root `src/shared/`. `shared` is a reserved URL
+   segment.
+7. **No `features/` layer.** Cross-island domain code lives in `shared/` (`shared/api/`,
    `shared/tenancy/`); introduce a new layer only with explicit import rules if cross-island
    domain UI actually emerges.
 
@@ -139,7 +143,7 @@ Order for `/organization/org_8fK2x/patients/pat_x9Q2m/appointments/apt_…`:
 1. `authGuard` — logged in? → else redirect `/login` (carry `returnTo`)
 2. `organizationGuard` — param is well-formed; user is a member → else **404** (don't leak existence)
 3. `organizationStatusGuard` — active / subscription valid / onboarded → else `…/suspended` or `/onboarding`
-4. `rbacGuard` — section permission (`page.permission` from the manifest) → else **403** `/unauthorized`
+4. `rbacGuard` — section permission (`manifest.permission` from the manifest) → else **403** `/unauthorized`
 5. `featureGuard` — module enabled in plan → else 404 or upsell state
 6. **Resource scope is NOT a frontend guard** — the route loader's data fetch _is_ the check:
    the API returns the resource scoped to the organization (and parent resource), and a

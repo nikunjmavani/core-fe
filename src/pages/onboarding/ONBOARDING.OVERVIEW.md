@@ -5,11 +5,11 @@ Route: `/onboarding`. Where a freshly authenticated user with **no organization*
 
 ## Files
 
-| File                   | Responsibility                                                                                                                                                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `onboarding.route.tsx` | Route marker — exports `Component` rendering `OnboardingPage`.                                                                                                                                                                                               |
-| `onboarding.page.ts`   | Page manifest (`path: '/onboarding'`, `testId`, `kind: leaf`).                                                                                                                                                                                               |
-| `OnboardingPage.tsx`   | Multi-step wizard (profile → organization → invite team → done). Reads/writes progress from `@/shared/store/useOnboardingStore/` so a refresh resumes mid-flow. On finish it creates the org, sets tenant context, sends mock invites, and redirects to `/`. |
+| File                     | Responsibility                                                                                                                                                                                                                                               |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onboarding.route.tsx`   | Route marker — exports `Component` rendering `OnboardingPage`.                                                                                                                                                                                               |
+| `onboarding.manifest.ts` | Page manifest (`path: '/onboarding'`, `testId`, `kind: leaf`).                                                                                                                                                                                               |
+| `OnboardingPage.tsx`     | Multi-step wizard (profile → organization → invite team → done). Reads/writes progress from `@/shared/store/useOnboardingStore/` so a refresh resumes mid-flow. On finish it creates the org, sets tenant context, sends mock invites, and redirects to `/`. |
 
 ## State
 

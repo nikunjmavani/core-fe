@@ -73,7 +73,7 @@ Every directory under `src/pages/` that corresponds to a frontend URL path **mus
 **The rule in five lines (read this first):**
 
 1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/org_8fK2x/dashboard` → `pages/organization/$organizationId/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. One exception: `/` is a pure resolver route (redirect only, no island).
-2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.page.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationId/` → `organization-id.route.tsx`, `ORGANIZATION_ID.OVERVIEW.md`).
+2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationId/` → `organization-id.route.tsx`, `ORGANIZATION_ID.OVERVIEW.md`).
 3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppShell via the `pages/organization/$organizationId/` layout island (the org guard boundary). No grouping directories under `pages/`.
 4. **Code used by 2+ page islands lives in `shared/`** (e.g. `shared/api/auth-api.ts`, `shared/tenancy/`).
 5. **Settings is a global hash modal, not a route space** — `#settings/<scope>/<section>` opens `shared/components/SettingsModal/` over any page (see `agent-os/rules/file-structure.mdc` → Settings hash modal). Full spec: `docs/reference/routing-and-tenancy.md`.
@@ -84,7 +84,7 @@ Every directory under `src/pages/` that corresponds to a frontend URL path **mus
 src/pages/
 ├── login/                           ← /login (AuthLayout via pathless auth-shell)
 │   ├── login.route.tsx
-│   ├── login.page.ts                ← manifest
+│   ├── login.manifest.ts                ← manifest
 │   ├── LoginPage.tsx                ← top-level UI
 │   ├── LOGIN.OVERVIEW.md
 │   └── forms/LoginForm/             (folder-per-unit)
@@ -94,11 +94,11 @@ src/pages/
 ├── onboarding/   accept-invite/
 └── organization/
     ├── organization.route.tsx       ← /organization (picker)
-    ├── organization.page.ts
+    ├── organization.manifest.ts
     ├── OrganizationPickerPage.tsx
     └── $organizationId/             ← /organization/org_8fK2x — org guard boundary
         ├── organization-id.route.tsx     ($param folder → strip-$ kebab prefix)
-        ├── organization-id.page.ts       kind: 'layout', children: [dashboard, suspended]
+        ├── organization-id.manifest.ts       kind: 'layout', children: [dashboard, suspended]
         ├── OrganizationLayout.tsx        mounts shared AppShell
         ├── ORGANIZATION_ID.OVERVIEW.md
         ├── dashboard/               ← …/dashboard — full island (api, contracts, hooks/, components/)
@@ -108,13 +108,13 @@ src/pages/
 
 ### Page Directory Shape (route island)
 
-Every route uses a **route island** ([`agent-os/skills/route-island/SKILL.md`](agent-os/skills/route-island/SKILL.md), [`docs/reference/route-island-structure.md`](docs/reference/route-island-structure.md)). Layout parents nest children **directly** as `<segment>/` (or `$param/`). **`<page>.page.ts`** is the layout + leaf manifest; top-level UI is `<Page>Page.tsx` / `<Page>Layout.tsx` at island root; tests are colocated next to source (sub-units use folder-per-unit).
+Every route uses a **route island** ([`agent-os/skills/route-island/SKILL.md`](agent-os/skills/route-island/SKILL.md), [`docs/reference/route-island-structure.md`](docs/reference/route-island-structure.md)). Layout parents nest children **directly** as `<segment>/` (or `$param/`). **`<page>.manifest.ts`** is the layout + leaf manifest; top-level UI is `<Page>Page.tsx` / `<Page>Layout.tsx` at island root; tests are colocated next to source (sub-units use folder-per-unit).
 
 ```
 pages/<page>/
 ├── <PAGE>.OVERVIEW.md                # required — AI/human entry doc
 ├── <page>.route.tsx                  # required — lazy boundary
-├── <page>.page.ts                    # required — manifest (path, RBAC, testId, kind, children)
+├── <page>.manifest.ts                    # required — manifest (path, RBAC, testId, kind, children)
 ├── <Page>Page.tsx | <Page>Layout.tsx # required — top-level UI
 ├── <page>.contracts.ts               # optional — Zod schemas
 ├── <page>.api.ts                     # optional — fetchers
@@ -126,6 +126,7 @@ pages/<page>/
 ├── hooks/use<Name>/                  # folder-per-unit
 ├── dialogs/<Name>Dialog/             # folder-per-unit (resource pages)
 ├── __tests__/integration/            # cross-component flows in this island
+├── shared/                           # FAMILY-SHARED (layout pages) — this page + children only
 └── <child>/                          # nested route — DIRECT child, full recursive copy
 ```
 
@@ -137,14 +138,14 @@ pages/<page>/
 import { requirePermission } from '@/core/rbac/guards.ts';
 
 import { DashboardPage } from './DashboardPage.tsx';
-import { page } from './dashboard.page.ts';
+import { manifest } from './dashboard.manifest.ts';
 
 export function Component() {
   return <DashboardPage />;
 }
 
 export function loader() {
-  if (page.permission) requirePermission(page.permission);
+  if (manifest.permission) requirePermission(manifest.permission);
   return null;
 }
 ```
@@ -184,9 +185,19 @@ src/shared/
     └── useOnboardingStore/
 ```
 
-### Component Promotion Rule
+### Promotion ladder
 
-Components start colocated with their page. Move to `shared/` only when used by **2+ different page groups**.
+Everything starts colocated with its page and climbs exactly one rung per force:
+
+```
+ONE page                            → inside that page
+page + its OWN nested children      → pages/<parent>/shared/   (family-shared)
+DIFFERENT families, or any
+src/shared component needs it       → src/shared/              (root shared)
+platform-level                      → src/core/ or src/lib/
+```
+
+Family-shared is importable by the parent island and its descendants only — never by sibling families. Full rules: `agent-os/rules/file-structure.mdc` → Promotion ladder.
 
 ## Import Conventions
 

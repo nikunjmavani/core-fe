@@ -1,6 +1,6 @@
 # Route island structure
 
-Self-contained folders under `pages/<page-name>/` with page-prefixed role files, folder-per-unit sub-units, **direct child folders** for nested routes (the pages tree mirrors the URL tree), **`<page>.page.ts`** for the layout/leaf manifest, and colocated tests.
+Self-contained folders under `pages/<page-name>/` with page-prefixed role files, folder-per-unit sub-units, **direct child folders** for nested routes (the pages tree mirrors the URL tree), **`<page>.manifest.ts`** for the layout/leaf manifest, and colocated tests.
 
 **Rule (contract):** [`agent-os/rules/file-structure.mdc`](../../agent-os/rules/file-structure.mdc)
 **Skill (workflow):** [`agent-os/skills/route-island/SKILL.md`](../../agent-os/skills/route-island/SKILL.md)
@@ -14,7 +14,7 @@ Self-contained folders under `pages/<page-name>/` with page-prefixed role files,
 pages/<page-name>/
 ├── <PAGE>.OVERVIEW.md                        REQUIRED — AI/human entry doc
 ├── <page>.route.tsx                   REQUIRED — Lazy boundary
-├── <page>.page.ts                     REQUIRED — Manifest (path, RBAC, testId, kind, children)
+├── <page>.manifest.ts                     REQUIRED — Manifest (path, RBAC, testId, kind, children)
 ├── <Page>Page.tsx                     REQUIRED when kind: leaf — top-level UI
 ├── <Page>Layout.tsx                   REQUIRED when kind: layout — top-level UI + <Outlet />
 ├── <page>.contracts.ts                OPTIONAL — Zod schemas
@@ -29,6 +29,8 @@ pages/<page-name>/
 ├── hooks/use<Name>/                   folder-per-unit
 ├── dialogs/<Name>Dialog/              folder-per-unit (resource pages)
 ├── __tests__/integration/             cross-component flows in this island
+├── shared/                            FAMILY-SHARED (layout pages only) — code used by
+│                                      this page + its children; never by other families
 └── <child-segment>/                   nested route — DIRECT child, full recursive copy
                                        ($param folders for dynamic segments)
 ```
@@ -39,17 +41,17 @@ pages/<page-name>/
 
 ## Naming summary
 
-| Category                      | Style                                  | Example                                                        |
-| ----------------------------- | -------------------------------------- | -------------------------------------------------------------- |
-| Role files (single-per-page)  | `<page>.<role>.<ext>` lowercase-dotted | `dashboard.route.tsx`, `dashboard.page.ts`, `dashboard.api.ts` |
-| Entry doc                     | UPPER_SNAKE, directory-prefixed        | `<PAGE>.OVERVIEW.md`                                           |
-| Top-level UI                  | PascalCase, page-prefixed              | `DashboardPage.tsx`, `OrganizationLayout.tsx`                  |
-| Sub-units                     | PascalCase, no prefix                  | `ActivityFeed/`, `LoginForm/`, `useDashboard/`                 |
-| shadcn primitives (exception) | flat lowercase                         | `shared/components/ui/button.tsx`                              |
+| Category                      | Style                                  | Example                                                            |
+| ----------------------------- | -------------------------------------- | ------------------------------------------------------------------ |
+| Role files (single-per-page)  | `<page>.<role>.<ext>` lowercase-dotted | `dashboard.route.tsx`, `dashboard.manifest.ts`, `dashboard.api.ts` |
+| Entry doc                     | UPPER_SNAKE, directory-prefixed        | `<PAGE>.OVERVIEW.md`                                               |
+| Top-level UI                  | PascalCase, page-prefixed              | `DashboardPage.tsx`, `OrganizationLayout.tsx`                      |
+| Sub-units                     | PascalCase, no prefix                  | `ActivityFeed/`, `LoginForm/`, `useDashboard/`                     |
+| shadcn primitives (exception) | flat lowercase                         | `shared/components/ui/button.tsx`                                  |
 
 ---
 
-## `<page>.page.ts` (layout + leaf manifest)
+## `<page>.manifest.ts` (layout + leaf manifest)
 
 | Field        | Role                                                              |
 | ------------ | ----------------------------------------------------------------- |
@@ -63,7 +65,7 @@ pages/<page-name>/
 ```ts
 import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
-export const page = {
+export const manifest = {
   segment: 'organization',
   path: '/organization',
   testId: 'organization-page',
@@ -99,7 +101,7 @@ Resources (organizations, members, roles, etc.) add a CRUD specialization:
 ```
 pages/<resource>/
 ├── <resource>.route.tsx                 parent route — renders the list
-├── <resource>.page.ts                   kind: 'layout', children: ['create', '$<resource>Id']
+├── <resource>.manifest.ts                   kind: 'layout', children: ['create', '$<resource>Id']
 ├── <resource>.resource.ts               resource manifest
 ├── <Resource>ListPage.tsx               top-level UI — mounts the dialogs
 ├── components/, forms/, hooks/          folder-per-unit
@@ -154,7 +156,7 @@ Established cases:
 | Cross-component integration in this island | `__tests__/integration/`                        |
 | Browser E2E (full app, cross-page)         | Project `tests/e2e/` (Playwright)               |
 
-**No test required for:** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
+**No test required for:** `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
 
 Vitest globs cover both `src/**/*.test.{ts,tsx}` and `src/**/__tests__/**/*.test.{ts,tsx}`.
 

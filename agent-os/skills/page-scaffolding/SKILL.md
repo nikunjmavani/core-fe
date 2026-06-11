@@ -46,12 +46,12 @@ For a layout island, add `<child>/` directories per child — DIRECT children, e
 
 ### 3. Create the role files
 
-#### `src/pages/<name>/<name>.page.ts` — manifest
+#### `src/pages/<name>/<name>.manifest.ts` — manifest
 
 ```ts
 import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
-export const page = {
+export const manifest = {
   segment: '<name>',
   path: '/<name>',
   testId: '<name>-page',
@@ -154,14 +154,14 @@ export function <Name>Page() {
 import { requirePermission } from '@/core/rbac/guards.ts';
 
 import { <Name>Page } from './<Name>Page.tsx';
-import { page } from './<name>.page.ts';
+import { manifest } from './<name>.manifest.ts';
 
 export function Component() {
   return <<Name>Page />;
 }
 
 export function loader() {
-  if (page.permission) requirePermission(page.permission);
+  if (manifest.permission) requirePermission(manifest.permission);
   return null;
 }
 ```
@@ -179,7 +179,7 @@ export function loader() {
 
 | File                  | Role                |
 | --------------------- | ------------------- |
-| `<name>.page.ts`      | Manifest            |
+| `<name>.manifest.ts`  | Manifest            |
 | `<name>.route.tsx`    | Lazy boundary       |
 | `<Name>Page.tsx`      | Top-level UI        |
 | `<name>.contracts.ts` | Zod schemas         |
@@ -243,7 +243,7 @@ Each test:
 - Uses `data-testid` for selectors
 - Wraps with `renderWithProviders` from `@/tests/utils/renderWithProviders.tsx`
 
-**No test file required for:** `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
+**No test file required for:** `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
 
 ### 7. Update test-id inventory
 

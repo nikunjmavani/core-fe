@@ -7,11 +7,11 @@ finalized (`REPLACE_WITH_MODULE`), one module at a time.
 
 ## Files
 
-| File                  | Responsibility                                                      |
-| --------------------- | ------------------------------------------------------------------- |
-| `dashboard.route.tsx` | Route marker — exports `Component` rendering `DashboardPage`.       |
-| `dashboard.page.ts`   | Manifest — `kind: 'leaf'`, no permission (auth + org guards apply). |
-| `DashboardPage.tsx`   | Placeholder UI. Owns `data-testid="dashboard-page"`.                |
+| File                    | Responsibility                                                      |
+| ----------------------- | ------------------------------------------------------------------- |
+| `dashboard.route.tsx`   | Route marker — exports `Component` rendering `DashboardPage`.       |
+| `dashboard.manifest.ts` | Manifest — `kind: 'leaf'`, no permission (auth + org guards apply). |
+| `DashboardPage.tsx`     | Placeholder UI. Owns `data-testid="dashboard-page"`.                |
 
 ## When this module is built
 

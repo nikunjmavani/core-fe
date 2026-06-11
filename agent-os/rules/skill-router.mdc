@@ -41,7 +41,7 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 
 1. **Code Structure**: When implementing any requirement (new feature, page, component, API), read the `code-structure` skill first for placement and dependency rules; then add or update tests automatically (do not wait for the user to ask for tests).
 
-2. **Test Generation**: When a new `.tsx` or `.ts` source file is created under `src/`, check if a colocated test file exists. If not, invoke the `test-generation` skill to create one. Exceptions: `types.ts`, `branded.ts`, `index.ts` (barrel), `<page>.contracts.ts`, `<page>.constants.ts`, `<page>.route.tsx`, `<page>.page.ts`, `<PAGE>.OVERVIEW.md`. Do not ask the user whether to add tests — generate them as part of the implementation.
+2. **Test Generation**: When a new `.tsx` or `.ts` source file is created under `src/`, check if a colocated test file exists. If not, invoke the `test-generation` skill to create one. Exceptions: `types.ts`, `branded.ts`, `index.ts` (barrel), `<page>.contracts.ts`, `<page>.constants.ts`, `<page>.route.tsx`, `<page>.manifest.ts`, `<PAGE>.OVERVIEW.md`. Do not ask the user whether to add tests — generate them as part of the implementation.
 
 2b. **E2E Test IDs**: When adding or changing interactive UI, or when the user wants Playwright-ready selectors, invoke the `e2e-testids` skill: apply naming conventions, add `data-testid` on pages/forms/nav, and update `docs/reference/e2e-testids-inventory.md`.
 

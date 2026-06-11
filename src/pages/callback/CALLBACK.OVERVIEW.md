@@ -8,11 +8,11 @@ split-screen auth chrome.
 
 ## Files
 
-| File                 | Responsibility                                                                                                                                                                                                         |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `callback.route.tsx` | Route marker — exports `Component` rendering `CallbackPage`.                                                                                                                                                           |
-| `callback.page.ts`   | Page manifest — `kind: 'leaf'`, path `/callback`, no permission required.                                                                                                                                              |
-| `CallbackPage.tsx`   | Exchanges the callback (code / token) for a session. In mock mode it calls `performMockLogin` and redirects to the dashboard; on failure it routes back to `/login` with an error. Owns `data-testid="callback-page"`. |
+| File                   | Responsibility                                                                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `callback.route.tsx`   | Route marker — exports `Component` rendering `CallbackPage`.                                                                                                                                                           |
+| `callback.manifest.ts` | Page manifest — `kind: 'leaf'`, path `/callback`, no permission required.                                                                                                                                              |
+| `CallbackPage.tsx`     | Exchanges the callback (code / token) for a session. In mock mode it calls `performMockLogin` and redirects to the dashboard; on failure it routes back to `/login` with an error. Owns `data-testid="callback-page"`. |
 
 ## Wiring to the backend
 

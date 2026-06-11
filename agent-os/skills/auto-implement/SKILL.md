@@ -83,7 +83,7 @@ Once the user provides a requirement (Option A or B), the agent runs **all** of 
 
 4. **Follow code-structure skill** (`agent-os/skills/code-structure/SKILL.md`):
    - Place files in the correct layer per the dependency rule.
-   - New pages get: `<page>.route.tsx`, `<page>.page.ts`, `<Page>Page.tsx`, `<page>.contracts.ts`, `<page>.api.ts`, `hooks/use<X>/`, `components/<Name>/`, `forms/<Name>Form/` (sub-units are folder-per-unit with `index.ts`).
+   - New pages get: `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx`, `<page>.contracts.ts`, `<page>.api.ts`, `hooks/use<X>/`, `components/<Name>/`, `forms/<Name>Form/` (sub-units are folder-per-unit with `index.ts`).
    - Zod schemas in `<page>.contracts.ts`; API functions using `apiClient` in `<page>.api.ts`.
    - TanStack Query hooks in `hooks/use<Name>/use<Name>.ts`.
 
@@ -107,7 +107,7 @@ Once the user provides a requirement (Option A or B), the agent runs **all** of 
    - Create colocated test files for every new component, hook, service, and page.
    - Include `vitest-axe` accessibility checks (`toHaveNoViolations()`).
    - Use `data-testid` for stable selectors.
-   - Skip test files for exceptions: `<page>.route.tsx`, `<page>.page.ts`, `<page>.contracts.ts`, `<page>.constants.ts`, `types.ts`, `index.ts` (barrel), `<PAGE>.OVERVIEW.md`.
+   - Skip test files for exceptions: `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<page>.constants.ts`, `types.ts`, `index.ts` (barrel), `<PAGE>.OVERVIEW.md`.
 
 9. **Run tests** (mentally or via terminal) — ensure no regressions.
 

@@ -7,8 +7,8 @@ the picker.
 
 ## Files
 
-| File                  | Responsibility                                                |
-| --------------------- | ------------------------------------------------------------- |
-| `suspended.route.tsx` | Route marker — exports `Component` rendering `SuspendedPage`. |
-| `suspended.page.ts`   | Manifest — `kind: 'leaf'`, no permission.                     |
-| `SuspendedPage.tsx`   | Blocked-state UI. Owns `data-testid="suspended-page"`.        |
+| File                    | Responsibility                                                |
+| ----------------------- | ------------------------------------------------------------- |
+| `suspended.route.tsx`   | Route marker — exports `Component` rendering `SuspendedPage`. |
+| `suspended.manifest.ts` | Manifest — `kind: 'leaf'`, no permission.                     |
+| `SuspendedPage.tsx`     | Blocked-state UI. Owns `data-testid="suspended-page"`.        |

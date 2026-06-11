@@ -23,7 +23,7 @@ This is an enterprise React 18 + TypeScript + Vite frontend with a page-first ar
 - Use `.ts` extension for pure logic, `.tsx` for files with JSX
 - Always include `.ts`/`.tsx` extension in imports (e.g., `import { cn } from '@/lib/utils.ts'`)
 - Use the `@/` path alias for all imports from `src/`
-- **Role files** (single-per-page) are page-prefixed lowercase-dotted: `<page>.route.tsx`, `<page>.page.ts`, `<page>.api.ts`, `<page>.contracts.ts`, `<page>.search.ts`, `<page>.fixtures.ts`
+- **Role files** (single-per-page) are page-prefixed lowercase-dotted: `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.api.ts`, `<page>.contracts.ts`, `<page>.search.ts`, `<page>.fixtures.ts`
 - **Sub-units** (components, forms, hooks, dialogs, stores) are folder-per-unit + `index.ts` barrel: `<Name>/{<Name>.tsx, <Name>.test.tsx, index.ts}`
 - **Exception:** shadcn primitives in `shared/components/ui/` stay flat
 
@@ -66,7 +66,7 @@ Full tree + rules: [`agent-os/rules/file-structure.mdc`](file-structure.mdc) (co
 pages/<page>/
 ├── <PAGE>.OVERVIEW.md                # required — AI/human entry doc
 ├── <page>.route.tsx                  # required — lazy boundary
-├── <page>.page.ts                    # required — manifest (path, RBAC, testId, kind, children)
+├── <page>.manifest.ts                    # required — manifest (path, RBAC, testId, kind, children)
 ├── <Page>Page.tsx | <Page>Layout.tsx # required — top-level UI
 ├── <page>.contracts.ts               # optional — Zod schemas
 ├── <page>.api.ts                     # optional — fetchers

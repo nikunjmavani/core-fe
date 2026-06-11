@@ -42,13 +42,13 @@ flowchart TB
 
 ## Getting started
 
-| Doc                                                                                      | Purpose                                                          |
-| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [setup.md](getting-started/setup.md)                                                     | Local development: clone, env, run the app                       |
-| [requirement-intake.md](getting-started/requirement-intake.md)                           | How to submit a requirement so the AI can implement it in one go |
-| [requirement-format.md](getting-started/requirement-format.md)                           | Template and field guide for writing requirements                |
-| [route-island-template.md](getting-started/route-island-template.md)                     | Copy-paste tree (`page.ts`, colocated tests, direct children)    |
-| [requirements/sample-requirement.md](getting-started/requirements/sample-requirement.md) | Filled example (Notifications page)                              |
+| Doc                                                                                      | Purpose                                                                  |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| [setup.md](getting-started/setup.md)                                                     | Local development: clone, env, run the app                               |
+| [requirement-intake.md](getting-started/requirement-intake.md)                           | How to submit a requirement so the AI can implement it in one go         |
+| [requirement-format.md](getting-started/requirement-format.md)                           | Template and field guide for writing requirements                        |
+| [route-island-template.md](getting-started/route-island-template.md)                     | Copy-paste tree (`<page>.manifest.ts`, colocated tests, direct children) |
+| [requirements/sample-requirement.md](getting-started/requirements/sample-requirement.md) | Filled example (Notifications page)                                      |
 
 ---
 

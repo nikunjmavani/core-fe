@@ -6,7 +6,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * `/organization/$organizationId/dashboard`. The `/` resolver redirects here
  * when no last-used organization is known.
  */
-export const page = {
+export const manifest = {
   segment: 'organization',
   path: '/organization',
   testId: 'organization-page',

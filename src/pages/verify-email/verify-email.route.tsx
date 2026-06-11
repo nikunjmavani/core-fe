@@ -1,6 +1,6 @@
 import { requirePermission } from '@/core/rbac/guards.ts';
 
-import { page } from './verify-email.page.ts';
+import { manifest } from './verify-email.manifest.ts';
 import { VerifyEmailPage } from './VerifyEmailPage.tsx';
 
 /**
@@ -11,6 +11,6 @@ export function Component() {
 }
 
 export function loader() {
-  if (page.permission) requirePermission(page.permission);
+  if (manifest.permission) requirePermission(manifest.permission);
   return null;
 }

@@ -7,12 +7,12 @@ access token and then redirects to `/`.
 
 ## Files
 
-| File             | Responsibility                                                                                                              |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `mfa.route.tsx`  | Route marker — exports `Component` rendering `MfaPage` inside `AuthLayout`.                                                 |
-| `mfa.page.ts`    | Page manifest — `kind: 'leaf'`, path `/mfa`, no permission required.                                                        |
-| `MfaPage.tsx`    | Thin wrapper that mounts `MfaForm` and exposes `data-testid="mfa-page"`.                                                    |
-| `forms/MfaForm/` | Code input form, calls `authApi.mfaVerify`, sets the access token, fetches the user, schedules refresh, and navigates home. |
+| File              | Responsibility                                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `mfa.route.tsx`   | Route marker — exports `Component` rendering `MfaPage` inside `AuthLayout`.                                                 |
+| `mfa.manifest.ts` | Page manifest — `kind: 'leaf'`, path `/mfa`, no permission required.                                                        |
+| `MfaPage.tsx`     | Thin wrapper that mounts `MfaForm` and exposes `data-testid="mfa-page"`.                                                    |
+| `forms/MfaForm/`  | Code input form, calls `authApi.mfaVerify`, sets the access token, fetches the user, schedules refresh, and navigates home. |
 
 ## State
 

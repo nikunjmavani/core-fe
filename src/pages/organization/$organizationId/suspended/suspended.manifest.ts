@@ -5,7 +5,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * Blocked state for suspended / lapsed organizations; target of
  * `requireActiveOrganization`.
  */
-export const page = {
+export const manifest = {
   segment: 'suspended',
   path: '/organization/$organizationId/suspended',
   testId: 'suspended-page',

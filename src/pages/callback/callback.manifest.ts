@@ -6,7 +6,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * backend brokers every third party onto this one URL); exchanges the
  * callback for a session and forwards the user to the dashboard.
  */
-export const page = {
+export const manifest = {
   segment: 'callback',
   path: '/callback',
   testId: 'callback-page',

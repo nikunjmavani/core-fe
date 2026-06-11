@@ -5,7 +5,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * Public sign-up form that creates the account, sets the auth token, and lands the user
  * on `/` where the onboarding redirect takes over if no organization exists.
  */
-export const page = {
+export const manifest = {
   segment: 'register',
   path: '/register',
   testId: 'register-page',

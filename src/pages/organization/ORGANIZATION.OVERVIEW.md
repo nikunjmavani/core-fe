@@ -9,7 +9,7 @@ organizations but no (valid) last-used one. Spec: `docs/reference/routing-and-te
 | File                         | Responsibility                                                                          |
 | ---------------------------- | --------------------------------------------------------------------------------------- |
 | `organization.route.tsx`     | Route marker — exports `Component` rendering `OrganizationPickerPage`.                  |
-| `organization.page.ts`       | Manifest — `kind: 'layout'`, child segment `$organizationId`.                           |
+| `organization.manifest.ts`   | Manifest — `kind: 'layout'`, child segment `$organizationId`.                           |
 | `OrganizationPickerPage.tsx` | Picker UI — organization cards + create dialog. Owns `data-testid="organization-page"`. |
 
 ## Children

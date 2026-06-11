@@ -6,12 +6,12 @@ where the onboarding redirect picks them up if they have no organization yet.
 
 ## Files
 
-| File                  | Responsibility                                                                                                                                                                    |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `register.route.tsx`  | Route marker — exports `Component` rendering `RegisterPage` inside the shared `AuthLayout`.                                                                                       |
-| `register.page.ts`    | Page manifest (`kind: 'leaf'`, `path: '/register'`, `testId: 'register-page'`, no permission).                                                                                    |
-| `RegisterPage.tsx`    | Thin wrapper that mounts `<RegisterForm />` and exposes the page-level `data-testid`.                                                                                             |
-| `forms/RegisterForm/` | Email/password form with show-password toggle, Zod validation, and submit-time API error surfacing. On success it sets the access token, schedules refresh, and navigates to `/`. |
+| File                   | Responsibility                                                                                                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `register.route.tsx`   | Route marker — exports `Component` rendering `RegisterPage` inside the shared `AuthLayout`.                                                                                       |
+| `register.manifest.ts` | Page manifest (`kind: 'leaf'`, `path: '/register'`, `testId: 'register-page'`, no permission).                                                                                    |
+| `RegisterPage.tsx`     | Thin wrapper that mounts `<RegisterForm />` and exposes the page-level `data-testid`.                                                                                             |
+| `forms/RegisterForm/`  | Email/password form with show-password toggle, Zod validation, and submit-time API error surfacing. On success it sets the access token, schedules refresh, and navigates to `/`. |
 
 ## Contracts & API
 

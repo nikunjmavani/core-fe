@@ -8,11 +8,11 @@ permissions on change. Spec: `docs/reference/routing-and-tenancy.md`.
 
 ## Files
 
-| File                        | Responsibility                                                       |
-| --------------------------- | -------------------------------------------------------------------- |
-| `organization-id.route.tsx` | Route marker — exports `Component` rendering `OrganizationLayout`.   |
-| `organization-id.page.ts`   | Manifest — `kind: 'layout'`, children `dashboard`, `suspended`.      |
-| `OrganizationLayout.tsx`    | Thin wrapper mounting the shared AppShell (sidebar/header/`Outlet`). |
+| File                          | Responsibility                                                       |
+| ----------------------------- | -------------------------------------------------------------------- |
+| `organization-id.route.tsx`   | Route marker — exports `Component` rendering `OrganizationLayout`.   |
+| `organization-id.manifest.ts` | Manifest — `kind: 'layout'`, children `dashboard`, `suspended`.      |
+| `OrganizationLayout.tsx`      | Thin wrapper mounting the shared AppShell (sidebar/header/`Outlet`). |
 
 ## Guard chain (routeTree `beforeLoad`)
 

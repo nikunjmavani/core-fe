@@ -1,6 +1,6 @@
 import { requirePermission } from '@/core/rbac/guards.ts';
 
-import { page } from './login.page.ts';
+import { manifest } from './login.manifest.ts';
 import { LoginPage } from './LoginPage.tsx';
 
 /**
@@ -13,6 +13,6 @@ export function Component() {
 }
 
 export function loader() {
-  if (page.permission) requirePermission(page.permission);
+  if (manifest.permission) requirePermission(manifest.permission);
   return null;
 }

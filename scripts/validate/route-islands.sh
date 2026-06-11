@@ -25,7 +25,7 @@ for route in $(find src/pages -name '*.route.tsx' | sort); do
 
   dirbase=$(basename "$dir")
   case "$dirbase" in
-    components|hooks|forms|dialogs|store|__tests__|sub-pages)
+    components|hooks|forms|dialogs|store|shared|__tests__|sub-pages)
       fail "$dir: reserved unit-folder name '$dirbase' used as a route folder" ;;
   esac
   # $param folders derive their prefix mechanically: strip the `$`, camelCase →
@@ -36,8 +36,8 @@ for route in $(find src/pages -name '*.route.tsx' | sort); do
   esac
   [ "$expected" = "$prefix" ] ||
     fail "$route: route marker prefix '$prefix' does not match directory '$dirbase' (expected '$expected')"
-  [ -f "$dir/$prefix.page.ts" ] ||
-    fail "$dir: missing manifest $prefix.page.ts"
+  [ -f "$dir/$prefix.manifest.ts" ] ||
+    fail "$dir: missing manifest $prefix.manifest.ts"
   ov="$(printf '%s' "$prefix" | tr 'a-z-' 'A-Z_').OVERVIEW.md"
   [ -f "$dir/$ov" ] ||
     fail "$dir: missing $ov"

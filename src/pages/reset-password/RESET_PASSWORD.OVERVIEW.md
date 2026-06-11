@@ -5,12 +5,12 @@ delivered via email. The token is read from the `?token=` query parameter.
 
 ## Files
 
-| File                       | Responsibility                                                                                                                             |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `reset-password.route.tsx` | Route marker — exports `Component` rendering `ResetPasswordPage`.                                                                          |
-| `reset-password.page.ts`   | Manifest: path, testId, RBAC (public), kind=leaf.                                                                                          |
-| `ResetPasswordPage.tsx`    | Thin wrapper that mounts `AuthLayout` with the `ResetPasswordForm`.                                                                        |
-| `forms/ResetPasswordForm/` | The form unit: reads `token` from the URL, validates with Zod, calls `authApi.resetPassword`, then shows the success / invalid-link state. |
+| File                         | Responsibility                                                                                                                             |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `reset-password.route.tsx`   | Route marker — exports `Component` rendering `ResetPasswordPage`.                                                                          |
+| `reset-password.manifest.ts` | Manifest: path, testId, RBAC (public), kind=leaf.                                                                                          |
+| `ResetPasswordPage.tsx`      | Thin wrapper that mounts `AuthLayout` with the `ResetPasswordForm`.                                                                        |
+| `forms/ResetPasswordForm/`   | The form unit: reads `token` from the URL, validates with Zod, calls `authApi.resetPassword`, then shows the success / invalid-link state. |
 
 ## State
 

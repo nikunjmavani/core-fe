@@ -6,12 +6,12 @@ on mount; on success the session is bootstrapped (access token + user in the aut
 
 ## Files
 
-| File                     | Responsibility                                                                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `verify-email.route.tsx` | Route marker — exports `Component` rendering `VerifyEmailPage` and an RBAC `loader`.                                                                                |
-| `verify-email.page.ts`   | Page manifest (path, testId, RBAC, kind).                                                                                                                           |
-| `VerifyEmailPage.tsx`    | Thin wrapper that composes `AuthLayout` + `VerifyEmailForm`.                                                                                                        |
-| `forms/VerifyEmailForm/` | Folder-per-unit form: reads `token` from the URL, calls `authApi.verifyEmail`, stores the session, and renders the invalid-link / loading / success / error states. |
+| File                       | Responsibility                                                                                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verify-email.route.tsx`   | Route marker — exports `Component` rendering `VerifyEmailPage` and an RBAC `loader`.                                                                                |
+| `verify-email.manifest.ts` | Page manifest (path, testId, RBAC, kind).                                                                                                                           |
+| `VerifyEmailPage.tsx`      | Thin wrapper that composes `AuthLayout` + `VerifyEmailForm`.                                                                                                        |
+| `forms/VerifyEmailForm/`   | Folder-per-unit form: reads `token` from the URL, calls `authApi.verifyEmail`, stores the session, and renders the invalid-link / loading / success / error states. |
 
 ## State
 

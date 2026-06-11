@@ -5,7 +5,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
  * Guard boundary for everything org-scoped: auth → membership/context sync →
  * status. Renders the shared AppShell (sidebar, header, Outlet).
  */
-export const page = {
+export const manifest = {
   segment: '$organizationId',
   path: '/organization/$organizationId',
   testId: 'app-shell',
