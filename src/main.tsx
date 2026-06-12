@@ -5,7 +5,8 @@ import { createRoot } from 'react-dom/client';
 
 import { router } from '@/app/routes/routeTree.tsx';
 import { startVersionCheck } from '@/core/version/check.ts';
-import { silentRefresh } from '@/shared/auth/service.ts';
+import { subscribeToAuthBroadcast } from '@/shared/auth/auth-channel.ts';
+import { handleCrossTabLogout, silentRefresh } from '@/shared/auth/service.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { resolveOrganizationFromSubdomain } from '@/shared/tenancy/tenancy-service.ts';
 
@@ -66,3 +67,7 @@ initObservabilityWhenIdle();
 
 // Start version check — auto-reload when new deployment is detected (production only)
 startVersionCheck();
+
+// Cross-tab logout: when any tab's session dies (admin-suspend, logout-all,
+// expiry), every open tab clears its in-memory token and returns to login.
+subscribeToAuthBroadcast(handleCrossTabLogout);

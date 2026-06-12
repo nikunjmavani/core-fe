@@ -6,6 +6,7 @@ import {
 } from '@/core/config/constants.ts';
 import { config } from '@/core/config/env.ts';
 import { queryClient } from '@/core/http/queryClient.ts';
+import { broadcastLogout } from '@/shared/auth/auth-channel.ts';
 import {
   endMockSession,
   hasMockSession,
@@ -46,12 +47,8 @@ async function authFetch(
   }
 }
 
-/**
- * Shared logout helper — clears ALL auth state consistently.
- * Used by both the manual `logout()` flow and the fetch client's
- * refresh-failure path to avoid duplicated cleanup logic.
- */
-export function forceLogout(): void {
+/** Clear ALL local auth state (token, mock session, store, query cache). */
+function clearLocalAuthState(): void {
   try {
     cancelTokenRefresh();
     clearAccessToken();
@@ -63,7 +60,36 @@ export function forceLogout(): void {
       console.error('[Auth] Cleanup failed during logout', cleanupError);
     }
   }
+}
+
+/**
+ * Shared logout helper — clears ALL auth state and redirects to login.
+ * Used by both the manual `logout()` flow and the fetch client's
+ * refresh-failure path. Also broadcasts to sibling tabs so a dead session
+ * (admin-suspend, logout-all, expiry) logs every open tab out at once.
+ */
+export function forceLogout(): void {
+  clearLocalAuthState();
+  broadcastLogout();
   window.location.href = AUTH_ROUTES.LOGIN;
+}
+
+/**
+ * Cross-tab logout receiver — invoked when ANOTHER tab broadcasts a logout.
+ * Clears local state and redirects, but never re-broadcasts (loop guard).
+ * Skips the redirect when already on the login page so an idle login tab is
+ * not pointlessly reloaded.
+ *
+ * @remarks
+ * Wired once at boot via `subscribeToAuthBroadcast` in `main.tsx`. The
+ * broadcast carries only the logout signal — never the token — so each tab
+ * clears its own in-memory closure independently.
+ */
+export function handleCrossTabLogout(): void {
+  clearLocalAuthState();
+  if (window.location.pathname !== AUTH_ROUTES.LOGIN) {
+    window.location.href = AUTH_ROUTES.LOGIN;
+  }
 }
 
 /**

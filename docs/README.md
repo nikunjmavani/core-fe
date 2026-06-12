@@ -104,6 +104,7 @@ flowchart TB
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | [tools-and-usage.md](reference/tools-and-usage.md)                 | Dependency usage table (what each package is used for)                                                    |
 | [quality/sonarqube-local.md](reference/quality/sonarqube-local.md) | **SonarQube local quality gate** — Docker server, `pnpm sonar:scan`, pre-push enforcement                 |
+| [security-model.md](reference/security-model.md)                   | **Frontend security model** — threats covered, CSP delivery, accepted risks, backend's half               |
 | [third-party-comparison.md](reference/third-party-comparison.md)   | Keep/swap verdicts for major dependencies (charts, analytics, routing)                                    |
 | [ui-components-sourcing.md](reference/ui-components-sourcing.md)   | shadcn-first UI workflow (`npx shadcn add`, research sites)                                               |
 | [dependency-upgrades.md](reference/dependency-upgrades.md)         | Audits, Dependabot, and intentional version pins                                                          |

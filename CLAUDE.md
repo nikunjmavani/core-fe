@@ -326,6 +326,10 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 - Refresh token is an HttpOnly cookie (set by backend).
 - Never store tokens in localStorage or sessionStorage.
 - `assetsInlineLimit: 0` in Vite config for CSP compliance.
+- CSP ships as a build-generated **header** (`dist/_headers`, authoritative) plus an
+  `index.html` meta fallback, both from `lib/csp-api-origin.ts`; set `VITE_CSP_REPORT_URI`
+  to collect violations. Cross-tab logout (`shared/auth/auth-channel.ts`) kills every open
+  tab when a session dies. Full model + accepted risks: **docs/reference/security-model.md**.
 
 ## Routing
 

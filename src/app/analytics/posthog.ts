@@ -30,6 +30,10 @@ export function initPostHog(): void {
       capture_pageleave: true,
       persistence: 'localStorage+cookie',
       autocapture: false, // We capture specific events explicitly
+      // Passive capture stays OFF: no autocapture, and session recording is
+      // disabled in code so a server-side dashboard toggle can't silently
+      // start recording the authenticated admin DOM (member lists, org data).
+      disable_session_recording: true,
     });
     initialized = true;
   } catch (error) {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildContentSecurityPolicy,
   formatCspApiConnectSrcFragment,
   getCspConnectSrcOrigin,
 } from './csp-api-origin.ts';
@@ -43,5 +44,40 @@ describe('formatCspApiConnectSrcFragment', () => {
     expect(formatCspApiConnectSrcFragment('https://api.example.com')).toBe(
       '\n               https://api.example.com',
     );
+  });
+});
+
+describe('buildContentSecurityPolicy', () => {
+  const policy = buildContentSecurityPolicy('https://api.example.com');
+
+  it.each([
+    "default-src 'self'",
+    "script-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    'upgrade-insecure-requests',
+  ])('carries the locked directive %s', (directive) => {
+    expect(policy).toContain(directive);
+  });
+
+  it('adds the API origin to connect-src', () => {
+    expect(policy).toContain("connect-src 'self' https://api.example.com");
+  });
+
+  it('never weakens script-src with unsafe-inline or unsafe-eval', () => {
+    expect(policy).not.toMatch(/script-src[^;]*unsafe-(inline|eval)/);
+  });
+
+  it('omits reporting directives when no collector is configured', () => {
+    expect(policy).not.toContain('report-uri');
+    expect(policy).not.toContain('report-to');
+  });
+
+  it('adds report-uri + report-to when a collector is configured', () => {
+    const reported = buildContentSecurityPolicy(undefined, 'https://collect.example/csp');
+    expect(reported).toContain('report-uri https://collect.example/csp');
+    expect(reported).toContain('report-to csp');
   });
 });

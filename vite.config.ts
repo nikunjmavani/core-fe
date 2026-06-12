@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       react({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } }),
       tailwindcss(),
       versionJson(),
-      cspApiOrigin(env.VITE_API_BASE_URL),
+      cspApiOrigin(env.VITE_API_BASE_URL, env.VITE_CSP_REPORT_URI),
 
       // PWA — injectManifest mode avoids workbox-build/terser race condition in Vite 7
       VitePWA({
