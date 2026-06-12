@@ -1,31 +1,36 @@
 name: Mutation Test (Stryker)
 
+# Weekly mutation-score check over the pure runtime logic (rbac, auth, tenancy,
+# route helpers — the `mutate` list in stryker.config.json). Scheduled and
+# non-blocking: a failing run is a signal that tests assert too little, not a
+# merge gate. Thresholds (break: 70) live in stryker.config.json.
+
 on:
   schedule:
     - cron: '0 4 * * 0' # Every Sunday at 4am UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   mutation:
     name: Stryker Mutation Testing
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
 
-      # Install Stryker (not a regular dev dep — too heavy)
+      # Stryker is installed ad-hoc (too heavy for a regular devDependency);
+      # configuration lives in stryker.config.json.
       - run: pnpm add -D @stryker-mutator/core @stryker-mutator/vitest-runner
 
-      # Run mutation tests
-      - run: npx stryker run
+      - run: pnpm exec stryker run
 
-      # Upload report
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
         with:
           name: stryker-report

@@ -29,13 +29,13 @@ This document is for **humans** working on the project. It explains how the repo
 
 ## Code Structure (Quick Reference)
 
-- **`src/app/`** — Route config, guards, providers, error boundaries.
-- **`src/core/`** — Auth, HTTP, RBAC, tenancy, config (no React components).
-- **`src/pages/<name>/`** — One directory per route: `route.tsx`, `<Name>Page.tsx`, `contracts.ts`, `api.ts`, `hooks/`, `components/`, `forms/`.
-- **`src/shared/`** — Reusable UI, layouts, forms, hooks (used by 2+ page groups).
-- **`src/lib/`** — Pure utilities (e.g. `cn()`). **`src/stores/`** — Zustand (theme, UI).
+- **`src/app/`** — Route tree, guards, providers, error boundaries, analytics/observability bootstrap.
+- **`src/core/`** — Framework-agnostic platform: HTTP, RBAC, config, data-provider, version (no React components).
+- **`src/pages/<name>/`** — One route island per URL segment, 4 mandatory files: `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx`, `<PAGE>.OVERVIEW.md` (plus optional data layer and unit folders).
+- **`src/shared/`** — Cross-page components/forms/hooks/layouts, auth runtime (`shared/auth/`), tenancy (`shared/tenancy/`), global Zustand stores (`shared/store/`).
+- **`src/lib/`** — Pure utilities (e.g. `cn()`, route builders, animations).
 
-**Rule:** `shared` ← `pages` ← `core`. Pages never import from other pages.
+**Dependency rule (one-way):** `ui → lib → core → shared → pages → app`. Pages never import from other pages. `pnpm validate:structure` enforces the island anatomy.
 
 Full layout and diagrams are in **README.md** and **CLAUDE.md**.
 
@@ -101,8 +101,8 @@ If you ever see the agent asking for confirmation on tests, routes, RBAC, lint, 
 
 Use the **standard requirement format** so the agent has everything in one place and implements without back-and-forth:
 
-1. **Template and field guide:** [docs/REQUIREMENT_FORMAT.md](docs/REQUIREMENT_FORMAT.md) — copy the template and fill in: What, Where, Acceptance criteria, Data/API, UI/Behavior, Constraints (and optional Out of scope).
-2. **Filled example:** [docs/requirements/sample-requirement.md](docs/requirements/sample-requirement.md) — sample "Notifications page" requirement.
+1. **Template and field guide:** [docs/getting-started/requirement-format.md](docs/getting-started/requirement-format.md) — copy the template and fill in: What, Where, Acceptance criteria, Data/API, UI/Behavior, Constraints (and optional Out of scope).
+2. **Filled example:** [docs/getting-started/requirements/sample-requirement.md](docs/getting-started/requirements/sample-requirement.md) — sample "Notifications page" requirement.
 
 Paste your filled requirement into the chat. The agent will parse it and implement fully (tests, route registration, RBAC) without asking. If you give a vague request (e.g. "we need notifications"), the agent will ask you to use this format and point you to the template and sample.
 
@@ -121,21 +121,50 @@ For a short template and more examples, see "How to Request Changes (Best Format
 
 If you prefer to do it yourself or verify after AI:
 
-1. Create `src/pages/<name>/` with `route.tsx`, `<Name>Page.tsx`, `contracts.ts`, `api.ts`, `hooks/`, `components/`, `forms/` as needed.
-2. Register the route in `src/app/routes/routeTree.tsx` (lazy import).
+1. Create `src/pages/<name>/` with the 4 mandatory island files — `<name>.route.tsx`, `<name>.manifest.ts`, `<Name>Page.tsx`, `<NAME>.OVERVIEW.md` — plus optional `<name>.contracts.ts`, `<name>.api.ts`, `hooks/`, `components/`, `forms/` (template: [docs/getting-started/route-island-template.md](docs/getting-started/route-island-template.md)).
+2. Register the route in `src/app/routes/routeTree.tsx` (lazy import) and add a row in `docs/reference/routes-and-ui.md`.
 3. Add permissions in `src/core/rbac/policies.ts` if the route is protected.
-4. Add colocated tests (see **agent-os/rules/testing-requirements.mdc** and **agent-os/skills/test-generation/SKILL.md**).
-5. Use `data-testid` per the convention in testing-requirements.
+4. Add colocated tests — every component and hook ships a `*.test.ts(x)` (validator-enforced).
+5. Use `data-testid` per the convention in testing-requirements, then run `pnpm validate:structure`.
 
 ---
 
 ## Testing
 
-- **Unit/integration:** `pnpm test` (Vitest). Tests are colocated (e.g. `Button.test.tsx` next to `Button.tsx`).
-- **E2E:** `pnpm test:e2e` (Playwright).
-- **Coverage:** `pnpm test:coverage`. Thresholds are in `vitest.config.ts`.
+- **Unit/integration:** `pnpm test` (Vitest). Tests are colocated (e.g. `Button.test.tsx` next to `Button.tsx`); strict colocation is validator-enforced.
+- **E2E:** `pnpm test:e2e` (Playwright, Chromium).
+- **Coverage:** `pnpm test:ci`. Thresholds in `vitest.config.ts` are a **ratchet** — raise them as coverage rises, never lower them.
 
 Component tests must include **vitest-axe** accessibility checks. See **agent-os/skills/test-generation/SKILL.md** for templates.
+
+---
+
+## Branches, Commits, and Releases
+
+- **Branches:** `feat/`, `fix/`, `chore/`, `docs/`, `ci/` prefixes.
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) with **lower-case subjects** (commitlint-enforced).
+- **Releases:** Release Please ([release.yml](.github/workflows/release.yml)) versions `main` from commit history; config in `release-please-config.json`. PR titles must also be conventional — the PR Governance workflow validates them and auto-applies size/path labels.
+
+---
+
+## Git Hooks and Quality Gates
+
+[Husky](.husky/) runs checks locally. Fix failures rather than skipping hooks (`--no-verify`).
+
+| Hook           | What runs                                                                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **pre-commit** | before-commit-guard (env docs, public assets), lint-staged (biome check → eslint --fix → prettier), gitleaks scan, conflict-marker + large-file guards        |
+| **commit-msg** | commitlint (Conventional Commits, lower-case subject)                                                                                                         |
+| **pre-push**   | biome check, type-check, build, changed-markdown lint, unit tests (when relevant), SonarQube gate on deployed-surface changes (`SKIP_SONAR=1` to bypass once) |
+
+**Full local gate:** `pnpm quality` = `pnpm health` (10 phases) + the local SonarQube gate ([docs/reference/quality/sonarqube-local.md](docs/reference/quality/sonarqube-local.md)). CI mirrors these as parallel lanes behind a single required `quality-gate` check.
+
+---
+
+## Code of Conduct and Security
+
+- **[CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)** — community expectations.
+- **[SECURITY.md](SECURITY.md)** — how to report vulnerabilities privately; dependency-advisory response targets.
 
 ---
 

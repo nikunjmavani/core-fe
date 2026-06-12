@@ -22,7 +22,7 @@ volume — a real concern for a clinic app). Internal DB ids never appear in URL
 
 ## 2. URL scheme
 
-```
+```text
 /organization                                                    organization picker
 /organization/$organizationId/dashboard
 /organization/$organizationId/patients
@@ -50,7 +50,7 @@ volume — a real concern for a clinic app). Internal DB ids never appear in URL
 "sub-pages" segment and the mirror must be literal. "Everything between two `*.route.tsx` files
 belongs to the parent" still holds.
 
-```
+```text
 src/pages/
 ├── login/ … register/ … callback/ … mfa/ …      (unchanged auth islands)
 ├── onboarding/        accept-invite/
@@ -157,7 +157,7 @@ Frontend guards are UX only; the backend/RLS enforces authority.
 `core/` stays the app-state-free kernel (`file-structure.mdc` rule). Tenancy needs the Zustand
 store, organization APIs, and storage — so it lives in `shared/`, exactly like `shared/auth/`:
 
-```
+```text
 src/shared/tenancy/
 ├── TENANCY.OVERVIEW.md
 ├── organization-context.ts        read canonical organization from route → sync store
@@ -176,7 +176,7 @@ because the modal must overlay **any** page — including deep organization URLs
 unmounting it (a path change re-runs route matching; a hash change does not). Copy-link
 reproduces page + modal, refresh survives, back/Esc closes.
 
-```
+```text
 #settings/account/{profile|security|notifications|appearance|sessions}
 #settings/organization/{general|members|roles|branches|billing|integrations}
 ```
@@ -206,7 +206,7 @@ reproduces page + modal, refresh survives, back/Esc closes.
 
 ## 9. Route builders — `src/lib/routes/`
 
-```
+```text
 src/lib/routes/
 ├── paths.ts        path constants (absorbs lib/routes/paths.ts — one path module only)
 ├── params.ts       Zod param schemas + parsers

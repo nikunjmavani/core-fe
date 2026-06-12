@@ -44,9 +44,11 @@ flowchart TB
    Set at least `VITE_API_BASE_URL` (see [credentials-and-env.md](../integrations/credentials-and-env.md)).
 
 2. Run the app:
+
    ```bash
    pnpm dev
    ```
+
    App runs at http://localhost:5173.
 
 ---

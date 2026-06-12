@@ -64,6 +64,7 @@ Single reference table for every dependency: whether it's used and where.
 | `husky`                            | Yes             | Git hooks (prepare script).                                                                                                                                                            |
 | `jsdom`                            | Yes             | Vitest DOM environment.                                                                                                                                                                |
 | `lint-staged`                      | Yes             | Pre-commit: biome check, eslint --fix, prettier on staged files.                                                                                                                       |
+| `markdownlint-cli2`                | Yes             | Markdown lint lane (`docs:lint*`); config `.markdownlint-cli2.jsonc` + `.markdownlint.json`.                                                                                           |
 | `prettier`                         | Yes             | Formatting (format, format:check).                                                                                                                                                     |
 | `prettier-plugin-tailwindcss`      | Yes             | Prettier Tailwind class sorting.                                                                                                                                                       |
 | `rollup-plugin-visualizer`         | Yes             | Build analyzer (build:analyze).                                                                                                                                                        |
@@ -90,6 +91,33 @@ Two quality layers sit on top of ESLint/Prettier, mirroring core-be:
   blocks the push on any unresolved issue/hotspot in deployed-surface code. Full guide:
   [quality/sonarqube-local.md](quality/sonarqube-local.md). Orchestrator: `pnpm quality`
   (= `pnpm health` + Sonar gate).
+
+Further gates, all mirroring core-be:
+
+- **Markdownlint** (`pnpm docs:lint`, `docs:lint:fix`, `docs:lint:changed`) — `.markdownlint-cli2.jsonc`
+  owns globs/ignores; rule set in `.markdownlint.json` (emphasis = underscore to match Prettier,
+  which formats markdown in lint-staged). Runs in pre-push (changed files) and the Docs lint CI lane.
+- **Patch coverage** (`pnpm coverage:patch`) — `scripts/ci/check-patch-coverage.mjs` measures the
+  coverage of _changed executable lines_ against `coverage/coverage-final.json`; the CI unit lane
+  enforces ≥ 80% on PRs. Complements the global ratchet: the ratchet stops regressions, this stops
+  under-tested new code.
+- **TSDoc budget** (`pnpm tsdoc:check`, `:report`, `:refresh-budget`) — `scripts/tsdoc/check-coverage.mjs`
+  counts public exports missing TSDoc against the locked budget in `scripts/tsdoc/budget.json`
+  (raise-never, lower-and-refresh). Runs in `pnpm health` phase 10 and the CI structure lane.
+- **CodeQL** (`.github/workflows/codeql.yml`) — weekly + per-PR taint-tracking analysis scoped by
+  `.github/codeql/codeql-config.yml` to the deployed surface; complements Semgrep.
+- **PR governance** (`.github/workflows/pr-governance.yml`) — conventional PR title, size labels,
+  path labels (`.github/labeler.yml` / `labels.yml`), and a committed-env-file guard. The
+  Dependency review CI lane blocks high-severity/GPL-AGPL dependency changes.
+- **Branch protection as code** (`.github/rulesets/main.json`, `pnpm gh:rulesets:sync`) — `main`
+  requires only the aggregate `Quality gate` + governance `Checks`; adding a CI lane never touches
+  branch protection.
+- **SBOM** (`pnpm sbom:generate`) — CycloneDX inventory via cdxgen (reads `pnpm-lock.yaml`);
+  uploaded as a CI artifact from the build lane.
+- **Mutation testing** (`stryker.config.json`) — scheduled weekly over the pure runtime logic
+  (rbac, auth, tenancy, route helpers); report artifact in the Actions run.
+- **Lighthouse budgets** (`.lighthouserc.cjs`) — scheduled weekly against the built app
+  (perf ≥ 0.9 warn, a11y = 1.0 error, best-practices ≥ 0.95 warn).
 
 ---
 

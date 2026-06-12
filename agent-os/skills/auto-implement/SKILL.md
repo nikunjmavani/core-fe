@@ -81,57 +81,57 @@ Once the user provides a requirement (Option A or B), the agent runs **all** of 
 
 ### Phase 2 — Implement
 
-4. **Follow code-structure skill** (`agent-os/skills/code-structure/SKILL.md`):
+1. **Follow code-structure skill** (`agent-os/skills/code-structure/SKILL.md`):
    - Place files in the correct layer per the dependency rule.
    - New pages get: `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx`, `<page>.contracts.ts`, `<page>.api.ts`, `hooks/use<X>/`, `components/<Name>/`, `forms/<Name>Form/` (sub-units are folder-per-unit with `index.ts`).
    - Zod schemas in `<page>.contracts.ts`; API functions using `apiClient` in `<page>.api.ts`.
    - TanStack Query hooks in `hooks/use<Name>/use<Name>.ts`.
 
-5. **Follow page-scaffolding skill** (`agent-os/skills/page-scaffolding/SKILL.md`) if creating a new page:
+2. **Follow page-scaffolding skill** (`agent-os/skills/page-scaffolding/SKILL.md`) if creating a new page:
    - Scaffold all standard files.
    - Add `data-testid` attributes on all interactive elements.
    - Use the correct layout (AppShell, AuthLayout, etc.).
 
-6. **Register route** in `src/app/routes/routeTree.tsx`:
+3. **Register route** in `src/app/routes/routeTree.tsx`:
    - Lazy import: `lazy: () => import('@/pages/<name>/<name>.route.tsx').then((m) => ({ default: m.Component }))`.
    - Wrap with `<ProtectedRoute>` if the page is protected.
 
-7. **Add RBAC permissions** in `src/core/rbac/policies.ts`:
+4. **Add RBAC permissions** in `src/core/rbac/policies.ts`:
    - If the requirement specifies permission names (e.g. `notifications.read`), add them.
    - If not specified but the page is protected, infer from the page name (e.g. `<name>.read`, `<name>.write`).
    - Add `requirePermission()` in the route's `loader` export.
 
 ### Phase 3 — Test
 
-8. **Follow test-generation skill** (`agent-os/skills/test-generation/SKILL.md`):
+1. **Follow test-generation skill** (`agent-os/skills/test-generation/SKILL.md`):
    - Create colocated test files for every new component, hook, service, and page.
    - Include `vitest-axe` accessibility checks (`toHaveNoViolations()`).
    - Use `data-testid` for stable selectors.
    - Skip test files for exceptions: `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<page>.constants.ts`, `types.ts`, `index.ts` (barrel), `<PAGE>.OVERVIEW.md`.
 
-9. **Run tests** (mentally or via terminal) — ensure no regressions.
+2. **Run tests** (mentally or via terminal) — ensure no regressions.
 
 ### Phase 4 — Lint & Type-check
 
-10. **Follow lint-guard skill** (`agent-os/skills/lint-guard/SKILL.md`):
-    - Fix all ESLint errors (nested ternaries, purity, import ordering, type imports, etc.).
-    - Fix all TypeScript errors (`tsc --noEmit`).
-    - If a new pattern needs an ESLint override, add it to `eslint.config.mjs` (not inline disables).
-    - Ensure `pnpm lint` and `pnpm type-check` pass with zero errors.
+1. **Follow lint-guard skill** (`agent-os/skills/lint-guard/SKILL.md`):
+   - Fix all ESLint errors (nested ternaries, purity, import ordering, type imports, etc.).
+   - Fix all TypeScript errors (`tsc --noEmit`).
+   - If a new pattern needs an ESLint override, add it to `eslint.config.mjs` (not inline disables).
+   - Ensure `pnpm lint` and `pnpm type-check` pass with zero errors.
 
 ### Phase 5 — Documentation
 
-11. **Update docs if structure changed**:
-    - `README.md` — if routes, scripts, or architecture sections are affected.
-    - `CLAUDE.md` — if env paths, architecture, or conventions changed.
-    - Do not ask "Should I update the README?" — just update if relevant.
+1. **Update docs if structure changed**:
+   - `README.md` — if routes, scripts, or architecture sections are affected.
+   - `CLAUDE.md` — if env paths, architecture, or conventions changed.
+   - Do not ask "Should I update the README?" — just update if relevant.
 
 ### Phase 6 — Verify Acceptance Criteria
 
-12. **Check each acceptance criterion** from the requirement against the implementation:
-    - List implemented? Empty state? Loading/error states? Actions? Permissions?
-    - If a criterion is **not met**, implement it now.
-    - Report a brief summary of what was built and how each criterion was satisfied.
+1. **Check each acceptance criterion** from the requirement against the implementation:
+   - List implemented? Empty state? Loading/error states? Actions? Permissions?
+   - If a criterion is **not met**, implement it now.
+   - Report a brief summary of what was built and how each criterion was satisfied.
 
 ---
 

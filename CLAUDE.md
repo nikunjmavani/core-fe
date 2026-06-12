@@ -21,8 +21,17 @@ disabled — Prettier + `prettier-plugin-tailwindcss` own formatting). SonarQube
 Docker and is enforced by `.husky/pre-push` on deployed-surface changes (`pnpm sonar:scan`;
 `SKIP_SONAR=1 git push` to bypass once) — see docs/reference/quality/sonarqube-local.md.
 Coverage thresholds in `vitest.config.ts` are a **ratchet**: pinned just under measured
-coverage, raised as coverage rises, never lowered. CI (`.github/workflows/ci.yml`) runs
-path-filtered parallel lanes with a single aggregate `quality-gate` required check.
+coverage, raised as coverage rises, never lowered; the same raise-never philosophy applies to
+the **TSDoc budget** (`pnpm tsdoc:check`, `scripts/tsdoc/budget.json`) and to **patch
+coverage** (`pnpm coverage:patch` — changed lines ≥ 80% in PR CI). Vitest is split into
+`unit` (colocated src suites) and `security` (tests/security — token storage, redirect
+safety, mock-mode rejection, header tripwires) projects. Markdown is linted
+(`pnpm docs:lint`; emphasis style follows Prettier). CI (`.github/workflows/ci.yml`) runs
+path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest+patch-coverage/docs-lint/
+structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint/e2e —
+behind a single aggregate `quality-gate` required check (branch protection as code:
+`.github/rulesets/`, `pnpm gh:rulesets:sync`). CodeQL, Stryker mutation tests, Lighthouse
+budgets, k6 load, cache cleanup, and Dependabot CI triage run as scheduled/event workflows.
 
 ## Documentation
 
@@ -42,7 +51,7 @@ path-filtered parallel lanes with a single aggregate `quality-gate` required che
 
 ## Architecture Overview
 
-```
+```text
 Layer          Purpose                                                    Files (approx)
 ─────────────  ─────────────────────────────────────────────────────────  ──────────────
 src/app/       Application shell: routes, guards, providers, error        ~20
@@ -60,7 +69,7 @@ agent-os/      Agents, skills, rules, hooks, MCP, docs                    ~50+
                (.cursor/ and .claude/ symlink into this)
 ```
 
-```
+```text
 tests/              # At project root: utils, e2e, load (see tests/README.md)
 src/
 ├── app/            # Application shell: route tree, guards, providers, error boundaries
@@ -91,7 +100,7 @@ Every directory under `src/pages/` that corresponds to a frontend URL path **mus
 
 **Source of truth for what is live today:** [`src/app/routes/routeTree.tsx`](src/app/routes/routeTree.tsx) and [`docs/reference/routes-and-ui.md`](docs/reference/routes-and-ui.md). The tree below mixes **implemented** routes with **common examples** (same shapes as new features).
 
-```
+```text
 src/pages/
 ├── login/                           ← /login (AuthLayout via pathless auth-shell)
 │   ├── login.route.tsx
@@ -121,7 +130,7 @@ src/pages/
 
 Every route uses a **route island** ([`agent-os/skills/route-island/SKILL.md`](agent-os/skills/route-island/SKILL.md), [`docs/reference/route-island-structure.md`](docs/reference/route-island-structure.md)). Layout parents nest children **directly** as `<segment>/` (or `$param/`). **`<page>.manifest.ts`** is the layout + leaf manifest; top-level UI is `<Page>Page.tsx` / `<Page>Layout.tsx` at island root; tests are colocated next to source (sub-units use folder-per-unit).
 
-```
+```text
 src/pages/<page>/                          ← folder = URL segment
 │
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
@@ -196,7 +205,7 @@ export function loader() {
 
 ## Shared Layer
 
-```
+```text
 src/shared/
 ├── components/
 │   ├── ui/                          # shadcn/ui primitives — FLAT (button.tsx, card.tsx, ...)
@@ -216,7 +225,7 @@ src/shared/
 
 Everything starts colocated with its page and climbs exactly one rung per force:
 
-```
+```text
 ONE page                            → inside that page
 page + its OWN nested children      → pages/<parent>/shared/   (family-shared)
 DIFFERENT families, or any
@@ -292,7 +301,7 @@ import { User } from './contracts';
 
 Env files live at **project root** for clear paths. Vite loads them automatically.
 
-```
+```text
 .env                 # Shared defaults (committed)
 .env.development     # Dev overrides (committed)
 .env.production      # Production overrides (committed, no secrets)

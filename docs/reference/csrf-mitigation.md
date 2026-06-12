@@ -14,7 +14,7 @@ The refresh token is an `HttpOnly`, `Secure`, `SameSite=Lax` (or `Strict`) cooki
 
 All API requests sent via `apiClient` (`src/core/http/fetch-client.ts`) include:
 
-```
+```text
 X-Requested-With: XMLHttpRequest
 ```
 

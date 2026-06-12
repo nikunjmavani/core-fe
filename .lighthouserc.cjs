@@ -2,7 +2,8 @@ module.exports = {
   ci: {
     collect: {
       url: ['http://localhost:5173/login'],
-      startServerCommand: 'pnpm preview',
+      // vite preview defaults to 4173 — pin it to the URL above.
+      startServerCommand: 'pnpm preview --port 5173 --strictPort',
       startServerReadyPattern: 'Local',
       numberOfRuns: 3,
     },

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Full project health check: format, lint, biome, type-check, tests, build, size, env, public.
+# Full project health check: format, lint, biome, type-check, tests, build, size, env, public, tsdoc, structure.
 # Run from project root: pnpm health  or  pnpm health:fix
 # --fix: run pnpm lint:fix and pnpm format before checks (report-only otherwise).
 set -e
@@ -126,7 +126,16 @@ else
 fi
 
 echo ""
-echo "Phase 10: Route-island structure"
+echo "Phase 10: TSDoc budget"
+if pnpm tsdoc:check >/dev/null 2>&1; then
+  echo "  $PASS  pnpm tsdoc:check"
+else
+  echo "  $FAIL  pnpm tsdoc:check"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+echo ""
+echo "Phase 11: Route-island structure"
 if pnpm validate:structure >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:structure"
 else

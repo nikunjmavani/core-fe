@@ -92,7 +92,7 @@ export const manifest = {
 
 Every component/form/hook/dialog/store:
 
-```
+```text
 <Name>/
 ├── <Name>.tsx                          source
 ├── <Name>.test.tsx                     colocated unit test
@@ -109,7 +109,7 @@ Imports stay clean: `from '@/pages/dashboard/components/ActivityFeed'`.
 
 Resources (organizations, members, roles, etc.) add a CRUD specialization:
 
-```
+```text
 pages/<resource>/
 ├── <resource>.route.tsx                 parent route — renders the list
 ├── <resource>.manifest.ts                   kind: 'layout', children: ['create', '$<resource>Id']

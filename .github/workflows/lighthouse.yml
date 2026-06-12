@@ -1,0 +1,39 @@
+name: Lighthouse CI
+
+# Weekly performance/a11y/best-practices budget over the built app — the
+# frontend analog of core-be's scheduled k6 SLO lane. Budgets and asserted
+# categories live in .lighthouserc.cjs (perf ≥ 0.9 warn, a11y = 1.0 error,
+# best-practices ≥ 0.95 warn). Scheduled and non-blocking for PRs; a failing
+# run means a budget regressed on main.
+
+on:
+  schedule:
+    - cron: '0 3 * * 3' # Every Wednesday at 3am UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    name: Lighthouse budgets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+
+      - run: pnpm build
+
+      # @lhci/cli is installed ad-hoc (heavy, only needed here);
+      # configuration lives in .lighthouserc.cjs.
+      - run: pnpm dlx @lhci/cli@0.15.x autorun
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        if: always()
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+          retention-days: 30

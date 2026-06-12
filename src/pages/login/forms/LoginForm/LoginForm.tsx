@@ -16,12 +16,9 @@ import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 import { useCooldownClock } from '../../hooks/useCooldownClock/index.ts';
 import { PasswordlessOptions } from '../PasswordlessOptions/index.ts';
+import { isSafeRedirectPath } from './redirect-safety.ts';
 
 /** Only allow internal relative paths to prevent open-redirect attacks. */
-function isSafeRedirectPath(path: string): boolean {
-  return path.startsWith('/') && !path.startsWith('//') && !path.includes('://');
-}
-
 /** Read redirect path from location (TanStack: search.redirect; React Router legacy: state.from.pathname). */
 function getRedirectPath(location: {
   search?: unknown;

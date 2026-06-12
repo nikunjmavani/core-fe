@@ -6,7 +6,7 @@ Secondary entry point for AI coding agents (Codex CLI, Claude Code, etc.). For t
 
 All agent configuration lives under **`agent-os/`** and is shared by every tool via symlinks. Edit files in `agent-os/`; the symlinks in `.cursor/` and `.claude/` resolve to the same files.
 
-```
+```text
 agent-os/
 ├── agents/        # Agent definitions (Cursor agents, Claude subagents)
 ├── skills/        # Project + installed skills (SKILL.md per directory)

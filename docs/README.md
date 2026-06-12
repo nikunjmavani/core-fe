@@ -79,9 +79,12 @@ flowchart TB
 
 ## Process
 
-| Doc                                        | Purpose                                              |
-| ------------------------------------------ | ---------------------------------------------------- |
-| [git-workflow.md](process/git-workflow.md) | Branch naming, PR flow, conventional commits, hotfix |
+| Doc                                         | Purpose                                                       |
+| ------------------------------------------- | ------------------------------------------------------------- |
+| [git-workflow.md](process/git-workflow.md)  | Branch naming, PR flow, conventional commits, hotfix          |
+| [CONTRIBUTING.md](../CONTRIBUTING.md)       | For humans: repo layout, hooks/gates, how to work with the AI |
+| [SECURITY.md](../SECURITY.md)               | Vulnerability reporting, dependency-advisory response targets |
+| [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) | Community expectations                                        |
 
 ---
 

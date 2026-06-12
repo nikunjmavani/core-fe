@@ -5,6 +5,16 @@ pnpm biome:check
 pnpm type-check
 pnpm build
 
+# Markdown lint on the pushed diff (mirrors the Docs lint CI lane). lint-staged
+# only formats staged markdown; this lints every changed file in the push.
+# Default base is origin/main; override with LINT_BASE=origin/dev.
+PUSHED_MD=$(git diff --name-only @{u}...HEAD 2>/dev/null | grep -E '\.md$' || true)
+if [ -n "$PUSHED_MD" ]; then
+  pnpm docs:lint:changed
+else
+  echo "Skipping changed-markdown lint on pre-push (no markdown changes)."
+fi
+
 # Unit tests (matches the CI unit lane).
 # Run only when pushed commits include unit-relevant files.
 PUSHED_UNIT_RELEVANT=$(git diff --name-only @{u}...HEAD 2>/dev/null | grep -E \

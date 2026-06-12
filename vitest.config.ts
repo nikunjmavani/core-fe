@@ -14,12 +14,31 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/utils/setup.ts'],
-    include: [
-      'src/**/*.{test,spec}.{ts,tsx}',
-      'src/**/__tests__/**/*.{test,spec}.{ts,tsx}',
-    ],
     exclude: ['node_modules', 'dist', 'tests/e2e'],
     css: true,
+    // Projects (core-be pattern): `unit` = colocated src suites; `security` =
+    // cross-cutting invariants under tests/security (token storage, redirect
+    // safety, mock-mode rejection, header tripwires). `pnpm test` runs all;
+    // `pnpm test:unit` / `pnpm test:security` target one project.
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          include: [
+            'src/**/*.{test,spec}.{ts,tsx}',
+            'src/**/__tests__/**/*.{test,spec}.{ts,tsx}',
+          ],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: 'security',
+          include: ['tests/security/**/*.test.ts'],
+        },
+      },
+    ],
     coverage: {
       provider: 'v8',
       // lcov feeds SonarQube (sonar.javascript.lcov.reportPaths);

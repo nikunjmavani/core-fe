@@ -257,7 +257,7 @@ Select your team and the site. After that, `deploy:netlify` / `deploy:netlify:pr
 On **push to `main`**, the **Release** workflow (`.github/workflows/release.yml`):
 
 1. Runs **release-please** (`release-please` job):
-   - Reads `.releaserc.json` / `.release-please-manifest.json`.
+   - Reads `release-please-config.json` / `.release-please-manifest.json`.
    - Calculates the next version from conventional commits on `main`.
    - Updates `CHANGELOG.md`, bumps the version, and creates or updates a **release PR**.
    - When that release PR is merged, it creates a **Git tag** and **GitHub Release**.
