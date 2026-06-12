@@ -56,14 +56,17 @@ function readEnvLocal() {
  * @param {Record<string, string>} updates
  */
 function upsertEnvLocal(updates) {
-  const existing = existsSync(ENV_LOCAL) ? readFileSync(ENV_LOCAL, 'utf8').split('\n') : [];
+  const existing = existsSync(ENV_LOCAL)
+    ? readFileSync(ENV_LOCAL, 'utf8').split('\n')
+    : [];
   const updateKeys = new Set(Object.keys(updates));
   const kept = existing.filter((line) => {
     const match = /^([A-Z0-9_]+)=/.exec(line.trim());
     return !(match?.[1] && updateKeys.has(match[1]));
   });
   while (kept.length > 0 && kept[kept.length - 1] === '') kept.pop();
-  if (kept.length > 0) kept.push('# SonarQube local quality gate (generated; gitignored)');
+  if (kept.length > 0)
+    kept.push('# SonarQube local quality gate (generated; gitignored)');
   for (const [key, value] of Object.entries(updates)) kept.push(`${key}=${value}`);
   writeFileSync(ENV_LOCAL, `${kept.join('\n')}\n`);
 }
@@ -136,7 +139,9 @@ async function ensureServerUp() {
 
 /** @param {string} token */
 async function tokenIsValid(token) {
-  const response = await sonarApi('/api/authentication/validate', { basicAuth: `${token}:` });
+  const response = await sonarApi('/api/authentication/validate', {
+    basicAuth: `${token}:`,
+  });
   if (!response.ok) return false;
   const parsed = await response.json();
   return parsed.valid === true;
@@ -167,8 +172,8 @@ async function ensureToken() {
     if (!defaultValid) {
       die(
         'SonarQube admin password is unknown (not the default and not in .env.local).\n' +
-          '  If core-be\'s SonarQube owns port 9000, copy SONAR_ADMIN_PASSWORD from core-be/.env.local\n' +
-          '  into this repo\'s .env.local. Otherwise reset the instance with `pnpm sonar:reset`.',
+          "  If core-be's SonarQube owns port 9000, copy SONAR_ADMIN_PASSWORD from core-be/.env.local\n" +
+          "  into this repo's .env.local. Otherwise reset the instance with `pnpm sonar:reset`.",
       );
     }
     adminPassword = generateLocalAdminPassword();
@@ -187,13 +192,35 @@ async function ensureToken() {
     basicAuth: `${ADMIN_LOGIN}:${adminPassword}`,
     form: { name: TOKEN_NAME },
   });
-  const generated = await sonarApi('/api/user_tokens/generate', {
+  let generated = await sonarApi('/api/user_tokens/generate', {
     method: 'POST',
     basicAuth: `${ADMIN_LOGIN}:${adminPassword}`,
     form: { name: TOKEN_NAME },
   });
+  if (generated.status === 401) {
+    // Stored credentials belong to a previous server (e.g. core-be's instance
+    // owned port 9000 before; this is a fresh container with admin/admin).
+    // Re-provision from the default instead of dying.
+    log('Stored admin password rejected — re-provisioning against a fresh instance…');
+    const fresh = generateLocalAdminPassword();
+    const changed = await sonarApi('/api/users/change_password', {
+      method: 'POST',
+      basicAuth: `${ADMIN_LOGIN}:admin`,
+      form: { login: ADMIN_LOGIN, previousPassword: 'admin', password: fresh },
+    });
+    if (changed.ok || changed.status === 204) {
+      adminPassword = fresh;
+      generated = await sonarApi('/api/user_tokens/generate', {
+        method: 'POST',
+        basicAuth: `${ADMIN_LOGIN}:${adminPassword}`,
+        form: { name: TOKEN_NAME },
+      });
+    }
+  }
   if (!generated.ok) {
-    die(`failed to mint a SonarQube token (HTTP ${generated.status}). Try \`pnpm sonar:reset\`.`);
+    die(
+      `failed to mint a SonarQube token (HTTP ${generated.status}). Try \`pnpm sonar:reset\`.`,
+    );
   }
   const token = (await generated.json()).token;
   if (!token) die('SonarQube returned no token.');
@@ -206,11 +233,15 @@ async function ensureToken() {
 /** @param {string} token */
 function runScanner(token) {
   log('Scanning… (this takes ~60–90s)');
-  const result = spawnSync('docker', ['compose', '-f', COMPOSE_FILE, 'run', '--rm', 'scanner'], {
-    encoding: 'utf8',
-    maxBuffer: 64 * 1024 * 1024,
-    env: { ...process.env, SONAR_TOKEN: token },
-  });
+  const result = spawnSync(
+    'docker',
+    ['compose', '-f', COMPOSE_FILE, 'run', '--rm', 'scanner'],
+    {
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+      env: { ...process.env, SONAR_TOKEN: token },
+    },
+  );
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`;
   if (result.status !== 0) {
     process.stderr.write(output);
@@ -240,12 +271,16 @@ async function waitForAnalysis(token, taskId) {
   log('Waiting for SonarQube to process the report…');
   const deadline = Date.now() + CE_TIMEOUT_MS;
   while (Date.now() < deadline) {
-    const response = await sonarApi(`/api/ce/task?id=${taskId}`, { basicAuth: `${token}:` });
+    const response = await sonarApi(`/api/ce/task?id=${taskId}`, {
+      basicAuth: `${token}:`,
+    });
     if (response.ok) {
       const status = (await response.json()).task?.status;
       if (status === 'SUCCESS') return;
       if (status === 'FAILED' || status === 'CANCELED') {
-        die(`SonarQube analysis ${status.toLowerCase()}. Check the dashboard at ${SONAR_URL}.`);
+        die(
+          `SonarQube analysis ${status.toLowerCase()}. Check the dashboard at ${SONAR_URL}.`,
+        );
       }
     }
     await sleep(POLL_INTERVAL_MS);
@@ -323,7 +358,10 @@ async function main() {
   const token = await ensureToken();
   const scanOutput = runScanner(token);
   await waitForAnalysis(token, parseCeTaskId(scanOutput));
-  const [issues, hotspots] = await Promise.all([fetchOpenIssues(token), fetchOpenHotspots(token)]);
+  const [issues, hotspots] = await Promise.all([
+    fetchOpenIssues(token),
+    fetchOpenHotspots(token),
+  ]);
   reportAndExit(issues, hotspots);
 }
 

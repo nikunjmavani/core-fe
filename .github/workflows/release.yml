@@ -48,12 +48,45 @@ jobs:
           path: dist/
           retention-days: 90
       - name: Deploy to Netlify
+        id: deploy
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
         run: |
           if [ -z "$NETLIFY_AUTH_TOKEN" ] || [ -z "$NETLIFY_SITE_ID" ]; then
             echo "Skipping Netlify deploy — NETLIFY_AUTH_TOKEN or NETLIFY_SITE_ID unset."
+            echo "url=" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          pnpm exec netlify deploy --prod --dir=dist
+          pnpm exec netlify deploy --prod --dir=dist --json > deploy-result.json
+          DEPLOY_URL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('deploy-result.json','utf8')).url ?? '')")
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "Could not read the deploy URL from netlify output:" >&2
+            cat deploy-result.json >&2
+            exit 1
+          fi
+          echo "Deployed to $DEPLOY_URL"
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+
+      # Verify the release deploy is actually serving (version.json fresh,
+      # login shell renders). Skipped when the deploy itself was skipped.
+      - name: Post-deploy smoke
+        if: steps.deploy.outputs.url != ''
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          echo "Smoking $DEPLOY_URL"
+          VERSION_JSON=$(curl -fsS --retry 3 --retry-delay 5 "$DEPLOY_URL/version.json")
+          echo "version.json: $VERSION_JSON"
+          BUILD_ID=$(node -e "console.log(JSON.parse(process.argv[1]).buildId ?? '')" "$VERSION_JSON")
+          if [ -z "$BUILD_ID" ]; then
+            echo "version.json has no buildId — deploy looks broken." >&2
+            exit 1
+          fi
+          LOGIN_HTML=$(curl -fsS --retry 3 --retry-delay 5 "$DEPLOY_URL/login")
+          echo "$LOGIN_HTML" | grep -q 'id="root"' || {
+            echo "/login did not serve the app shell (SPA redirect broken?)." >&2
+            exit 1
+          }
+          echo "Smoke OK — buildId $BUILD_ID live."

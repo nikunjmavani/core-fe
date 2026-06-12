@@ -84,6 +84,9 @@ So a clean gate means **zero issues in the code that ships to production**.
 - **"admin password is unknown"** — the instance was provisioned outside this flow (e.g. it is
   core-be's server). Copy `SONAR_ADMIN_PASSWORD` from `core-be/.env.local`, or run
   `pnpm sonar:reset` to start fresh.
+- **Server swapped under stored credentials** (core-be's instance went away and the gate booted a
+  fresh one while `.env.local` still held the old password) — the gate self-heals: a 401 during
+  token minting triggers re-provisioning from the fresh instance's `admin/admin` default.
 - **Port 9000 already in use when `sonar:up` fails** — core-be's server owns the port; that is
   fine, see [Sharing port 9000](#sharing-port-9000-with-core-be).
 - **Server slow / stuck after an upgrade** — `pnpm sonar:reset`.

@@ -114,6 +114,11 @@ Further gates, all mirroring core-be:
   branch protection.
 - **SBOM** (`pnpm sbom:generate`) — CycloneDX inventory via cdxgen (reads `pnpm-lock.yaml`);
   uploaded as a CI artifact from the build lane.
+- **Contract drift** (`pnpm contracts:drift`) — every backend endpoint this app references
+  (API_ENDPOINTS + `apiClient` calls) must exist in core-be's committed route catalog
+  (`../core-be/docs/routes.txt`); intentional fe-ahead endpoints live in
+  `scripts/ci/contract-drift-allowlist.json` with reasons, and stale entries fail the gate.
+  Local-only (needs the sibling checkout); runs in pre-push.
 - **Knip** (`pnpm knip`, `knip.jsonc`) — dead-code gate: unused files, exports, types,
   dependencies, and binaries. Validator-mandated unit barrels are entries (a unit's barrel is its
   public API); the only suppressions are declared in `knip.jsonc` with reasons. Runs in

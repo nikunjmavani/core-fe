@@ -35,7 +35,7 @@ const MY_ORGANIZATIONS_FIXTURE: Organization[] = [
 export async function listMyOrganizations(): Promise<Organization[]> {
   // REPLACE_WITH_API: GET /api/v1/tenancy/organizations
   if (config.useMockApi) return mockResponse(MY_ORGANIZATIONS_FIXTURE);
-  const res = await apiClient.get<unknown>(`${BASE}/organizations`);
+  const res = await apiClient.get<unknown>(`${BASE}/tenancy/organizations`);
   const data = res.data;
   if (!Array.isArray(data)) return [];
   return data.map((o) => organizationSchema.parse(o));
@@ -65,7 +65,7 @@ export async function createOrganization(
     MY_ORGANIZATIONS_FIXTURE.push(org);
     return mockResponse(org);
   }
-  const res = await apiClient.post<unknown>(`${BASE}/organizations`, {
+  const res = await apiClient.post<unknown>(`${BASE}/tenancy/organizations`, {
     name: payload.name,
     slug,
   });

@@ -1,13 +1,13 @@
-/* eslint-disable react-refresh/only-export-components -- route tree exports router + routeTree */
 import {
   createRootRoute,
   createRoute,
   createRouter,
   HeadContent,
+  lazyRouteComponent,
   Outlet,
   redirect,
 } from '@tanstack/react-router';
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Toaster } from 'sonner';
 
 import {
@@ -16,6 +16,8 @@ import {
 } from '@/app/guards/route-guards.ts';
 import { requireAuth } from '@/core/rbac/guards.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
+import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts';
+import { RouteErrorBoundary } from '@/shared/components/RouteErrorBoundary/index.ts';
 import { SettingsModal } from '@/shared/components/SettingsModal/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { resolveRootRedirect } from '@/shared/tenancy/organization-resolver.ts';
@@ -23,86 +25,74 @@ import { resolveRootRedirect } from '@/shared/tenancy/organization-resolver.ts';
 import { ErrorBoundary } from './ErrorBoundary.tsx';
 
 // ── Lazy components ──
-const AuthLayout = lazy(() =>
-  import('@/shared/layouts/AuthLayout/index.ts').then((m) => ({
-    default: m.AuthLayout,
-  })),
+// lazyRouteComponent (not React.lazy): the router can call `.preload()` on
+// these, which is what makes `defaultPreload: 'intent'` actually fetch the
+// island's chunk on hover/touch. Suspension is handled by the router's
+// defaultPendingComponent.
+const AuthLayout = lazyRouteComponent(
+  () => import('@/shared/layouts/AuthLayout/index.ts'),
+  'AuthLayout',
 );
-const LoginPage = lazy(() =>
-  import('@/pages/login/login.route.tsx').then((m) => ({ default: m.Component })),
+const LoginPage = lazyRouteComponent(
+  () => import('@/pages/login/login.route.tsx'),
+  'Component',
 );
-const RegisterPage = lazy(() =>
-  import('@/pages/register/register.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const RegisterPage = lazyRouteComponent(
+  () => import('@/pages/register/register.route.tsx'),
+  'Component',
 );
-const ForgotPasswordPage = lazy(() =>
-  import('@/pages/forgot-password/forgot-password.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const ForgotPasswordPage = lazyRouteComponent(
+  () => import('@/pages/forgot-password/forgot-password.route.tsx'),
+  'Component',
 );
-const ResetPasswordPage = lazy(() =>
-  import('@/pages/reset-password/reset-password.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const ResetPasswordPage = lazyRouteComponent(
+  () => import('@/pages/reset-password/reset-password.route.tsx'),
+  'Component',
 );
-const VerifyEmailPage = lazy(() =>
-  import('@/pages/verify-email/verify-email.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const VerifyEmailPage = lazyRouteComponent(
+  () => import('@/pages/verify-email/verify-email.route.tsx'),
+  'Component',
 );
-const MfaPage = lazy(() =>
-  import('@/pages/mfa/mfa.route.tsx').then((m) => ({ default: m.Component })),
+const MfaPage = lazyRouteComponent(
+  () => import('@/pages/mfa/mfa.route.tsx'),
+  'Component',
 );
-const CallbackPage = lazy(() =>
-  import('@/pages/callback/callback.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const CallbackPage = lazyRouteComponent(
+  () => import('@/pages/callback/callback.route.tsx'),
+  'Component',
 );
-const OnboardingPage = lazy(() =>
-  import('@/pages/onboarding/onboarding.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const OnboardingPage = lazyRouteComponent(
+  () => import('@/pages/onboarding/onboarding.route.tsx'),
+  'Component',
 );
-const AcceptInvitePage = lazy(() =>
-  import('@/pages/accept-invite/accept-invite.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const AcceptInvitePage = lazyRouteComponent(
+  () => import('@/pages/accept-invite/accept-invite.route.tsx'),
+  'Component',
 );
-const UnauthorizedPage = lazy(() =>
-  import('@/app/routes/UnauthorizedPage.tsx').then((m) => ({ default: m.Component })),
+const UnauthorizedPage = lazyRouteComponent(
+  () => import('@/app/routes/UnauthorizedPage.tsx'),
+  'Component',
 );
-const OrganizationPickerPage = lazy(() =>
-  import('@/pages/organization/organization.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const OrganizationPickerPage = lazyRouteComponent(
+  () => import('@/pages/organization/organization.route.tsx'),
+  'Component',
 );
-const OrganizationShell = lazy(() =>
-  import('@/pages/organization/$organizationId/organization-id.route.tsx').then((m) => ({
-    default: m.Component,
-  })),
+const OrganizationShell = lazyRouteComponent(
+  () => import('@/pages/organization/$organizationId/organization-id.route.tsx'),
+  'Component',
 );
-const DashboardPage = lazy(() =>
-  import('@/pages/organization/$organizationId/dashboard/dashboard.route.tsx').then(
-    (m) => ({ default: m.Component }),
-  ),
+const DashboardPage = lazyRouteComponent(
+  () => import('@/pages/organization/$organizationId/dashboard/dashboard.route.tsx'),
+  'Component',
 );
-const SuspendedPage = lazy(() =>
-  import('@/pages/organization/$organizationId/suspended/suspended.route.tsx').then(
-    (m) => ({ default: m.Component }),
-  ),
+const SuspendedPage = lazyRouteComponent(
+  () => import('@/pages/organization/$organizationId/suspended/suspended.route.tsx'),
+  'Component',
 );
-const NotFoundPage = lazy(() =>
-  import('@/app/routes/NotFoundPage.tsx').then((m) => ({ default: m.Component })),
+const NotFoundPage = lazyRouteComponent(
+  () => import('@/app/routes/NotFoundPage.tsx'),
+  'Component',
 );
-
-function Lazy({ C }: { C: React.LazyExoticComponent<React.ComponentType> }) {
-  return (
-    <Suspense fallback={<FullPageSpinner />}>
-      <C />
-    </Suspense>
-  );
-}
 
 // ── Root ──
 const rootRoute = createRootRoute({
@@ -120,16 +110,19 @@ const rootRoute = createRootRoute({
       </div>
       {/* Global hash-driven settings modal — overlays any page (#settings/…). */}
       <SettingsModal />
+      <OfflineIndicator />
       <Toaster richColors closeButton position="top-right" />
     </>
   ),
-  notFoundComponent: () => <Lazy C={NotFoundPage} />,
+  notFoundComponent: () => <NotFoundPage />,
   errorComponent: ({ error }) => <ErrorBoundary error={error} />,
 });
 
 // ── Auth shell ──
 // Pathless layout route (`id`, not `path`): mounts the split-screen AuthLayout
 // once over every auth page; the pages keep their top-level URLs (/login, …).
+// AuthLayout is rendered inside a custom component (it wraps Outlet), so it
+// keeps a local Suspense boundary — the router only manages route components.
 const authShellRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'auth-shell',
@@ -140,6 +133,7 @@ const authShellRoute = createRoute({
       </AuthLayout>
     </Suspense>
   ),
+  errorComponent: RouteErrorBoundary,
 });
 
 // ── Public ──
@@ -151,37 +145,43 @@ const loginRoute = createRoute({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
     redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
   }),
-  component: () => <Lazy C={LoginPage} />,
+  component: LoginPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const registerRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/register',
-  component: () => <Lazy C={RegisterPage} />,
+  component: RegisterPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const forgotPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/forgot-password',
-  component: () => <Lazy C={ForgotPasswordPage} />,
+  component: ForgotPasswordPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const resetPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/reset-password',
-  component: () => <Lazy C={ResetPasswordPage} />,
+  component: ResetPasswordPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const verifyEmailRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/verify-email',
-  component: () => <Lazy C={VerifyEmailPage} />,
+  component: VerifyEmailPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const mfaRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/mfa',
-  component: () => <Lazy C={MfaPage} />,
+  component: MfaPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 // One provider-agnostic OAuth / magic-link return URL for all third parties —
@@ -190,26 +190,30 @@ const mfaRoute = createRoute({
 const callbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/callback',
-  component: () => <Lazy C={CallbackPage} />,
+  component: CallbackPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const onboardingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/onboarding',
   beforeLoad: ({ location }) => requireAuth(location.href),
-  component: () => <Lazy C={OnboardingPage} />,
+  component: OnboardingPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const acceptInviteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/accept-invite/$invitationId',
-  component: () => <Lazy C={AcceptInvitePage} />,
+  component: AcceptInvitePage,
+  errorComponent: RouteErrorBoundary,
 });
 
 const unauthorizedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/unauthorized',
-  component: () => <Lazy C={UnauthorizedPage} />,
+  component: UnauthorizedPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 // ── Index resolver ──
@@ -218,7 +222,10 @@ const unauthorizedRoute = createRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async ({ location, preload }) => {
+    // Resolving `/` triggers fetches and always throws a redirect — pointless
+    // (and side-effectful) for hover preloads.
+    if (preload) return;
     requireAuth(location.href);
     throw redirect(await resolveRootRedirect());
   },
@@ -230,7 +237,8 @@ const organizationPickerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/organization',
   beforeLoad: ({ location }) => requireAuth(location.href),
-  component: () => <Lazy C={OrganizationPickerPage} />,
+  component: OrganizationPickerPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 // ── Organization shell (/organization/$organizationId) ──
@@ -240,22 +248,35 @@ const organizationPickerRoute = createRoute({
 const organizationShellRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/organization/$organizationId',
-  beforeLoad: async ({ location, params }) => {
+  beforeLoad: async ({ location, params, preload }) => {
     requireAuth(location.href);
+    // Context sync mutates the organization store and fetches permissions —
+    // never run it for a hover preload (the chunk still preloads). With
+    // defaultPreloadStaleTime: 0 the guard re-runs on real navigation.
+    if (preload) return;
     await requireOrganizationContext(params.organizationId);
   },
   component: function OrganizationShellRoute() {
     const isLoading = useAuthStore((s) => s.isLoading);
     if (isLoading) return <FullPageSpinner />;
-    return <Lazy C={OrganizationShell} />;
+    return (
+      <Suspense fallback={<FullPageSpinner />}>
+        <OrganizationShell />
+      </Suspense>
+    );
   },
+  errorComponent: RouteErrorBoundary,
 });
 
 const organizationDashboardRoute = createRoute({
   getParentRoute: () => organizationShellRoute,
   path: 'dashboard',
-  beforeLoad: ({ params }) => requireActiveOrganization(params.organizationId),
-  component: () => <Lazy C={DashboardPage} />,
+  beforeLoad: ({ params, preload }) => {
+    if (preload) return;
+    requireActiveOrganization(params.organizationId);
+  },
+  component: DashboardPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 // Outside the status gate on purpose: a suspended organization must still be
@@ -263,7 +284,8 @@ const organizationDashboardRoute = createRoute({
 const organizationSuspendedRoute = createRoute({
   getParentRoute: () => organizationShellRoute,
   path: 'suspended',
-  component: () => <Lazy C={SuspendedPage} />,
+  component: SuspendedPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 // Settings is no longer a route space: the global SettingsModal (mounted on
@@ -275,7 +297,8 @@ const organizationSuspendedRoute = createRoute({
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '$',
-  component: () => <Lazy C={NotFoundPage} />,
+  component: NotFoundPage,
+  errorComponent: RouteErrorBoundary,
 });
 
 // ── Tree ──
@@ -301,7 +324,16 @@ const routeTree = rootRoute.addChildren([
   notFoundRoute,
 ]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({
+  routeTree,
+  // Preload the destination island's chunk (and pure loaders) on hover/touch.
+  defaultPreload: 'intent',
+  // Preloaded guard results are immediately stale: beforeLoad re-runs on the
+  // real navigation, so the side-effectful guard chain (org context sync,
+  // permission refetch) is never satisfied by a hover.
+  defaultPreloadStaleTime: 0,
+  defaultPendingComponent: () => <FullPageSpinner />,
+});
 
 declare module '@tanstack/react-router' {
   interface Register {
