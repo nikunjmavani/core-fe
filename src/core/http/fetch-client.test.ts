@@ -3,8 +3,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { clearAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { HttpError, isUnauthorized } from '@/shared/errors/HttpError.ts';
 
-vi.mock('@/shared/auth/service.ts', () => ({ forceLogout: vi.fn() }));
-import { forceLogout } from '@/shared/auth/service.ts';
+// Full stub — no importOriginal. service.ts sits in an import cycle with this
+// module (service → queryClient → fetch-client → service), and importOriginal
+// would evaluate that cycle while the mock factory is still running, handing
+// fetch-client the REAL forceLogout instead of the stub. With a plain factory
+// the mock exists before fetch-client evaluates. The single-flight network
+// behaviour of refreshAccessToken is service's contract, proven in
+// shared/auth/service.test.ts — here we only assert fetch-client DELEGATES.
+vi.mock('@/shared/auth/service.ts', () => ({
+  forceLogout: vi.fn(),
+  refreshAccessToken: vi.fn(),
+}));
+import { forceLogout, refreshAccessToken } from '@/shared/auth/service.ts';
 
 import { apiClient } from './fetch-client.ts';
 
@@ -136,50 +146,57 @@ describe('fetch-client', () => {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
-    const refreshed = () =>
-      new Response(JSON.stringify({ accessToken: VALID_TOKEN }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
 
-    it('401 → ONE refresh → replay succeeds with the fresh token', async () => {
+    it('401 → delegate to the shared refresh → replay succeeds', async () => {
       fetchMock
         .mockResolvedValueOnce(unauthorized()) // original request
-        .mockResolvedValueOnce(refreshed()) // refresh call
-        .mockResolvedValueOnce(ok()); // replay
+        .mockResolvedValueOnce(ok()); // replay (refresh is the service's stub)
 
       const { data } = await apiClient.get<{ ok: boolean }>('/protected');
       expect(data).toEqual({ ok: true });
+      expect(refreshAccessToken).toHaveBeenCalledTimes(1);
+      // fetch-client must NEVER call /auth/refresh itself — only via service.
       const urls = fetchMock.mock.calls.map((c) => String(c[0]));
-      expect(urls.filter((u) => u.includes('/auth/refresh'))).toHaveLength(1);
+      expect(urls.filter((u) => u.includes('/auth/refresh'))).toHaveLength(0);
       expect(forceLogout).not.toHaveBeenCalled();
     });
 
     it('replay that 401s AGAIN means a dead session: forceLogout, no refresh loop', async () => {
       fetchMock
         .mockResolvedValueOnce(unauthorized()) // original request
-        .mockResolvedValueOnce(refreshed()) // refresh call (succeeds)
         .mockResolvedValueOnce(unauthorized()); // replay STILL 401
 
       await expect(apiClient.get('/protected')).rejects.toBeInstanceOf(HttpError);
-      const refreshCalls = fetchMock.mock.calls
-        .map((c) => String(c[0]))
-        .filter((u) => u.includes('/auth/refresh'));
-      expect(refreshCalls).toHaveLength(1); // never refreshes twice for one request
+      // never refreshes twice for one request
+      expect(refreshAccessToken).toHaveBeenCalledTimes(1);
       expect(forceLogout).toHaveBeenCalledTimes(1);
     });
 
-    it('refresh failure clears the session via forceLogout', async () => {
-      fetchMock
-        .mockResolvedValueOnce(unauthorized()) // original request
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify({ message: 'session revoked' }), {
-            status: 401,
-            headers: { 'Content-Type': 'application/json' },
-          }),
-        ); // refresh itself rejected
+    it('every concurrent 401 awaits the shared single-flight (no direct refresh fetch)', async () => {
+      const seen = new Set<string>();
+      // First hit per endpoint 401s, the replay succeeds.
+      fetchMock.mockImplementation((url: string) => {
+        if (seen.has(String(url))) return Promise.resolve(ok());
+        seen.add(String(url));
+        return Promise.resolve(unauthorized());
+      });
 
-      await expect(apiClient.get('/protected')).rejects.toBeInstanceOf(HttpError);
+      await Promise.all([apiClient.get('/a'), apiClient.get('/b'), apiClient.get('/c')]);
+
+      // One delegation per 401; collapsing them into ONE network call is
+      // refreshAccessToken's own single-flight, proven in service.test.ts.
+      expect(refreshAccessToken).toHaveBeenCalledTimes(3);
+      const urls = fetchMock.mock.calls.map((c) => String(c[0]));
+      expect(urls.filter((u) => u.includes('/auth/refresh'))).toHaveLength(0);
+      expect(forceLogout).not.toHaveBeenCalled();
+    });
+
+    it('refresh failure clears the session via forceLogout', async () => {
+      vi.mocked(refreshAccessToken).mockRejectedValueOnce(new Error('session revoked'));
+      fetchMock.mockResolvedValueOnce(unauthorized()); // original request
+
+      // The refresh error surfaces to the caller after the local logout.
+      await expect(apiClient.get('/protected')).rejects.toThrow('session revoked');
       expect(forceLogout).toHaveBeenCalledTimes(1);
     });
   });
@@ -212,21 +229,12 @@ describe('fetch-client', () => {
             headers: { 'Content-Type': 'application/json' },
           }),
         )
-        .mockResolvedValueOnce(
-          new Response(JSON.stringify({ accessToken: VALID_TOKEN }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-          }),
-        )
-        .mockResolvedValueOnce(ok());
+        .mockResolvedValueOnce(ok()); // replay (refresh is the service's stub)
 
       await apiClient.post('/things', { a: 1 });
 
-      const writeCalls = fetchMock.mock.calls.filter(
-        (c) => !String(c[0]).includes('/auth/refresh'),
-      );
-      const first = (writeCalls[0][1] as RequestInit).headers as Headers;
-      const replay = (writeCalls[1][1] as RequestInit).headers as Headers;
+      const first = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
+      const replay = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;
       expect(first.get('Idempotency-Key')).toBe(replay.get('Idempotency-Key'));
       expect(first.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
     });

@@ -19,7 +19,7 @@ src/pages/<page>/                          ← folder = URL segment
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
 ├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
-├── <page>.manifest.ts                     manifest — path, testId, permission, kind, children
+├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
 │══ OPTIONAL — the page's OWN data layer ══════════════════════════════════
@@ -71,6 +71,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'organizations',
   path: '/organizations',
+  title: 'Organizations', // document title: "Organizations · Core Admin" (routeTree wires manifestHead)
   testId: 'organizations-page',
   permission: null, // or 'organization:read' etc.
   kind: 'leaf', // 'leaf' | 'layout'
@@ -193,7 +194,7 @@ Established cases: `/settings` → `/settings/profile`, `/settings/organization`
 1. **Read** `<PAGE>.OVERVIEW.md` (or create it) + the parent's `<page>.manifest.ts` if nested.
 2. **Create files** in order: `<PAGE>.OVERVIEW.md` → `<page>.manifest.ts` → `<page>.contracts.ts` → `<page>.api.ts` → `<Page>Page.tsx | <Page>Layout.tsx` → `<page>.route.tsx`.
 3. **Add components/hooks/forms** under `components/<Name>/`, `hooks/use<Name>/`, `forms/<Name>Form/` — each a folder with `<Name>.{tsx,ts}` + `<Name>.test.{tsx,ts}` + `index.ts`.
-4. **Register lazy route** in [`src/app/routes/routeTree.tsx`](../../../src/app/routes/routeTree.tsx): `import('@/pages/<name>/<name>.route.tsx').then(m => ({ default: m.Component }))`.
+4. **Register lazy route** in [`src/app/routes/routeTree.tsx`](../../../src/app/routes/routeTree.tsx): `lazyRouteComponent(() => import('@/pages/<name>/<name>.route.tsx'), 'Component')` + `head: manifestHead(<name>Manifest)` (document title from `manifest.title`) + `errorComponent: RouteErrorBoundary`.
 5. **Update test-id inventory:** [`docs/reference/e2e-testids-inventory.md`](../../../docs/reference/e2e-testids-inventory.md).
 
 ## Related

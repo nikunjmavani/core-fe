@@ -15,8 +15,23 @@ import {
   requireOrganizationContext,
 } from '@/app/guards/route-guards.ts';
 import { redirectIfAuthenticated, requireAuth } from '@/core/rbac/guards.ts';
+import { APP_TITLE, composePageTitle, manifestHead } from '@/lib/routes/page-head.ts';
+import { manifest as acceptInviteManifest } from '@/pages/accept-invite/accept-invite.manifest.ts';
+import { manifest as callbackManifest } from '@/pages/callback/callback.manifest.ts';
+import { manifest as forgotPasswordManifest } from '@/pages/forgot-password/forgot-password.manifest.ts';
+import { manifest as loginManifest } from '@/pages/login/login.manifest.ts';
+import { manifest as mfaManifest } from '@/pages/mfa/mfa.manifest.ts';
+import { manifest as onboardingManifest } from '@/pages/onboarding/onboarding.manifest.ts';
+import { manifest as dashboardManifest } from '@/pages/organization/$organizationId/dashboard/dashboard.manifest.ts';
+import { manifest as organizationShellManifest } from '@/pages/organization/$organizationId/organization-id.manifest.ts';
+import { manifest as suspendedManifest } from '@/pages/organization/$organizationId/suspended/suspended.manifest.ts';
+import { manifest as organizationPickerManifest } from '@/pages/organization/organization.manifest.ts';
+import { manifest as registerManifest } from '@/pages/register/register.manifest.ts';
+import { manifest as resetPasswordManifest } from '@/pages/reset-password/reset-password.manifest.ts';
+import { manifest as verifyEmailManifest } from '@/pages/verify-email/verify-email.manifest.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts';
+import { RouteAnnouncer } from '@/shared/components/RouteAnnouncer/index.ts';
 import { RouteErrorBoundary } from '@/shared/components/RouteErrorBoundary/index.ts';
 import { SettingsModalLazy } from '@/shared/components/SettingsModal/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
@@ -98,7 +113,7 @@ const NotFoundPage = lazyRouteComponent(
 const rootRoute = createRootRoute({
   head: () => ({
     meta: [
-      { title: 'Core Admin' },
+      { title: APP_TITLE },
       { name: 'description', content: 'Enterprise admin dashboard' },
     ],
   }),
@@ -111,6 +126,8 @@ const rootRoute = createRootRoute({
       {/* Global hash-driven settings modal — overlays any page (#settings/…). */}
       <SettingsModalLazy />
       <OfflineIndicator />
+      {/* aria-live announcer: reads the new document.title on navigation. */}
+      <RouteAnnouncer />
       <Toaster richColors closeButton position="top-right" />
     </>
   ),
@@ -140,6 +157,7 @@ const authShellRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/login',
+  head: manifestHead(loginManifest),
   // Guest-only (layer 0.5): a signed-in user never sees the login form.
   beforeLoad: () => redirectIfAuthenticated(),
   // `redirect` = post-login return path, set by requireAuth (validated in
@@ -154,6 +172,7 @@ const loginRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/register',
+  head: manifestHead(registerManifest),
   beforeLoad: () => redirectIfAuthenticated(),
   component: RegisterPage,
   errorComponent: RouteErrorBoundary,
@@ -162,6 +181,7 @@ const registerRoute = createRoute({
 const forgotPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/forgot-password',
+  head: manifestHead(forgotPasswordManifest),
   beforeLoad: () => redirectIfAuthenticated(),
   component: ForgotPasswordPage,
   errorComponent: RouteErrorBoundary,
@@ -170,6 +190,7 @@ const forgotPasswordRoute = createRoute({
 const resetPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/reset-password',
+  head: manifestHead(resetPasswordManifest),
   component: ResetPasswordPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -177,6 +198,7 @@ const resetPasswordRoute = createRoute({
 const verifyEmailRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/verify-email',
+  head: manifestHead(verifyEmailManifest),
   component: VerifyEmailPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -184,6 +206,7 @@ const verifyEmailRoute = createRoute({
 const mfaRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/mfa',
+  head: manifestHead(mfaManifest),
   component: MfaPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -194,6 +217,7 @@ const mfaRoute = createRoute({
 const callbackRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/callback',
+  head: manifestHead(callbackManifest),
   component: CallbackPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -201,6 +225,7 @@ const callbackRoute = createRoute({
 const onboardingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/onboarding',
+  head: manifestHead(onboardingManifest),
   beforeLoad: ({ location }) => requireAuth(location.href),
   component: OnboardingPage,
   errorComponent: RouteErrorBoundary,
@@ -209,6 +234,7 @@ const onboardingRoute = createRoute({
 const acceptInviteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/accept-invite/$invitationId',
+  head: manifestHead(acceptInviteManifest),
   component: AcceptInvitePage,
   errorComponent: RouteErrorBoundary,
 });
@@ -216,6 +242,7 @@ const acceptInviteRoute = createRoute({
 const unauthorizedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/unauthorized',
+  head: () => ({ meta: [{ title: composePageTitle('Unauthorized') }] }),
   component: UnauthorizedPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -240,6 +267,7 @@ const indexRoute = createRoute({
 const organizationPickerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/organization',
+  head: manifestHead(organizationPickerManifest),
   beforeLoad: ({ location }) => requireAuth(location.href),
   component: OrganizationPickerPage,
   errorComponent: RouteErrorBoundary,
@@ -252,6 +280,7 @@ const organizationPickerRoute = createRoute({
 const organizationShellRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/organization/$organizationId',
+  head: manifestHead(organizationShellManifest),
   beforeLoad: async ({ location, params, preload }) => {
     requireAuth(location.href);
     // Context sync mutates the organization store and fetches permissions —
@@ -275,6 +304,7 @@ const organizationShellRoute = createRoute({
 const organizationDashboardRoute = createRoute({
   getParentRoute: () => organizationShellRoute,
   path: 'dashboard',
+  head: manifestHead(dashboardManifest),
   beforeLoad: ({ params, preload }) => {
     if (preload) return;
     requireActiveOrganization(params.organizationId);
@@ -288,6 +318,7 @@ const organizationDashboardRoute = createRoute({
 const organizationSuspendedRoute = createRoute({
   getParentRoute: () => organizationShellRoute,
   path: 'suspended',
+  head: manifestHead(suspendedManifest),
   component: SuspendedPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -301,6 +332,7 @@ const organizationSuspendedRoute = createRoute({
 const notFoundRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '$',
+  head: () => ({ meta: [{ title: composePageTitle('Page not found') }] }),
   component: NotFoundPage,
   errorComponent: RouteErrorBoundary,
 });

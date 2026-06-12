@@ -54,6 +54,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: '<name>',
   path: '/<name>',
+  title: '<Human title>', // document title (routeTree wires manifestHead)
   testId: '<name>-page',
   permission: null, // or 'resource:action'
   kind: 'leaf', // 'leaf' | 'layout'
@@ -196,14 +197,22 @@ export function loader() {
 Add to [`src/app/routes/routeTree.tsx`](../../../src/app/routes/routeTree.tsx):
 
 ```tsx
-const <Name>Page = lazy(() =>
-  import('@/pages/<name>/<name>.route.tsx').then((m) => ({ default: m.Component })),
+import { manifestHead } from '@/lib/routes/page-head.ts';
+import { manifest as <name>Manifest } from '@/pages/<name>/<name>.manifest.ts';
+
+// lazyRouteComponent (NOT React.lazy) so `defaultPreload: 'intent'` can
+// prefetch the island chunk on hover/touch.
+const <Name>Page = lazyRouteComponent(
+  () => import('@/pages/<name>/<name>.route.tsx'),
+  'Component',
 );
 
 const <name>Route = createRoute({
-  getParentRoute: () => dashboardLayoutRoute,    // or rootRoute for public pages
+  getParentRoute: () => organizationShellRoute, // or rootRoute / authShellRoute
   path: '<name>',
-  component: () => <Lazy C={<Name>Page} />,
+  head: manifestHead(<name>Manifest), // document title from manifest.title
+  component: <Name>Page,
+  errorComponent: RouteErrorBoundary,
 });
 
 // ...add to routeTree.addChildren([...])

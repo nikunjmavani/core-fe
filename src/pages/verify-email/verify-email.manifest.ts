@@ -8,6 +8,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'verify-email',
   path: '/verify-email',
+  title: 'Verify email',
   testId: 'verify-email-page',
   permission: null,
   kind: 'leaf',

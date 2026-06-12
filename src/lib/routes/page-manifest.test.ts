@@ -7,6 +7,7 @@ describe('PageManifest', () => {
     const manifest: PageManifest = {
       segment: 'dashboard',
       path: '/',
+      title: 'Dashboard',
       testId: 'dashboard-page',
       permission: null,
       kind: 'leaf',
@@ -19,6 +20,7 @@ describe('PageManifest', () => {
     const manifest: PageManifest = {
       segment: 'organization',
       path: '/organization',
+      title: 'Choose organization',
       testId: 'organization-page',
       permission: 'organization:read',
       kind: 'layout',

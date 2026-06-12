@@ -7,6 +7,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'forgot-password',
   path: '/forgot-password',
+  title: 'Forgot password',
   testId: 'forgot-password-page',
   permission: null,
   kind: 'leaf',

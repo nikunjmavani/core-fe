@@ -116,14 +116,46 @@ export async function silentRefresh(): Promise<void> {
 
 const authBase = () => `${config.apiBaseUrl}${API_BASE_PATH}`;
 
-async function doSilentRefresh(): Promise<void> {
+let tokenRefreshPromise: Promise<void> | null = null;
+
+/**
+ * THE single-flight token refresh — the only code path that calls
+ * `/auth/refresh`. Both the proactive timer (via {@link silentRefresh}) and
+ * the fetch client's 401 interceptor consume this promise, so the two can
+ * never race each other into parallel refreshes.
+ *
+ * @remarks
+ * The backend rotates the refresh session on every refresh and treats a
+ * concurrent reuse of the old cookie as theft (reuse-detection kills the
+ * session). That makes parallelism the failure mode twice over: within a tab
+ * (timer vs 401) the module promise serializes callers, and ACROSS tabs the
+ * network call is wrapped in `navigator.locks` ('core-auth:refresh') so N
+ * tabs refreshing at the same instant — every tab schedules its timer off
+ * the same token expiry — take turns instead of tripping reuse-detection.
+ * Falls back to the plain call where Web Locks is unavailable.
+ */
+export async function refreshAccessToken(): Promise<void> {
+  if (tokenRefreshPromise) return tokenRefreshPromise;
+  tokenRefreshPromise = runExclusiveRefresh().finally(() => {
+    tokenRefreshPromise = null;
+  });
+  return tokenRefreshPromise;
+}
+
+async function runExclusiveRefresh(): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    return navigator.locks.request('core-auth:refresh', () => doTokenRefresh());
+  }
+  return doTokenRefresh();
+}
+
+async function doTokenRefresh(): Promise<void> {
   // REPLACE_WITH_API: POST /api/v1/auth/refresh
   if (config.useMockApi) {
     if (!hasMockSession()) {
       throw new Error('[Auth] No mock session');
     }
     setAccessToken(MOCK_ACCESS_TOKEN);
-    useAuthStore.getState().setUser(MOCK_USER);
     scheduleTokenRefresh();
     return;
   }
@@ -142,6 +174,18 @@ async function doSilentRefresh(): Promise<void> {
   const { accessToken } = authTokenResponseSchema.parse(data);
   setAccessToken(accessToken);
 
+  // Schedule proactive refresh for this new token
+  scheduleTokenRefresh();
+}
+
+async function doSilentRefresh(): Promise<void> {
+  await refreshAccessToken();
+
+  if (config.useMockApi) {
+    useAuthStore.getState().setUser(MOCK_USER);
+    return;
+  }
+
   // Fetch and cache user profile — roll back token if this fails
   try {
     const user = await getCurrentUser();
@@ -150,9 +194,6 @@ async function doSilentRefresh(): Promise<void> {
     clearAccessToken();
     throw error;
   }
-
-  // Schedule proactive refresh for this new token
-  scheduleTokenRefresh();
 }
 
 /**

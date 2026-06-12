@@ -8,6 +8,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'suspended',
   path: '/organization/$organizationId/suspended',
+  title: 'Organization suspended',
   testId: 'suspended-page',
   permission: null,
   kind: 'leaf',

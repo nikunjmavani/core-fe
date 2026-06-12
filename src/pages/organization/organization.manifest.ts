@@ -9,6 +9,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'organization',
   path: '/organization',
+  title: 'Choose organization',
   testId: 'organization-page',
   permission: null,
   kind: 'layout',

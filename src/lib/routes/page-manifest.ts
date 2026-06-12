@@ -13,6 +13,12 @@ export type PageManifest = {
   segment: string;
   /** Full pathname this island serves. */
   path: string;
+  /**
+   * Human document title for this page ("Sign in", "Dashboard"). Rendered as
+   * `<title>` via the route's `head` (see `manifestHead`) and announced to
+   * screen readers by `RouteAnnouncer` on SPA navigations.
+   */
+  title: string;
   /** Primary page container `data-testid`. */
   testId: string;
   /** Loader permission; `null` when inherited or public. */

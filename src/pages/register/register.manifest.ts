@@ -8,6 +8,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'register',
   path: '/register',
+  title: 'Create account',
   testId: 'register-page',
   permission: null,
   kind: 'leaf',

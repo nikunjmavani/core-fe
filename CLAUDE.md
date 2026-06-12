@@ -136,7 +136,7 @@ src/pages/<page>/                          ← folder = URL segment
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
 ├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
-├── <page>.manifest.ts                     manifest — path, testId, permission, kind, children
+├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
 │══ OPTIONAL — the page's OWN data layer ══════════════════════════════════
@@ -325,6 +325,11 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 - Access token stored in memory only (module closure in `shared/auth/token.ts`).
 - Refresh token is an HttpOnly cookie (set by backend).
 - Never store tokens in localStorage or sessionStorage.
+- **One refresh path:** `refreshAccessToken()` in `shared/auth/service.ts` is the ONLY code
+  allowed to call `/auth/refresh` — a module-level single-flight dedupes concurrent callers
+  (proactive timer, 401 interceptor) and a `navigator.locks` Web Lock (`core-auth:refresh`)
+  serializes tabs. Never add a second refresh call: the backend rotates refresh sessions
+  with reuse-detection, so parallel refreshes kill the session.
 - `assetsInlineLimit: 0` in Vite config for CSP compliance.
 - CSP ships as a build-generated **header** (`dist/_headers`, authoritative) plus an
   `index.html` meta fallback, both from `lib/csp-api-origin.ts`; set `VITE_CSP_REPORT_URI`
@@ -337,6 +342,9 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 - Route config lives in `src/app/routes/routeTree.tsx`.
 - Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationId` chain (auth → membership/context sync from the URL → status) plus `requirePermission`; see `src/app/guards/GUARDS.OVERVIEW.md`.
 - RBAC enforcement in route loaders: `requirePermission('domain.action')`.
+- Every route sets `head: manifestHead(manifest)` (`lib/routes/page-head.ts`) — the document
+  title comes from `manifest.title` as `"<title> · Core Admin"`; the root-mounted
+  `RouteAnnouncer` announces it to screen readers on SPA navigations.
 
 ## New-deployment detection
 

@@ -7,6 +7,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'mfa',
   path: '/mfa',
+  title: 'Two-factor authentication',
   testId: 'mfa-page',
   permission: null,
   kind: 'leaf',

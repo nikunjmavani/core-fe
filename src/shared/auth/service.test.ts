@@ -48,12 +48,14 @@ describe('auth/service', () => {
   let silentRefresh: AuthServiceModule['silentRefresh'];
   let forceLogout: AuthServiceModule['forceLogout'];
   let logout: AuthServiceModule['logout'];
+  let refreshAccessToken: AuthServiceModule['refreshAccessToken'];
 
   beforeAll(async () => {
     const mod = await import('./service.ts');
     silentRefresh = mod.silentRefresh;
     forceLogout = mod.forceLogout;
     logout = mod.logout;
+    refreshAccessToken = mod.refreshAccessToken;
   });
 
   beforeEach(() => {
@@ -130,6 +132,56 @@ describe('auth/service', () => {
       expect(r2).toBeUndefined();
       // refresh + me (shared promise so only one doSilentRefresh run)
       expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('refreshAccessToken (the ONE single-flight)', () => {
+    it('concurrent calls share ONE /auth/refresh request', async () => {
+      (fetchMock as Mock).mockResolvedValueOnce(
+        mockResponse({ accessToken: VALID_TOKEN }),
+      );
+
+      // jsdom has no navigator.locks, so this also covers the fallback path.
+      await Promise.all([refreshAccessToken(), refreshAccessToken()]);
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/auth/refresh');
+      expect(getAccessToken()).toBe(VALID_TOKEN);
+    });
+
+    it('a failed refresh clears the in-flight slot so the next call retries', async () => {
+      (fetchMock as Mock)
+        .mockResolvedValueOnce(mockResponse({ message: 'session revoked' }, 401))
+        .mockResolvedValueOnce(mockResponse({ accessToken: VALID_TOKEN }));
+
+      await expect(refreshAccessToken()).rejects.toThrow('session revoked');
+      await refreshAccessToken();
+
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(getAccessToken()).toBe(VALID_TOKEN);
+    });
+
+    it('serializes through the cross-tab Web Lock when navigator.locks exists', async () => {
+      const lockRequest = vi.fn(
+        (_name: string, cb: () => Promise<unknown>): Promise<unknown> => cb(),
+      );
+      Object.defineProperty(navigator, 'locks', {
+        configurable: true,
+        value: { request: lockRequest },
+      });
+      try {
+        (fetchMock as Mock).mockResolvedValueOnce(
+          mockResponse({ accessToken: VALID_TOKEN }),
+        );
+
+        await refreshAccessToken();
+
+        expect(lockRequest).toHaveBeenCalledTimes(1);
+        expect(lockRequest.mock.calls[0]?.[0]).toBe('core-auth:refresh');
+        expect(getAccessToken()).toBe(VALID_TOKEN);
+      } finally {
+        delete (navigator as { locks?: unknown }).locks;
+      }
     });
   });
 

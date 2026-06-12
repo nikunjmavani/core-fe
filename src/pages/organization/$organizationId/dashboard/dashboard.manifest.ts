@@ -8,6 +8,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'dashboard',
   path: '/organization/$organizationId/dashboard',
+  title: 'Dashboard',
   testId: 'dashboard-page',
   permission: null,
   kind: 'leaf',

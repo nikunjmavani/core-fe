@@ -16,7 +16,7 @@ src/pages/<page>/                          ← folder = URL segment
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
 ├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
-├── <page>.manifest.ts                     manifest — path, testId, permission, kind, children
+├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
 │══ OPTIONAL — the page's OWN data layer ══════════════════════════════════
@@ -79,6 +79,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'organization',
   path: '/organization',
+  title: 'Choose organization',
   testId: 'organization-page',
   permission: 'organization:read',
   kind: 'layout',

@@ -1,8 +1,7 @@
-import { API_BASE_PATH, API_ENDPOINTS, HTTP } from '@/core/config/constants.ts';
+import { API_ENDPOINTS, HTTP } from '@/core/config/constants.ts';
 import { config } from '@/core/config/env.ts';
-import { forceLogout } from '@/shared/auth/service.ts';
-import { getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
-import { authTokenResponseSchema } from '@/shared/auth/types.ts';
+import { forceLogout, refreshAccessToken } from '@/shared/auth/service.ts';
+import { getAccessToken } from '@/shared/auth/token.ts';
 import { HttpError } from '@/shared/errors/HttpError.ts';
 
 // ------------------------------------------------------------------
@@ -12,23 +11,6 @@ let requestCounter = 0;
 function generateRequestId(): string {
   requestCounter = (requestCounter + 1) % Number.MAX_SAFE_INTEGER;
   return `${Date.now().toString(36)}-${requestCounter.toString(36)}`;
-}
-
-// ------------------------------------------------------------------
-// 401 refresh queue
-// ------------------------------------------------------------------
-let isRefreshing = false;
-const failedQueue: Array<{
-  resolve: () => void;
-  reject: (reason: unknown) => void;
-}> = [];
-
-function processQueue(error: unknown): void {
-  failedQueue.forEach((prom) => {
-    if (error) prom.reject(error);
-    else prom.resolve();
-  });
-  failedQueue.length = 0;
 }
 
 // ------------------------------------------------------------------
@@ -133,57 +115,23 @@ function buildRequestUrl(path: string): string {
   return `${base}${sep}${path}`;
 }
 
+/**
+ * 401 handler: refresh once via the SHARED single-flight in shared/auth
+ * (the only code path allowed to call /auth/refresh — see
+ * `refreshAccessToken`'s remarks on rotation + reuse-detection), then replay
+ * the original request. Concurrent 401s all await the same in-flight refresh.
+ * A failed refresh means the session is gone: clear local auth and bail.
+ */
 async function doRefreshAndReplay<T>(
-  url: string,
   replay: () => Promise<{ data: T }>,
 ): Promise<{ data: T }> {
-  if (isRefreshing) {
-    await new Promise<void>((resolve, reject) => {
-      failedQueue.push({ resolve, reject });
-    });
-    return replay();
-  }
-  isRefreshing = true;
   try {
-    const refreshController = new AbortController();
-    const refreshTimeoutId = setTimeout(
-      () => refreshController.abort(),
-      HTTP.REFRESH_TIMEOUT,
-    );
-    const refreshRes = await fetch(
-      `${config.apiBaseUrl}${API_BASE_PATH}${API_ENDPOINTS.AUTH.REFRESH}`,
-      {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        signal: refreshController.signal,
-      },
-    ).finally(() => clearTimeout(refreshTimeoutId));
-    if (!refreshRes.ok) {
-      const errData = await refreshRes.json().catch(() => ({}));
-      throw new HttpError(
-        (errData as { message?: string })?.message ?? 'Refresh failed',
-        refreshRes.status,
-        url,
-        'POST',
-        errData,
-      );
-    }
-    const refreshData = (await refreshRes.json()) as unknown;
-    const { accessToken } = authTokenResponseSchema.parse(refreshData);
-    setAccessToken(accessToken);
-    processQueue(null);
-    return replay();
+    await refreshAccessToken();
   } catch (refreshError) {
-    processQueue(refreshError);
     forceLogout();
     throw refreshError;
-  } finally {
-    isRefreshing = false;
   }
+  return replay();
 }
 
 /** Write methods carry an auto-generated Idempotency-Key (server de-dupes). */
@@ -245,7 +193,7 @@ async function request<T>(
         forceLogout();
         throw await parseErrorResponse(response, url, method);
       }
-      return doRefreshAndReplay(url, () => doOne(0, true));
+      return doRefreshAndReplay(() => doOne(0, true));
     }
 
     if (!response.ok) {

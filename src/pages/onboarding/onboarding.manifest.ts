@@ -7,6 +7,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'onboarding',
   path: '/onboarding',
+  title: 'Onboarding',
   testId: 'onboarding-page',
   permission: null,
   kind: 'leaf',

@@ -47,7 +47,7 @@ One per page. The prefix makes them globally unique → AI agents, grep, and IDE
 | File | Required? | Purpose |
 |------|-----------|---------|
 | `<page>.route.tsx` | ✓ | Lazy boundary (`Component`, `loader`, `ErrorBoundary`) |
-| `<page>.manifest.ts` | ✓ | Manifest: `path`, `testId`, `permission`, `kind`, `children` |
+| `<page>.manifest.ts` | ✓ | Manifest: `path`, `title`, `testId`, `permission`, `kind`, `children` |
 | `<page>.contracts.ts` | optional | Zod schemas + inferred TS types |
 | `<page>.api.ts` | optional | Fetcher functions for this page |
 | `<page>.search.ts` | optional | URL search-param schema (TanStack Router `validateSearch`) |
@@ -120,7 +120,7 @@ src/pages/<page>/                          ← folder = URL segment
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
 ├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
-├── <page>.manifest.ts                     manifest — path, testId, permission, kind, children
+├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
 │══ OPTIONAL — the page's OWN data layer ══════════════════════════════════
