@@ -17,7 +17,9 @@ export default defineConfig(({ mode }) => {
   return {
     envDir,
     plugins: [
-      react(),
+      // React Compiler: automatic memoization at build time (React 19).
+      // The eslint react-hooks rules already lint for compiler compatibility.
+      react({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } }),
       tailwindcss(),
       versionJson(),
       cspApiOrigin(env.VITE_API_BASE_URL),

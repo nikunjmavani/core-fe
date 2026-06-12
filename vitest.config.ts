@@ -3,6 +3,10 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  // Deliberately NO react-compiler here (vite.config.ts has it): coverage must
+  // measure SOURCE branches, not the compiler's synthetic memo-cache checks
+  // (which tripled the branch denominator and made the ratchet meaningless).
+  // Compiled output is exercised by the e2e suite and the production build.
   plugins: [react()],
   resolve: {
     alias: {
@@ -57,9 +61,9 @@ export default defineConfig({
       // target is 80 as the auth/organization modules get rebuilt with tests.
       thresholds: {
         branches: 53,
-        functions: 52,
-        lines: 57,
-        statements: 57,
+        functions: 56,
+        lines: 60,
+        statements: 59,
       },
     },
   },

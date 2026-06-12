@@ -39,3 +39,24 @@ Revisit these when Dependabot or direct dependency upgrades remove the need.
 ## Audit noise
 
 `pnpm audit --audit-level=high` should report **no high/critical** after overrides; **moderate** issues may remain in dev-only trees. Treat **production `dependencies`** first; document accepted risk for dev-only transitives if no patched upgrade exists yet.
+
+## Upgrade decisions log
+
+### React 19 + React Compiler (2026-06-12) — ADOPTED
+
+- `react`/`react-dom` 18.3 → 19.2 with `@types/react*` 19: **zero** type or
+  test changes needed (plain-function components, no `forwardRef`, strict
+  types throughout made the codebase forward-compatible).
+- **React Compiler** enabled in `vite.config.ts` via
+  `babel-plugin-react-compiler` — automatic memoization at build time;
+  verified active (`useMemoCache` present in the production bundle). The
+  `eslint-plugin-react-hooks` v7 rules already lint for compiler
+  compatibility (`react-hooks/incompatible-library` warnings on TanStack
+  Table test harnesses are expected — those components skip compilation).
+- **Deliberately NOT enabled in `vitest.config.ts`**: the compiler's
+  synthetic memo-cache checks tripled the branch denominator
+  (1,240 → 3,750) and made the coverage ratchet measure compiler internals
+  instead of source. Unit coverage stays on source semantics; compiled
+  output is exercised by the e2e suite (20 specs) and the production build.
+- Coverage ratchet raised on the upgrade's real gains: functions 52 → 56,
+  lines 57 → 60, statements 57 → 59 (branches hold at 53).
