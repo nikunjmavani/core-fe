@@ -123,7 +123,10 @@ export default defineConfig(({ mode }) => {
               return 'vendor';
             }
             if (id.includes('node_modules/@tanstack/react-query')) return 'query';
-            if (id.includes('node_modules/cmdk')) return 'cmdk';
+            // NO manual chunk for cmdk: it is only ever dynamically imported
+            // (CommandPaletteLazy), so natural splitting already isolates it.
+            // Forcing it into a named chunk made rollup hoist a shared radix
+            // helper there, statically chaining the whole chunk to the entry.
           },
         },
       },

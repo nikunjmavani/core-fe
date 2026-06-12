@@ -1,6 +1,5 @@
-import { AlertCircle } from 'lucide-react';
-
 import { cn } from '@/lib/utils.ts';
+import { AlertCircle } from '@/shared/icons/index.ts';
 
 interface FormErrorProps {
   message?: string | null;

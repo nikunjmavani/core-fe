@@ -41,10 +41,7 @@ export default defineConfig([
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
-      '@typescript-eslint/consistent-type-imports': [
-        'error',
-        { prefer: 'type-imports' },
-      ],
+      '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
       '@typescript-eslint/no-explicit-any': 'error',
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
 
@@ -64,6 +61,28 @@ export default defineConfig([
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-param-reassign': 'error',
+    },
+  },
+
+  // Icons flow through the @/shared/icons barrel so the icon library is
+  // swappable in one file. Vendored shadcn primitives and the barrel itself
+  // are the only direct lucide importers.
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['src/shared/icons/**', 'src/shared/components/ui/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'lucide-react',
+              message:
+                "Import icons from '@/shared/icons/index.ts' (one-file icon-library swap).",
+            },
+          ],
+        },
+      ],
     },
   },
 
@@ -214,8 +233,7 @@ export default defineConfig([
             {
               // everything internal except @/lib and other ui primitives
               regex: '^@/(core|pages|app)/|^@/shared/(?!components/ui/)',
-              message:
-                'UI primitives may import only @/lib and other ui primitives.',
+              message: 'UI primitives may import only @/lib and other ui primitives.',
             },
           ],
         },

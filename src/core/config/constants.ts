@@ -42,7 +42,8 @@ export const HTTP = {
   STALE_TIME: 1000 * 60 * 5, // 5 minutes
 } as const;
 
+// No HEADER entry: the backend scopes organization context from the URL path
+// (/api/v1/tenancy/organizations/:id/…) — there is no X-Organization-ID header.
 export const ORGANIZATION = {
-  HEADER: 'X-Organization-ID',
   LOCALHOST_FALLBACK: 'default',
 } as const;

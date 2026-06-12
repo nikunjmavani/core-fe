@@ -14,11 +14,11 @@ import {
   requireActiveOrganization,
   requireOrganizationContext,
 } from '@/app/guards/route-guards.ts';
-import { requireAuth } from '@/core/rbac/guards.ts';
+import { redirectIfAuthenticated, requireAuth } from '@/core/rbac/guards.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts';
 import { RouteErrorBoundary } from '@/shared/components/RouteErrorBoundary/index.ts';
-import { SettingsModal } from '@/shared/components/SettingsModal/index.ts';
+import { SettingsModalLazy } from '@/shared/components/SettingsModal/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { resolveRootRedirect } from '@/shared/tenancy/organization-resolver.ts';
 
@@ -109,7 +109,7 @@ const rootRoute = createRootRoute({
         <Outlet />
       </div>
       {/* Global hash-driven settings modal — overlays any page (#settings/…). */}
-      <SettingsModal />
+      <SettingsModalLazy />
       <OfflineIndicator />
       <Toaster richColors closeButton position="top-right" />
     </>
@@ -140,6 +140,8 @@ const authShellRoute = createRoute({
 const loginRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/login',
+  // Guest-only (layer 0.5): a signed-in user never sees the login form.
+  beforeLoad: () => redirectIfAuthenticated(),
   // `redirect` = post-login return path, set by requireAuth (validated in
   // LoginForm). Optional return type keeps `search` optional for plain links.
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
@@ -152,6 +154,7 @@ const loginRoute = createRoute({
 const registerRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/register',
+  beforeLoad: () => redirectIfAuthenticated(),
   component: RegisterPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -159,6 +162,7 @@ const registerRoute = createRoute({
 const forgotPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/forgot-password',
+  beforeLoad: () => redirectIfAuthenticated(),
   component: ForgotPasswordPage,
   errorComponent: RouteErrorBoundary,
 });

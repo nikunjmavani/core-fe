@@ -13,7 +13,13 @@ import { listMyOrganizations } from './my-organizations.ts';
  * not enough; it would leak org A's permissions into org B's UI).
  */
 
-/** The organization, if the signed-in user is a member; otherwise `null`. */
+/**
+ * The organization, if the signed-in user is a member; otherwise `null`.
+ *
+ * REPLACE_WITH_API note: this runs on EVERY org-route navigation (guard
+ * chain). When the real API lands, put `listMyOrganizations()` behind the
+ * query cache (staleTime) so navigation does not refetch the membership list.
+ */
 export async function findMembership(
   organizationId: string,
 ): Promise<Organization | null> {
@@ -28,7 +34,7 @@ export async function ensurePermissionsFor(organizationId: string): Promise<void
   const store = useOrganizationStore.getState();
   if (permissionsLoadedFor === organizationId && store.permissions.length > 0) return;
   // REPLACE_WITH_API: permissions come from the membership response for THIS
-  // organization; the X-Organization-ID header is already synced from the URL.
+  // organization (org-scoped endpoints carry the organization id in the path).
   store.setPermissions(await getMyPermissions());
   permissionsLoadedFor = organizationId;
 }

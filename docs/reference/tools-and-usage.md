@@ -114,6 +114,15 @@ Further gates, all mirroring core-be:
   branch protection.
 - **SBOM** (`pnpm sbom:generate`) — CycloneDX inventory via cdxgen (reads `pnpm-lock.yaml`);
   uploaded as a CI artifact from the build lane.
+- **Design tokens** (`pnpm validate:tokens`) — app code styles only through semantic tokens
+  (`background`, `success`, `brand`, `overlay`, …); raw Tailwind palette classes are forbidden
+  outside vendored `components/ui/`. This single gate is what keeps "a theme = a CSS file of
+  token values" true. Status/brand/overlay tokens live in `src/index.css`.
+- **Preload graph** (`pnpm build:check`, after `pnpm build`) — deferred chunks
+  (sentry/posthog/cmdk/rhf/charts) must never re-enter `dist/index.html`'s modulepreload list;
+  one static import anywhere in the entry graph silently drags them onto the first-paint path.
+- **Icon barrel** (`@/shared/icons`) — every app icon import flows through one file (eslint
+  `no-restricted-imports`), so swapping the icon library is a one-file change.
 - **Contract drift** (`pnpm contracts:drift`) — every backend endpoint this app references
   (API_ENDPOINTS + `apiClient` calls) must exist in core-be's committed route catalog
   (`../core-be/docs/routes.txt`); intentional fe-ahead endpoints live in

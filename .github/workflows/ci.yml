@@ -224,6 +224,8 @@ jobs:
         run: ./scripts/validate/env-example.sh
       - name: Public assets
         run: ./scripts/validate/public-assets.sh
+      - name: Design tokens (no raw palette in app code)
+        run: ./scripts/validate/design-tokens.sh
       # Zero-dependency node script — runs on the runner's preinstalled node,
       # no pnpm install needed in this lane.
       - name: TSDoc coverage budget
@@ -241,6 +243,9 @@ jobs:
           fetch-depth: 1
       - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm build
+      # Deferred chunks (sentry/posthog/cmdk/rhf/charts) must stay off the
+      # entry preload path — scripts/ci/check-preload-graph.mjs.
+      - run: pnpm build:check
       - run: pnpm size
 
       # Supply-chain inventory (CycloneDX via cdxgen — reads pnpm-lock.yaml;

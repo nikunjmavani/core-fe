@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:check": "node scripts/ci/check-preload-graph.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -66,6 +67,7 @@
     "validate:env-example": "./scripts/validate/env-example.sh",
     "validate:public": "./scripts/validate/public-assets.sh",
     "validate:structure": "./scripts/validate/route-islands.sh",
+    "validate:tokens": "./scripts/validate/design-tokens.sh",
     "health": "./scripts/validate/health-check.sh",
     "health:fix": "./scripts/validate/health-check.sh --fix",
     "report:code-review": "node scripts/reports/code-review-report.mjs",

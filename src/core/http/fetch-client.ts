@@ -1,15 +1,9 @@
-import {
-  API_BASE_PATH,
-  API_ENDPOINTS,
-  HTTP,
-  ORGANIZATION,
-} from '@/core/config/constants.ts';
+import { API_BASE_PATH, API_ENDPOINTS, HTTP } from '@/core/config/constants.ts';
 import { config } from '@/core/config/env.ts';
 import { forceLogout } from '@/shared/auth/service.ts';
 import { getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { authTokenResponseSchema } from '@/shared/auth/types.ts';
 import { HttpError } from '@/shared/errors/HttpError.ts';
-import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 // ------------------------------------------------------------------
 // Request ID
@@ -52,19 +46,21 @@ const defaultConfig: HttpClientConfig = {
   credentials: 'include',
 };
 
-function buildHeaders(_method: string, customHeaders?: HeadersInit): Headers {
+// No X-Organization-ID header: the backend scopes organization context from
+// the URL path (/api/v1/tenancy/organizations/:id/…), so a header would be
+// redundant state to keep in sync.
+function buildHeaders(idempotencyKey?: string, customHeaders?: HeadersInit): Headers {
   const headers = new Headers(customHeaders);
   headers.set('Content-Type', 'application/json');
   headers.set('X-Requested-With', 'XMLHttpRequest');
   headers.set('X-Request-ID', generateRequestId());
+  if (idempotencyKey) {
+    headers.set('Idempotency-Key', idempotencyKey);
+  }
 
   const accessToken = getAccessToken();
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
-  }
-  const organizationId = useOrganizationStore.getState().organizationId;
-  if (organizationId) {
-    headers.set(ORGANIZATION.HEADER, organizationId);
   }
   return headers;
 }
@@ -190,6 +186,9 @@ async function doRefreshAndReplay<T>(
   }
 }
 
+/** Write methods carry an auto-generated Idempotency-Key (server de-dupes). */
+const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
 async function request<T>(
   method: string,
   path: string,
@@ -199,9 +198,12 @@ async function request<T>(
   const url = buildRequestUrl(path);
   const isRefreshUrl =
     path === API_ENDPOINTS.AUTH.REFRESH || url.endsWith(API_ENDPOINTS.AUTH.REFRESH);
+  // Minted once per logical request: retries and the post-refresh replay all
+  // send the SAME key, so the server can collapse duplicates.
+  const idempotencyKey = WRITE_METHODS.has(method) ? crypto.randomUUID() : undefined;
 
   async function attemptFetch(retryCount: number): Promise<Response> {
-    const headers = buildHeaders(method);
+    const headers = buildHeaders(idempotencyKey);
     const init: RequestInit = {
       method,
       headers,
@@ -232,11 +234,18 @@ async function request<T>(
     }
   }
 
-  const doOne = async (retryCount = 0): Promise<{ data: T }> => {
+  const doOne = async (retryCount = 0, hasRefreshed = false): Promise<{ data: T }> => {
     const response = await attemptFetch(retryCount);
 
     if (response.status === 401 && !options?.skip401 && !isRefreshUrl) {
-      return doRefreshAndReplay(url, () => doOne(0));
+      if (hasRefreshed) {
+        // The replay carried a freshly-minted token and was still rejected:
+        // the session is genuinely dead (revoked / logout-all / expiry).
+        // Never refresh-loop — clear local auth and surface the error.
+        forceLogout();
+        throw await parseErrorResponse(response, url, method);
+      }
+      return doRefreshAndReplay(url, () => doOne(0, true));
     }
 
     if (!response.ok) {

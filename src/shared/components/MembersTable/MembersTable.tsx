@@ -9,7 +9,6 @@ import {
   useReactTable,
   type VisibilityState,
 } from '@tanstack/react-table';
-import { Download, MoreHorizontal } from 'lucide-react';
 import { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 
 import { downloadCsv, toCsv } from '@/lib/csv.ts';
@@ -60,6 +59,7 @@ import {
   useUpdateMemberStatus,
 } from '@/shared/hooks/useMembers/index.ts';
 import { useHasPermission } from '@/shared/hooks/useRBAC/index.ts';
+import { Download, MoreHorizontal } from '@/shared/icons/index.ts';
 
 function applyStateUpdate<T>(updater: SetStateAction<T>, prev: T): T {
   return typeof updater === 'function' ? (updater as (p: T) => T)(prev) : updater;

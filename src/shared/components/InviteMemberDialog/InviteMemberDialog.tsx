@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select.tsx';
 import { useCreateInvitation } from '@/shared/hooks/useInvitations/index.ts';
+import { UserPlus } from '@/shared/icons/index.ts';
 
 const inviteSchema = z.object({
   email: z.email('Enter a valid email address'),

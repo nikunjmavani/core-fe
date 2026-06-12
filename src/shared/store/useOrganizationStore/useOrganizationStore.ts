@@ -53,7 +53,7 @@ interface OrganizationStore {
  * permissions).
  *
  * Accessible outside React via `useOrganizationStore.getState()` — used by the HTTP
- * request interceptor to inject `X-Organization-ID` on every request, and by RBAC
+ * RBAC
  * guards to resolve org-scoped permissions.
  */
 export const useOrganizationStore = create<OrganizationStore>((set) => ({

@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
-import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -12,6 +11,7 @@ import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
+import { Eye, EyeOff } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 import { useCooldownClock } from '../../hooks/useCooldownClock/index.ts';

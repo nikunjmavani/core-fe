@@ -1,4 +1,3 @@
-import { Fingerprint, Laptop, Smartphone, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,6 +12,7 @@ import {
 } from '@/shared/components/ui/card.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { Switch } from '@/shared/components/ui/switch.tsx';
+import { Fingerprint, Laptop, Smartphone, Trash2 } from '@/shared/icons/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 

@@ -1,4 +1,4 @@
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from '@/shared/icons/index.ts';
 
 /**
  * Full-page loading spinner used during app bootstrap and auth checks.

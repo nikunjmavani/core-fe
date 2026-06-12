@@ -1,7 +1,7 @@
-import { AlertTriangle } from 'lucide-react';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 
 import { Button } from '@/shared/components/ui/button.tsx';
+import { AlertTriangle } from '@/shared/icons/index.ts';
 
 interface WidgetErrorBoundaryProps {
   children: ReactNode;

@@ -154,7 +154,16 @@ else
 fi
 
 echo ""
-echo "Phase 13: Route-island structure"
+echo "Phase 13: Design tokens"
+if pnpm validate:tokens >/dev/null 2>&1; then
+  echo "  $PASS  pnpm validate:tokens"
+else
+  echo "  $FAIL  pnpm validate:tokens"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+echo ""
+echo "Phase 14: Route-island structure"
 if pnpm validate:structure >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:structure"
 else

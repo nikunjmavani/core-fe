@@ -37,7 +37,7 @@ vi.mock('@/core/rbac/policies.ts', async (importOriginal) => {
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
-import { requireAuth, requirePermission } from './guards.ts';
+import { redirectIfAuthenticated, requireAuth, requirePermission } from './guards.ts';
 
 const setAuth = (useAuthStore as unknown as { __setState: (s: unknown) => void })
   .__setState;
@@ -57,6 +57,26 @@ describe('requireAuth', () => {
   it('does not throw when authenticated', () => {
     setAuth({ user: { id: '1', role: 'user' }, isAuthenticated: true });
     expect(() => requireAuth()).not.toThrow();
+  });
+});
+
+describe('redirectIfAuthenticated', () => {
+  it('does not throw for guests (login form renders)', () => {
+    setAuth({ user: null, isAuthenticated: false });
+    expect(() => redirectIfAuthenticated()).not.toThrow();
+  });
+
+  it('redirects signed-in users to / (resolver picks the destination)', () => {
+    setAuth({
+      user: { id: '1', email: 'u@test.com', role: 'user' },
+      isAuthenticated: true,
+    });
+    try {
+      redirectIfAuthenticated();
+      expect.fail('should throw');
+    } catch (e) {
+      expect((e as { to: string }).to).toBe('/');
+    }
   });
 });
 

@@ -1,4 +1,3 @@
-import { Copy, ShieldCheck, Trash2, TriangleAlert } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -22,6 +21,7 @@ import {
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
+import { Copy, ShieldCheck, Trash2, TriangleAlert } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
@@ -157,7 +157,7 @@ export function AccountPanel() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive hover:bg-destructive/90 text-white"
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               onClick={() => {
                 setConfirmDelete(false);
                 toast.success('Account deletion requested (mock)');

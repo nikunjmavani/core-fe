@@ -12,6 +12,20 @@
   --color-secondary-foreground: oklch(0.205 0 0);
   --color-destructive: oklch(0.577 0.245 27.325);
   --color-destructive-foreground: oklch(0.985 0 0);
+  /* Status colors — semantic, themeable (never use raw palette classes;
+     enforced by scripts/validate/design-tokens.sh) */
+  --color-success: oklch(0.596 0.145 163.225);
+  --color-success-foreground: oklch(0.985 0 0);
+  --color-warning: oklch(0.666 0.179 58.318);
+  --color-warning-foreground: oklch(0.145 0 0);
+  --color-info: oklch(0.588 0.158 241.966);
+  --color-info-foreground: oklch(0.985 0 0);
+  /* Brand surface — the always-dark marketing panel (AuthLayout). Constant
+     across light/dark; themes may restyle it without touching components. */
+  --color-brand: oklch(0.145 0 0);
+  --color-brand-foreground: oklch(0.985 0 0);
+  /* Scrim behind overlays/drawers — used with opacity (bg-overlay/50). */
+  --color-overlay: oklch(0 0 0);
   --color-muted: oklch(0.97 0 0);
   --color-muted-foreground: oklch(0.556 0 0);
   --color-accent: oklch(0.97 0 0);
@@ -76,6 +90,15 @@
   --color-accent-foreground: oklch(0.985 0 0);
   --color-destructive: oklch(0.704 0.191 22.216);
   --color-destructive-foreground: oklch(0.985 0 0);
+  --color-success: oklch(0.765 0.177 163.223);
+  --color-success-foreground: oklch(0.205 0 0);
+  --color-warning: oklch(0.828 0.189 84.429);
+  --color-warning-foreground: oklch(0.205 0 0);
+  --color-info: oklch(0.746 0.16 232.661);
+  --color-info-foreground: oklch(0.205 0 0);
+  --color-brand: oklch(0.145 0 0);
+  --color-brand-foreground: oklch(0.985 0 0);
+  --color-overlay: oklch(0 0 0);
   --color-border: oklch(0.269 0 0);
   --color-input: oklch(0.269 0 0);
   --color-ring: oklch(0.556 0 0);

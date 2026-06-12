@@ -1,5 +1,4 @@
 import type { Table } from '@tanstack/react-table';
-import { Search, SlidersHorizontal, X } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { Button } from '@/shared/components/ui/button.tsx';
@@ -12,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
+import { Search, SlidersHorizontal, X } from '@/shared/icons/index.ts';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;

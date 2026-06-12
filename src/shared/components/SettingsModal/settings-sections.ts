@@ -1,4 +1,3 @@
-import type { LucideIcon } from 'lucide-react';
 import {
   Bell,
   Building2,
@@ -12,6 +11,8 @@ import {
   UserCog,
   Users,
 } from 'lucide-react';
+
+import type { LucideIcon } from '@/shared/icons/index.ts';
 
 /**
  * Settings registry — two scopes, one modal (routing-and-tenancy.md §7).

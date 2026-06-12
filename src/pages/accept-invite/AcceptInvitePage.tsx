@@ -1,5 +1,4 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
-import { CheckCircle2, Loader2, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 import { acceptInvitation } from '@/shared/api/organization-api.ts';
@@ -18,6 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import { CheckCircle2, Loader2, XCircle } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { persistOrganizationToStorage } from '@/shared/store/useOrganizationStore/index.ts';
 
@@ -87,7 +87,7 @@ export function AcceptInvitePage() {
           )}
           {status === 'success' && (
             <CheckCircle2
-              className="h-10 w-10 text-emerald-500"
+              className="text-success h-10 w-10"
               data-testid="accept-invite-success"
             />
           )}

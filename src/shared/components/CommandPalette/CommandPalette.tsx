@@ -1,5 +1,10 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
+import { useCallback, useEffect, useRef } from 'react';
+
+import { cn } from '@/lib/utils.ts';
+import { logout } from '@/shared/auth/service.ts';
+import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
 import {
   Building2,
   LayoutDashboard,
@@ -9,12 +14,7 @@ import {
   Search,
   Settings,
   Sun,
-} from 'lucide-react';
-import { useCallback, useEffect, useRef } from 'react';
-
-import { cn } from '@/lib/utils.ts';
-import { logout } from '@/shared/auth/service.ts';
-import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
+} from '@/shared/icons/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
@@ -91,7 +91,7 @@ export function CommandPalette() {
     >
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="bg-overlay/50 fixed inset-0 backdrop-blur-sm"
         aria-hidden="true"
         onClick={() => setOpen(false)}
       />

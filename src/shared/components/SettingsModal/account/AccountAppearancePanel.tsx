@@ -1,5 +1,3 @@
-import { Check, Monitor, Moon, Sun } from 'lucide-react';
-
 import { cn } from '@/lib/utils.ts';
 import {
   Card,
@@ -8,6 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import { Check, Monitor, Moon, Sun } from '@/shared/icons/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';

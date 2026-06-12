@@ -1,6 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router';
-import { Boxes, ShieldCheck, Sparkles, Users, Zap } from 'lucide-react';
 import type { ReactNode } from 'react';
+
+import { Boxes, ShieldCheck, Sparkles, Users, Zap } from '@/shared/icons/index.ts';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -51,10 +52,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       </a>
 
       {/* ── Left brand panel (hidden on mobile) ── */}
-      <div className="relative hidden w-1/2 flex-col overflow-hidden bg-neutral-950 text-neutral-50 lg:flex xl:w-[55%]">
+      <div className="bg-brand text-brand-foreground relative hidden w-1/2 flex-col overflow-hidden lg:flex xl:w-[55%]">
         {/* Dot grid */}
         <svg
-          className="absolute inset-0 h-full w-full text-white/[0.07]"
+          className="text-brand-foreground/[0.07] absolute inset-0 h-full w-full"
           aria-hidden="true"
         >
           <defs>
@@ -65,22 +66,22 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           <rect width="100%" height="100%" fill="url(#auth-dots)" />
         </svg>
         {/* Soft monochrome orbs */}
-        <div className="absolute -top-24 -left-24 h-80 w-80 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute right-[-10%] bottom-[-15%] h-96 w-96 rounded-full bg-white/[0.06] blur-3xl" />
+        <div className="bg-brand-foreground/10 absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl" />
+        <div className="bg-brand-foreground/[0.06] absolute right-[-10%] bottom-[-15%] h-96 w-96 rounded-full blur-3xl" />
 
         <div className="relative z-10 flex flex-1 flex-col justify-between p-10 xl:p-14">
           {/* Logo + status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white text-neutral-950">
+              <div className="bg-brand-foreground text-brand flex h-9 w-9 items-center justify-center rounded-lg">
                 <Boxes className="h-5 w-5" />
               </div>
               <span className="text-lg font-semibold tracking-tight">Core</span>
             </div>
-            <span className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70">
+            <span className="border-brand-foreground/15 bg-brand-foreground/5 text-brand-foreground/70 flex items-center gap-2 rounded-full border px-3 py-1 text-xs">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="bg-success absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
+                <span className="bg-success relative inline-flex h-2 w-2 rounded-full" />
               </span>
               <span>All systems operational</span>
             </span>
@@ -89,13 +90,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           {/* Headline + features */}
           <div className="max-w-md space-y-10">
             <div className="space-y-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1 text-xs font-medium text-white/70">
+              <span className="border-brand-foreground/15 text-brand-foreground/70 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
                 <Sparkles className="h-3 w-3" /> Operations, unified
               </span>
               <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance xl:text-5xl">
                 The operating system for your organization.
               </h1>
-              <p className="text-white/60">
+              <p className="text-brand-foreground/60">
                 Members, roles, billing, and security — one fast, keyboard-first workspace
                 for every team you run.
               </p>
@@ -104,12 +105,12 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <ul className="space-y-4">
               {FEATURES.map((f) => (
                 <li key={f.title} className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/15 bg-white/5">
+                  <span className="border-brand-foreground/15 bg-brand-foreground/5 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border">
                     <f.icon className="h-4 w-4" />
                   </span>
                   <div>
                     <p className="text-sm font-medium">{f.title}</p>
-                    <p className="text-sm text-white/55">{f.body}</p>
+                    <p className="text-brand-foreground/55 text-sm">{f.body}</p>
                   </div>
                 </li>
               ))}
@@ -117,11 +118,11 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </div>
 
           {/* Stats */}
-          <div className="flex items-center gap-8 border-t border-white/10 pt-6">
+          <div className="border-brand-foreground/10 flex items-center gap-8 border-t pt-6">
             {STATS.map((s) => (
               <div key={s.label}>
                 <p className="text-xl font-semibold tracking-tight">{s.value}</p>
-                <p className="text-xs text-white/50">{s.label}</p>
+                <p className="text-brand-foreground/50 text-xs">{s.label}</p>
               </div>
             ))}
           </div>

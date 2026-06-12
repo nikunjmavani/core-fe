@@ -1,15 +1,4 @@
 import { Link, Outlet, useNavigate, useParams } from '@tanstack/react-router';
-import {
-  Boxes,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Monitor,
-  Moon,
-  Search,
-  Settings,
-  Sun,
-} from 'lucide-react';
 
 import { PageTransition } from '@/lib/animations/PageTransition.tsx';
 import { cn } from '@/lib/utils.ts';
@@ -32,6 +21,17 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
+import {
+  Boxes,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Monitor,
+  Moon,
+  Search,
+  Settings,
+  Sun,
+} from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
@@ -77,7 +77,7 @@ export function Component() {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          className="bg-overlay/50 fixed inset-0 z-40 md:hidden"
           aria-hidden="true"
           onClick={toggleSidebar}
         />

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Building2, Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { organizationDashboard } from '@/lib/routes/index.ts';
@@ -15,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu.tsx';
+import { Building2, Check, ChevronsUpDown, Plus } from '@/shared/icons/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
 

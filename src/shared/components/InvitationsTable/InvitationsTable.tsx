@@ -7,7 +7,6 @@ import {
   type SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { RotateCw, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import type { Invitation } from '@/shared/api/organization-contracts.ts';
@@ -24,6 +23,7 @@ import {
   useRevokeInvitation,
 } from '@/shared/hooks/useInvitations/index.ts';
 import { useHasPermission } from '@/shared/hooks/useRBAC/index.ts';
+import { RotateCw, X } from '@/shared/icons/index.ts';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, {

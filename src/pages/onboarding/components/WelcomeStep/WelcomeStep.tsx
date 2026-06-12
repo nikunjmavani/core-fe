@@ -1,4 +1,4 @@
-import { Rocket } from 'lucide-react';
+import { Rocket } from '@/shared/icons/index.ts';
 
 /** First onboarding step — short pitch for the setup flow. */
 export function WelcomeStep() {

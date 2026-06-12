@@ -1,6 +1,5 @@
-import { AlertCircle } from 'lucide-react';
-
 import { Button } from '@/shared/components/ui/button.tsx';
+import { AlertCircle } from '@/shared/icons/index.ts';
 
 interface RetryErrorProps {
   message?: string;

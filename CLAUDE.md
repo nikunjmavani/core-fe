@@ -240,6 +240,8 @@ Family-shared is importable by the parent island and its descendants only — ne
 - **Always** use the `@/` path alias for all imports from `src/`.
 - **Always** include `.ts`/`.tsx` extensions in import paths.
 - Use `type` imports for type-only imports: `import type { User } from './types.ts'`
+- **Icons:** import from `@/shared/icons/index.ts` — never `lucide-react` directly (eslint-enforced; vendored `components/ui/` is exempt). One-file icon-library swap.
+- **Heavy deferred modules** (`@sentry/react`, `posthog-js`, the SettingsModal/CommandPalette trees) are **dynamic-import only** — a single static import drags their chunk onto the first-paint preload path (`pnpm build:check` tripwires this).
 
 ```tsx
 // Good
@@ -287,6 +289,7 @@ import { User } from './contracts';
 - Design tokens via `@theme` directive (OKLCH color space).
 - Dark mode via `.dark` class — managed by `useThemeStore`.
 - Never use inline styles — use Tailwind utility classes.
+- **Semantic tokens only** in app code — `bg-background`, `text-success`, `bg-brand`, `bg-overlay/50`, never raw palette classes (`bg-emerald-400`, `text-white`); enforced by `pnpm validate:tokens` (vendored `components/ui/` exempt). A future theme is then just a CSS file of token values.
 - shadcn/ui components live in `src/shared/components/ui/`.
 - **Aesthetic quality:** when building/styling/beautifying UI, apply **`agent-os/skills/frontend-design/SKILL.md`** (typography hierarchy, intentional theme, high-impact motion, composition, memorable details) — but **within** the guardrails: shadcn components, neutral semantic tokens (no raw colors), configured fonts/brand, and `web-design-guidelines` for a11y. It elevates craft; it does not override the component library, tokens, or brand.
 - **Design intelligence (advisory):** query **`agent-os/skills/ui-ux-pro-max/`** for styles, palettes, font pairings, UX/stack/chart guidance (`python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <…> [--stack shadcn]`). Advisory only — never overrides neutral tokens, configured fonts/brand, or shadcn choices.
@@ -294,8 +297,12 @@ import { User } from './contracts';
 ## HTTP / API
 
 - Use `apiClient` from `@/core/http/fetch-client.ts` for all API calls.
-- Exception: auth service uses raw axios to avoid interceptor recursion.
-- The Axios interceptor handles 401 refresh + replay.
+- Exception: the auth service uses raw `fetch` (`authFetch`) to avoid interceptor recursion.
+- The fetch client is the reactive auth layer: Bearer attach, single-flight 401 refresh
+  (concurrent 401s share ONE refresh) + one replay — a second 401 after a fresh token
+  means the session is dead → `forceLogout()`. Writes auto-carry an `Idempotency-Key`
+  (minted once per logical request, reused across retries/replay). Organization context
+  travels in the URL path — there is no `X-Organization-ID` header.
 
 ## Environment Variables
 

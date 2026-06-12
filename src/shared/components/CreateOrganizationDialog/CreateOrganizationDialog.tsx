@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Plus } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -19,6 +18,7 @@ import {
 } from '@/shared/components/ui/dialog.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
+import { Plus } from '@/shared/icons/index.ts';
 import {
   createOrganization,
   type CreateOrganizationInput,

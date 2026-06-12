@@ -31,6 +31,18 @@ export function requirePermission(permission: OrganizationPermission): void {
 }
 
 /**
+ * Guest-only guard — sends already-authenticated users away from auth screens
+ * (login/register/forgot-password) to `/`, where the resolver picks their
+ * last organization. Pure store read: safe to run during hover preloads.
+ */
+export function redirectIfAuthenticated(): void {
+  const { isAuthenticated } = useAuthStore.getState();
+  if (isAuthenticated) {
+    throw redirect({ to: '/' });
+  }
+}
+
+/**
  * Route loader guard — throws redirect if not authenticated.
  *
  * @param redirectTo - Optional path to return to after login; carried as the

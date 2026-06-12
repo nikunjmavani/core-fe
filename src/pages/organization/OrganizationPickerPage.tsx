@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { Building2, ChevronRight, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import { organizationDashboard } from '@/lib/routes/index.ts';
@@ -8,6 +7,7 @@ import { CreateOrganizationDialog } from '@/shared/components/CreateOrganization
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Card, CardContent } from '@/shared/components/ui/card.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
+import { Building2, ChevronRight, Plus } from '@/shared/icons/index.ts';
 import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
 
 /**

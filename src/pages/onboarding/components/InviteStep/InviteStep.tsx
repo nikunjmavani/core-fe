@@ -1,9 +1,9 @@
-import { Plus, X } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
+import { Plus, X } from '@/shared/icons/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 
 /** Collects optional teammate emails; the final step sends the invitations. */

@@ -1,5 +1,4 @@
-import { Check } from 'lucide-react';
-
+import { Check } from '@/shared/icons/index.ts';
 import { ONBOARDING_STEPS } from '@/shared/store/useOnboardingStore/index.ts';
 
 type StepState = 'done' | 'current' | 'upcoming';

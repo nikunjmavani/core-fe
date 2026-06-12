@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useSearch } from '@tanstack/react-router';
-import { Eye, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -13,6 +12,7 @@ import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
+import { Eye, EyeOff } from '@/shared/icons/index.ts';
 
 export function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);

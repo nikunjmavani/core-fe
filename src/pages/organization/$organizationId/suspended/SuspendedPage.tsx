@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router';
-import { ShieldAlert } from 'lucide-react';
 
 import { organizationPicker } from '@/lib/routes/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
+import { ShieldAlert } from '@/shared/icons/index.ts';
 
 /**
  * Blocked state for a suspended / lapsed organization. Reading data is

@@ -24,6 +24,6 @@ resolver's redirect choice.
 
 - `app/guards/route-guards.ts` — the `$organizationId` guard chain
 - `app/routes/routeTree.tsx` — `/` resolver
-- `core/http/fetch-client.ts` — reads the derived store for the `X-Organization-ID` header
+- `core/rbac/guards.ts` — reads the derived store's permission set for `requirePermission`
 - `OrganizationSwitcher`, `CreateOrganizationDialog`, onboarding — navigate to
   `/organization/$organizationId/dashboard` and let the guard sync everything

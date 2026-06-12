@@ -1,7 +1,7 @@
 import type { ErrorComponentProps } from '@tanstack/react-router';
-import { AlertTriangle } from 'lucide-react';
 
 import { Button } from '@/shared/components/ui/button.tsx';
+import { AlertTriangle } from '@/shared/icons/index.ts';
 
 /**
  * Route-level error component wired as `errorComponent` on every route in

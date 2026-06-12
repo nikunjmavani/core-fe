@@ -1,5 +1,4 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -13,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import { Loader2 } from '@/shared/icons/index.ts';
 import {
   ONBOARDING_STEPS,
   useOnboardingStore,

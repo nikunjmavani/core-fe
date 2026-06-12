@@ -1,8 +1,8 @@
-import { Search } from 'lucide-react';
 import { useState } from 'react';
 
 import { cn } from '@/lib/utils.ts';
 import { Input } from '@/shared/components/ui/input.tsx';
+import { Search } from '@/shared/icons/index.ts';
 
 import type { SettingsNavGroup, SettingsSectionRef } from './settings-sections.ts';
 import { filterNav } from './settings-sections.ts';

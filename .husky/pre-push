@@ -4,6 +4,7 @@
 pnpm biome:check
 pnpm type-check
 pnpm build
+pnpm build:check
 
 # Markdown lint on the pushed diff (mirrors the Docs lint CI lane). lint-staged
 # only formats staged markdown; this lints every changed file in the push.

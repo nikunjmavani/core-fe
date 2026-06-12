@@ -40,8 +40,9 @@ function initObservabilityWhenIdle(): void {
 // ── 1. Bootstrap: resolve organization → mount React immediately → silent auth in background ──
 const root = createRoot(document.getElementById('root')!);
 
-// Resolve organization from subdomain (SYNC — just parses hostname)
-// Must happen before silentRefresh so X-Organization-ID header is available
+// Resolve organization from subdomain (SYNC — just parses hostname). Seeds the
+// derived organization store before anything renders; the URL/guards take over
+// once routing starts.
 resolveOrganizationFromSubdomain();
 
 // Mount React immediately so user sees app (spinner or login) instead of blank screen.

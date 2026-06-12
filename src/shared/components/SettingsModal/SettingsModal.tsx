@@ -1,12 +1,11 @@
 import { useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { Building2 } from 'lucide-react';
-import posthog from 'posthog-js';
 import { useEffect } from 'react';
 
 import { ORGANIZATION } from '@/core/config/constants.ts';
 import { organizationPicker } from '@/lib/routes/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog.tsx';
+import { Building2 } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
@@ -53,7 +52,17 @@ export function SettingsModal() {
   // Hash changes are invisible to pageview analytics — emit explicitly.
   useEffect(() => {
     if (scope && section) {
-      posthog.capture('settings_section_viewed', { scope, section });
+      // Lazy: posthog loads at idle (main.tsx); resolve from the module cache
+      // instead of pulling the chunk into this component's static graph.
+      import('posthog-js')
+        .then(({ default: posthog }) => {
+          if (posthog.__loaded) {
+            posthog.capture('settings_section_viewed', { scope, section });
+          }
+        })
+        .catch(() => {
+          /* analytics must never break settings */
+        });
     }
   }, [scope, section]);
 

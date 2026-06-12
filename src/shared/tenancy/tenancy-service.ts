@@ -25,8 +25,8 @@ export function resolveOrganizationFromSubdomain(): void {
   // Extract subdomain: "acme.app.example.com" → "acme"
   const parts = hostname.split('.');
   if (parts.length < 3) {
-    // No subdomain detected (e.g., "app.example.com") — use fallback
-    // to ensure X-Organization-ID header is always present
+    // No subdomain detected (e.g., "app.example.com") — seed the fallback so
+    // the derived store is never empty before the URL guards take over
     if (import.meta.env.DEV) {
       console.warn(
         '[Tenancy] No subdomain detected in hostname:',

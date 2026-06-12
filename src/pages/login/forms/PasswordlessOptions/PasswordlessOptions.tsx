@@ -1,5 +1,4 @@
 import { useNavigate } from '@tanstack/react-router';
-import { Fingerprint, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { API_BASE_PATH, API_ENDPOINTS } from '@/core/config/constants.ts';
@@ -7,6 +6,7 @@ import { config } from '@/core/config/env.ts';
 import { performMockLogin } from '@/shared/auth/mock-auth.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
+import { Fingerprint, Mail } from '@/shared/icons/index.ts';
 
 /**
  * Passwordless / social sign-in options: Google OAuth, passkey (WebAuthn), and

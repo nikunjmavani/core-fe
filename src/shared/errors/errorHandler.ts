@@ -1,5 +1,3 @@
-import * as Sentry from '@sentry/react';
-
 import { AppError } from '@/shared/errors/AppError.ts';
 import { isHttpError } from '@/shared/errors/HttpError.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
@@ -13,35 +11,44 @@ export function reportError(error: unknown, context?: Record<string, unknown>): 
   const user = useAuthStore.getState().user;
   const organization = useOrganizationStore.getState();
 
-  Sentry.withScope((scope) => {
-    if (user) {
-      // Only send user ID — no PII (email, name) to Sentry
-      scope.setUser({ id: user.id });
-    }
+  // Lazy on purpose: a static import would drag the whole Sentry chunk into
+  // the entry preload graph. By the time errors flow, the idle bootstrap
+  // (main.tsx) has usually loaded it — this resolves from the module cache.
+  import('@sentry/react')
+    .then((Sentry) => {
+      Sentry.withScope((scope) => {
+        if (user) {
+          // Only send user ID — no PII (email, name) to Sentry
+          scope.setUser({ id: user.id });
+        }
 
-    if (organization.organizationId) {
-      scope.setTag('organization_id', organization.organizationId);
-      scope.setTag('organization_slug', organization.organizationSlug ?? 'unknown');
-    }
+        if (organization.organizationId) {
+          scope.setTag('organization_id', organization.organizationId);
+          scope.setTag('organization_slug', organization.organizationSlug ?? 'unknown');
+        }
 
-    if (context) {
-      scope.setExtras(context);
-    }
+        if (context) {
+          scope.setExtras(context);
+        }
 
-    if (error instanceof AppError) {
-      scope.setTag('error_code', error.code);
-      scope.setExtra('status_code', error.statusCode);
-    }
+        if (error instanceof AppError) {
+          scope.setTag('error_code', error.code);
+          scope.setExtra('status_code', error.statusCode);
+        }
 
-    if (isHttpError(error)) {
-      scope.setExtra('url', error.url);
-      scope.setExtra('method', error.method);
-      scope.setExtra('status', error.status);
-      // Do NOT log response body — may contain PII
-    }
+        if (isHttpError(error)) {
+          scope.setExtra('url', error.url);
+          scope.setExtra('method', error.method);
+          scope.setExtra('status', error.status);
+          // Do NOT log response body — may contain PII
+        }
 
-    Sentry.captureException(error);
-  });
+        Sentry.captureException(error);
+      });
+    })
+    .catch(() => {
+      /* error reporting must never throw */
+    });
 }
 
 const HTTP_STATUS_MESSAGES: Record<number, string> = {
