@@ -1,6 +1,8 @@
 import posthog from 'posthog-js';
 
 import { config } from '@/core/config/env.ts';
+import { scrubObjectUrls } from '@/lib/telemetry-scrub.ts';
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 let initialized = false;
 
@@ -34,8 +36,26 @@ export function initPostHog(): void {
       // disabled in code so a server-side dashboard toggle can't silently
       // start recording the authenticated admin DOM (member lists, org data).
       disable_session_recording: true,
+      // Pageview/pageleave events capture $current_url (and $set_once
+      // person props capture the initial URL) — scrub reset/verify
+      // `?token=` secrets before anything leaves the browser.
+      before_send: (event) => {
+        if (event?.properties) scrubObjectUrls(event.properties);
+        return event;
+      },
     });
     initialized = true;
+
+    // The anonymous distinct_id persists in localStorage: without a reset,
+    // successive users on a shared admin workstation chain into ONE PostHog
+    // profile. Synchronous (zustand notifies inline), so it lands before
+    // forceLogout's hard redirect unloads the page.
+    let hadUser = useAuthStore.getState().user !== null;
+    useAuthStore.subscribe((state) => {
+      const hasUser = state.user !== null;
+      if (hadUser && !hasUser) posthog.reset();
+      hadUser = hasUser;
+    });
   } catch (error) {
     if (import.meta.env.DEV) {
       console.warn('[PostHog] Initialization failed:', error);

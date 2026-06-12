@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -12,14 +12,15 @@ import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
+import { useConsumedSearchToken } from '@/shared/hooks/useConsumedSearchToken/index.ts';
 import { Eye, EyeOff } from '@/shared/icons/index.ts';
 
 export function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const search: { token?: string } = useSearch({ strict: false });
-  const token = typeof search?.token === 'string' ? search.token : '';
+  // Consumed once: the hook scrubs ?token= from the address bar/history.
+  const token = useConsumedSearchToken();
 
   const {
     register,

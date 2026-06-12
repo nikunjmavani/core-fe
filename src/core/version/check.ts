@@ -45,6 +45,32 @@ function shouldReload(
 }
 
 /**
+ * Reload-loop guard: remember (per tab) which buildId we already reloaded
+ * for. If the mismatch survives a reload — index.html served stale by an
+ * intermediary cache, or a half-propagated deploy — reloading again would
+ * loop forever, so we stand down until version.json advertises a NEWER
+ * buildId. sessionStorage access can throw (privacy modes); failing open
+ * means at worst one extra reload, never a loop.
+ */
+const RELOADED_FOR_KEY = 'core:version-check:reloaded-for';
+
+function alreadyReloadedFor(buildId: string): boolean {
+  try {
+    return sessionStorage.getItem(RELOADED_FOR_KEY) === buildId;
+  } catch {
+    return false;
+  }
+}
+
+function markReloadedFor(buildId: string): void {
+  try {
+    sessionStorage.setItem(RELOADED_FOR_KEY, buildId);
+  } catch {
+    // Best effort — without the marker we may reload twice, never loop-free worse.
+  }
+}
+
+/**
  * Start the version check. Only runs in production.
  * Call once from main.tsx after app bootstrap.
  *
@@ -63,12 +89,24 @@ export function startVersionCheck(): (() => void) | undefined {
 
   async function checkAndReload(): Promise<void> {
     const latest = await fetchVersion();
-    if (shouldReload(latest, currentBuildId)) {
-      if (import.meta.env.DEV) {
-        console.info('[VersionCheck] New deployment detected, reloading…');
-      }
-      window.location.reload();
+    if (!(latest && shouldReload(latest, currentBuildId))) return;
+
+    if (alreadyReloadedFor(latest.buildId)) {
+      // Reloaded for this deployment already and STILL running the old
+      // build — something upstream serves index.html stale. Don't loop.
+      console.warn(
+        '[VersionCheck] Still on the old build after reloading for',
+        latest.buildId,
+        '— suppressing further reloads for this deployment.',
+      );
+      return;
     }
+
+    if (import.meta.env.DEV) {
+      console.info('[VersionCheck] New deployment detected, reloading…');
+    }
+    markReloadedFor(latest.buildId);
+    window.location.reload();
   }
 
   function schedulePoll(): void {

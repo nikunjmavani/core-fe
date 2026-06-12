@@ -1,4 +1,4 @@
-import { Link, useSearch } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 import { authApi } from '@/shared/api/auth-api.ts';
@@ -6,13 +6,14 @@ import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
+import { useConsumedSearchToken } from '@/shared/hooks/useConsumedSearchToken/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 export function VerifyEmailForm() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const search: { token?: string } = useSearch({ strict: false });
-  const token = typeof search?.token === 'string' ? search.token : '';
+  // Consumed once: the hook scrubs ?token= from the address bar/history.
+  const token = useConsumedSearchToken();
 
   useEffect(() => {
     if (!token || status !== 'idle') return;

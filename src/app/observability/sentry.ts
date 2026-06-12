@@ -1,6 +1,7 @@
 import type { AnyRouter } from '@tanstack/react-router';
 
 import { config } from '@/core/config/env.ts';
+import { scrubEventUrls } from '@/lib/telemetry-scrub.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 /**
@@ -54,7 +55,15 @@ export async function initSentry(router: AnyRouter): Promise<void> {
           return breadcrumb;
         });
       }
-      return event;
+      // Reset/verify tokens must never reach Sentry via request.url or
+      // navigation breadcrumbs (the pages scrub the address bar, but an
+      // error can fire before that effect runs).
+      return scrubEventUrls(event);
+    },
+
+    // Transactions skip beforeSend; pageload spans carry the full URL.
+    beforeSendTransaction(event) {
+      return scrubEventUrls(event);
     },
   });
 
