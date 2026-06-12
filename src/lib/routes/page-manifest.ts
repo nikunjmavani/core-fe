@@ -6,7 +6,7 @@ import type { OrganizationPermission } from '@/core/types/permissions.ts';
  * React UI: `components/<Segment>Layout.tsx` or `components/<Segment>Page.tsx`.
  * Tests: `__tests__/unit/` (not colocated beside source). See route-island skill.
  */
-export type RouteIslandKind = 'leaf' | 'layout';
+type RouteIslandKind = 'leaf' | 'layout';
 
 export type PageManifest = {
   /** URL segment for this folder (not the full path). */

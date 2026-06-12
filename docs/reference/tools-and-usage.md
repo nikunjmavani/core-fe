@@ -103,7 +103,7 @@ Further gates, all mirroring core-be:
   under-tested new code.
 - **TSDoc budget** (`pnpm tsdoc:check`, `:report`, `:refresh-budget`) — `scripts/tsdoc/check-coverage.mjs`
   counts public exports missing TSDoc against the locked budget in `scripts/tsdoc/budget.json`
-  (raise-never, lower-and-refresh). Runs in `pnpm health` phase 10 and the CI structure lane.
+  (raise-never, lower-and-refresh). Runs in `pnpm health` and the CI structure lane.
 - **CodeQL** (`.github/workflows/codeql.yml`) — weekly + per-PR taint-tracking analysis scoped by
   `.github/codeql/codeql-config.yml` to the deployed surface; complements Semgrep.
 - **PR governance** (`.github/workflows/pr-governance.yml`) — conventional PR title, size labels,
@@ -114,6 +114,10 @@ Further gates, all mirroring core-be:
   branch protection.
 - **SBOM** (`pnpm sbom:generate`) — CycloneDX inventory via cdxgen (reads `pnpm-lock.yaml`);
   uploaded as a CI artifact from the build lane.
+- **Knip** (`pnpm knip`, `knip.jsonc`) — dead-code gate: unused files, exports, types,
+  dependencies, and binaries. Validator-mandated unit barrels are entries (a unit's barrel is its
+  public API); the only suppressions are declared in `knip.jsonc` with reasons. Runs in
+  `pnpm health` and its own CI lane.
 - **Mutation testing** (`stryker.config.json`) — scheduled weekly over the pure runtime logic
   (rbac, auth, tenancy, route helpers); report artifact in the Actions run.
 - **Lighthouse budgets** (`.lighthouserc.cjs`) — scheduled weekly against the built app

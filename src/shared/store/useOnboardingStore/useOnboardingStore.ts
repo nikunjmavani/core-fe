@@ -9,10 +9,9 @@ export const ONBOARDING_STEPS = [
   'invite',
   'done',
 ] as const;
-export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 /** Data collected across the onboarding wizard (persisted so it is resumable). */
-export interface OnboardingData {
+interface OnboardingData {
   fullName: string;
   jobTitle: string;
   organizationName: string;

@@ -12,6 +12,9 @@
     <link rel="dns-prefetch" href="https://us.i.posthog.com" />
     <link rel="dns-prefetch" href="https://o0.ingest.sentry.io" />
     <meta name="theme-color" content="#0a0a0a" />
+    <!-- frame-ancestors is intentionally absent here: browsers ignore it in
+         meta CSPs (header-only directive). It ships as a real header from
+         public/_headers, alongside X-Frame-Options: DENY. -->
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self';
@@ -25,7 +28,6 @@
              img-src 'self' data: blob:;
              font-src 'self';
              worker-src 'self';
-             frame-ancestors 'none';
              object-src 'none';
              base-uri 'self';
              form-action 'self';
@@ -51,8 +53,15 @@
       <!-- Loading splash (replaced by React on mount). Centering lives on this
            inner wrapper — never on #root — so it cannot leak into the mounted
            app and collapse the layout width. -->
-      <div style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
-        <p style="color: #71717a; font-size: 0.875rem;">Loading…</p>
+      <div
+        style="
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        "
+      >
+        <p style="color: #71717a; font-size: 0.875rem">Loading…</p>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>

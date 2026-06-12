@@ -306,7 +306,7 @@ export interface HttpClient {
   delete: <T>(url: string, options?: { skip401?: boolean }) => Promise<{ data: T }>;
 }
 
-export function createHttpClient(_overrides?: Partial<HttpClientConfig>): HttpClient {
+function createHttpClient(_overrides?: Partial<HttpClientConfig>): HttpClient {
   return {
     get: <T>(path: string, options?: { skip401?: boolean }) =>
       request<T>('GET', path, undefined, options),

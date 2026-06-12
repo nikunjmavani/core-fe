@@ -11,7 +11,7 @@ hosted SonarQube and no CI dependency. Same setup as core-be (`../core-be`), por
 pnpm sonar:up      # start the local SonarQube server (detached; first boot ~2 min)
 pnpm sonar:scan    # scan now + print the report; exits non-zero if anything is open
 git push           # the pre-push hook runs the same gate automatically
-pnpm quality       # full local quality story: pnpm health (10 phases) + the Sonar gate
+pnpm quality       # full local quality story: pnpm health (all phases) + the Sonar gate
 ```
 
 First run provisions an analysis token into `.env.local` (gitignored); after that a scan is

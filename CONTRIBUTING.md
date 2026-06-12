@@ -157,7 +157,7 @@ Component tests must include **vitest-axe** accessibility checks. See **agent-os
 | **commit-msg** | commitlint (Conventional Commits, lower-case subject)                                                                                                         |
 | **pre-push**   | biome check, type-check, build, changed-markdown lint, unit tests (when relevant), SonarQube gate on deployed-surface changes (`SKIP_SONAR=1` to bypass once) |
 
-**Full local gate:** `pnpm quality` = `pnpm health` (10 phases) + the local SonarQube gate ([docs/reference/quality/sonarqube-local.md](docs/reference/quality/sonarqube-local.md)). CI mirrors these as parallel lanes behind a single required `quality-gate` check.
+**Full local gate:** `pnpm quality` = `pnpm health` (every phase: format, lint, biome, docs, types, tests, build, size, env, public, tsdoc, structure) + the local SonarQube gate ([docs/reference/quality/sonarqube-local.md](docs/reference/quality/sonarqube-local.md)). CI mirrors these as parallel lanes behind a single required `quality-gate` check.
 
 ---
 

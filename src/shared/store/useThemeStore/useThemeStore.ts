@@ -58,6 +58,3 @@ if (typeof window !== 'undefined') {
     });
   }
 }
-
-/** Cleanup the media query listener — for app teardown or testing */
-export const cleanupThemeListener = () => themeListenerController.abort();

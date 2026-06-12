@@ -1,0 +1,52 @@
+// Dead-code gate: unused files, exports, types, dependencies, and binaries.
+// This is the layer that catches "config that nothing runs" and "exports
+// nothing imports" — the exact class of drift found by hand before adopting
+// it (.lighthouserc.cjs unwired, axios-client.ts compat shim, never-called
+// cleanup handlers). Run with `pnpm knip`; CI runs it as its own lane.
+//
+// Philosophy: a finding is either FIXED (delete/unexport) or the surface is
+// declared here with a reason. No silent suppressions.
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/App.tsx",
+    // PWA service worker — built by vite-plugin-pwa injectManifest, not imported.
+    "src/sw.ts",
+    // Route islands are lazy-loaded from routeTree; manifests are the
+    // validator-mandated metadata file of every island (some are read only by
+    // tooling/conventions, not imported at runtime).
+    "src/pages/**/*.route.tsx",
+    "src/pages/**/*.manifest.ts",
+    // Folder-per-unit barrels are the unit's public API (validator-enforced);
+    // treating them as entries means "exported from the barrel" counts as the
+    // unit's surface, mirroring the file-structure contract.
+    "src/**/index.ts",
+    // Vite build plugins (imported by vite.config.ts) and CLI/dev scripts run
+    // via `node`/`pnpm` directly.
+    "plugins/**/*.ts",
+    "scripts/**/*.mjs",
+    "tests/security/**/*.test.ts",
+    "tests/utils/**/*.{ts,tsx}",
+  ],
+  "project": ["src/**/*.{ts,tsx}", "plugins/**/*.ts", "scripts/**/*.mjs"],
+  "ignore": [
+    // Vendored shadcn primitives: sub-exports ship with the upstream component
+    // and are replaced wholesale on `shadcn add` — pruning them churns updates.
+    "src/shared/components/ui/**",
+    // STAGED SURFACE — deliberately built ahead of its consumer; remove when
+    // the organization module is wired. (Staged unit folders — CRUD hooks,
+    // data-provider, animations — need no ignore: their validator-mandated
+    // index.ts barrels are entries, so barrel exports count as the surface.)
+    "src/shared/api/organization-contracts.ts",
+  ],
+  // Dependencies knip cannot see (no CSS parsing; ignored vendored files;
+  // shell-script invocation):
+  //  - tailwindcss + tw-animate-css: imported in src/index.css (Tailwind v4 CSS-first)
+  //  - recharts: imported only by vendored src/shared/components/ui/chart.tsx (ignored above)
+  //  - lint-staged: invoked by scripts/validate/before-commit-guard.sh (pre-commit)
+  "ignoreDependencies": ["tailwindcss", "tw-animate-css", "recharts", "lint-staged"],
+  // External CLIs invoked from scripts/workflows but not npm dependencies:
+  // gh (GitHub CLI), gitleaks/semgrep (security scanners), k6 (load testing),
+  // stryker (installed ad-hoc by mutation-test.yml).
+  "ignoreBinaries": ["gh", "gitleaks", "k6", "semgrep", "stryker"],
+}

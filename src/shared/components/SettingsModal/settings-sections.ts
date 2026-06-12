@@ -20,7 +20,7 @@ import {
  */
 export type SettingsScope = 'account' | 'organization';
 
-export type AccountSettingsSection =
+type AccountSettingsSection =
   | 'profile'
   | 'account'
   | 'security'
@@ -54,7 +54,7 @@ export const DEFAULT_SETTINGS: SettingsSectionRef = {
   section: 'profile',
 };
 
-export interface SettingsNavItem {
+interface SettingsNavItem {
   scope: SettingsScope;
   section: SettingsSection;
   label: string;

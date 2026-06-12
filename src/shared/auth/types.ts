@@ -9,7 +9,7 @@ import { z } from 'zod';
  *   org-scoped permission codes (see {@link OrganizationPermission} in `@/core/rbac/policies.ts`),
  *   not by this global role.
  */
-export const roleSchema = z.enum(['super_admin', 'admin', 'user']);
+const roleSchema = z.enum(['super_admin', 'admin', 'user']);
 export type Role = z.infer<typeof roleSchema>;
 
 /**

@@ -110,6 +110,19 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm lint
 
+  knip:
+    name: Knip (dead code)
+    needs: [changes]
+    if: needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm knip
+
   format:
     name: Prettier
     needs: [changes]
@@ -254,8 +267,7 @@ jobs:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
           fetch-depth: 0
-      # TODO: pin to a commit SHA once verified (no pin inherited from core-be).
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -361,6 +373,7 @@ jobs:
         changes,
         biome,
         lint,
+        knip,
         format,
         typecheck,
         unit-tests,
@@ -383,6 +396,7 @@ jobs:
           RESULTS: |
             biome=${{ needs.biome.result }}
             lint=${{ needs.lint.result }}
+            knip=${{ needs.knip.result }}
             format=${{ needs.format.result }}
             typecheck=${{ needs.typecheck.result }}
             unit-tests=${{ needs.unit-tests.result }}

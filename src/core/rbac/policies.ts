@@ -3,7 +3,6 @@ import type { Role } from '@/shared/auth/types.ts';
 
 // The permission codes live in core/types (so lib may reference them); the RBAC
 // engine re-exports them for its consumers.
-export { organizationPermissionSchema } from '@/core/types/permissions.ts';
 export type { OrganizationPermission };
 
 /**

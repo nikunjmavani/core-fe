@@ -14,7 +14,7 @@ import { DEFAULT_SETTINGS, SECTIONS_BY_SCOPE } from './settings-sections.ts';
  * survives, back/Esc closes. Route guards never see hashes, so all gating
  * lives inside the modal (settings-permissions.ts). routing-and-tenancy.md §7.
  */
-export const SETTINGS_HASH_PREFIX = 'settings';
+const SETTINGS_HASH_PREFIX = 'settings';
 
 /** Build the hash value (without `#`) for a settings location. */
 export function settingsHash(scope: SettingsScope, section: SettingsSection): string {

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Full project health check: format, lint, biome, type-check, tests, build, size, env, public, tsdoc, structure.
+# Full project health check: format, lint, biome, docs, type-check, tests, build, size, env, public, tsdoc, structure.
 # Run from project root: pnpm health  or  pnpm health:fix
 # --fix: run pnpm lint:fix and pnpm format before checks (report-only otherwise).
 set -e
@@ -40,6 +40,7 @@ if [ "$FIX_MODE" = 1 ]; then
   echo "Auto-fix mode: running lint:fix, biome:fix and format..."
   pnpm lint:fix >/dev/null 2>&1 || true
   pnpm biome:fix >/dev/null 2>&1 || true
+  pnpm docs:lint:fix >/dev/null 2>&1 || true
   pnpm format >/dev/null 2>&1 || true
   echo ""
 fi
@@ -72,7 +73,16 @@ else
 fi
 
 echo ""
-echo "Phase 4: Type check"
+echo "Phase 4: Docs lint"
+if pnpm docs:lint >/dev/null 2>&1; then
+  echo "  $PASS  pnpm docs:lint"
+else
+  echo "  $FAIL  pnpm docs:lint"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+echo ""
+echo "Phase 5: Type check"
 if pnpm type-check >/dev/null 2>&1; then
   echo "  $PASS  pnpm type-check"
 else
@@ -81,7 +91,7 @@ else
 fi
 
 echo ""
-echo "Phase 5: Unit tests"
+echo "Phase 6: Unit tests"
 if pnpm test >/dev/null 2>&1; then
   echo "  $PASS  pnpm test"
 else
@@ -90,7 +100,7 @@ else
 fi
 
 echo ""
-echo "Phase 6: Build"
+echo "Phase 7: Build"
 if pnpm build >/dev/null 2>&1; then
   echo "  $PASS  pnpm build"
 else
@@ -99,7 +109,7 @@ else
 fi
 
 echo ""
-echo "Phase 7: Bundle size"
+echo "Phase 8: Bundle size"
 if pnpm size >/dev/null 2>&1; then
   echo "  $PASS  pnpm size"
 else
@@ -108,7 +118,7 @@ else
 fi
 
 echo ""
-echo "Phase 8: Env validation"
+echo "Phase 9: Env validation"
 if pnpm validate:env-example >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:env-example"
 else
@@ -117,7 +127,7 @@ else
 fi
 
 echo ""
-echo "Phase 9: Public assets"
+echo "Phase 10: Public assets"
 if pnpm validate:public >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:public"
 else
@@ -126,7 +136,7 @@ else
 fi
 
 echo ""
-echo "Phase 10: TSDoc budget"
+echo "Phase 11: TSDoc budget"
 if pnpm tsdoc:check >/dev/null 2>&1; then
   echo "  $PASS  pnpm tsdoc:check"
 else
@@ -135,7 +145,16 @@ else
 fi
 
 echo ""
-echo "Phase 11: Route-island structure"
+echo "Phase 12: Knip (dead code)"
+if pnpm knip >/dev/null 2>&1; then
+  echo "  $PASS  pnpm knip"
+else
+  echo "  $FAIL  pnpm knip"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+echo ""
+echo "Phase 13: Route-island structure"
 if pnpm validate:structure >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:structure"
 else

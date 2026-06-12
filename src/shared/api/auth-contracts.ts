@@ -59,6 +59,7 @@ export const resetPasswordSchema = z
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
 // ── Verify email (token from email link) ──
+/** Staged for the auth-module rebuild (verify-email flow). @public */
 export const verifyEmailSchema = z.object({
   token: z.string().min(1, 'Token is required'),
 });

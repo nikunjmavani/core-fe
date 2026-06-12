@@ -27,7 +27,7 @@ export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;
 const BASE = API_BASE_PATH;
 
 /** Organizations the signed-in user belongs to (mock fixture while unwired). */
-export const MY_ORGANIZATIONS_FIXTURE: Organization[] = [
+const MY_ORGANIZATIONS_FIXTURE: Organization[] = [
   { id: 'org_acme', name: 'Acme Inc.', slug: 'acme' },
   { id: 'org_globex', name: 'Globex', slug: 'globex' },
 ];

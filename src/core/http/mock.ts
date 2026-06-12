@@ -12,7 +12,7 @@
  */
 
 /** Default simulated network latency (ms) for mock responses. */
-export const MOCK_DELAY_MS = 250;
+const MOCK_DELAY_MS = 250;
 
 export interface MockOptions {
   /** Simulated latency before resolving. Defaults to {@link MOCK_DELAY_MS}. */

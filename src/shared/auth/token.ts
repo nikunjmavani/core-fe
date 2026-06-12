@@ -2,11 +2,11 @@
  * Isolated module for access token storage.
  *
  * Token is held in a module-scoped closure — NEVER in localStorage or sessionStorage.
- * Both `axios-client.ts` and `auth/service.ts` import from here to avoid circular deps.
+ * Both `core/http/fetch-client.ts` and `shared/auth/service.ts` import from here
+ * to avoid circular deps:
  *
- * Dependency graph:
- *   core/http/axios-client.ts  -->  core/auth/token.ts
- *   core/auth/service.ts       -->  core/auth/token.ts
+ *   core/http/fetch-client.ts  -->  shared/auth/token.ts
+ *   shared/auth/service.ts     -->  shared/auth/token.ts
  *   (no cycle)
  */
 

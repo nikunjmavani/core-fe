@@ -279,7 +279,7 @@ const notFoundRoute = createRoute({
 });
 
 // ── Tree ──
-export const routeTree = rootRoute.addChildren([
+const routeTree = rootRoute.addChildren([
   indexRoute,
   authShellRoute.addChildren([
     loginRoute,
