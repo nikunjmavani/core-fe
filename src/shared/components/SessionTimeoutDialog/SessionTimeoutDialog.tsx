@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { startIdleTimeout } from '@/shared/auth/idle-timeout.ts';
 import { forceLogout } from '@/shared/auth/service.ts';
+import { startSessionLifetimeWatch } from '@/shared/auth/session-lifetime.ts';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,8 +68,18 @@ export function SessionTimeoutDialog() {
       },
     });
 
+    // Absolute lifetime cap — fires regardless of activity (the idle timer
+    // above only covers *inactivity*). A long-lived session kept warm by the
+    // proactive refresh is force-logged-out once it exceeds SESSION.MAX_AGE_MS.
+    const stopLifetimeWatch = startSessionLifetimeWatch(() => {
+      stopCountdown();
+      setOpen(false);
+      forceLogout();
+    });
+
     return () => {
       cleanup();
+      stopLifetimeWatch();
       stopCountdown();
     };
   }, [isAuthenticated, startCountdown, stopCountdown]);

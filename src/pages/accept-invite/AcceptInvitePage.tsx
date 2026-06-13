@@ -8,6 +8,7 @@ import {
   startMockSession,
 } from '@/shared/auth/mock-auth.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
+import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -44,6 +45,7 @@ export function AcceptInvitePage() {
 
         // Auto-login the (mock) user and activate the joined organization.
         setAccessToken(MOCK_ACCESS_TOKEN);
+        markSessionStart(); // start the absolute session-lifetime clock
         startMockSession();
         useAuthStore.getState().setUser(MOCK_USER);
         scheduleTokenRefresh();

@@ -14,6 +14,7 @@ import {
   MOCK_USER,
 } from '@/shared/auth/mock-auth.ts';
 import { cancelTokenRefresh, scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
+import { clearSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { authTokenResponseSchema, authUserSchema } from '@/shared/auth/types.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
@@ -52,6 +53,7 @@ function clearLocalAuthState(): void {
   try {
     cancelTokenRefresh();
     clearAccessToken();
+    clearSessionStart();
     endMockSession();
     useAuthStore.getState().clearAuth();
     queryClient.clear();

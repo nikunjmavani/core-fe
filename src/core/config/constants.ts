@@ -42,6 +42,19 @@ export const HTTP = {
   STALE_TIME: 1000 * 60 * 5, // 5 minutes
 } as const;
 
+/** Session-lifetime limits (absolute cap + watchdog cadence). */
+export const SESSION = {
+  /**
+   * Absolute session lifetime, independent of activity. A session kept warm by
+   * the proactive refresh would otherwise never expire client-side; after this
+   * the user is forced to re-authenticate. UX/defense-in-depth — the backend's
+   * refresh-session age remains the source of truth.
+   */
+  MAX_AGE_MS: 12 * 60 * 60 * 1000, // 12 hours
+  /** How often the watchdog re-checks the absolute cap. */
+  LIFETIME_CHECK_INTERVAL_MS: 60_000,
+} as const;
+
 // No HEADER entry: the backend scopes organization context from the URL path
 // (/api/v1/tenancy/organizations/:id/…) — there is no X-Organization-ID header.
 export const ORGANIZATION = {

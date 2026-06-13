@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { authApi } from '@/shared/api/auth-api.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
+import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
@@ -22,6 +23,7 @@ export function VerifyEmailForm() {
       .verifyEmail({ token })
       .then(async ({ accessToken }) => {
         setAccessToken(accessToken);
+        markSessionStart(); // start the absolute session-lifetime clock
         const user = await authApi.me(accessToken);
         useAuthStore.getState().setUser(user);
         scheduleTokenRefresh();

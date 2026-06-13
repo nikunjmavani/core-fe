@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { type RegisterInput, registerSchema } from '@/shared/api/auth-contracts.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
+import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 import { PasswordStrengthMeter } from '@/shared/components/PasswordStrengthMeter/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
@@ -43,6 +44,7 @@ export function RegisterForm() {
     try {
       const { accessToken } = await authApi.register(data);
       setAccessToken(accessToken);
+      markSessionStart(); // start the absolute session-lifetime clock
       const user = await authApi.me(accessToken);
       useAuthStore.getState().setUser(user);
       scheduleTokenRefresh();

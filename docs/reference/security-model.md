@@ -18,6 +18,7 @@ everything — frontend controls are defense-in-depth and UX, never the only gat
 | Refresh-rotation race            | `refreshAccessToken()` is the **only** `/auth/refresh` caller: a module single-flight collapses concurrent callers (proactive timer + 401s) and a `navigator.locks` Web Lock (`core-auth:refresh`) serializes tabs — parallel refreshes would trip the backend's rotation reuse-detection and kill the session                                             | [`shared/auth/service.ts`](../../src/shared/auth/service.ts)                                                                                                                                                                                              |
 | Reset/verify token exposure      | `useConsumedSearchToken` reads `?token=` once and scrubs it from the address bar (`history.replaceState`) — it never lingers in history or copy-pasted links; telemetry scrubs `token` params from every outgoing Sentry/PostHog event for the window before that effect runs                                                                              | [`shared/hooks/useConsumedSearchToken/`](../../src/shared/hooks/useConsumedSearchToken/useConsumedSearchToken.ts), [`lib/telemetry-scrub.ts`](../../src/lib/telemetry-scrub.ts)                                                                           |
 | Weak / breached credentials      | Register + reset password gate on a **Have I Been Pwned** k-anonymity check (only a SHA-1 prefix leaves the browser; confirmed breach blocks submit) and show a 0–4 strength meter that penalizes common, identity-derived, and trivially-patterned passwords. Advisory to the user, hard gate on a confirmed breach; the backend enforces the real policy | [`lib/password-breach.ts`](../../src/lib/password-breach.ts), [`lib/password-strength.ts`](../../src/lib/password-strength.ts), [`shared/components/PasswordStrengthMeter/`](../../src/shared/components/PasswordStrengthMeter/PasswordStrengthMeter.tsx) |
+| Stale long-lived session         | Absolute session-lifetime cap (`SESSION.MAX_AGE_MS`, 12 h) on top of the idle timeout: a session kept warm by the proactive refresh is force-logged-out once it exceeds the cap, measured from **interactive** auth (not boot refreshes). UX/defense-in-depth — the backend's refresh-session age is the source of truth                                   | [`shared/auth/session-lifetime.ts`](../../src/shared/auth/session-lifetime.ts)                                                                                                                                                                            |
 | Leaked internals in error UI     | `sanitizeServerMessage` drops messages that look like SQL, stack traces, or file paths; Sentry receives only `user.id`, never PII                                                                                                                                                                                                                          | [`shared/errors/errorHandler.ts`](../../src/shared/errors/errorHandler.ts)                                                                                                                                                                                |
 | Stale PII after logout           | `queryClient.clear()` wipes the TanStack Query cache on every logout path                                                                                                                                                                                                                                                                                  | `shared/auth/service.ts`                                                                                                                                                                                                                                  |
 | Reverse tabnabbing               | No `target="_blank"` without `rel`; no `window.opener` exposure                                                                                                                                                                                                                                                                                            | (grep-verified absent)                                                                                                                                                                                                                                    |
@@ -62,6 +63,17 @@ Set `VITE_CSP_REPORT_URI` (e.g. a Sentry CSP ingest URL) to turn on
 `report-uri`/`report-to` + a `Reporting-Endpoints` header, so production CSP
 violations — including blocked XSS attempts — are collected instead of silent.
 
+**Trusted Types (staged rollout).** The build also emits a
+`Content-Security-Policy-Report-Only` header carrying
+`require-trusted-types-for 'script'`
+([`buildTrustedTypesReportOnlyPolicy`](../../src/lib/csp-api-origin.ts)). This is
+a structural DOM-XSS defense — it flags any script sink (`innerHTML`, `eval`, …)
+that receives a plain string instead of a Trusted Type — shipped **report-only**
+because React 19 is Trusted-Types-aware but Sentry/PostHog may use sinks. Once
+the violation stream (collected via `VITE_CSP_REPORT_URI`) is clean, promote
+`require-trusted-types-for 'script'` into the enforcing policy. Report-only is
+header-only — `http-equiv` can't carry it — so there is no meta fallback.
+
 ## Accepted risks (intentional — do not "fix" without re-reading this)
 
 1. **`style-src 'unsafe-inline'`.** Required by Tailwind v4's generated styles
@@ -81,6 +93,18 @@ violations — including blocked XSS attempts — are collected instead of silen
    `script-src 'self'`), served over HTTPS with immutable caching. The residual
    risk is a deploy-pipeline / host compromise — infrastructure trust, outside
    the frontend code's control.
+
+   **Subresource Integrity (SRI) is deliberately not added in app code here.**
+   `config.js` is generated at deploy time by the Docker entrypoint, so its hash
+   is unknown at build — SRI on it belongs to that entrypoint: compute
+   `sha384` of the generated file and inject `integrity="sha384-…"` into the
+   `index.html` script tag it writes (the same step that writes `config.js`).
+   For the in-repo static scripts (`theme-init.js`), build-time SRI was
+   evaluated and **declined**: they are same-origin and already constrained by
+   `script-src 'self'`, while `integrity` would break the app if any host-side
+   byte transform (minify, re-encode) touched them — net-negative for a
+   negligible gain. Revisit if these scripts ever move to a third-party origin.
+
 4. **Login is not synced across tabs** (only logout is). A fresh tab obtains its
    own token via the boot silent-refresh; tokens never leave their tab's memory.
    Propagating login would tempt cross-tab token sharing for no security gain.

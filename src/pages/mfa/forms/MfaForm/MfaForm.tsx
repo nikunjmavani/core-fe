@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { type MfaVerifyInput, mfaVerifySchema } from '@/shared/api/auth-contracts.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
+import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
@@ -40,6 +41,7 @@ export function MfaForm() {
     try {
       const { accessToken } = await authApi.mfaVerify(data, mfaToken);
       setAccessToken(accessToken);
+      markSessionStart(); // start the absolute session-lifetime clock
       const user = await authApi.me(accessToken);
       useAuthStore.getState().setUser(user);
       scheduleTokenRefresh();

@@ -83,3 +83,26 @@ export function buildContentSecurityPolicy(
 
   return directives.join('; ');
 }
+
+/**
+ * Trusted Types policy, shipped **report-only** as a staged rollout.
+ *
+ * `require-trusted-types-for 'script'` makes the browser flag any DOM script
+ * sink (`innerHTML`, `eval`, …) that receives a plain string instead of a
+ * Trusted Type — a structural DOM-XSS defense layered on top of
+ * `script-src 'self'`. Delivered via a `Content-Security-Policy-Report-Only`
+ * header (header-only — `http-equiv` can't carry report-only), so violations
+ * are COLLECTED, not enforced: React 19 is Trusted-Types-aware, but Sentry /
+ * PostHog may use sinks, so we observe first. Flip to the enforcing CSP once
+ * the violation stream is clean. `trusted-types` policy names are intentionally
+ * unconstrained while reporting — that is what we are here to discover.
+ *
+ * @param reportUri - optional collector; adds report-uri + report-to.
+ */
+export function buildTrustedTypesReportOnlyPolicy(reportUri?: string): string {
+  const directives = ["require-trusted-types-for 'script'"];
+  if (reportUri) {
+    directives.push(`report-uri ${reportUri}`, 'report-to csp');
+  }
+  return directives.join('; ');
+}

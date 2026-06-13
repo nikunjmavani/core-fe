@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildContentSecurityPolicy,
+  buildTrustedTypesReportOnlyPolicy,
   formatCspApiConnectSrcFragment,
   getCspConnectSrcOrigin,
 } from './csp-api-origin.ts';
@@ -77,6 +78,24 @@ describe('buildContentSecurityPolicy', () => {
 
   it('adds report-uri + report-to when a collector is configured', () => {
     const reported = buildContentSecurityPolicy(undefined, 'https://collect.example/csp');
+    expect(reported).toContain('report-uri https://collect.example/csp');
+    expect(reported).toContain('report-to csp');
+  });
+});
+
+describe('buildTrustedTypesReportOnlyPolicy', () => {
+  it('requires trusted types for script sinks', () => {
+    expect(buildTrustedTypesReportOnlyPolicy()).toBe(
+      "require-trusted-types-for 'script'",
+    );
+  });
+
+  it('does not constrain policy names while reporting', () => {
+    expect(buildTrustedTypesReportOnlyPolicy()).not.toContain('trusted-types ');
+  });
+
+  it('adds reporting directives when a collector is configured', () => {
+    const reported = buildTrustedTypesReportOnlyPolicy('https://collect.example/csp');
     expect(reported).toContain('report-uri https://collect.example/csp');
     expect(reported).toContain('report-to csp');
   });

@@ -5,6 +5,7 @@ import type { Plugin } from 'vite';
 
 import {
   buildContentSecurityPolicy,
+  buildTrustedTypesReportOnlyPolicy,
   formatCspApiConnectSrcFragment,
 } from '../src/lib/csp-api-origin.ts';
 
@@ -29,6 +30,7 @@ const HEADERS_CSP_PLACEHOLDER = "Content-Security-Policy: frame-ancestors 'none'
 export function cspApiOrigin(apiBaseUrl: string | undefined, reportUri?: string): Plugin {
   const metaFragment = formatCspApiConnectSrcFragment(apiBaseUrl);
   const headerPolicy = buildContentSecurityPolicy(apiBaseUrl, reportUri);
+  const trustedTypesReportOnly = buildTrustedTypesReportOnlyPolicy(reportUri);
   let outDir = 'dist';
 
   return {
@@ -54,11 +56,15 @@ export function cspApiOrigin(apiBaseUrl: string | undefined, reportUri?: string)
       const reportingHeader = reportUri
         ? `\n  Reporting-Endpoints: csp="${reportUri}"`
         : '';
+      // Trusted Types ships report-only alongside the enforcing CSP — a staged
+      // rollout that collects DOM-script-sink violations without breaking React
+      // / Sentry / PostHog (see buildTrustedTypesReportOnlyPolicy).
+      const reportOnlyHeader = `\n  Content-Security-Policy-Report-Only: ${trustedTypesReportOnly}`;
       writeFileSync(
         headersPath,
         contents.replace(
           HEADERS_CSP_PLACEHOLDER,
-          `Content-Security-Policy: ${headerPolicy}${reportingHeader}`,
+          `Content-Security-Policy: ${headerPolicy}${reportingHeader}${reportOnlyHeader}`,
         ),
         'utf8',
       );
