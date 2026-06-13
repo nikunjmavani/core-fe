@@ -23,11 +23,11 @@ Weekly npm updates are configured in [`.github/dependabot.yml`](../../.github/de
 
 [`package.json`](../../package.json) defines `pnpm.overrides` to force patched versions where upstream has not yet bumped:
 
-| Override               | Why                                                                                                                                                     |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `protobufjs` **7.5.6** | `posthog-js` → OpenTelemetry OTLP stack previously pulled **7.5.5** (multiple high advisories).                                                         |
-| `basic-ftp` **5.3.1**  | `@size-limit/preset-app` → puppeteer → `get-uri` pulled older `basic-ftp` (path traversal / DoS advisories).                                            |
-| `minimatch` **10.2.5** | `eslint-plugin-sonarjs` v3 pulled vulnerable `minimatch@10.1.x` (ReDoS). **v4** of the plugin is now direct; override keeps the tree on a patched line. |
+| Override               | Why                                                                                                                                                                                                                   |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `protobufjs` **7.6.4** | `posthog-js` → OpenTelemetry OTLP stack pulls it transitively (tree-shaken out of the shipped bundle). Pinned past the `<=7.5.7` unbounded-recursion DoS advisory; raise on the same 7.x line as new advisories land. |
+| `basic-ftp` **5.3.1**  | `@size-limit/preset-app` → puppeteer → `get-uri` pulled older `basic-ftp` (path traversal / DoS advisories).                                                                                                          |
+| `minimatch` **10.2.5** | `eslint-plugin-sonarjs` v3 pulled vulnerable `minimatch@10.1.x` (ReDoS). **v4** of the plugin is now direct; override keeps the tree on a patched line.                                                               |
 
 Revisit these when Dependabot or direct dependency upgrades remove the need.
 

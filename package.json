@@ -79,7 +79,7 @@
   "pnpm": {
     "overrides": {
       "basic-ftp": "5.3.1",
-      "protobufjs": "7.5.6",
+      "protobufjs": "7.6.4",
       "minimatch": "10.2.5",
       "multiparty": ">=4.3.0",
       "tmp": ">=0.2.6"
