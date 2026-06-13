@@ -41,8 +41,8 @@ export async function listMyOrganizations(): Promise<Organization[]> {
   return data.map((o) => organizationSchema.parse(o));
 }
 
-/** Derive a URL-safe slug from an organization name. */
-function slugifyName(name: string): string {
+/** Derive a URL-safe slug from an organization name (lowercase, hyphenated). */
+export function deriveOrganizationSlug(name: string): string {
   return name
     .toLowerCase()
     .split(/[^a-z0-9]+/)
@@ -57,7 +57,9 @@ export async function createOrganization(
   // REPLACE_WITH_API: POST /api/v1/tenancy/organizations
   const payload = createOrganizationSchema.parse(input);
   const requestedSlug = payload.slug?.trim();
-  const derivedSlug = requestedSlug?.length ? requestedSlug : slugifyName(payload.name);
+  const derivedSlug = requestedSlug?.length
+    ? requestedSlug
+    : deriveOrganizationSlug(payload.name);
   const slug = derivedSlug.length ? derivedSlug : 'org';
   if (config.useMockApi) {
     const org: Organization = { id: `org_${Date.now()}`, name: payload.name, slug };

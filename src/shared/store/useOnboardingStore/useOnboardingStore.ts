@@ -5,6 +5,7 @@ import { persist } from 'zustand/middleware';
 export const ONBOARDING_STEPS = [
   'welcome',
   'profile',
+  'questions',
   'workspace',
   'invite',
   'done',
@@ -14,6 +15,10 @@ export const ONBOARDING_STEPS = [
 interface OnboardingData {
   fullName: string;
   jobTitle: string;
+  /** Qualifying questions — drive segmentation + smart defaults. */
+  teamSize: string;
+  primaryUseCase: string;
+  referralSource: string;
   organizationName: string;
   organizationSlug: string;
   invites: string[];
@@ -24,11 +29,18 @@ interface OnboardingStore {
   stepIndex: number;
   data: OnboardingData;
   completed: boolean;
+  /**
+   * Id of the organization created by the finish step, if any. Set the moment
+   * creation succeeds so a partial failure (e.g. an invite rejects) never
+   * re-creates a DUPLICATE org when the user retries — the retry reuses this.
+   */
+  createdOrganizationId: string | null;
 
   setStepIndex: (index: number) => void;
   next: () => void;
   back: () => void;
   patch: (data: Partial<OnboardingData>) => void;
+  setCreatedOrganizationId: (id: string) => void;
   complete: () => void;
   reset: () => void;
 }
@@ -36,6 +48,9 @@ interface OnboardingStore {
 const INITIAL_DATA: OnboardingData = {
   fullName: '',
   jobTitle: '',
+  teamSize: '',
+  primaryUseCase: '',
+  referralSource: '',
   organizationName: '',
   organizationSlug: '',
   invites: [],
@@ -52,6 +67,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
       stepIndex: 0,
       data: INITIAL_DATA,
       completed: false,
+      createdOrganizationId: null,
 
       setStepIndex: (stepIndex) => set({ stepIndex }),
       next: () =>
@@ -60,8 +76,15 @@ export const useOnboardingStore = create<OnboardingStore>()(
         })),
       back: () => set((s) => ({ stepIndex: Math.max(s.stepIndex - 1, 0) })),
       patch: (data) => set((s) => ({ data: { ...s.data, ...data } })),
+      setCreatedOrganizationId: (createdOrganizationId) => set({ createdOrganizationId }),
       complete: () => set({ completed: true }),
-      reset: () => set({ stepIndex: 0, data: INITIAL_DATA, completed: false }),
+      reset: () =>
+        set({
+          stepIndex: 0,
+          data: INITIAL_DATA,
+          completed: false,
+          createdOrganizationId: null,
+        }),
     }),
     { name: 'core-onboarding' },
   ),

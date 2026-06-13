@@ -160,4 +160,29 @@ export const authApi = {
     const json = (await response.json()) as unknown;
     return authUserSchema.parse(json);
   },
+
+  /**
+   * Persist profile fields collected during onboarding (name, job title).
+   * Best-effort by contract: the caller must not block the user on it — a
+   * failure here should never trap someone on the onboarding screen.
+   */
+  updateProfile: async (
+    input: { name?: string; jobTitle?: string },
+    token: string,
+  ): Promise<void> => {
+    // REPLACE_WITH_API: PATCH /api/v1/users/me
+    if (config.useMockApi) {
+      await mockResponse(null);
+      return;
+    }
+    const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.ME}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+      const json = (await response.json().catch(() => null)) as unknown;
+      throwOnNotOk(response, json, `Profile update failed (${response.status})`);
+    }
+  },
 };
