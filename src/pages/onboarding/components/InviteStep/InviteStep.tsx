@@ -7,7 +7,7 @@ import { Label } from '@/shared/components/ui/label.tsx';
 import { Plus, X } from '@/shared/icons/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 
-const inviteEmailSchema = z.string().trim().email();
+const inviteEmailSchema = z.string().trim().pipe(z.email());
 
 /** Collects optional teammate emails; the final step sends the invitations. */
 export function InviteStep() {

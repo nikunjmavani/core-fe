@@ -1,5 +1,4 @@
 import { cn } from '@/lib/utils.ts';
-import { Label } from '@/shared/components/ui/label.tsx';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 
 const TEAM_SIZES = ['Just me', '2–10', '11–50', '51–200', '200+'] as const;
@@ -18,7 +17,12 @@ const REFERRAL_SOURCES = [
   'Other',
 ] as const;
 
-/** Single-select chip group — accessible (radiogroup) and trivial to test. */
+/**
+ * Single-select chip group built as toggle buttons (`aria-pressed`) inside a
+ * native `fieldset`/`legend`. Toggle buttons — not `role="radio"`/native radios
+ * — because the choices are optional: clicking the active chip clears it, which
+ * a radio cannot do.
+ */
 function ChoiceGroup({
   label,
   options,
@@ -33,22 +37,16 @@ function ChoiceGroup({
   testId: string;
 }) {
   return (
-    <div className="space-y-2">
-      <Label id={`${testId}-label`}>{label}</Label>
-      <div
-        role="radiogroup"
-        aria-labelledby={`${testId}-label`}
-        className="flex flex-wrap gap-2"
-        data-testid={testId}
-      >
+    <fieldset className="space-y-2">
+      <legend className="mb-2 text-sm leading-none font-medium">{label}</legend>
+      <div className="flex flex-wrap gap-2" data-testid={testId}>
         {options.map((option) => {
           const selected = value === option;
           return (
             <button
               key={option}
               type="button"
-              role="radio"
-              aria-checked={selected}
+              aria-pressed={selected}
               onClick={() => onSelect(selected ? '' : option)}
               className={cn(
                 'rounded-full border px-3 py-1.5 text-sm transition-colors',
@@ -62,7 +60,7 @@ function ChoiceGroup({
           );
         })}
       </div>
-    </div>
+    </fieldset>
   );
 }
 

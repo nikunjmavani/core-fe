@@ -13,10 +13,7 @@ describe('QuestionsStep', () => {
 
   it('renders the three optional question groups', () => {
     render(<QuestionsStep />);
-    expect(screen.getByTestId('onboarding-team-size')).toHaveAttribute(
-      'role',
-      'radiogroup',
-    );
+    expect(screen.getByTestId('onboarding-team-size')).toBeInTheDocument();
     expect(screen.getByTestId('onboarding-use-case')).toBeInTheDocument();
     expect(screen.getByTestId('onboarding-referral')).toBeInTheDocument();
   });
@@ -25,19 +22,19 @@ describe('QuestionsStep', () => {
     const user = userEvent.setup();
     render(<QuestionsStep />);
 
-    await user.click(
-      within(screen.getByTestId('onboarding-team-size')).getByRole('radio', {
-        name: '2–10',
-      }),
-    );
+    const chip = within(screen.getByTestId('onboarding-team-size')).getByRole('button', {
+      name: '2–10',
+    });
+    await user.click(chip);
 
     expect(useOnboardingStore.getState().data.teamSize).toBe('2–10');
+    expect(chip).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('toggles a choice off when re-clicked (all questions optional)', async () => {
     const user = userEvent.setup();
     render(<QuestionsStep />);
-    const chip = within(screen.getByTestId('onboarding-referral')).getByRole('radio', {
+    const chip = within(screen.getByTestId('onboarding-referral')).getByRole('button', {
       name: 'Search',
     });
 
