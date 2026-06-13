@@ -27,6 +27,18 @@ function makeJwt(payload: Record<string, unknown>): string {
 
 const VALID_TOKEN = makeJwt({ sub: 'user1', exp: 9999999999 });
 
+/** Shared response fixtures (module-scoped so blocks don't duplicate them). */
+const ok = () =>
+  new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+const unauthorized = () =>
+  new Response(JSON.stringify({ message: 'expired' }), {
+    status: 401,
+    headers: { 'Content-Type': 'application/json' },
+  });
+
 describe('fetch-client', () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -136,17 +148,6 @@ describe('fetch-client', () => {
   });
 
   describe('reactive auth layer', () => {
-    const ok = () =>
-      new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    const unauthorized = () =>
-      new Response(JSON.stringify({ message: 'expired' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-
     it('401 → delegate to the shared refresh → replay succeeds', async () => {
       fetchMock
         .mockResolvedValueOnce(unauthorized()) // original request
@@ -232,6 +233,42 @@ describe('fetch-client', () => {
         .mockResolvedValueOnce(ok()); // replay (refresh is the service's stub)
 
       await apiClient.post('/things', { a: 1 });
+
+      const first = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
+      const replay = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;
+      expect(first.get('Idempotency-Key')).toBe(replay.get('Idempotency-Key'));
+      expect(first.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+    });
+  });
+
+  describe('write methods (PUT / DELETE)', () => {
+    it('DELETE and PUT both carry an auto-generated Idempotency-Key', async () => {
+      fetchMock.mockImplementation(() => Promise.resolve(ok()));
+
+      await apiClient.delete('/things/1');
+      await apiClient.put('/things/1', { a: 1 });
+
+      const deleteHeaders = (fetchMock.mock.calls[0][1] as RequestInit)
+        .headers as Headers;
+      const putHeaders = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;
+      expect(deleteHeaders.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+      expect(putHeaders.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+    });
+
+    it('DELETE 401 → shared refresh → replay succeeds', async () => {
+      fetchMock.mockResolvedValueOnce(unauthorized()).mockResolvedValueOnce(ok());
+
+      const { data } = await apiClient.delete<{ ok: boolean }>('/things/1');
+
+      expect(data).toEqual({ ok: true });
+      expect(refreshAccessToken).toHaveBeenCalledTimes(1);
+      expect(forceLogout).not.toHaveBeenCalled();
+    });
+
+    it('PUT keeps the SAME Idempotency-Key across the 401 replay', async () => {
+      fetchMock.mockResolvedValueOnce(unauthorized()).mockResolvedValueOnce(ok());
+
+      await apiClient.put('/things/1', { a: 1 });
 
       const first = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
       const replay = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;

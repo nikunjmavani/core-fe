@@ -81,11 +81,16 @@ export function ForgotPasswordForm() {
               placeholder="name@company.com"
               autoComplete="email"
               aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'forgot-password-email-error' : undefined}
               data-testid="forgot-password-email"
               {...register('email')}
             />
             {errors.email && (
-              <p className="text-destructive text-xs" role="alert">
+              <p
+                id="forgot-password-email-error"
+                className="text-destructive text-xs"
+                role="alert"
+              >
                 {errors.email.message}
               </p>
             )}

@@ -92,11 +92,12 @@ export function MfaForm() {
               placeholder="000000"
               maxLength={6}
               aria-invalid={!!errors.code}
+              aria-describedby={errors.code ? 'mfa-code-error' : undefined}
               data-testid="mfa-code"
               {...register('code')}
             />
             {errors.code && (
-              <p className="text-destructive text-xs" role="alert">
+              <p id="mfa-code-error" className="text-destructive text-xs" role="alert">
                 {errors.code.message}
               </p>
             )}

@@ -131,10 +131,15 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
               {...register('name')}
               placeholder="Your name"
               aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? 'profile-name-error' : undefined}
               data-testid="profile-name"
             />
             {errors.name && (
-              <p className="text-destructive text-xs" role="alert">
+              <p
+                id="profile-name-error"
+                className="text-destructive text-xs"
+                role="alert"
+              >
                 {errors.name.message}
               </p>
             )}
@@ -159,10 +164,13 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
             value={email}
             disabled
             readOnly
+            aria-describedby="profile-email-desc"
             className="text-muted-foreground"
             data-testid="profile-email"
           />
-          <p className="text-muted-foreground text-xs">Email cannot be changed here.</p>
+          <p id="profile-email-desc" className="text-muted-foreground text-xs">
+            Email cannot be changed here.
+          </p>
         </div>
 
         <div className="space-y-2">

@@ -7,7 +7,7 @@ import { CreateOrganizationDialog } from '@/shared/components/CreateOrganization
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Card, CardContent } from '@/shared/components/ui/card.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
-import { Building2, ChevronRight, Plus } from '@/shared/icons/index.ts';
+import { AlertCircle, Building2, ChevronRight, Plus } from '@/shared/icons/index.ts';
 import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
 
 /**
@@ -18,10 +18,17 @@ import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
 export function OrganizationPickerPage() {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
-  const { data: organizations = [], isLoading } = useQuery({
+  const {
+    data: organizations = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
     queryKey: ['organizations'],
     queryFn: listMyOrganizations,
   });
+
+  const isEmpty = !isLoading && !isError && organizations.length === 0;
 
   return (
     <main
@@ -43,7 +50,38 @@ export function OrganizationPickerPage() {
               <Skeleton className="h-16 w-full" />
             </>
           )}
+
+          {isError && (
+            <Card data-testid="organization-picker-error">
+              <CardContent className="flex flex-col items-center gap-3 p-6 text-center">
+                <AlertCircle className="text-destructive h-6 w-6" />
+                <p className="text-muted-foreground text-sm">
+                  We couldn&rsquo;t load your organizations. Check your connection and try
+                  again.
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void refetch()}
+                  data-testid="organization-picker-retry"
+                >
+                  Try again
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {isEmpty && (
+            <Card data-testid="organization-picker-empty">
+              <CardContent className="text-muted-foreground p-6 text-center text-sm">
+                You&rsquo;re not part of any organization yet. Create one below to get
+                started.
+              </CardContent>
+            </Card>
+          )}
+
           {!isLoading &&
+            !isError &&
             organizations.map((organization) => (
               <Card
                 key={organization.id}

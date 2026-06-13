@@ -51,6 +51,7 @@ export function InviteStep() {
               }
             }}
             aria-invalid={!!error}
+            aria-describedby={error ? 'onboarding-invite-error' : undefined}
             placeholder="teammate@company.com"
             data-testid="onboarding-invite-email"
           />
@@ -67,6 +68,7 @@ export function InviteStep() {
       </div>
       {error && (
         <p
+          id="onboarding-invite-error"
           className="text-destructive text-xs"
           role="alert"
           data-testid="onboarding-invite-error"

@@ -77,11 +77,13 @@ export function RegisterForm() {
               placeholder="name@company.com"
               autoComplete="email"
               aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'register-email-error' : undefined}
               data-testid="register-email"
               {...register('email')}
             />
             {errors.email && (
               <p
+                id="register-email-error"
                 className="text-destructive text-xs"
                 role="alert"
                 data-testid="register-email-error"
@@ -100,6 +102,7 @@ export function RegisterForm() {
                 placeholder="At least 8 characters"
                 autoComplete="new-password"
                 aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'register-password-error' : undefined}
                 data-testid="register-password"
                 {...register('password')}
               />
@@ -119,6 +122,7 @@ export function RegisterForm() {
             </div>
             {errors.password && (
               <p
+                id="register-password-error"
                 className="text-destructive text-xs"
                 role="alert"
                 data-testid="register-password-error"

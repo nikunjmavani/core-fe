@@ -132,11 +132,13 @@ export function LoginForm() {
               placeholder="name@company.com"
               autoComplete="email"
               aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'login-email-error' : undefined}
               data-testid="login-email"
               {...register('email')}
             />
             {errors.email && (
               <p
+                id="login-email-error"
                 className="text-destructive text-xs"
                 role="alert"
                 data-testid="login-email-error"
@@ -164,6 +166,7 @@ export function LoginForm() {
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'login-password-error' : undefined}
                 data-testid="login-password"
                 {...register('password')}
               />
@@ -183,6 +186,7 @@ export function LoginForm() {
             </div>
             {errors.password && (
               <p
+                id="login-password-error"
                 className="text-destructive text-xs"
                 role="alert"
                 data-testid="login-password-error"

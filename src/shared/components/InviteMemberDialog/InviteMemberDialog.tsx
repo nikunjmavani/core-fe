@@ -88,11 +88,16 @@ export function InviteMemberDialog() {
               placeholder="teammate@company.com"
               autoComplete="email"
               aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'invite-email-error' : undefined}
               data-testid="invite-member-email"
               {...register('email')}
             />
             {errors.email && (
-              <p className="text-destructive text-xs" role="alert">
+              <p
+                id="invite-email-error"
+                className="text-destructive text-xs"
+                role="alert"
+              >
                 {errors.email.message}
               </p>
             )}

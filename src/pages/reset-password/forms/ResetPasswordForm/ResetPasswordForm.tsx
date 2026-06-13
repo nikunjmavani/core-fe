@@ -108,6 +108,7 @@ export function ResetPasswordForm() {
                 placeholder="At least 8 characters"
                 autoComplete="new-password"
                 aria-invalid={!!errors.password}
+                aria-describedby={errors.password ? 'reset-password-error' : undefined}
                 data-testid="reset-password-password"
                 {...register('password')}
               />
@@ -126,7 +127,11 @@ export function ResetPasswordForm() {
               </button>
             </div>
             {errors.password && (
-              <p className="text-destructive text-xs" role="alert">
+              <p
+                id="reset-password-error"
+                className="text-destructive text-xs"
+                role="alert"
+              >
                 {errors.password.message}
               </p>
             )}
@@ -141,11 +146,18 @@ export function ResetPasswordForm() {
               placeholder="Confirm your password"
               autoComplete="new-password"
               aria-invalid={!!errors.confirmPassword}
+              aria-describedby={
+                errors.confirmPassword ? 'reset-password-confirm-error' : undefined
+              }
               data-testid="reset-password-confirm"
               {...register('confirmPassword')}
             />
             {errors.confirmPassword && (
-              <p className="text-destructive text-xs" role="alert">
+              <p
+                id="reset-password-confirm-error"
+                className="text-destructive text-xs"
+                role="alert"
+              >
                 {errors.confirmPassword.message}
               </p>
             )}

@@ -110,11 +110,16 @@ export function CreateOrganizationDialog({
               autoComplete="organization"
               placeholder="Acme Inc."
               aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? 'new-org-name-error' : undefined}
               data-testid="create-organization-dialog-name"
               {...register('name')}
             />
             {errors.name && (
-              <p className="text-destructive text-xs" role="alert">
+              <p
+                id="new-org-name-error"
+                className="text-destructive text-xs"
+                role="alert"
+              >
                 {errors.name.message}
               </p>
             )}
