@@ -29,6 +29,7 @@ import { manifest as organizationPickerManifest } from '@/pages/organization/org
 import { manifest as registerManifest } from '@/pages/register/register.manifest.ts';
 import { manifest as resetPasswordManifest } from '@/pages/reset-password/reset-password.manifest.ts';
 import { manifest as verifyEmailManifest } from '@/pages/verify-email/verify-email.manifest.ts';
+import { ConsentBanner } from '@/shared/components/ConsentBanner/index.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts';
 import { RouteAnnouncer } from '@/shared/components/RouteAnnouncer/index.ts';
@@ -128,6 +129,8 @@ const rootRoute = createRootRoute({
       <OfflineIndicator />
       {/* aria-live announcer: reads the new document.title on navigation. */}
       <RouteAnnouncer />
+      {/* Cookie-consent gate for analytics (PostHog). */}
+      <ConsentBanner />
       <Toaster richColors closeButton position="top-right" />
     </>
   ),

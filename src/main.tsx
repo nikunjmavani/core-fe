@@ -8,27 +8,48 @@ import { startVersionCheck } from '@/core/version/check.ts';
 import { subscribeToAuthBroadcast } from '@/shared/auth/auth-channel.ts';
 import { handleCrossTabLogout, silentRefresh } from '@/shared/auth/service.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import {
+  hasAnalyticsConsent,
+  useConsentStore,
+} from '@/shared/store/useConsentStore/index.ts';
 import { resolveOrganizationFromSubdomain } from '@/shared/tenancy/tenancy-service.ts';
 
 import App from './App.tsx';
 
 /**
- * Initialize observability + analytics lazily and off the critical path.
- *
- * Sentry, PostHog, and performance monitoring are dynamically imported during
- * browser idle time so they never bloat the entry chunk or delay first paint.
+ * Start cookie-setting analytics (PostHog + web-vitals → PostHog). Idempotent
+ * and gated by consent — only ever runs after the user has granted it (boot
+ * for returning users, or the moment they Accept the ConsentBanner). Sentry is
+ * NOT here: error monitoring runs under legitimate interest (no tracking
+ * cookies, masked replay).
+ */
+let analyticsStarted = false;
+function startAnalytics(): void {
+  if (analyticsStarted || !hasAnalyticsConsent()) return;
+  analyticsStarted = true;
+  import('@/app/analytics/posthog.ts')
+    .then((m) => m.initPostHog())
+    .catch(() => undefined);
+  import('@/app/observability/performance.ts')
+    .then((m) => m.initPerformanceMonitoring())
+    .catch(() => undefined);
+}
+
+/**
+ * Initialize observability lazily and off the critical path. Sentry always;
+ * analytics only with consent. A store subscription starts analytics the
+ * instant the user accepts the banner, without a reload.
  */
 function initObservabilityWhenIdle(): void {
+  useConsentStore.subscribe((state) => {
+    if (state.analyticsConsent === 'granted') startAnalytics();
+  });
+
   const run = () => {
     import('@/app/observability/sentry.ts')
       .then((m) => m.initSentry(router))
       .catch(() => undefined);
-    import('@/app/analytics/posthog.ts')
-      .then((m) => m.initPostHog())
-      .catch(() => undefined);
-    import('@/app/observability/performance.ts')
-      .then((m) => m.initPerformanceMonitoring())
-      .catch(() => undefined);
+    startAnalytics();
   };
 
   if ('requestIdleCallback' in window) {

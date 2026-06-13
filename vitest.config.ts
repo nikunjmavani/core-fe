@@ -60,10 +60,10 @@ export default defineConfig({
       // regression, never on ambition. Raise (never lower) when coverage rises;
       // target is 80 as the auth/organization modules get rebuilt with tests.
       thresholds: {
-        branches: 58,
-        functions: 60,
+        branches: 59,
+        functions: 61,
         lines: 66,
-        statements: 65,
+        statements: 66,
       },
     },
   },

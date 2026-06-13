@@ -15,6 +15,12 @@ vi.mock('@/core/config/env.ts', () => ({
   },
 }));
 
+// Consent defaults to granted for these tests; the gate itself is asserted in
+// the dedicated "no consent" case below (and in useConsentStore.test.ts).
+vi.mock('@/shared/store/useConsentStore/index.ts', () => ({
+  hasAnalyticsConsent: vi.fn(() => true),
+}));
+
 import posthogModule from 'posthog-js';
 
 import type { AuthUser } from '@/shared/auth/types.ts';
@@ -36,6 +42,11 @@ async function loadFreshPostHog() {
   vi.resetModules();
   vi.doMock('@/core/config/env.ts', () => ({
     config: { posthogKey: 'phc_test', posthogHost: undefined },
+  }));
+  // Consent granted — re-mocked here so a lingering doMock from the
+  // "no consent" case (doMock persists across resetModules) can't leak in.
+  vi.doMock('@/shared/store/useConsentStore/index.ts', () => ({
+    hasAnalyticsConsent: () => true,
   }));
   vi.doMock('posthog-js', () => ({
     default: { init: vi.fn(), reset: vi.fn(), __loaded: false },
@@ -62,6 +73,25 @@ describe('initPostHog', () => {
         capture_pageview: true,
       }),
     );
+  });
+
+  it('does NOT initialize without analytics consent', async () => {
+    // Fully isolated: fresh modules + its own mocks, so neither the shared
+    // posthog mock nor posthog.ts's `initialized` flag leaks in from prior tests.
+    vi.resetModules();
+    vi.doMock('@/shared/store/useConsentStore/index.ts', () => ({
+      hasAnalyticsConsent: () => false,
+    }));
+    vi.doMock('@/core/config/env.ts', () => ({
+      config: { posthogKey: 'phc_test', posthogHost: undefined },
+    }));
+    vi.doMock('posthog-js', () => ({ default: { init: vi.fn(), __loaded: false } }));
+
+    const { initPostHog } = await import('./posthog.ts');
+    const phMock = (await import('posthog-js')).default;
+    initPostHog();
+
+    expect(phMock.init).not.toHaveBeenCalled();
   });
 
   it('does not call init when key is missing', async () => {

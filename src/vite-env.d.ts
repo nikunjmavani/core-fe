@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_POSTHOG_HOST: string;
   readonly VITE_DEV_API_URL: string;
   readonly VITE_APP_BUILD_ID: string;
+  /** Optional: privacy-policy URL linked from the cookie-consent banner. */
+  readonly VITE_PRIVACY_POLICY_URL: string;
 }
 
 interface ImportMeta {

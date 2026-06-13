@@ -3,6 +3,7 @@ import posthog from 'posthog-js';
 import { config } from '@/core/config/env.ts';
 import { scrubObjectUrls } from '@/lib/telemetry-scrub.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { hasAnalyticsConsent } from '@/shared/store/useConsentStore/index.ts';
 
 let initialized = false;
 
@@ -14,6 +15,16 @@ let initialized = false;
  */
 export function initPostHog(): void {
   if (initialized) return;
+
+  // Defense in depth: PostHog sets cookies + captures pageviews, so it must
+  // never initialize without analytics consent — even if a caller forgets to
+  // gate it (the boot sequence and ConsentBanner already do).
+  if (!hasAnalyticsConsent()) {
+    if (import.meta.env.DEV) {
+      console.info('[PostHog] Analytics consent not granted — not initializing');
+    }
+    return;
+  }
 
   const key = config.posthogKey;
   const host = config.posthogHost;

@@ -36,13 +36,18 @@ capture settings are part of the threat model — verified:
   with `beforeSendTransaction` — scrubs `token` query params from event and
   breadcrumb URLs (`lib/telemetry-scrub.ts`); only `user.id` is identified.
   ([`app/observability/sentry.ts`](../../src/app/observability/sentry.ts))
-- **PostHog** — `autocapture: false` and `disable_session_recording: true`:
-  passive DOM/network capture is off in code, so a server-side dashboard toggle
-  cannot silently start recording the authenticated admin surface. Only
-  explicitly-coded events are sent; `before_send` scrubs `token` params from
-  `$current_url`-style properties, and `posthog.reset()` runs when the session
-  ends so successive users on a shared device never chain into one anonymous
-  profile. ([`app/analytics/posthog.ts`](../../src/app/analytics/posthog.ts))
+- **PostHog** — **consent-gated**: it sets cookies and captures pageviews, so it
+  does not initialize until the user accepts the cookie banner
+  (`shared/components/ConsentBanner`, `shared/store/useConsentStore`; `main.tsx`
+  reacts to the decision and `initPostHog` refuses without consent). Beyond that:
+  `autocapture: false` and `disable_session_recording: true` keep passive
+  DOM/network capture off in code; only explicitly-coded events are sent;
+  `before_send` scrubs `token` params from `$current_url`-style properties; and
+  `posthog.reset()` runs when the session ends so successive users on a shared
+  device never chain into one anonymous profile.
+  ([`app/analytics/posthog.ts`](../../src/app/analytics/posthog.ts)) Error
+  monitoring (Sentry) is **not** gated — no tracking cookies, masked replay,
+  legitimate interest.
 - **Service worker** — precaches only static build assets + fonts; **no runtime
   caching of `/api`** or auth responses, so a shared device cannot serve one
   user's data to another from the SW cache. ([`src/sw.ts`](../../src/sw.ts))

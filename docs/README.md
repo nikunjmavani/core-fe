@@ -54,14 +54,15 @@ flowchart TB
 
 ## Deployment
 
-| Doc                                                                     | Purpose                                             |
-| ----------------------------------------------------------------------- | --------------------------------------------------- |
-| [runbook-dev-to-production.md](deployment/runbook-dev-to-production.md) | Step-by-step: local dev → validate → build → deploy |
-| [cicd-and-netlify.md](deployment/cicd-and-netlify.md)                   | CI/CD, Netlify env, deploy commands, GitHub Actions |
-| [deployment-and-pre-launch.md](deployment/deployment-and-pre-launch.md) | Full deployment guide and pre-launch checklist      |
-| [path-to-production.md](deployment/path-to-production.md)               | Gate: run runbook + checklist before release        |
-| [netlify-cli-setup.md](deployment/netlify-cli-setup.md)                 | Netlify CLI one-time connect and deploy             |
-| [scripts/live/README.md](../scripts/live/README.md)                     | One-command deployment: `pnpm run setup`            |
+| Doc                                                                     | Purpose                                              |
+| ----------------------------------------------------------------------- | ---------------------------------------------------- |
+| [runbook-dev-to-production.md](deployment/runbook-dev-to-production.md) | Step-by-step: local dev → validate → build → deploy  |
+| [cicd-and-netlify.md](deployment/cicd-and-netlify.md)                   | CI/CD, Netlify env, deploy commands, GitHub Actions  |
+| [deployment-and-pre-launch.md](deployment/deployment-and-pre-launch.md) | Full deployment guide and pre-launch checklist       |
+| [path-to-production.md](deployment/path-to-production.md)               | Gate: run runbook + checklist before release         |
+| [production-readiness.md](deployment/production-readiness.md)           | **Go / no-go** — what blocks production, categorized |
+| [netlify-cli-setup.md](deployment/netlify-cli-setup.md)                 | Netlify CLI one-time connect and deploy              |
+| [scripts/live/README.md](../scripts/live/README.md)                     | One-command deployment: `pnpm run setup`             |
 
 ---
 
