@@ -34,6 +34,10 @@ const CONNECT_SRC_THIRD_PARTY = [
   'https://*.sentry.io',
   'https://us.i.posthog.com',
   'https://us-assets.i.posthog.com',
+  // Have I Been Pwned range API — k-anonymity password breach check on the
+  // register/reset forms (only a hash prefix is ever sent). See
+  // `lib/password-breach.ts`.
+  'https://api.pwnedpasswords.com',
 ] as const;
 
 /**

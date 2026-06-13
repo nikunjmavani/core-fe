@@ -19,6 +19,12 @@ vi.mock('@/shared/api/auth-api.ts', () => ({
   },
 }));
 
+// The strength meter debounces a real HIBP fetch — stub it so the form's unit
+// tests never touch the network (the meter has its own coverage).
+vi.mock('@/lib/password-breach.ts', () => ({
+  checkPasswordBreached: vi.fn().mockResolvedValue(null),
+}));
+
 function createTestRouter(initialEntry: string) {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const resetPasswordRoute = createRoute({

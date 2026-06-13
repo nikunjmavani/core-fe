@@ -8,6 +8,7 @@ import {
   type ResetPasswordInput,
   resetPasswordSchema,
 } from '@/shared/api/auth-contracts.ts';
+import { PasswordStrengthMeter } from '@/shared/components/PasswordStrengthMeter/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
@@ -19,20 +20,28 @@ export function ResetPasswordForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isBreached, setIsBreached] = useState(false);
   // Consumed once: the hook scrubs ?token= from the address bar/history.
   const token = useConsumedSearchToken();
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
     defaultValues: { token, password: '', confirmPassword: '' },
   });
 
+  const password = watch('password') ?? '';
+
   const onSubmit = async (data: ResetPasswordInput) => {
     setApiError(null);
+    if (isBreached) {
+      setApiError('That password appeared in a data breach. Please choose another.');
+      return;
+    }
     try {
       await authApi.resetPassword({ ...data, token: data.token || token });
       setSuccess(true);
@@ -121,6 +130,7 @@ export function ResetPasswordForm() {
                 {errors.password.message}
               </p>
             )}
+            <PasswordStrengthMeter password={password} onBreachedChange={setIsBreached} />
           </div>
 
           <div className="space-y-2">
@@ -145,7 +155,7 @@ export function ResetPasswordForm() {
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isBreached}
               data-testid="reset-password-submit"
             >
               {isSubmitting ? 'Updating...' : 'Update password'}

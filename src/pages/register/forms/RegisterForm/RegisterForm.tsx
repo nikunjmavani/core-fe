@@ -7,6 +7,7 @@ import { authApi } from '@/shared/api/auth-api.ts';
 import { type RegisterInput, registerSchema } from '@/shared/api/auth-contracts.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
+import { PasswordStrengthMeter } from '@/shared/components/PasswordStrengthMeter/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
@@ -17,19 +18,28 @@ import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [isBreached, setIsBreached] = useState(false);
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: { email: '', password: '' },
   });
 
+  const password = watch('password') ?? '';
+  const email = watch('email') ?? '';
+
   const onSubmit = async (data: RegisterInput) => {
     setApiError(null);
+    if (isBreached) {
+      setApiError('That password appeared in a data breach. Please choose another.');
+      return;
+    }
     try {
       const { accessToken } = await authApi.register(data);
       setAccessToken(accessToken);
@@ -114,13 +124,18 @@ export function RegisterForm() {
                 {errors.password.message}
               </p>
             )}
+            <PasswordStrengthMeter
+              password={password}
+              userInputs={email ? [email] : []}
+              onBreachedChange={setIsBreached}
+            />
           </div>
 
           <div>
             <Button
               type="submit"
               className="w-full"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isBreached}
               data-testid="register-submit"
             >
               {isSubmitting ? 'Creating account...' : 'Create account'}
