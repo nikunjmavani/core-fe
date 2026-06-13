@@ -13,7 +13,8 @@ describe('ConsentBanner', () => {
 
   it('shows while the decision is undecided', () => {
     render(<ConsentBanner />);
-    expect(screen.getByTestId('consent-banner')).toHaveAttribute('role', 'region');
+    // <section aria-label> exposes an implicit region role with that name.
+    expect(screen.getByRole('region', { name: 'Cookie consent' })).toBeInTheDocument();
   });
 
   it('Accept grants consent and hides the banner', async () => {

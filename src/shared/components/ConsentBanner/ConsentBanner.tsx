@@ -18,8 +18,7 @@ export function ConsentBanner() {
   if (decision !== null) return null;
 
   return (
-    <div
-      role="region"
+    <section
       aria-label="Cookie consent"
       data-testid="consent-banner"
       className="bg-card text-card-foreground fixed inset-x-0 bottom-0 z-50 border-t shadow-lg"
@@ -60,6 +59,6 @@ export function ConsentBanner() {
           </Button>
         </div>
       </div>
-    </div>
+    </section>
   );
 }
