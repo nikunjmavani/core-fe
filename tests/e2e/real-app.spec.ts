@@ -35,4 +35,22 @@ test.describe('Real-stack UI (FE → live core-be)', () => {
     // Proves the UI actually hit the live backend — mock mode makes no such call.
     expect(loginStatus).toBe(401);
   });
+
+  test('[+] signup through the UI lands on a real org dashboard', async ({ page }) => {
+    const stamp = Date.now();
+    // Unique + 3 char classes (backend policy) + NOT a breached pattern (the FE
+    // HIBP meter disables submit on a breached password — e.g. anything "Passw0rd").
+    const email = `fe-e2e-${stamp}@acme.test`;
+    await page.goto('/register');
+    await page.getByTestId('register-email').fill(email);
+    await page.getByTestId('register-password').fill(`Zq7!${stamp}xK`);
+    await page.getByTestId('register-submit').click();
+
+    // Fresh signup auto-creates exactly one (personal) org → the resolver skips
+    // the picker and lands on that org's dashboard. The id is a real org_<21>.
+    await expect(page).toHaveURL(/\/organization\/org_[a-z0-9]+\/dashboard/, {
+      timeout: 20_000,
+    });
+    await expect(page.getByTestId('dashboard-page')).toBeVisible();
+  });
 });

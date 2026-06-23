@@ -25,7 +25,12 @@ describe('listMyOrganizations', () => {
 
     const result = await listMyOrganizations();
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual({ id: 'org-1', name: 'Acme', slug: 'acme' });
+    expect(result[0]).toEqual({
+      id: 'org-1',
+      name: 'Acme',
+      slug: 'acme',
+      status: 'active',
+    });
   });
 
   it('returns empty array when API returns non-array', async () => {
@@ -58,7 +63,7 @@ describe('createOrganization', () => {
         slug: 'gamma',
       },
     );
-    expect(result).toEqual(created);
+    expect(result).toEqual({ ...created, status: 'active' });
   });
 
   it('derives a slug from the name when none is provided', async () => {

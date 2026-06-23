@@ -40,7 +40,17 @@ export async function listMyOrganizations(): Promise<Organization[]> {
   const res = await apiClient.get<unknown>(`${BASE}/tenancy/organizations`);
   const data = res.data;
   if (!Array.isArray(data)) return [];
-  return data.map((o) => organizationSchema.parse(o));
+  // core-be returns UPPERCASE status + a nullable slug (null for personal orgs)
+  // + type/capabilities. Map to the FE Organization shape.
+  return data.map((raw) => {
+    const o = raw as { id: string; name: string; slug: string | null; status?: string };
+    return organizationSchema.parse({
+      id: o.id,
+      name: o.name,
+      slug: o.slug ?? '',
+      status: (o.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'active' : 'suspended',
+    });
+  });
 }
 
 /** Derive a URL-safe slug from an organization name (lowercase, hyphenated). */

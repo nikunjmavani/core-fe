@@ -23,5 +23,10 @@ export async function resolveRootRedirect(): Promise<RootRedirect> {
   const lastIsValid = last && organizations.some((o) => o.id === last.id);
   if (lastIsValid) return organizationDashboard(last.id);
 
+  // A single organization needs no picker — land straight on its dashboard.
+  if (organizations.length === 1 && organizations[0]) {
+    return organizationDashboard(organizations[0].id);
+  }
+
   return organizationPicker();
 }

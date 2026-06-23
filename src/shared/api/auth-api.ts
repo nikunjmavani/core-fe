@@ -195,7 +195,23 @@ export const authApi = {
       headers: { Authorization: `Bearer ${token}` },
     });
     const json = (await response.json()) as unknown;
-    return authUserSchema.parse(json);
+    if (!response.ok)
+      throwOnNotOk(response, json, `Failed to load profile (${response.status})`);
+    const u = unwrapEnvelope(json) as Record<string, unknown>;
+    // Tolerate the real core-be UserOutput (snake_case, nullable fields) and a
+    // bare AuthUser (camelCase, used by unit tests). authUserSchema's optional
+    // fields are string|undefined, so coerce the backend's nulls to undefined.
+    const joined = [u.first_name, u.last_name].filter(Boolean).join(' ');
+    return authUserSchema.parse({
+      id: u.id,
+      email: u.email,
+      role: (u.role as string | undefined) ?? 'user',
+      name: (u.name as string | undefined) ?? (joined.length > 0 ? joined : undefined),
+      avatarUrl: (u.avatarUrl ?? u.avatar_url ?? undefined) as string | undefined,
+      organizationId: (u.organizationId ?? u.personal_organization_id ?? undefined) as
+        | string
+        | undefined,
+    });
   },
 
   /**
