@@ -1,0 +1,52 @@
+/**
+ * Security tripwire: app code must contain no raw HTML/JS injection sinks.
+ *
+ * React escapes interpolated content by default, and the app ships a CSP — but
+ * a single `dangerouslySetInnerHTML`, `el.innerHTML = …`, `insertAdjacentHTML`,
+ * `document.write`, or `eval(` reopens an XSS hole that escaping/CSP may not
+ * fully cover. This scans every committed app source file (via Vite's raw glob)
+ * and fails loudly if a sink appears. Vendored `components/ui/` and test files
+ * are out of scope; comments are stripped so docs that *mention* a sink don't
+ * trip it.
+ */
+import { describe, expect, it } from 'vitest';
+
+const sources = import.meta.glob('../../src/**/*.{ts,tsx}', {
+  query: '?raw',
+  import: 'default',
+  eager: true,
+}) as Record<string, string>;
+
+const SINKS: ReadonlyArray<readonly [string, RegExp]> = [
+  ['dangerouslySetInnerHTML', /dangerouslySetInnerHTML/],
+  ['innerHTML assignment', /\.innerHTML\s*=/],
+  ['outerHTML assignment', /\.outerHTML\s*=/],
+  ['insertAdjacentHTML', /insertAdjacentHTML/],
+  ['document.write', /document\s*\.\s*write/],
+  ['eval', /\beval\s*\(/],
+  ['new Function', /\bnew\s+Function\s*\(/],
+];
+
+function stripComments(code: string): string {
+  return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+}
+
+describe('XSS sink tripwire', () => {
+  it('app source contains no raw HTML/JS injection sinks', () => {
+    const offenders: string[] = [];
+    for (const [path, code] of Object.entries(sources)) {
+      if (path.includes('.test.') || path.includes('/components/ui/')) continue;
+      const stripped = stripComments(code);
+      for (const [label, pattern] of SINKS) {
+        if (pattern.test(stripped)) offenders.push(`${path} → ${label}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('actually scanned a meaningful number of source files', () => {
+    // Guards against a glob that silently matches nothing (which would make the
+    // tripwire vacuously pass).
+    expect(Object.keys(sources).length).toBeGreaterThan(50);
+  });
+});
