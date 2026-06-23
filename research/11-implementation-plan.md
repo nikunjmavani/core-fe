@@ -5,48 +5,49 @@ Status: **awaiting item-wise green-light** · Backend contract: core-be
 session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 (URL-as-source-of-truth) and the [[pages-url-mirror-design]] memory.
 
-> **Part I** is the design — **27 numbered decisions** (`D-01`…`D-27`, indexed
+> **Part I** is the design — **28 numbered decisions** (`D-01`…`D-28`, indexed
 > below, each traced to the items that build it). **Part II** is the commit-sized
-> plan — **53 build items** (`FE-01`…`FE-53`), each with a stable ID.
+> plan — **57 build items** (`FE-01`…`FE-57`), each with a stable ID.
 
 ---
 
 ## Part I — Design
 
-### Design decisions index (D-01…D-27)
+### Design decisions index (D-01…D-28)
 
 Every normative decision below carries a stable `D-` ID, the section that
-specifies it, and the Part II item(s) that build it. **27 decisions → 53 items.**
+specifies it, and the Part II item(s) that build it. **28 decisions → 57 items.**
 
-| ID       | Decision                                                                                                                                                                                      | Spec     | Built by                   |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
-| **D-01** | Active org = JWT `org` claim; `me/context` is authoritative; URL only reflects it                                                                                                             | §0, §2   | FE-05, FE-07, FE-08, FE-11 |
-| **D-02** | Dual-URL by type: PERSONAL → root, TEAM → `/organization/$slug`                                                                                                                               | §0, §3.1 | FE-19, FE-21, FE-22        |
-| **D-03** | One PERSONAL + N TEAM orgs; left switcher                                                                                                                                                     | §1, §4   | FE-24                      |
-| **D-04** | Gate team-only UI on `capabilities.*` — never probe (422)                                                                                                                                     | §1       | FE-15, FE-34…FE-37         |
-| **D-05** | Switch re-mints token + applies the inline delta (no extra `me/context`)                                                                                                                      | §2       | FE-06                      |
-| **D-06** | `user` + `organizations[]` stable across a switch (flip `is_active` locally)                                                                                                                  | §2       | FE-06, FE-07               |
-| **D-07** | 401 → refresh; refresh-401 → login; refresh preserves the switched org                                                                                                                        | §2       | FE-10                      |
-| **D-08** | Three shared layouts: Auth / Public / Protected                                                                                                                                               | §3.2     | FE-16, FE-17, FE-18        |
-| **D-09** | Slug in team URL; immutable id resolved locally; `by-slug` fallback                                                                                                                           | §3.1     | FE-22                      |
-| **D-10** | `/` resolver → onboarding \| personal `/dashboard` \| team-slug                                                                                                                               | §3.3     | FE-19                      |
-| **D-11** | Dual-mount: one shared `DashboardPage`, route markers at both URLs                                                                                                                            | §3.4     | FE-20, FE-21, FE-22        |
-| **D-12** | Security gateway: sequential gates, first failure short-circuits                                                                                                                              | §3.7     | FE-09                      |
-| **D-13** | Six layered access gates **L1–L6**                                                                                                                                                            | §3.7     | FE-10…FE-15                |
-| **D-14** | Defense-in-depth; the server is the boundary, FE gates are UX                                                                                                                                 | §3.7     | FE-10…FE-15                |
-| **D-15** | `core/security/` access layer (folder structure)                                                                                                                                              | §3.7     | FE-09…FE-15                |
-| **D-16** | Switcher: personal/team navigation + create-team                                                                                                                                              | §4       | FE-24                      |
-| **D-17** | Branch on the body (not the 201); every flow ends at `me/context`                                                                                                                             | §5       | FE-05                      |
-| **D-18** | Magic-link is code-entry (`{email, code}`), not a link                                                                                                                                        | §5       | FE-01                      |
-| **D-19** | OAuth start returns `{url}`; return via `/callback` → refresh                                                                                                                                 | §5       | FE-02, FE-03               |
-| **D-20** | `mfa/login` uses `totp_code` / `recovery_code`                                                                                                                                                | §5       | FE-04                      |
-| **D-21** | One env var; every API has mock + live, identical domain shape                                                                                                                                | §6       | FE-25…FE-33                |
-| **D-22** | Mock data mirrors the mapped wire (offline parity)                                                                                                                                            | §6       | FE-25…FE-33                |
-| **D-23** | Reconciliations: role object, no list-invitations, embedded `user`                                                                                                                            | §6       | FE-25                      |
-| **D-24** | Doc / convention / memory ripple                                                                                                                                                              | §7       | FE-42                      |
-| **D-25** | Cross-cutting UX layer: one `notify` module + error→message map + shared mutation wrapper + confirm/empty/error primitives                                                                    | §8       | FE-43…FE-48                |
-| **D-26** | Route authorization: default-deny; policy declared in `manifest` (permission + capability + module + onDeny); deny matrix (login / 403 / 404-hide / suspended); UI gating matches the gateway | §3.8     | FE-49…FE-52                |
-| **D-27** | Adaptive surface: one switch renders content as a centered modal **or** a right drawer (full-screen sheet ≤ sm)                                                                               | §8       | FE-53                      |
+| ID       | Decision                                                                                                                                                                                                                                                                 | Spec     | Built by                   |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------- |
+| **D-01** | Active org = JWT `org` claim; `me/context` is authoritative; URL only reflects it                                                                                                                                                                                        | §0, §2   | FE-05, FE-07, FE-08, FE-11 |
+| **D-02** | Dual-URL by type: PERSONAL → root, TEAM → `/organization/$slug`                                                                                                                                                                                                          | §0, §3.1 | FE-19, FE-21, FE-22        |
+| **D-03** | One PERSONAL + N TEAM orgs; left switcher                                                                                                                                                                                                                                | §1, §4   | FE-24                      |
+| **D-04** | Gate team-only UI on `capabilities.*` — never probe (422)                                                                                                                                                                                                                | §1       | FE-15, FE-34…FE-37         |
+| **D-05** | Switch re-mints token + applies the inline delta (no extra `me/context`)                                                                                                                                                                                                 | §2       | FE-06                      |
+| **D-06** | `user` + `organizations[]` stable across a switch (flip `is_active` locally)                                                                                                                                                                                             | §2       | FE-06, FE-07               |
+| **D-07** | 401 → refresh; refresh-401 → login; refresh preserves the switched org                                                                                                                                                                                                   | §2       | FE-10                      |
+| **D-08** | Three shared layouts: Auth / Public / Protected                                                                                                                                                                                                                          | §3.2     | FE-16, FE-17, FE-18        |
+| **D-09** | Slug in team URL; immutable id resolved locally; `by-slug` fallback                                                                                                                                                                                                      | §3.1     | FE-22                      |
+| **D-10** | `/` resolver → onboarding \| personal `/dashboard` \| team-slug                                                                                                                                                                                                          | §3.3     | FE-19                      |
+| **D-11** | Dual-mount: one shared `DashboardPage`, route markers at both URLs                                                                                                                                                                                                       | §3.4     | FE-20, FE-21, FE-22        |
+| **D-12** | Security gateway: sequential gates, first failure short-circuits                                                                                                                                                                                                         | §3.7     | FE-09                      |
+| **D-13** | Six layered access gates **L1–L6**                                                                                                                                                                                                                                       | §3.7     | FE-10…FE-15                |
+| **D-14** | Defense-in-depth; the server is the boundary, FE gates are UX                                                                                                                                                                                                            | §3.7     | FE-10…FE-15                |
+| **D-15** | `core/security/` access layer (folder structure)                                                                                                                                                                                                                         | §3.7     | FE-09…FE-15                |
+| **D-16** | Switcher: personal/team navigation + create-team                                                                                                                                                                                                                         | §4       | FE-24                      |
+| **D-17** | Branch on the body (not the 201); every flow ends at `me/context`                                                                                                                                                                                                        | §5       | FE-05                      |
+| **D-18** | Magic-link is code-entry (`{email, code}`), not a link                                                                                                                                                                                                                   | §5       | FE-01                      |
+| **D-19** | OAuth start returns `{url}`; return via `/callback` → refresh                                                                                                                                                                                                            | §5       | FE-02, FE-03               |
+| **D-20** | `mfa/login` uses `totp_code` / `recovery_code`                                                                                                                                                                                                                           | §5       | FE-04                      |
+| **D-21** | One env var; every API has mock + live, identical domain shape                                                                                                                                                                                                           | §6       | FE-25…FE-33                |
+| **D-22** | Mock data mirrors the mapped wire (offline parity)                                                                                                                                                                                                                       | §6       | FE-25…FE-33                |
+| **D-23** | Reconciliations: role object, no list-invitations, embedded `user`                                                                                                                                                                                                       | §6       | FE-25                      |
+| **D-24** | Doc / convention / memory ripple                                                                                                                                                                                                                                         | §7       | FE-42                      |
+| **D-25** | Cross-cutting UX layer: one `notify` module + error→message map + shared mutation wrapper + confirm/empty/error primitives                                                                                                                                               | §8       | FE-43…FE-48                |
+| **D-26** | Route authorization: default-deny; policy declared in `manifest` (permission + capability + module + onDeny); deny matrix (login / 403 / 404-hide / suspended); UI gating matches the gateway                                                                            | §3.8     | FE-49…FE-52                |
+| **D-27** | Adaptive surface: one switch renders content as a centered modal **or** a right drawer (full-screen sheet ≤ sm)                                                                                                                                                          | §8       | FE-53                      |
+| **D-28** | Global theming: shadcn-create-compatible OKLCH token contract; named presets via `data-theme` (× light/dark); runtime `mode + preset` switcher in Settings → Appearance; optional org brand → `--color-brand`. Semantic-token-only means one swap restyles every element | §9       | FE-54…FE-57                |
 
 ## 0. Why
 
@@ -384,14 +385,40 @@ Centralize it — this is to UX what §3.7 is to access:
   use and auto-collapsing to a full-screen sheet ≤ sm — so Settings / command /
   create-edit dialogs pick modal-vs-drawer without duplicating markup.
 
+## 9. Global theming (shadcn-create compatible)
+
+Every component already consumes **semantic OKLCH tokens** from `@theme` in
+`src/index.css` (primary / secondary / destructive / muted / accent / background /
+foreground / card / popover / border / input / ring / `sidebar-*` / `chart-1…5` /
+`radius-*` / fonts), and `validate:tokens` forbids raw palette classes in app
+code. So **theming is already global** — change the token values and every
+element follows. This section makes that a product capability:
+
+- **shadcn-create compatible.** A theme exported from `ui.shadcn.com/create` is a
+  set of CSS variables; adopting one is a **name-mapped value swap** (their
+  `--primary` → our `--color-primary`, `--radius`, fonts) — a small adapter + doc
+  makes "paste a generated theme" one step.
+- **Named presets.** Each preset (base + accent + radius + font) is a block of
+  token overrides applied via `data-theme="<id>"` on `<html>`, composed with the
+  existing `.dark` class — so `mode × preset` are independent.
+- **Runtime switch.** `useThemeStore` grows from `{ mode }` to
+  `{ mode, preset, radius? }` (persisted); a **Settings → Appearance** panel picks
+  mode + preset (+ optional accent/radius). Switching restyles the whole app
+  instantly, no rebuild.
+- **Org brand (optional).** A team's `brand_color` can feed `--color-brand` (+ a
+  derived ramp) so a workspace brands the app, gated like any module (§3.8).
+
+The contract stays CSS-only — "a future theme is just a file of token values"
+(CLAUDE.md), now switchable at runtime and per preset.
+
 ---
 
 ## Part II — Implementation plan (item-wise)
 
-**53 build items** (`FE-01`…`FE-53`) across 10 phases — plus Phase 0 (already
+**57 build items** (`FE-01`…`FE-57`) across 11 phases — plus Phase 0 (already
 shipped). Each is commit-sized with a stable ID; review by ID — I build only
 green-lit items, in dependency order, each its own tested commit. Legend: ⬜ to
-build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 4 · P4 5 · P5 1 · PF 7 · P6 9 · P7 5 · P8 4.
+build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 4 · P4 5 · P5 1 · PF 7 · PT 4 · P6 9 · P7 5 · P8 4.
 
 ### Phase 0 — Already shipped
 
@@ -458,6 +485,15 @@ _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by depend
 - ⬜ **FE-48** State primitives — `Skeleton` / `EmptyState` + per-route `ErrorBoundary` for dashboard + panels. _Files:_ shared/components/{EmptyState,ErrorBoundary}.
 - ⬜ **FE-53** `<Surface>` adaptive modal⇄right-drawer container (`Dialog` ⇄ `Sheet side="right"`; full-screen sheet ≤ sm); adopt in SettingsModal + create/edit dialogs. _Files:_ shared/components/Surface (+ SettingsModal). Builds D-27.
 
+### Phase T — Global theming (4) — land before Phases 7–8
+
+_Appended IDs (`FE-54`…`FE-57`); builds D-28. FE-54 can land anytime; FE-56 ships with Settings._
+
+- ⬜ **FE-54** Token-contract alignment + shadcn-create adapter — verify `@theme` covers the full shadcn variable set; documented name-map + a one-step "adopt a `ui.shadcn.com/create` export" path (their `--*` → our `--color-*`, radius, fonts). _Files:_ index.css, docs/reference/theming, scripts.
+- ⬜ **FE-55** Named theme presets — N presets (base/accent + radius + font) as token-override blocks applied via `data-theme` on `<html>`, composed with `.dark`. _Files:_ index.css (preset blocks), shared theme registry.
+- ⬜ **FE-56** Runtime theme switcher — extend `useThemeStore` → `{ mode, preset, radius? }` (persisted); apply `data-theme` + `.dark`; **Settings → Appearance** panel (mode + preset [+ accent/radius]). _Files:_ useThemeStore, SettingsModal Appearance panel.
+- ⬜ **FE-57** Org brand theming (optional) — org `brand_color` → `--color-brand` (+ derived ramp); capability/module-gated. _Files:_ shared/tenancy, index.css brand tokens.
+
 ### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
 
 - ⬜ **FE-25** Memberships (role `{id,name}`; invite = add-by-email; embed `user`).
@@ -492,6 +528,8 @@ Critical path **FE-01 → FE-23** (auth → me/context → gateway+layouts → r
 Phase 7 (panels rely on `can()` / `<Gate>` / module gating). **Phase F
 (FE-43…FE-48, FE-53)** is cross-cutting — land it before Phases 6–7 so panels
 share one notify / mutation / error / surface layer (FE-43/44 can land even earlier).
+**Phase T (FE-54…FE-57)** theming is independent — FE-54 (token contract) can
+land anytime; FE-56 (switcher) ships with Settings (Phase 7).
 **Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
 **Phase 7** depends on Phase 6 + Phase F + Phase 3A. **Phase 8** is last.
 Cross-deps: FE-22 needs FE-12; FE-24 needs FE-06; FE-20 needs OD-1; FE-34…FE-37
