@@ -582,7 +582,7 @@ _Builds D-31; depends on Phase F (`<Surface>` / notify) + FE-30 (prefs API)._
 - ✅ **FE-62** Notification center UI — header **bell** + unread badge opening a right-side `<Surface>` drawer (list, click-to-read, mark-all; loading/empty/error). Mounted in the AppShell header. _Files:_ shared/components/NotificationCenter, AppShell, icons (Bell/BellOff).
 - ✅ **FE-63** Delivery hooks — `useNotifications`/`useUnreadCount` (30s `refetchInterval` poll) + `useMarkNotificationRead`/`useMarkAllNotificationsRead` (invalidate inbox + badge, notify on error). SSE/WebSocket push is a noted upgrade that would invalidate the same keys. _Files:_ shared/hooks/useNotifications.
 - ✅ **FE-64** Desktop notifications — `shared/notifications/desktop.ts`: `isDesktopSupported`/`getDesktopPermission`/`requestDesktopPermission` (user-initiated, no re-prompt) + `showDesktopNotification` (raises only when granted AND tab backgrounded; no-op if denied/unsupported/visible). Wired to the prefs toggle (FE-65). _Files:_ shared/notifications/desktop.ts.
-- ⬜ **FE-65** Notifications preferences tab — Settings → Account → Notifications: category × channel (email / in-app / desktop) toggles on the prefs API (FE-30); desktop toggle triggers FE-64 permission. _Files:_ SettingsModal AccountNotificationsPanel.
+- ✅ **FE-65** Notifications preferences tab — Settings → Account → Notifications: a category × channel (email / in-app / desktop) Switch grid backed by the prefs API (FE-30, full-replace on toggle, derived-state not effect); the desktop toggle calls `requestDesktopPermission` (FE-64) and stays off with a hint when denied. _Files:_ AccountNotificationsPanel, useNotifications (prefs hooks).
 
 ### Phase 8 — Responsive + polish + capstone (4)
 

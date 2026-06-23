@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import type { NotificationPreference } from '@/shared/api/notification-contracts.ts';
 import { notificationQueryKeys } from '@/shared/api/notification-query-keys.ts';
 import * as api from '@/shared/api/notifications-api.ts';
 import { notify } from '@/shared/notify/index.ts';
@@ -49,5 +50,27 @@ export function useMarkAllNotificationsRead() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all }),
     onError: () => notify.error('Could not update notifications'),
+  });
+}
+
+/** Category × channel delivery preferences (FE-30). */
+export function useNotificationPreferences() {
+  return useQuery({
+    queryKey: notificationQueryKeys.preferences(),
+    queryFn: api.getNotificationPreferences,
+  });
+}
+
+/** Full-replace the preference set, seeding the cache with the saved result. */
+export function useUpdateNotificationPreferences() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (prefs: NotificationPreference[]) =>
+      api.updateNotificationPreferences(prefs),
+    onSuccess: (saved) => {
+      queryClient.setQueryData(notificationQueryKeys.preferences(), saved);
+      notify.success('Notification preferences saved');
+    },
+    onError: () => notify.error('Could not save preferences'),
   });
 }

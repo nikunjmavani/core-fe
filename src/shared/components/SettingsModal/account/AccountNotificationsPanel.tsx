@@ -1,5 +1,10 @@
 import { useState } from 'react';
 
+import type {
+  NotificationCategory,
+  NotificationChannel,
+  NotificationPreference,
+} from '@/shared/api/notification-contracts.ts';
 import {
   Card,
   CardContent,
@@ -7,80 +12,175 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
-import { Label } from '@/shared/components/ui/label.tsx';
+import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
 import { Switch } from '@/shared/components/ui/switch.tsx';
+import {
+  useNotificationPreferences,
+  useUpdateNotificationPreferences,
+} from '@/shared/hooks/useNotifications/index.ts';
+import { requestDesktopPermission } from '@/shared/notifications/desktop.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
-const CHANNELS = [
+const CATEGORIES: { id: NotificationCategory; label: string; description: string }[] = [
   {
-    id: 'product-updates',
-    label: 'Product updates',
-    description: 'New features and improvements.',
+    id: 'system',
+    label: 'Product & system',
+    description: 'Updates, announcements, and tips.',
   },
   {
-    id: 'security-alerts',
-    label: 'Security alerts',
-    description: 'Unusual sign-ins, password changes, and other safety events.',
-  },
-  {
-    id: 'team-activity',
+    id: 'member',
     label: 'Team activity',
     description: 'Member joins, role changes, and invitations.',
   },
   {
-    id: 'billing-receipts',
-    label: 'Billing & receipts',
-    description: 'Invoices, plan changes, and renewal reminders.',
+    id: 'billing',
+    label: 'Billing',
+    description: 'Invoices, plan changes, and renewals.',
   },
-] as const;
+  {
+    id: 'security',
+    label: 'Security',
+    description: 'Sign-ins, password changes, and safety events.',
+  },
+];
+
+const CHANNELS: { id: NotificationChannel; label: string }[] = [
+  { id: 'email', label: 'Email' },
+  { id: 'inApp', label: 'In-app' },
+  { id: 'desktop', label: 'Desktop' },
+];
+
+function prefKey(category: NotificationCategory, channel: NotificationChannel): string {
+  return `${category}:${channel}`;
+}
+
+/** Merge the server matrix with local edits into a full set for full-replace. */
+function buildMatrix(
+  base: NotificationPreference[],
+  overrides: Record<string, boolean>,
+): NotificationPreference[] {
+  const map = new Map<string, NotificationPreference>();
+  for (const p of base) map.set(prefKey(p.category, p.channel), { ...p });
+  for (const [key, enabled] of Object.entries(overrides)) {
+    const [category, channel] = key.split(':') as [
+      NotificationCategory,
+      NotificationChannel,
+    ];
+    map.set(key, { category, channel, enabled });
+  }
+  return [...map.values()];
+}
 
 /**
- * Notifications section — per-channel email preferences.
- *
- * REPLACE_WITH_API: GET / PATCH /api/v1/users/me/notifications
+ * Notifications preferences — a category × channel (email / in-app / desktop)
+ * grid backed by the preferences API (FE-30, full-replace on each change).
+ * Local edits are kept as overrides over the server matrix (derived during
+ * render — no prop→state effect). Enabling **desktop** first asks for the OS
+ * permission (FE-64); if it isn't granted the toggle stays off and a hint shows.
  */
 export function AccountNotificationsPanel() {
-  const [prefs, setPrefs] = useState<Record<string, boolean>>({
-    'product-updates': true,
-    'security-alerts': true,
-    'team-activity': true,
-    'billing-receipts': true,
-  });
+  const { data: serverPrefs = [], isLoading, isError } = useNotificationPreferences();
+  const update = useUpdateNotificationPreferences();
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
+  const [desktopDenied, setDesktopDenied] = useState(false);
+
+  function isEnabled(
+    category: NotificationCategory,
+    channel: NotificationChannel,
+  ): boolean {
+    const override = overrides[prefKey(category, channel)];
+    if (override !== undefined) return override;
+    return serverPrefs.some(
+      (p) => p.category === category && p.channel === channel && p.enabled,
+    );
+  }
+
+  async function applyToggle(
+    category: NotificationCategory,
+    channel: NotificationChannel,
+    value: boolean,
+  ): Promise<void> {
+    if (channel === 'desktop' && value) {
+      const permission = await requestDesktopPermission();
+      if (permission !== 'granted') {
+        setDesktopDenied(true);
+        return;
+      }
+      setDesktopDenied(false);
+    }
+    const nextOverrides = { ...overrides, [prefKey(category, channel)]: value };
+    setOverrides(nextOverrides);
+    update.mutate(buildMatrix(serverPrefs, nextOverrides));
+  }
+
+  function handleToggle(
+    category: NotificationCategory,
+    channel: NotificationChannel,
+    value: boolean,
+  ): void {
+    applyToggle(category, channel, value).catch(() => undefined);
+  }
 
   return (
     <div className="space-y-6" data-testid="settings-section-notifications">
       <SectionHeader
         title="Notifications"
-        description="Choose which emails you receive from us."
+        description="Choose what you're notified about, and how."
       />
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Email channels</CardTitle>
-          <CardDescription>Sent to your account email.</CardDescription>
+          <CardTitle className="text-base">Delivery</CardTitle>
+          <CardDescription>Pick a channel for each kind of update.</CardDescription>
         </CardHeader>
-        <CardContent className="divide-y">
-          {CHANNELS.map((channel) => (
-            <div
-              key={channel.id}
-              className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
-            >
-              <div className="space-y-0.5">
-                <Label htmlFor={`notify-${channel.id}`} className="text-sm font-medium">
-                  {channel.label}
-                </Label>
-                <p className="text-muted-foreground text-xs">{channel.description}</p>
-              </div>
-              <Switch
-                id={`notify-${channel.id}`}
-                checked={prefs[channel.id] ?? false}
-                onCheckedChange={(v) =>
-                  setPrefs((prev) => ({ ...prev, [channel.id]: v }))
-                }
-                data-testid={`notify-${channel.id}`}
-              />
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2" data-testid="notifications-prefs-loading">
+              {['a', 'b', 'c', 'd'].map((key) => (
+                <Skeleton key={key} className="h-12 w-full rounded-lg" />
+              ))}
             </div>
-          ))}
+          ) : null}
+
+          {isError ? (
+            <p className="text-destructive text-sm" role="alert">
+              Couldn&apos;t load your preferences. Please try again.
+            </p>
+          ) : null}
+
+          {!isLoading && !isError ? (
+            <>
+              <div className="divide-y">
+                {CATEGORIES.map((cat) => (
+                  <div key={cat.id} className="py-4 first:pt-0 last:pb-0">
+                    <p className="text-sm font-medium">{cat.label}</p>
+                    <p className="text-muted-foreground text-xs">{cat.description}</p>
+                    <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2">
+                      {CHANNELS.map((ch) => (
+                        <div key={ch.id} className="flex items-center gap-2 text-sm">
+                          <Switch
+                            checked={isEnabled(cat.id, ch.id)}
+                            onCheckedChange={(value) =>
+                              handleToggle(cat.id, ch.id, value)
+                            }
+                            aria-label={`${cat.label} — ${ch.label}`}
+                            data-testid={`notify-${cat.id}-${ch.id}`}
+                          />
+                          <span className="text-muted-foreground">{ch.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {desktopDenied ? (
+                <p className="text-muted-foreground mt-4 text-xs" role="status">
+                  Desktop notifications need browser permission. Enable them in your
+                  browser settings, then turn this on again.
+                </p>
+              ) : null}
+            </>
+          ) : null}
         </CardContent>
       </Card>
     </div>
