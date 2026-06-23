@@ -546,7 +546,7 @@ _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by depend
 
 _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30, D-32. FE-54 can land anytime; FE-56 ships with Settings._
 
-- ⬜ **FE-54** Token-contract alignment + shadcn-create adapter — verify `@theme` covers the full shadcn variable set; documented name-map + a one-step "adopt a `ui.shadcn.com/create` export" path (their `--*` → our `--color-*`, radius, fonts). _Files:_ index.css, docs/reference/theming, scripts.
+- ✅ **FE-54** Token-contract alignment + shadcn-create adapter — added the missing `sidebar-primary(-foreground)` tokens for full shadcn parity; wrote `docs/reference/theming.md` (name-map + one-step "adopt a create export" guide). _Files:_ index.css, docs/reference/theming.md.
 - ⬜ **FE-55** Named theme presets — N presets (base/accent + radius + font) as token-override blocks applied via `data-theme` on `<html>`, composed with `.dark`. _Files:_ index.css (preset blocks), shared theme registry.
 - ⬜ **FE-56** Runtime theme switcher — extend `useThemeStore` → `{ mode, preset, radius? }` (persisted); apply `data-theme` + `.dark`; **Settings → Appearance** panel (mode + preset [+ accent/radius]). _Files:_ useThemeStore, SettingsModal Appearance panel.
 - ⬜ **FE-57** Org brand theming (optional) — org `brand_color` → `--color-brand` (+ derived ramp); capability/module-gated. _Files:_ shared/tenancy, index.css brand tokens.
