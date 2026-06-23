@@ -497,12 +497,12 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1
 ### Phase 3 — Security gateway & shared layouts (10)
 
 - ✅ **FE-09** Gateway composer + `gate.types` — `gateway(...gates)` runs gates sequentially, first throw short-circuits; `Gate`/`GateContext` types. _Files:_ core/security/gateway.ts, gate.types.ts, index.ts.
-- ⬜ **FE-10** Gate **L1** `requireSession` (token/refresh). _Files:_ core/security/gates/require-session.ts (+test).
-- ⬜ **FE-11** Gate **L2** `hydrateContext` (load `me/context`).
-- ⬜ **FE-12** Gate **L3** `resolveActiveOrg` (personal/team slug→id, membership, switch-on-nav).
-- ⬜ **FE-13** Gate **L4** `requireOrgStatus` (suspended/archived).
-- ⬜ **FE-14** Gate **L5** `requirePermission` (RBAC).
-- ⬜ **FE-15** Gate **L6** `requireCapability` (org-type).
+- ✅ **FE-10** Gate **L1** `requireSession` — delegates to `requireAuth`, carries `returnTo`. _Files:_ core/security/gates/require-session.ts.
+- ⬜ **FE-11** Gate **L2** `hydrateContext` (load `me/context`) — wires with Phase 4 (layout `beforeLoad`).
+- ⬜ **FE-12** Gate **L3** `resolveActiveOrg` (personal/team slug→id, membership, switch-on-nav) — Phase 4 (routing-coupled).
+- ⬜ **FE-13** Gate **L4** `requireOrgStatus` (suspended/archived) — Phase 4 (wraps `requireActiveOrganization`).
+- ✅ **FE-14** Gate **L5** `requirePermissionGate(permission)` — binds the manifest permission → `requirePermission`. _Files:_ require-permission.ts.
+- ✅ **FE-15** Gate **L6** `requireCapabilityGate(capability)` — exhaustive capability read (personal=all false → blocked). _Files:_ require-capability.ts.
 - ⬜ **FE-16** `ProtectedLayout` (from today's `AppShell`) wired to its gateway. _Files:_ shared/layouts/ProtectedLayout.
 - ⬜ **FE-17** `PublicLayout` (new, minimal centered chrome). _Files:_ shared/layouts/PublicLayout.
 - ⬜ **FE-18** `AuthLayout` — wire the `redirectIfAuthenticated` gateway.
