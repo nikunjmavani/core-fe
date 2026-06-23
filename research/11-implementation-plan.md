@@ -571,7 +571,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 - ✅ **FE-34** Members panel — list (avatar/name/email/role/status) with loading/empty/error states + **capability-gated remove** via ConfirmDialog (uses useMembers/useRemoveMember). _Files:_ OrganizationMembersPanel. (Invite-by-email + role-change-via-role_id are follow-ups needing the roles list.)
 - ✅ **FE-35** Roles panel — list (name/description/member-count, System badge) with states + cap-gated delete of custom roles via ConfirmDialog (uses useRoles/useDeleteRole). _Files:_ OrganizationRolesPanel. (Create/edit-role form is a follow-up.)
 - ✅ **FE-36** Billing panel — current-plan summary (status, seats used, amount) + plan options (free/pro/enterprise) with cap-gated switch (canManageBilling); loading/error states (uses useSubscription/useUpdateSubscriptionPlan). _Files:_ OrganizationBillingPanel. (Invoices + payment method are follow-ups.)
-- ⬜ **FE-37** Integrations panel (API keys + webhooks).
+- 🔶 **FE-37** Integrations panel — **API keys** half: list (name, masked prefix, added-date) with states + cap-gated revoke via ConfirmDialog (uses useApiKeys/useRevokeApiKey). _Files:_ OrganizationIntegrationsPanel. (Key creation with one-time-secret reveal + webhooks deferred behind confirmed contract — FE-29.)
 - ⬜ **FE-38** Account panels (Security MFA/passkeys, Sessions, General; Notifications = FE-65).
 
 ### Phase N — Notifications (5) — feature module on the core-be notification API
