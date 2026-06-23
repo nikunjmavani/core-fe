@@ -548,10 +548,10 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 
 - ✅ **FE-54** Token-contract alignment + shadcn-create adapter — added the missing `sidebar-primary(-foreground)` tokens for full shadcn parity; wrote `docs/reference/theming.md` (name-map + one-step "adopt a create export" guide). _Files:_ index.css, docs/reference/theming.md.
 - ✅ **FE-55** Named theme presets — `shared/theme` registry (default/violet/emerald) + `applyThemePreset` (`data-theme` on `<html>`, default clears it); accent override blocks in index.css composed with `.dark`. _Files:_ shared/theme/presets, index.css.
-- ⬜ **FE-56** Runtime theme switcher — **engine landed**: `useThemeStore` persists `{ theme(mode), preset }`, applies `data-theme` + `.dark`, `setPreset` (rehydrate applies both). The **Settings → Appearance** panel UI ships with Phase 7. _Files:_ useThemeStore (✅), SettingsModal Appearance (pending).
+- ✅ **FE-56** Runtime theme switcher — `useThemeStore` persists `{ theme(mode), preset }` + applies `data-theme`/`.dark`; **Settings → Appearance** panel has the mode + accent-preset pickers (theme-lock-gated). _Files:_ useThemeStore, AccountAppearancePanel.
 - ⬜ **FE-57** Org brand theming (optional) — org `brand_color` → `--color-brand` (+ derived ramp); capability/module-gated. _Files:_ shared/tenancy, index.css brand tokens.
 - ✅ **FE-60** Layout width mode — `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = `contained` | `full`, default `contained`) + `resolveLayoutWidth`; AppShell content container = centered 12-grid vs full-window; documented in `.env.example`. _Files:_ core/config/env.ts, AppShell, .env.example. (Runtime Appearance toggle lands with the switcher, FE-56.)
-- ⬜ **FE-66** Shuffle theme — **engine landed**: `shuffleTheme()` in `useThemeStore` picks a random preset ≠ current and persists it. The Appearance "Shuffle" button ships with Phase 7. _Files:_ useThemeStore (✅), SettingsModal Appearance (pending).
+- ✅ **FE-66** Shuffle theme — `shuffleTheme()` picks a random preset ≠ current; **Appearance "Shuffle theme" button** wired (hidden when theme-locked). _Files:_ useThemeStore, AccountAppearancePanel.
 - ✅ **FE-67** Theme-lock env — `config.themeLock` (`VITE_THEME_LOCK=true`) + `resolveThemeLock`; documented in `.env.example`. The switcher/shuffle read it to hide controls when locked (wired with FE-56). _Files:_ core/config/env.ts, .env.example.
 
 ### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
