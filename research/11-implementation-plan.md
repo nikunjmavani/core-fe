@@ -520,7 +520,7 @@ _Appended IDs (`FE-49`…`FE-52`, `FE-58`, `FE-59`); extends the gateway (Phase 
 
 ### Phase 4 — Dual-URL routing (5)
 
-- ⬜ **FE-19** Root resolver (`/` → personal | team-slug | onboarding). _Files:_ organization-resolver, routeTree.
+- ✅ **FE-19** Root resolver — `resolveRootTarget(ctx)` dual-URL decision (none→onboarding, PERSONAL→`/dashboard`, TEAM→`/organization/$slug/dashboard`; slugless team→onboarding). Pure + tested; wired into the `/` route in the Phase-4 route restructure. _Files:_ organization-resolver.
 - ⬜ **FE-20** Promote `DashboardPage` → shared (OD-1) — 1 tab · 1 page.
 - ⬜ **FE-21** Personal `_app` space (root `/dashboard`) under `ProtectedLayout`.
 - ⬜ **FE-22** Team `$organizationSlug` space + switch-on-nav (uses **FE-12**); rename `$organizationId`→`$organizationSlug` (OD-3).
