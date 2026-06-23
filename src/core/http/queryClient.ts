@@ -2,7 +2,7 @@ import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
 import { HTTP } from '@/core/config/constants.ts';
 import { isUnauthorized } from '@/core/http/fetch-client.ts';
-import { reportError } from '@/shared/errors/errorHandler.ts';
+import { notifyError, reportError } from '@/shared/errors/errorHandler.ts';
 
 /**
  * TanStack Query client.
@@ -34,6 +34,11 @@ export const queryClient = new QueryClient({
           console.error(`[Query Error] ${query.queryKey.toString()}:`, error.message);
         }
         reportError(error, { queryKey: query.queryKey.toString() });
+        // Opt-in: queries that set meta.notifyOnError surface a toast once
+        // (de-duped by query hash). Most queries stay silent (handled inline).
+        if (query.meta?.notifyOnError === true) {
+          notifyError(error, { id: `q:${query.queryHash}` });
+        }
       }
     },
   }),
@@ -45,6 +50,11 @@ export const queryClient = new QueryClient({
           console.error(`[Mutation Error] ${key}:`, error.message);
         }
         reportError(error, { mutationKey: key });
+        // Opt-in: mutations that set meta.notifyOnError surface a toast (hooks
+        // that already toast inline simply omit the flag — no double toast).
+        if (mutation.options.meta?.notifyOnError === true) {
+          notifyError(error);
+        }
       }
     },
   }),

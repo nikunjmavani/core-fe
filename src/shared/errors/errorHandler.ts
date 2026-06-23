@@ -1,5 +1,6 @@
 import { AppError } from '@/shared/errors/AppError.ts';
 import { isHttpError } from '@/shared/errors/HttpError.ts';
+import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
@@ -143,3 +144,13 @@ export function mapApiError(error: unknown): string {
 
 /** @deprecated Prefer {@link mapApiError}; kept as an alias for back-compat. */
 export const getErrorMessage = mapApiError;
+
+/**
+ * Toast a user-facing error through the single `notify` surface, with the
+ * message run through {@link mapApiError}. Used by the global query/mutation
+ * error handlers (opt-in via `meta.notifyOnError`) and any catch site that wants
+ * the standard wording without re-deriving it.
+ */
+export function notifyError(error: unknown, opts?: { id?: string | number }): void {
+  notify.error(mapApiError(error), opts);
+}

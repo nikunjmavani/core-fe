@@ -5,6 +5,7 @@ import {
   apiErrorReason,
   getErrorMessage,
   mapApiError,
+  notifyError,
   reportError,
 } from './errorHandler.ts';
 import { HttpError } from './HttpError.ts';
@@ -29,6 +30,18 @@ vi.mock('@/shared/store/useAuthStore/index.ts', () => ({
 vi.mock('@/shared/store/useOrganizationStore/index.ts', () => ({
   useOrganizationStore: {
     getState: () => ({ organizationId: null, organizationSlug: null }),
+  },
+}));
+
+const { notifyErrorMock } = vi.hoisted(() => ({ notifyErrorMock: vi.fn() }));
+vi.mock('@/shared/notify/index.ts', () => ({
+  notify: {
+    error: notifyErrorMock,
+    success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    promise: vi.fn(),
+    dismiss: vi.fn(),
   },
 }));
 
@@ -120,6 +133,17 @@ describe('mapApiError / apiErrorReason (core-be envelope)', () => {
 
   it('getErrorMessage remains an alias of mapApiError', () => {
     expect(getErrorMessage).toBe(mapApiError);
+  });
+});
+
+describe('notifyError', () => {
+  it('toasts the mapped message via the notify surface', () => {
+    notifyErrorMock.mockClear();
+    const err = new HttpError('HTTP 422', 422, '/x', 'POST', {
+      error: { detail: 'Email taken' },
+    });
+    notifyError(err, { id: 'q:1' });
+    expect(notifyErrorMock).toHaveBeenCalledWith('Email taken', { id: 'q:1' });
   });
 });
 
