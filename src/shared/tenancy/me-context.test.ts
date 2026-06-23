@@ -131,4 +131,27 @@ describe('toMeContext', () => {
       toMeContext({ ...WIRE, active_organization: null }).activeOrganization,
     ).toBeNull();
   });
+
+  it('tolerates an older backend whose capabilities omit can_manage_billing', () => {
+    // Live core-be (pre-#788) returns only 5 capability flags — verified by curl
+    // against http://localhost:3000. The schema defaults the missing flag to false.
+    const legacyCaps = {
+      can_invite_members: true,
+      can_manage_members: true,
+      can_manage_roles: true,
+      can_transfer_ownership: true,
+      can_delete: true,
+    };
+    const legacy = {
+      ...WIRE,
+      active_organization: { ...WIRE.active_organization, capabilities: legacyCaps },
+    };
+    const parsed = meContextWire.safeParse(legacy);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(
+        toMeContext(parsed.data).activeOrganization?.capabilities.canManageBilling,
+      ).toBe(false);
+    }
+  });
 });

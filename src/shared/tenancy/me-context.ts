@@ -13,7 +13,9 @@ const orgCapabilitiesWire = z.object({
   can_manage_roles: z.boolean(),
   can_transfer_ownership: z.boolean(),
   can_delete: z.boolean(),
-  can_manage_billing: z.boolean(),
+  // Added in core-be #788; tolerate older servers that omit it (default false
+  // → billing is hidden, matching a backend that can't gate billing yet).
+  can_manage_billing: z.boolean().optional().default(false),
 });
 
 const organizationWire = z.object({
