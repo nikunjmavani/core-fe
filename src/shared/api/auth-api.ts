@@ -201,10 +201,15 @@ export const authApi = {
   ): Promise<AuthTokenResponse> => {
     // Completes the login second factor. /auth/mfa/login is PUBLIC and reads the
     // short-lived mfa_session_token from the body (NOT a Bearer access token).
+    // The factor is `totp_code` for an authenticator code, or `recovery_code`
+    // when the user falls back to a one-time recovery code.
     if (config.useMockApi) return mockToken();
+    const secondFactor = data.useRecoveryCode
+      ? { recovery_code: data.code }
+      : { totp_code: data.code };
     const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.MFA_LOGIN}`, {
       method: 'POST',
-      body: JSON.stringify({ mfa_session_token: mfaSessionToken, code: data.code }),
+      body: JSON.stringify({ mfa_session_token: mfaSessionToken, ...secondFactor }),
     });
     const json = (await response.json()) as unknown;
     if (!response.ok)

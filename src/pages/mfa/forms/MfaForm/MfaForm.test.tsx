@@ -7,22 +7,22 @@ import {
   Outlet,
   RouterProvider,
 } from '@tanstack/react-router';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
 import { MfaForm } from './MfaForm.tsx';
 
+const { mfaVerifyMock, establishSessionMock } = vi.hoisted(() => ({
+  mfaVerifyMock: vi.fn().mockResolvedValue({ accessToken: 'token' }),
+  establishSessionMock: vi.fn().mockResolvedValue(undefined),
+}));
 vi.mock('@/shared/api/auth-api.ts', () => ({
-  authApi: {
-    mfaVerify: vi.fn().mockResolvedValue({ accessToken: 'token' }),
-    me: vi.fn().mockResolvedValue({
-      id: '1',
-      email: 'u@e.com',
-      role: 'admin',
-      organizationId: 't1',
-    }),
-  },
+  authApi: { mfaVerify: mfaVerifyMock },
+}));
+vi.mock('@/shared/auth/service.ts', () => ({
+  establishSession: establishSessionMock,
 }));
 
 const mockUseLocation = vi.fn();
@@ -41,7 +41,12 @@ function createTestRouter() {
     path: '/mfa',
     component: () => <MfaForm />,
   });
-  const tree = rootRoute.addChildren([mfaRoute]);
+  const indexRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/',
+    component: () => <div data-testid="home">home</div>,
+  });
+  const tree = rootRoute.addChildren([mfaRoute, indexRoute]);
   const history = createMemoryHistory({ initialEntries: ['/mfa'] });
   return createRouter({ routeTree: tree, history });
 }
@@ -60,6 +65,8 @@ function renderWithRouter() {
 
 describe('MfaForm', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+    mfaVerifyMock.mockResolvedValue({ accessToken: 'token' });
     mockUseLocation.mockReturnValue({ state: undefined });
   });
 
@@ -82,5 +89,42 @@ describe('MfaForm', () => {
     await screen.findByTestId('mfa-form');
     const results = await axe(container);
     expect(results).toHaveNoViolations();
+  });
+
+  it('submits a 6-digit code as a TOTP factor and establishes the session', async () => {
+    mockUseLocation.mockReturnValue({ state: { mfaToken: 'temp-token' } });
+    const user = userEvent.setup();
+    renderWithRouter();
+
+    await user.type(await screen.findByTestId('mfa-code'), '123456');
+    await user.click(screen.getByTestId('mfa-submit'));
+
+    await waitFor(() =>
+      expect(mfaVerifyMock).toHaveBeenCalledWith(
+        { code: '123456', useRecoveryCode: false },
+        'temp-token',
+      ),
+    );
+    expect(establishSessionMock).toHaveBeenCalledWith('token');
+  });
+
+  it('toggles to a recovery code and submits it as a recovery factor', async () => {
+    mockUseLocation.mockReturnValue({ state: { mfaToken: 'temp-token' } });
+    const user = userEvent.setup();
+    renderWithRouter();
+
+    await user.click(await screen.findByTestId('mfa-toggle-recovery'));
+    expect(screen.getByTestId('mfa-toggle-recovery')).toHaveTextContent(
+      /authenticator app instead/i,
+    );
+    await user.type(screen.getByTestId('mfa-code'), 'abcd1234');
+    await user.click(screen.getByTestId('mfa-submit'));
+
+    await waitFor(() =>
+      expect(mfaVerifyMock).toHaveBeenCalledWith(
+        { code: 'abcd1234', useRecoveryCode: true },
+        'temp-token',
+      ),
+    );
   });
 });

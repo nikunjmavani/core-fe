@@ -96,6 +96,48 @@ describe('authApi.listOAuthProviders (live)', () => {
   });
 });
 
+describe('authApi.mfaVerify second factor (live)', () => {
+  beforeEach(() => {
+    useMockApiRef.value = false;
+  });
+  afterEach(() => {
+    useMockApiRef.value = true;
+    vi.unstubAllGlobals();
+  });
+
+  async function captureMfaBody(data: {
+    code: string;
+    useRecoveryCode?: boolean;
+  }): Promise<Record<string, unknown>> {
+    let body: Record<string, unknown> = {};
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: unknown, init: RequestInit) => {
+        body = JSON.parse(init.body as string) as Record<string, unknown>;
+        return new Response(JSON.stringify({ data: { access_token: 'acc' } }), {
+          status: 201,
+        });
+      }),
+    );
+    await authApi.mfaVerify(data, 'mfa_sess');
+    return body;
+  }
+
+  it('sends totp_code for an authenticator code', async () => {
+    expect(await captureMfaBody({ code: '123456', useRecoveryCode: false })).toEqual({
+      mfa_session_token: 'mfa_sess',
+      totp_code: '123456',
+    });
+  });
+
+  it('sends recovery_code when falling back to a recovery code', async () => {
+    expect(await captureMfaBody({ code: 'abcd-efgh', useRecoveryCode: true })).toEqual({
+      mfa_session_token: 'mfa_sess',
+      recovery_code: 'abcd-efgh',
+    });
+  });
+});
+
 describe('authApi.login MFA handoff (live)', () => {
   beforeEach(() => {
     useMockApiRef.value = false;

@@ -5,14 +5,11 @@ import { useForm } from 'react-hook-form';
 
 import { authApi } from '@/shared/api/auth-api.ts';
 import { type MfaVerifyInput, mfaVerifySchema } from '@/shared/api/auth-contracts.ts';
-import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
-import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
-import { setAccessToken } from '@/shared/auth/token.ts';
+import { establishSession } from '@/shared/auth/service.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
-import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 type LocationState = { mfaToken?: string };
 
@@ -26,11 +23,14 @@ export function MfaForm() {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<MfaVerifyInput>({
     resolver: zodResolver(mfaVerifySchema),
-    defaultValues: { code: '' },
+    defaultValues: { code: '', useRecoveryCode: false },
   });
+  const useRecovery = watch('useRecoveryCode') ?? false;
 
   const onSubmit = async (data: MfaVerifyInput) => {
     setApiError(null);
@@ -40,11 +40,7 @@ export function MfaForm() {
     }
     try {
       const { accessToken } = await authApi.mfaVerify(data, mfaToken);
-      setAccessToken(accessToken);
-      markSessionStart(); // start the absolute session-lifetime clock
-      const user = await authApi.me(accessToken);
-      useAuthStore.getState().setUser(user);
-      scheduleTokenRefresh();
+      await establishSession(accessToken);
       void navigate({ to: '/', replace: true });
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Invalid code. Please try again.');
@@ -74,7 +70,9 @@ export function MfaForm() {
           Two-factor authentication
         </h1>
         <p className="text-muted-foreground text-sm">
-          Enter the 6-digit code from your authenticator app.
+          {useRecovery
+            ? 'Enter one of your one-time recovery codes.'
+            : 'Enter the 6-digit code from your authenticator app.'}
         </p>
       </div>
 
@@ -83,14 +81,14 @@ export function MfaForm() {
           <FormError message={apiError} data-testid="form-error" />
 
           <div className="space-y-2">
-            <Label htmlFor="mfa-code">Code</Label>
+            <Label htmlFor="mfa-code">{useRecovery ? 'Recovery code' : 'Code'}</Label>
             <Input
               id="mfa-code"
               type="text"
-              inputMode="numeric"
+              inputMode={useRecovery ? 'text' : 'numeric'}
               autoComplete="one-time-code"
-              placeholder="000000"
-              maxLength={6}
+              placeholder={useRecovery ? 'xxxxxxxx' : '000000'}
+              maxLength={useRecovery ? 32 : 6}
               aria-invalid={!!errors.code}
               aria-describedby={errors.code ? 'mfa-code-error' : undefined}
               data-testid="mfa-code"
@@ -111,6 +109,25 @@ export function MfaForm() {
               data-testid="mfa-submit"
             >
               {isSubmitting ? 'Verifying...' : 'Verify'}
+            </Button>
+          </div>
+
+          <div className="text-center">
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs"
+              onClick={() => {
+                setValue('useRecoveryCode', !useRecovery);
+                setValue('code', '', { shouldValidate: false });
+                setApiError(null);
+              }}
+              data-testid="mfa-toggle-recovery"
+            >
+              {useRecovery
+                ? 'Use your authenticator app instead'
+                : 'Use a recovery code instead'}
             </Button>
           </div>
         </div>

@@ -66,10 +66,23 @@ export const verifyEmailSchema = z.object({
 
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
 
-// ── MFA (TOTP code) ──
-export const mfaVerifySchema = z.object({
-  code: z.string().min(1, 'Code is required').length(6, 'Code must be 6 digits'),
-});
+// ── MFA (TOTP code or one-time recovery code) ──
+export const mfaVerifySchema = z
+  .object({
+    code: z.string().trim().min(1, 'Code is required'),
+    useRecoveryCode: z.boolean().optional(),
+  })
+  .superRefine((val, ctx) => {
+    // Authenticator (TOTP) codes are exactly 6 digits; recovery codes vary in
+    // shape and are validated server-side, so only enforce the TOTP format.
+    if (!val.useRecoveryCode && !/^\d{6}$/.test(val.code)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['code'],
+        message: 'Enter the 6-digit code from your authenticator app',
+      });
+    }
+  });
 
 export type MfaVerifyInput = z.infer<typeof mfaVerifySchema>;
 
