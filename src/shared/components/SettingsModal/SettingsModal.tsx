@@ -139,7 +139,10 @@ export function SettingsModal() {
               <Select
                 value={`${active.scope}/${active.section}`}
                 onValueChange={(v) => {
-                  const [scope, section] = v.split('/') as [SettingsScope, SettingsSection];
+                  const [scope, section] = v.split('/') as [
+                    SettingsScope,
+                    SettingsSection,
+                  ];
                   goTo({ scope, section });
                 }}
               >
@@ -177,26 +180,8 @@ export function SettingsModal() {
   );
 }
 
-function ActivePanel({
-  active,
-  hasOrganizationContext,
-  orgType,
-}: {
-  active: SettingsSectionRef;
-  hasOrganizationContext: boolean;
-  orgType: OrganizationType | undefined;
-}) {
-  if (active.scope === 'organization' && !hasOrganizationContext) {
-    return <SelectOrganizationFirst />;
-  }
-  if (
-    active.scope === 'organization' &&
-    orgType &&
-    !sectionsForOrgType(orgType).includes(active.section as OrganizationSettingsSection)
-  ) {
-    return <SectionNotAvailable />;
-  }
-  switch (active.section) {
+function panelForSection(section: SettingsSection) {
+  switch (section) {
     case 'profile':
       return <AccountProfilePanel />;
     case 'account':
@@ -222,6 +207,28 @@ function ActivePanel({
     case 'integrations':
       return <OrganizationIntegrationsPanel />;
   }
+}
+
+function ActivePanel({
+  active,
+  hasOrganizationContext,
+  orgType,
+}: {
+  active: SettingsSectionRef;
+  hasOrganizationContext: boolean;
+  orgType: OrganizationType | undefined;
+}) {
+  if (active.scope === 'organization' && !hasOrganizationContext) {
+    return <SelectOrganizationFirst />;
+  }
+  if (
+    active.scope === 'organization' &&
+    orgType &&
+    !sectionsForOrgType(orgType).includes(active.section as OrganizationSettingsSection)
+  ) {
+    return <SectionNotAvailable />;
+  }
+  return panelForSection(active.section);
 }
 
 /** Organization settings opened with no organization context. */
