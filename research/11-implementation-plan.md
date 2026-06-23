@@ -570,7 +570,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 
 - ✅ **FE-34** Members panel — list (avatar/name/email/role/status) with loading/empty/error states + **capability-gated remove** via ConfirmDialog (uses useMembers/useRemoveMember). _Files:_ OrganizationMembersPanel. (Invite-by-email + role-change-via-role_id are follow-ups needing the roles list.)
 - ✅ **FE-35** Roles panel — list (name/description/member-count, System badge) with states + cap-gated delete of custom roles via ConfirmDialog (uses useRoles/useDeleteRole). _Files:_ OrganizationRolesPanel. (Create/edit-role form is a follow-up.)
-- ⬜ **FE-36** Billing panel (personal: plans/upgrade; team: subscription mgmt).
+- ✅ **FE-36** Billing panel — current-plan summary (status, seats used, amount) + plan options (free/pro/enterprise) with cap-gated switch (canManageBilling); loading/error states (uses useSubscription/useUpdateSubscriptionPlan). _Files:_ OrganizationBillingPanel. (Invoices + payment method are follow-ups.)
 - ⬜ **FE-37** Integrations panel (API keys + webhooks).
 - ⬜ **FE-38** Account panels (Security MFA/passkeys, Sessions, General; Notifications = FE-65).
 
