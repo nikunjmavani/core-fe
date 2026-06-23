@@ -57,18 +57,30 @@ capabilities/permissions` sourced from context (mock keeps mock context).
   only validates + triggers switch-on-nav. _Files:_ `organization-context.ts`,
   guards. _Accept:_ guard tests updated green.
 
-## Phase 3 — Dual-URL routing
+## Phase 3 — Dual-URL routing & shared layouts
 
+- ⬜ **3.0 Shared layouts.** Establish `shared/layouts/{ProtectedLayout,
+PublicLayout, AuthLayout}`. **ProtectedLayout** = the authenticated app shell
+  (sidebar with the single **Dashboard** tab + org switcher + header +
+  `<Outlet/>`); wraps **both** the personal and team protected spaces.
+  **PublicLayout** = minimal centered chrome (callback, unauthorized, 404,
+  onboarding, accept-invite). **AuthLayout** = the existing auth split-screen.
+  _Files:_ `shared/layouts/ProtectedLayout/` (from today's `AppShell`), new
+  `shared/layouts/PublicLayout/`, `routeTree.tsx`. _Accept:_ three layouts route
+  their groups; structure validator green.
 - ⬜ **3.1 Root resolver.** `/` → onboarding | `/dashboard` (personal) |
   `/organization/$slug/dashboard` (team). _Files:_ `organization-resolver.ts`,
   `routeTree.tsx`. _Accept:_ resolver unit covers all 3 branches.
-- ⬜ **3.2 Promote `DashboardPage` to shared** (decision §3.4). _Files:_ move to
-  `shared/components/app/Dashboard/` (+ test). _Accept:_ both spaces import it.
-- ⬜ **3.3 Personal `_app` space.** Pathless layout mounting `<AppShell>` + root
-  `/dashboard`. _Files:_ `pages/_app/...` (or app/routes), `routeTree.tsx`.
-  _Accept:_ personal user lands on `/dashboard`, no org segment.
-- ⬜ **3.4 Team space → slug param.** Rename `$organizationId` → `$organizationSlug`;
-  slug→id via `me/context`; **switch-on-nav** guard. _Files:_ rename
+- ⬜ **3.2 Promote `DashboardPage` to shared** — the **one Dashboard tab → one
+  page** (OD-1), rendered in `ProtectedLayout`'s `<Outlet/>` for both spaces.
+  _Files:_ move to `shared/components/app/Dashboard/` (+ test). _Accept:_ both
+  spaces render it.
+- ⬜ **3.3 Personal `_app` space.** Pathless route **under `ProtectedLayout`** +
+  root `/dashboard`. _Files:_ `pages/_app/...`, `routeTree.tsx`. _Accept:_
+  personal user lands on `/dashboard`, no org segment.
+- ⬜ **3.4 Team space → slug param.** `/organization/$organizationSlug` **under
+  `ProtectedLayout`**; rename `$organizationId` → `$organizationSlug`; slug→id via
+  `me/context`; **switch-on-nav** guard. _Files:_ rename
   `pages/organization/$organizationId/` → `$organizationSlug/`, guards,
   `routeTree.tsx`. _Accept:_ `/organization/acme/dashboard` works + deep-link 404
   for non-member.

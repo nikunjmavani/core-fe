@@ -75,23 +75,29 @@ root URLs, so it never needs a slug.
 
 ### 3.2 Route tree
 
+Three shared layouts (`shared/layouts/`): **AuthLayout** (auth forms),
+**PublicLayout** (minimal centered chrome), **ProtectedLayout** (the
+authenticated app shell — sidebar with the single **Dashboard** tab + org
+switcher + header + `<Outlet/>`).
+
 ```text
 __root__  (RouteAnnouncer + global SettingsModal + version check)
-├── auth-shell (pathless)         /login /register /forgot-password /reset-password /verify-email /mfa
-├── /callback  /unauthorized  /onboarding  /accept-invite/$invitationId
-├── /                              resolver (no UI) — see 3.3
-├── _app (pathless layout)         PERSONAL space — mounts <AppShell> (active org = token's personal)
-│   └── /dashboard                 personal dashboard  (+ future personal pages)
-└── /organization/$organizationSlug  TEAM space — <AppShell> (org guard + switch-on-nav)
-    ├── dashboard
-    ├── suspended
-    └── … (members/roles/billing are the hash SettingsModal, not routes)
+├── AuthLayout (pathless)        /login /register /forgot-password /reset-password /verify-email /mfa
+├── PublicLayout                 /callback /unauthorized /onboarding /accept-invite/$id /* (404)
+├── /                            resolver (no UI) — see 3.3
+└── ProtectedLayout (auth-gated; renders the AppShell: Dashboard tab + switcher + header)
+    ├── _app (pathless)          PERSONAL space (root URLs) — active org = token's personal
+    │   └── /dashboard           the one Dashboard page (1 tab · 1 page)
+    └── /organization/$organizationSlug   TEAM space (org guard + switch-on-nav)
+        ├── dashboard
+        ├── suspended
+        └── … (members/roles/billing are the hash SettingsModal, not routes)
 ```
 
-Both spaces render the **same** `<AppShell>` (already in `shared/layouts/`) and
-the **same** page components. The personal space (`_app`) and the team space
-(`/organization/$organizationId`) are thin route markers that import the shared
-components — see 3.4.
+**ProtectedLayout** wraps **both** the personal (`_app`, root) and team
+(`/organization/$organizationSlug`) spaces — they're thin route markers that
+render the **same** shared `DashboardPage` (one tab, one page) in its `<Outlet/>`.
+Today's `AppShell` becomes `ProtectedLayout`; `PublicLayout` is new. See 3.4.
 
 ### 3.3 The `/` resolver
 
@@ -117,7 +123,7 @@ lives at two URLs. **Resolution:**
 - The **page component is shared** and lives once. `DashboardPage` (today in the
   team island) is promoted to a shared app surface (e.g.
   `shared/components/app/` or kept in the team island and imported by the
-  personal marker). `<AppShell>` is already shared.
+  personal marker). The shell chrome is `ProtectedLayout` (shared).
 - **Route markers exist at both URL locations** (`_app/dashboard.route.tsx` and
   `organization/$organizationSlug/dashboard/dashboard.route.tsx`), each rendering
   the shared component. This keeps URL-mirrored markers while sharing UI.
@@ -129,7 +135,7 @@ lives at two URLs. **Resolution:**
 
 Per-space guard chains (TanStack `beforeLoad`), all RBAC sourced from `me/context`:
 
-- **auth-shell:** `redirectIfAuthenticated()`.
+- **AuthLayout (auth-shell):** `redirectIfAuthenticated()`.
 - **`_app` (personal):** `requireAuth()` → ensure `me/context.activeOrganization.type === 'PERSONAL'` (else redirect to the team URL — keeps URL ⇄ active-org consistent) → `requirePermission` from `manifest`.
 - **`/organization/$organizationSlug` (team):** `requireAuth()` → **switch-on-nav** (3.6) → `requireActiveOrganization` (status) → `requirePermission`.
 
