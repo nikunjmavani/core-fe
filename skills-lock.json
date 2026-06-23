@@ -7,6 +7,12 @@
       "skillPath": "skills/shadcn-ui/SKILL.md",
       "computedHash": "ed8406a28d8dd2b80ca419fd4123cf3af8273dcfb8d42aca757591af7d55851e"
     },
+    "animejs": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/animejs/SKILL.md",
+      "computedHash": "1ccd0229d51e46aaa5e0d7033f1160c9f21440af470fbaab25fb68d9190c3edb"
+    },
     "emil-design-eng": {
       "source": "emilkowalski/skill",
       "sourceType": "github",
@@ -36,6 +42,12 @@
       "sourceType": "github",
       "skillPath": ".agents/skills/impeccable/SKILL.md",
       "computedHash": "c5c260ee8333b2710285ba484ab92d5abd23cc03d03cbf984bc2f108a8a47d8a"
+    },
+    "motion-framer": {
+      "source": "freshtechbro/claudedesignskills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/motion-framer/SKILL.md",
+      "computedHash": "16d7c6f24f1d1208500635331e0cf6e06555a44df461e6b1069e4ddb203fd737"
     },
     "redesign-existing-projects": {
       "source": "leonxlnx/taste-skill",
