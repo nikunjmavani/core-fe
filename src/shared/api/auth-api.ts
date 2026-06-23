@@ -8,7 +8,7 @@ import {
 } from '@/shared/auth/mock-auth.ts';
 import { isMockLoginValid } from '@/shared/auth/mock-credentials.ts';
 import type { AuthTokenResponse, AuthUser } from '@/shared/auth/types.ts';
-import { authTokenResponseSchema, authUserSchema } from '@/shared/auth/types.ts';
+import { authUserSchema } from '@/shared/auth/types.ts';
 
 import type {
   ForgotPasswordInput,
@@ -55,9 +55,45 @@ async function authFetch(
  * Auth endpoints need special handling since they manage the very
  * tokens that the interceptor injects.
  */
+/** Unwrap the core-be `{ data, meta }` envelope; pass a bare body through. */
+function unwrapEnvelope(json: unknown): unknown {
+  if (json && typeof json === 'object' && 'data' in json) {
+    return (json as { data: unknown }).data;
+  }
+  return json;
+}
+
+/** Human error message from the core-be error envelope or a bare `{ message }`. */
+function errorMessage(json: unknown, fallback: string): string {
+  const j = json as
+    | { error?: { detail?: string; reason?: string }; message?: string }
+    | null
+    | undefined;
+  return j?.error?.detail ?? j?.error?.reason ?? j?.message ?? fallback;
+}
+
 function throwOnNotOk(_response: Response, json: unknown, fallback: string): never {
-  const message = (json as { message?: string })?.message ?? fallback;
-  throw new Error(message);
+  throw new Error(errorMessage(json, fallback));
+}
+
+/**
+ * Extract the access token from a token response. Tolerant of the core-be shape
+ * (`{ data: { access_token } }`, snake_case + enveloped) and a bare
+ * `{ accessToken }`; surfaces the MFA-required branch as a clear error.
+ */
+function extractAccessToken(json: unknown, fallback: string): AuthTokenResponse {
+  const payload = unwrapEnvelope(json) as
+    | { access_token?: string; accessToken?: string; mfa_required?: boolean }
+    | null
+    | undefined;
+  if (payload?.mfa_required) {
+    throw new Error('Multi-factor authentication is required (not yet supported here).');
+  }
+  const token = payload?.access_token ?? payload?.accessToken;
+  if (typeof token !== 'string' || token.length === 0) {
+    throw new Error(fallback);
+  }
+  return { accessToken: token };
 }
 
 /** Resolve a mock token + start a mock session (shared by mock auth methods). */
@@ -81,20 +117,21 @@ export const authApi = {
     });
     const json = (await response.json()) as unknown;
     if (!response.ok) throwOnNotOk(response, json, `Login failed (${response.status})`);
-    return authTokenResponseSchema.parse(json);
+    return extractAccessToken(json, `Authentication failed (${response.status})`);
   },
 
   register: async (data: RegisterInput): Promise<AuthTokenResponse> => {
-    // REPLACE_WITH_API: POST /api/v1/auth/register
+    // core-be has no /auth/register — signup IS the registration endpoint
+    // (auto-provisions the user + their personal organization).
     if (config.useMockApi) return mockToken();
-    const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.REGISTER}`, {
+    const response = await authFetch(`${authBase()}/auth/signup`, {
       method: 'POST',
       body: JSON.stringify(data),
     });
     const json = (await response.json()) as unknown;
     if (!response.ok)
       throwOnNotOk(response, json, `Register failed (${response.status})`);
-    return authTokenResponseSchema.parse(json);
+    return extractAccessToken(json, `Authentication failed (${response.status})`);
   },
 
   forgotPassword: async (data: ForgotPasswordInput): Promise<void> => {
@@ -133,7 +170,7 @@ export const authApi = {
     const json = (await response.json()) as unknown;
     if (!response.ok)
       throwOnNotOk(response, json, `Verify email failed (${response.status})`);
-    return authTokenResponseSchema.parse(json);
+    return extractAccessToken(json, `Authentication failed (${response.status})`);
   },
 
   mfaVerify: async (data: MfaVerifyInput, token: string): Promise<AuthTokenResponse> => {
@@ -147,7 +184,7 @@ export const authApi = {
     const json = (await response.json()) as unknown;
     if (!response.ok)
       throwOnNotOk(response, json, `MFA verify failed (${response.status})`);
-    return authTokenResponseSchema.parse(json);
+    return extractAccessToken(json, `Authentication failed (${response.status})`);
   },
 
   me: async (token: string): Promise<AuthUser> => {
