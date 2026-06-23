@@ -6,7 +6,7 @@ session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 (URL-as-source-of-truth) and the [[pages-url-mirror-design]] memory.
 
 > **Part I** is the design (what / why / how). **Part II** is the commit-sized,
-> item-wise plan. Nothing is built until each item is green-lit.
+> item-wise plan — **42 build items** (`FE-01`…`FE-42`), each with a stable ID.
 
 ---
 
@@ -288,104 +288,96 @@ export async function listMembers(): Promise<Member[]> {
 
 ## Part II — Implementation plan (item-wise)
 
-Each item is **commit-sized**: one concern, with files + an acceptance check.
-Review per item; I build only green-lit items, in order, each its own tested
-commit. Legend: ⬜ proposed · ✅ shipped this session.
+**42 build items** (`FE-01`…`FE-42`) across 8 phases — plus Phase 0 (already
+shipped). Each is commit-sized with a stable ID; review by ID — I build only
+green-lit items, in dependency order, each its own tested commit. Legend: ⬜ to
+build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P4 5 · P5 1 · P6 9 · P7 5 · P8 4.
 
-## Phase 0 — Already shipped (one to revise)
+### Phase 0 — Already shipped
 
-- ✅ **0.1 Email-verify banner** (`b2cf639`). ✅ **0.2 Live RBAC** (`85ce454`).
-- ⚠️ **0.3 Magic-link via `/callback?token`** (`327a87c`) — **replaced by 1.1**
-  (real flow is code-entry). Flagged so we don't double-count.
+- ✅ Email-verify banner (`b2cf639`) · ✅ Live RBAC from `me/context` (`85ce454`).
+- ⚠️ Magic-link `/callback?token` (`327a87c`) — **superseded by FE-01**.
 
-## Phase 1 — Auth-flow alignment
+### Phase 1 — Auth-flow alignment (5)
 
-- ⬜ **1.1 Magic-link = code-entry.** `send {email}` → 6-digit code; `verify
-{email, code}`. Replace the `/callback?token` branch with a code-entry step.
-  _Files:_ `auth-api.ts`, `constants.ts`, `PasswordlessOptions.tsx`,
-  `CallbackPage.tsx`. _Accept:_ send→code→verify (mock); integration send 201.
-- ⬜ **1.2 OAuth start `{url}`.** Fetch `GET /auth/oauth/:provider` → redirect.
-  _Files:_ `auth-api.ts`, `PasswordlessOptions.tsx`.
-- ⬜ **1.3 OAuth return.** `/callback` → `/auth/refresh` → `me/context` (OD-2).
-  _Files:_ `CallbackPage.tsx`.
-- ⬜ **1.4 `mfa/login` → `totp_code`** (+ recovery-code toggle). _Files:_
-  `auth-api.ts`, `auth-contracts.ts`, `MfaForm.tsx`.
-- ⬜ **1.5 `me/context` canonical post-auth** across all flows. _Files:_ login/
-  register forms, `MfaForm`, resolver.
+- ⬜ **FE-01** Magic-link code-entry — `send {email}`→6-digit code, `verify {email, code}`; drop `/callback?token`. _Files:_ auth-api, constants, PasswordlessOptions, CallbackPage.
+- ⬜ **FE-02** OAuth start `{url}` — fetch `GET /auth/oauth/:provider` → `window.location.assign(url)`. _Files:_ auth-api, PasswordlessOptions.
+- ⬜ **FE-03** OAuth return — `/callback` → `/auth/refresh` → `me/context` (OD-2). _Files:_ CallbackPage.
+- ⬜ **FE-04** `mfa/login` → `totp_code` (+ recovery-code toggle). _Files:_ auth-api, auth-contracts, MfaForm.
+- ⬜ **FE-05** `me/context` canonical post-auth (all flows → resolver). _Files:_ login/register forms, MfaForm, resolver.
 
-## Phase 2 — me/context as the org source
+### Phase 2 — me/context as org source (3)
 
-- ⬜ **2.1 Switch service** (`switchToOrganization`/`switchToPersonal` → re-mint +
-  apply inline delta to the `useMeContext` cache). _Files:_ `shared/tenancy/switch.ts`.
-- ⬜ **2.2 Org store derives from context** (id/slug/type/status/caps/perms).
-- ⬜ **2.3 Retire URL-as-source** in guards (URL validates + triggers switch-on-nav).
+- ⬜ **FE-06** Switch service — re-mint + apply inline delta to the `useMeContext` cache. _Files:_ shared/tenancy/switch.ts.
+- ⬜ **FE-07** Org store derives from context (id/slug/type/status/caps/perms). _Files:_ useOrganizationStore, guards.
+- ⬜ **FE-08** Retire URL-as-source in guards. _Files:_ organization-context, guards.
 
-## Phase 3 — Security gateway & shared layouts
+### Phase 3 — Security gateway & shared layouts (10)
 
-- ⬜ **3.1 Gateway composer.** `core/security/gateway.ts` (`gateway(...gates)`,
-  sequential, short-circuit) + `gate.types.ts`. _Accept:_ unit: order + halt.
-- ⬜ **3.2 The gates (L1–L6).** `core/security/gates/`: `require-session`,
-  `hydrate-context`, `resolve-active-org`, `require-org-status`,
-  `require-permission`, `require-capability` — refactor today's ad-hoc guards
-  into these; colocated tests. _Accept:_ gate units + migrated guard tests green.
-- ⬜ **3.3 Shared layouts.** `shared/layouts/{ProtectedLayout, PublicLayout,
-AuthLayout}`, each wiring its per-layout gateway; `ProtectedLayout` = today's
-  `AppShell`, wraps both spaces. _Accept:_ layouts route their groups; validator green.
+- ⬜ **FE-09** Gateway composer + `gate.types` (sequential, short-circuit). _Files:_ core/security/gateway.ts, gate.types.ts.
+- ⬜ **FE-10** Gate **L1** `requireSession` (token/refresh). _Files:_ core/security/gates/require-session.ts (+test).
+- ⬜ **FE-11** Gate **L2** `hydrateContext` (load `me/context`).
+- ⬜ **FE-12** Gate **L3** `resolveActiveOrg` (personal/team slug→id, membership, switch-on-nav).
+- ⬜ **FE-13** Gate **L4** `requireOrgStatus` (suspended/archived).
+- ⬜ **FE-14** Gate **L5** `requirePermission` (RBAC).
+- ⬜ **FE-15** Gate **L6** `requireCapability` (org-type).
+- ⬜ **FE-16** `ProtectedLayout` (from today's `AppShell`) wired to its gateway. _Files:_ shared/layouts/ProtectedLayout.
+- ⬜ **FE-17** `PublicLayout` (new, minimal centered chrome). _Files:_ shared/layouts/PublicLayout.
+- ⬜ **FE-18** `AuthLayout` — wire the `redirectIfAuthenticated` gateway.
 
-## Phase 4 — Dual-URL routing
+### Phase 4 — Dual-URL routing (5)
 
-- ⬜ **4.1 Root resolver** (`/` → onboarding | `/dashboard` | `/organization/$slug/dashboard`).
-- ⬜ **4.2 Promote `DashboardPage` → shared** (OD-1) — one tab, one page.
-- ⬜ **4.3 Personal `_app` space** (root `/dashboard`) under `ProtectedLayout`.
-- ⬜ **4.4 Team `$organizationSlug` space** under `ProtectedLayout` + switch-on-nav
-  (uses the L3 gate); rename `$organizationId` → `$organizationSlug` (OD-3).
-- ⬜ **4.5 Update e2e + docs** for the new URLs (specs, mock fixtures, routes-and-ui).
+- ⬜ **FE-19** Root resolver (`/` → personal | team-slug | onboarding). _Files:_ organization-resolver, routeTree.
+- ⬜ **FE-20** Promote `DashboardPage` → shared (OD-1) — 1 tab · 1 page.
+- ⬜ **FE-21** Personal `_app` space (root `/dashboard`) under `ProtectedLayout`.
+- ⬜ **FE-22** Team `$organizationSlug` space + switch-on-nav (uses **FE-12**); rename `$organizationId`→`$organizationSlug` (OD-3).
+- ⬜ **FE-23** routeTree wiring + update e2e specs / mock fixtures / routes-and-ui for the new URLs.
 
-## Phase 5 — Org switcher
+### Phase 5 — Org switcher (1)
 
-- ⬜ **5.1 Switcher rebuild** (Personal + Teams + Create-team; uses 2.1; navigates
-  to the right URL space; capability-aware).
+- ⬜ **FE-24** Switcher rebuild — Personal + Teams + Create-team; uses **FE-06**; capability-aware. _Files:_ OrganizationSwitcher.
 
-## Phase 6 — API mock + live parity (per domain: `*Wire` + `to*` + both branches)
+### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
 
-_Accept (each):_ live + mock both return the domain shape; integration spec hits
-the real endpoint.
+- ⬜ **FE-25** Memberships (role `{id,name}`; invite = add-by-email; embed `user`).
+- ⬜ **FE-26** Roles (+ permissions catalog).
+- ⬜ **FE-27** Billing (plans + subscriptions + mutations).
+- ⬜ **FE-28** API keys (+ rotate).
+- ⬜ **FE-29** Webhooks + notification-policies.
+- ⬜ **FE-30** Notification preferences.
+- ⬜ **FE-31** Sessions (list + revoke).
+- ⬜ **FE-32** MFA enroll + passkeys.
+- ⬜ **FE-33** Org general / settings / logo.
 
-- ⬜ **6.1 Memberships** (role `{id,name}`; invite = add-by-email; embed `user`).
-- ⬜ **6.2 Roles** (+ permissions catalog). ⬜ **6.3 Billing** (plans + subscriptions).
-- ⬜ **6.4 API keys** (+ rotate). ⬜ **6.5 Webhooks/policies**. ⬜ **6.6 Notification prefs**.
-- ⬜ **6.7 Sessions** (`/auth/me/sessions`). ⬜ **6.8 MFA enroll + passkeys**.
-- ⬜ **6.9 Org general/settings/logo**.
+### Phase 7 — Settings panels (5) — consume Phase 6
 
-## Phase 7 — Settings panels (consume Phase 6)
+- ⬜ **FE-34** Members panel (table + invite-by-email + role change + remove; cap-gated).
+- ⬜ **FE-35** Roles panel (list + create custom + permissions).
+- ⬜ **FE-36** Billing panel (personal: plans/upgrade; team: subscription mgmt).
+- ⬜ **FE-37** Integrations panel (API keys + webhooks).
+- ⬜ **FE-38** Account panels (Security MFA/passkeys, Sessions, Notifications, General).
 
-- ⬜ **7.1 Members** · ⬜ **7.2 Roles** · ⬜ **7.3 Billing** · ⬜ **7.4 Integrations**
-  (API keys + webhooks) · ⬜ **7.5 Account** (Security/Sessions/Notifications/General).
+### Phase 8 — Responsive + polish + capstone (4)
 
-## Phase 8 — Responsive Pass 3 + polish + capstone
+- ⬜ **FE-39** Responsive Pass 3 (picker / onboarding / CommandPalette ≤320px / accept-invite).
+- ⬜ **FE-40** Premium polish (high-end-visual-design / impeccable / motion-framer).
+- ⬜ **FE-41** e2e capstone (all entry flows) + onboarding job-title persist.
+- ⬜ **FE-42** Docs / memory ripple (Part I §7).
 
-- ⬜ **8.1 Responsive Pass 3** (picker, onboarding, CommandPalette ≤320px,
-  accept-invite; extend `responsive.e2e`).
-- ⬜ **8.2 Premium polish** (high-end-visual-design / impeccable / motion-framer).
-- ⬜ **8.3 e2e capstone** (all entry flows) + onboarding job-title persist.
-- ⬜ **8.4 Docs/memory ripple** (§7).
+### Sequencing & dependencies
 
-## Sequencing & dependencies
+Critical path **FE-01 → FE-23** (auth → me/context → gateway+layouts → routing).
+**Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
+**Phase 7** depends on Phase 6. **Phase 8** is last. Cross-deps: FE-22 needs
+FE-12; FE-24 needs FE-06; FE-20 needs OD-1.
 
-`1 → 2 → 3 → 4` is the critical path (gateway + layouts before routing). **Phase
-6** runs parallel to 3–4 (pure data layer). **Phase 7** depends on 6. **Phase 8**
-is last. ~33 commit-sized items.
+### Open decisions
 
-## Open decisions (need your call before the dependent item)
+- **OD-1** (blocks **FE-20**): `DashboardPage` → promote to `shared/` (rec) vs. import from team island.
+- **OD-2** (blocks **FE-03**): OAuth return = cookie → `/auth/refresh` (rec) vs. token in URL.
+- **OD-3** (blocks **FE-22**): team rename/slug change → resolve via `by-slug`, no redirect v1 (rec) vs. 301 old→new.
 
-- **OD-1 (blocks 4.2):** `DashboardPage` → promote to `shared/` (rec) vs. import
-  from the team island.
-- **OD-2 (blocks 1.3):** confirm OAuth return = cookie → `/auth/refresh` (rec) vs.
-  token in URL — against core-be `frontend-auth-flows.md`.
-- **OD-3 (blocks 4.4):** team rename (slug change) → resolve via `by-slug`, no
-  redirect for v1 (rec) vs. 301 old→new.
-
-## Risks
+### Risks
 
 - Dual-mount vs. extract-to-shared for `DashboardPage` (OD-1).
 - OAuth return mechanics (OD-2).
