@@ -504,7 +504,7 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1
 - ✅ **FE-14** Gate **L5** `requirePermissionGate(permission)` — binds the manifest permission → `requirePermission`. _Files:_ require-permission.ts.
 - ✅ **FE-15** Gate **L6** `requireCapabilityGate(capability)` — exhaustive capability read (personal=all false → blocked). _Files:_ require-capability.ts.
 - ⬜ **FE-16** `ProtectedLayout` (from today's `AppShell`) wired to its gateway. _Files:_ shared/layouts/ProtectedLayout.
-- ⬜ **FE-17** `PublicLayout` (new, minimal centered chrome). _Files:_ shared/layouts/PublicLayout.
+- ✅ **FE-17** `PublicLayout` (new, minimal centered chrome — callback/unauthorized/onboarding/accept-invite/404). _Files:_ shared/layouts/PublicLayout. (Mounted as a route layout in Phase 4.)
 - ⬜ **FE-18** `AuthLayout` — wire the `redirectIfAuthenticated` gateway.
 
 ### Phase 3A — Route authorization, deny matrix & login redirect (6)
