@@ -1,5 +1,7 @@
+import { config } from '@/core/config/env.ts';
 import { mockResponse } from '@/core/http/mock.ts';
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
+import { organizationPermissionSchema } from '@/core/types/permissions.ts';
 import type {
   ApiKey,
   ApiKeyWithSecret,
@@ -11,14 +13,22 @@ import type {
   RoleSummary,
   Subscription,
 } from '@/shared/api/organization-contracts.ts';
+import { fetchMeContext } from '@/shared/tenancy/me-context.ts';
 
 import { MY_PERMISSIONS_FIXTURE } from './organization-fixtures.ts';
 import { orgMockStore } from './organization-mock-store.ts';
 
+const VALID_PERMISSIONS = new Set<string>(organizationPermissionSchema.options);
+
 /** The signed-in user's permissions in the active organization. */
-export function getMyPermissions(): Promise<OrganizationPermission[]> {
-  // REPLACE_WITH_API: GET /api/v1/tenancy/organizations/{orgId}/memberships/me
-  return mockResponse(MY_PERMISSIONS_FIXTURE, { delayMs: 0 });
+export async function getMyPermissions(): Promise<OrganizationPermission[]> {
+  if (config.useMockApi) return mockResponse(MY_PERMISSIONS_FIXTURE, { delayMs: 0 });
+  // Live: derive from the session context (GET /auth/me/context). Permission
+  // codes are forward-compatible strings — keep only those the RBAC engine knows.
+  const ctx = await fetchMeContext();
+  return ctx.myPermissions.filter((p): p is OrganizationPermission =>
+    VALID_PERMISSIONS.has(p),
+  );
 }
 
 export interface AcceptedInvitation {
