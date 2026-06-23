@@ -1,11 +1,88 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+
+const { useMembersMock, removeMutateAsync } = vi.hoisted(() => ({
+  useMembersMock: vi.fn(),
+  removeMutateAsync: vi.fn(),
+}));
+vi.mock('@/shared/hooks/useMembers/index.ts', () => ({
+  useMembers: useMembersMock,
+  useRemoveMember: () => ({ mutateAsync: removeMutateAsync }),
+}));
 
 import { OrganizationMembersPanel } from './OrganizationMembersPanel.tsx';
 
+const MEMBER = {
+  id: 'mem_1',
+  userId: 'usr_1',
+  name: 'Ada Byron',
+  email: 'ada@acme.test',
+  role: 'owner',
+  status: 'active',
+  joinedAt: '2026-01-01T00:00:00.000Z',
+};
+
+function setCanManage(value: boolean) {
+  useOrganizationStore.setState({
+    capabilities: {
+      canInviteMembers: value,
+      canManageMembers: value,
+      canManageRoles: value,
+      canTransferOwnership: value,
+      canDelete: value,
+      canManageBilling: value,
+    },
+  });
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  removeMutateAsync.mockResolvedValue({ id: 'mem_1' });
+  useOrganizationStore.getState().clearOrganization();
+});
+
 describe('OrganizationMembersPanel', () => {
-  it('renders the panel', () => {
+  it('shows an empty state when there are no members', () => {
+    useMembersMock.mockReturnValue({ data: [], isLoading: false, isError: false });
     render(<OrganizationMembersPanel />);
-    expect(screen.getByTestId('settings-organization-members')).toBeInTheDocument();
+    expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+  });
+
+  it('shows a loading skeleton', () => {
+    useMembersMock.mockReturnValue({ data: undefined, isLoading: true, isError: false });
+    render(<OrganizationMembersPanel />);
+    expect(screen.getByTestId('members-loading')).toBeInTheDocument();
+  });
+
+  it('lists members with a remove control when the org can manage members', () => {
+    useMembersMock.mockReturnValue({ data: [MEMBER], isLoading: false, isError: false });
+    setCanManage(true);
+    render(<OrganizationMembersPanel />);
+    expect(screen.getByText('Ada Byron')).toBeInTheDocument();
+    expect(screen.getByText('ada@acme.test')).toBeInTheDocument();
+    expect(screen.getByTestId('member-remove-mem_1')).toBeInTheDocument();
+  });
+
+  it('hides the remove control without the capability (e.g. a personal org)', () => {
+    useMembersMock.mockReturnValue({ data: [MEMBER], isLoading: false, isError: false });
+    setCanManage(false);
+    render(<OrganizationMembersPanel />);
+    expect(screen.getByText('Ada Byron')).toBeInTheDocument();
+    expect(screen.queryByTestId('member-remove-mem_1')).not.toBeInTheDocument();
+  });
+
+  it('confirms and removes a member', async () => {
+    useMembersMock.mockReturnValue({ data: [MEMBER], isLoading: false, isError: false });
+    setCanManage(true);
+    const user = userEvent.setup();
+    render(<OrganizationMembersPanel />);
+
+    await user.click(screen.getByTestId('member-remove-mem_1'));
+    await user.click(screen.getByTestId('confirm-accept'));
+
+    await waitFor(() => expect(removeMutateAsync).toHaveBeenCalledWith('mem_1'));
   });
 });
