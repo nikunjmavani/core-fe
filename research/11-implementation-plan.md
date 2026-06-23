@@ -490,7 +490,7 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1
 
 ### Phase 2 — me/context as org source (3)
 
-- ⬜ **FE-06** Switch service — re-mint + apply inline delta to the `useMeContext` cache. _Files:_ shared/tenancy/switch.ts.
+- ✅ **FE-06** Switch service — `switchToOrganization`/`switchToPersonal` re-mint the token + apply the inline delta to the `useMeContext` cache (mock flips locally). _Files:_ shared/tenancy/switch.ts, me-context (exports).
 - ⬜ **FE-07** Org store derives from context (id/slug/type/status/caps/perms). _Files:_ useOrganizationStore, guards.
 - ⬜ **FE-08** Retire URL-as-source in guards. _Files:_ organization-context, guards.
 

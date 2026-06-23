@@ -18,7 +18,7 @@ const orgCapabilitiesWire = z.object({
   can_manage_billing: z.boolean().optional().default(false),
 });
 
-const organizationWire = z.object({
+export const organizationWire = z.object({
   id: publicId('org'),
   name: z.string(),
   slug: z.string().nullable(),
@@ -109,7 +109,7 @@ function toCapabilities(w: z.infer<typeof orgCapabilitiesWire>): OrgCapabilities
     canManageBilling: w.can_manage_billing,
   };
 }
-function toOrganization(w: z.infer<typeof organizationWire>): OrganizationSummary {
+export function toOrganization(w: z.infer<typeof organizationWire>): OrganizationSummary {
   return {
     id: w.id,
     name: w.name,
