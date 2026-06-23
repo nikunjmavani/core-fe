@@ -6,7 +6,10 @@ import { describe, expect, it, vi } from 'vitest';
 import type { MeContext } from '@/shared/tenancy/me-context.ts';
 
 const { fetchMeContextMock } = vi.hoisted(() => ({ fetchMeContextMock: vi.fn() }));
-vi.mock('@/shared/tenancy/me-context.ts', () => ({ fetchMeContext: fetchMeContextMock }));
+vi.mock('@/shared/tenancy/me-context.ts', () => ({
+  fetchMeContext: fetchMeContextMock,
+  meContextQueryKey: ['auth', 'me-context'],
+}));
 
 import { useMeContext } from './useMeContext.ts';
 
