@@ -5,18 +5,18 @@ Status: **awaiting item-wise green-light** · Backend contract: core-be
 session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 (URL-as-source-of-truth) and the [[pages-url-mirror-design]] memory.
 
-> **Part I** is the design — **28 numbered decisions** (`D-01`…`D-28`, indexed
+> **Part I** is the design — **30 numbered decisions** (`D-01`…`D-30`, indexed
 > below, each traced to the items that build it). **Part II** is the commit-sized
-> plan — **57 build items** (`FE-01`…`FE-57`), each with a stable ID.
+> plan — **60 build items** (`FE-01`…`FE-60`), each with a stable ID.
 
 ---
 
 ## Part I — Design
 
-### Design decisions index (D-01…D-28)
+### Design decisions index (D-01…D-30)
 
 Every normative decision below carries a stable `D-` ID, the section that
-specifies it, and the Part II item(s) that build it. **28 decisions → 57 items.**
+specifies it, and the Part II item(s) that build it. **30 decisions → 60 items.**
 
 | ID       | Decision                                                                                                                                                                                                                                                                 | Spec     | Built by                   |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------- |
@@ -48,6 +48,8 @@ specifies it, and the Part II item(s) that build it. **28 decisions → 57 items
 | **D-26** | Route authorization: default-deny; policy declared in `manifest` (permission + capability + module + onDeny); deny matrix (login / 403 / 404-hide / suspended); UI gating matches the gateway                                                                            | §3.8     | FE-49…FE-52                |
 | **D-27** | Adaptive surface: one switch renders content as a centered modal **or** a right drawer (full-screen sheet ≤ sm)                                                                                                                                                          | §8       | FE-53                      |
 | **D-28** | Global theming: shadcn-create-compatible OKLCH token contract; named presets via `data-theme` (× light/dark); runtime `mode + preset` switcher in Settings → Appearance; optional org brand → `--color-brand`. Semantic-token-only means one swap restyles every element | §9       | FE-54…FE-57                |
+| **D-29** | Login redirect: L1 captures the attempted URL as `?returnTo=`; every auth flow consumes it via the resolver; only same-origin relative paths honored (`safeReturnTo`, open-redirect guard) else resolver default                                                         | §3.9     | FE-58, FE-59               |
+| **D-30** | Layout width: `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = contained \| full, default contained) toggles `ProtectedLayout` between centered 12-grid and full-window; optional runtime override                                                                            | §9       | FE-60                      |
 
 ## 0. Why
 
@@ -284,6 +286,24 @@ enforces — a user never sees a control that would 403/404 on use. The server
 re-checks every request; the FE policy is UX + defense-in-depth, never the
 boundary (D-14).
 
+### 3.9 Login redirect (`returnTo`)
+
+A deep link into a protected URL while signed-out must land there **after** auth.
+One redirect-intent flow:
+
+1. **Capture** — the session gate (L1) bounces to `/login?returnTo=<attempted
+path>` (relative path+search+hash, URL-encoded).
+2. **Consume** — every auth flow (password, signup → onboarding, magic-link,
+   OAuth `/callback`, MFA) ends at the resolver (§3.3); once the
+   active-org/onboarding checks pass, the resolver navigates to `returnTo` — else
+   its default (personal `/dashboard` or team slug).
+3. **Safe-redirect guard** — only **same-origin, relative** paths are honored;
+   `safeReturnTo()` rejects absolute / `//` / `javascript:` (open-redirect
+   defense, covered by `tests/security` redirect-safety).
+
+So `returnTo` survives the whole auth dance (including the OAuth round-trip and
+an org switch) and never becomes an open redirect.
+
 ## 4. Org switcher (left rail, in ProtectedLayout)
 
 - Source: `me/context.organizations` (personal + teams), `is_active` flag.
@@ -407,6 +427,10 @@ element follows. This section makes that a product capability:
   instantly, no rebuild.
 - **Org brand (optional).** A team's `brand_color` can feed `--color-brand` (+ a
   derived ramp) so a workspace brands the app, gated like any module (§3.8).
+- **Layout width (env).** `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = `contained`
+  | `full`, default `contained`) switches the `ProtectedLayout` content container
+  between a **centered 12-grid** (`max-w-screen-2xl mx-auto`) and **full-window**
+  (fluid, edge-to-edge). Optional runtime override in Appearance.
 
 The contract stays CSS-only — "a future theme is just a file of token values"
 (CLAUDE.md), now switchable at runtime and per preset.
@@ -415,10 +439,10 @@ The contract stays CSS-only — "a future theme is just a file of token values"
 
 ## Part II — Implementation plan (item-wise)
 
-**57 build items** (`FE-01`…`FE-57`) across 11 phases — plus Phase 0 (already
+**60 build items** (`FE-01`…`FE-60`) across 11 phases — plus Phase 0 (already
 shipped). Each is commit-sized with a stable ID; review by ID — I build only
 green-lit items, in dependency order, each its own tested commit. Legend: ⬜ to
-build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 4 · P4 5 · P5 1 · PF 7 · PT 4 · P6 9 · P7 5 · P8 4.
+build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1 · PF 7 · PT 5 · P6 9 · P7 5 · P8 4.
 
 ### Phase 0 — Already shipped
 
@@ -452,14 +476,16 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 4 · P4 5 · P5 1
 - ⬜ **FE-17** `PublicLayout` (new, minimal centered chrome). _Files:_ shared/layouts/PublicLayout.
 - ⬜ **FE-18** `AuthLayout` — wire the `redirectIfAuthenticated` gateway.
 
-### Phase 3A — Route authorization & deny matrix (4)
+### Phase 3A — Route authorization, deny matrix & login redirect (6)
 
-_Appended IDs (`FE-49`…`FE-52`); extends the gateway (Phase 3). Builds D-26._
+_Appended IDs (`FE-49`…`FE-52`, `FE-58`, `FE-59`); extends the gateway (Phase 3). Builds D-26, D-29._
 
 - ⬜ **FE-49** Route policy in `manifest` + default-deny — extend the manifest schema (`capability?`, `module?`, `onDeny?`; `permission?` exists); L5/L6 read it; protected routes with no policy still require auth. _Files:_ manifest type, gateway gates, route manifests.
 - ⬜ **FE-50** Module gate **L6b** `requireModule` — deployment flags (`me/context.user.capabilities`) + plan entitlement; off → `notFound()` + hide nav + settings section. _Files:_ core/security/gates/require-module.ts, SettingsModal sections, nav.
 - ⬜ **FE-51** Unified UI gating — `can()` selector + `<Gate>` + `useVisibleNav()`; replace the pass-through `useVisibleNavItems`; gate buttons + settings sections. _Files:_ core/rbac (`can`), shared/components/Gate, AppShell nav, SettingsModal.
-- ⬜ **FE-52** Deny outcomes + audit — wire `onDeny` to `/unauthorized` (403) vs `notFound()` (404-hide) + `returnTo` on `/login`; table-driven **route-access-matrix** test (role × org-type × module → reachable?). _Files:_ unauthorized page, gateway, tests/security/route-access-matrix.
+- ⬜ **FE-52** Deny outcomes + audit — wire `onDeny` to `/unauthorized` (403) vs `notFound()` (404-hide); table-driven **route-access-matrix** test (role × org-type × module → reachable?). _Files:_ unauthorized page, gateway, tests/security/route-access-matrix.
+- ⬜ **FE-58** `returnTo` capture + `safeReturnTo` — L1 bounces to `/login?returnTo=<attempted path>`; same-origin/relative-only guard (rejects absolute / `//` / `javascript:`) + redirect-safety test. _Files:_ core/security/gates/require-session.ts, lib/safe-redirect, tests/security.
+- ⬜ **FE-59** `returnTo` consume — the resolver + every auth flow (login / signup / magic-link / OAuth `/callback` / MFA) navigate to a safe `returnTo` after auth, else the resolver default. _Files:_ organization-resolver, login/register forms, CallbackPage, MfaForm.
 
 ### Phase 4 — Dual-URL routing (5)
 
@@ -485,14 +511,15 @@ _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by depend
 - ⬜ **FE-48** State primitives — `Skeleton` / `EmptyState` + per-route `ErrorBoundary` for dashboard + panels. _Files:_ shared/components/{EmptyState,ErrorBoundary}.
 - ⬜ **FE-53** `<Surface>` adaptive modal⇄right-drawer container (`Dialog` ⇄ `Sheet side="right"`; full-screen sheet ≤ sm); adopt in SettingsModal + create/edit dialogs. _Files:_ shared/components/Surface (+ SettingsModal). Builds D-27.
 
-### Phase T — Global theming (4) — land before Phases 7–8
+### Phase T — Global theming & layout width (5) — land before Phases 7–8
 
-_Appended IDs (`FE-54`…`FE-57`); builds D-28. FE-54 can land anytime; FE-56 ships with Settings._
+_Appended IDs (`FE-54`…`FE-57`, `FE-60`); builds D-28, D-30. FE-54 can land anytime; FE-56 ships with Settings._
 
 - ⬜ **FE-54** Token-contract alignment + shadcn-create adapter — verify `@theme` covers the full shadcn variable set; documented name-map + a one-step "adopt a `ui.shadcn.com/create` export" path (their `--*` → our `--color-*`, radius, fonts). _Files:_ index.css, docs/reference/theming, scripts.
 - ⬜ **FE-55** Named theme presets — N presets (base/accent + radius + font) as token-override blocks applied via `data-theme` on `<html>`, composed with `.dark`. _Files:_ index.css (preset blocks), shared theme registry.
 - ⬜ **FE-56** Runtime theme switcher — extend `useThemeStore` → `{ mode, preset, radius? }` (persisted); apply `data-theme` + `.dark`; **Settings → Appearance** panel (mode + preset [+ accent/radius]). _Files:_ useThemeStore, SettingsModal Appearance panel.
 - ⬜ **FE-57** Org brand theming (optional) — org `brand_color` → `--color-brand` (+ derived ramp); capability/module-gated. _Files:_ shared/tenancy, index.css brand tokens.
+- ⬜ **FE-60** Layout width mode — `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = `contained` | `full`, default `contained`): `ProtectedLayout` content container = centered 12-grid (`max-w-screen-2xl mx-auto`) vs full-window (fluid); optional Appearance toggle; document in `.env.example`. _Files:_ core/config/env.ts, shared/layouts/ProtectedLayout, .env.example, SettingsModal Appearance.
 
 ### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
 
@@ -524,12 +551,14 @@ _Appended IDs (`FE-54`…`FE-57`); builds D-28. FE-54 can land anytime; FE-56 sh
 ### Sequencing & dependencies
 
 Critical path **FE-01 → FE-23** (auth → me/context → gateway+layouts → routing).
-**Phase 3A (FE-49…FE-52)** extends the gateway — do with/after Phase 3, before
-Phase 7 (panels rely on `can()` / `<Gate>` / module gating). **Phase F
+**Phase 3A (FE-49…FE-52, FE-58–FE-59)** extends the gateway — do with/after
+Phase 3, before Phase 7 (panels rely on `can()` / `<Gate>` / module gating);
+`returnTo` capture/consume spans the gateway + auth flows. **Phase F
 (FE-43…FE-48, FE-53)** is cross-cutting — land it before Phases 6–7 so panels
 share one notify / mutation / error / surface layer (FE-43/44 can land even earlier).
-**Phase T (FE-54…FE-57)** theming is independent — FE-54 (token contract) can
-land anytime; FE-56 (switcher) ships with Settings (Phase 7).
+**Phase T (FE-54…FE-57, FE-60)** theming + layout width are independent —
+FE-54/FE-60 (token contract / layout env) can land anytime; FE-56 (switcher)
+ships with Settings (Phase 7).
 **Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
 **Phase 7** depends on Phase 6 + Phase F + Phase 3A. **Phase 8** is last.
 Cross-deps: FE-22 needs FE-12; FE-24 needs FE-06; FE-20 needs OD-1; FE-34…FE-37
