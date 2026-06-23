@@ -2,7 +2,6 @@ import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-import { API_BASE_PATH } from '@/core/config/constants.ts';
 import { config } from '@/core/config/env.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { performMockLogin } from '@/shared/auth/mock-auth.ts';
@@ -78,13 +77,20 @@ export function PasswordlessOptions() {
     };
   }, []);
 
-  const startOAuth = (provider: string) => {
+  const startOAuth = async (provider: string) => {
     if (config.useMockApi) {
       void navigate({ to: '/callback' });
       return;
     }
-    // Full-page navigation: the backend redirects to the provider, then back to /callback.
-    window.location.assign(`${config.apiBaseUrl}${API_BASE_PATH}/auth/oauth/${provider}`);
+    try {
+      // The start endpoint returns the provider's authorize URL; redirect to it.
+      const url = await authApi.oauthStart(provider);
+      window.location.assign(url);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : `Could not start ${provider} sign-in.`,
+      );
+    }
   };
 
   const handlePasskey = async () => {
@@ -145,7 +151,7 @@ export function PasswordlessOptions() {
           type="button"
           variant="outline"
           className="w-full"
-          onClick={() => startOAuth(provider)}
+          onClick={() => void startOAuth(provider)}
           data-testid={`login-oauth-${provider}`}
         >
           <ProviderIcon provider={provider} />

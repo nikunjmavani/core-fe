@@ -288,6 +288,32 @@ export const authApi = {
   },
 
   /**
+   * Begin an OAuth flow. `GET /auth/oauth/:provider` returns `{ url }` (the
+   * provider's authorize URL); the caller redirects the browser to it. The
+   * provider returns to the backend, which sets the refresh cookie and bounces
+   * the browser to `/callback`.
+   */
+  oauthStart: async (provider: string): Promise<string> => {
+    if (config.useMockApi) return mockResponse('/callback');
+    const response = await authFetch(
+      `${authBase()}/auth/oauth/${encodeURIComponent(provider)}`,
+      { method: 'GET' },
+    );
+    const json = (await response.json()) as unknown;
+    if (!response.ok)
+      throwOnNotOk(
+        response,
+        json,
+        `Could not start ${provider} sign-in (${response.status})`,
+      );
+    const data = unwrapEnvelope(json) as { url?: string } | null;
+    if (typeof data?.url !== 'string' || data.url.length === 0) {
+      throw new Error(`Could not start ${provider} sign-in (no redirect URL).`);
+    }
+    return data.url;
+  },
+
+  /**
    * Request a passwordless sign-in link/code. The response is uniform whether or
    * not the account exists (no enumeration) — callers should never branch on it.
    */

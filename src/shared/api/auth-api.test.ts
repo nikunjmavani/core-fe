@@ -56,6 +56,10 @@ describe('authApi passwordless / oauth (mock)', () => {
     expect(res.accessToken).toBeTruthy();
   });
 
+  it('oauthStart returns a redirect URL', async () => {
+    expect(await authApi.oauthStart('google')).toBeTruthy();
+  });
+
   it('resendVerification resolves without throwing', async () => {
     await expect(authApi.resendVerification('tok')).resolves.toBeUndefined();
   });

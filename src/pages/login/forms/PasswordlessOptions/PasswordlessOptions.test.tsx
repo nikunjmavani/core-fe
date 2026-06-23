@@ -32,6 +32,25 @@ describe('PasswordlessOptions', () => {
     expect(screen.getByTestId('login-magic-link')).toBeInTheDocument();
   });
 
+  it('starts OAuth by fetching the provider URL and redirecting', async () => {
+    vi.spyOn(authApi, 'listOAuthProviders').mockResolvedValue(['google']);
+    const start = vi
+      .spyOn(authApi, 'oauthStart')
+      .mockResolvedValue('https://accounts.google.com/o/oauth2/auth?x=1');
+    const assign = vi.fn();
+    vi.spyOn(window, 'location', 'get').mockReturnValue({
+      ...window.location,
+      assign,
+    } as Location);
+    const user = userEvent.setup();
+    renderWithProviders(<PasswordlessOptions />);
+
+    await user.click(await screen.findByTestId('login-oauth-google'));
+
+    await waitFor(() => expect(start).toHaveBeenCalledWith('google'));
+    expect(assign).toHaveBeenCalledWith('https://accounts.google.com/o/oauth2/auth?x=1');
+  });
+
   it('sends a 6-digit sign-in code to the entered email', async () => {
     vi.spyOn(authApi, 'listOAuthProviders').mockResolvedValue([]);
     const send = vi.spyOn(authApi, 'magicLinkSend').mockResolvedValue();
