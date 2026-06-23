@@ -1,6 +1,6 @@
 import { apiClient } from '@/core/http/fetch-client.ts';
 
-import type { DataProvider, ListParams, ListResult } from '../dataProvider.ts';
+import type { DataProvider, ListParams } from '../dataProvider.ts';
 
 function buildQuery(params?: ListParams): string {
   if (!params) return '';
@@ -30,8 +30,9 @@ function buildQuery(params?: ListParams): string {
 
 /**
  * REST adapter for the {@link DataProvider} contract. Wraps `apiClient`
- * (`@/core/http/fetch-client`) and lets the backend respond either as a
- * bare array (we infer `total` from length) or as `{ data, total }`.
+ * (`@/core/http/fetch-client`), which already unwraps the core-be `{ data, meta }`
+ * envelope — so `res.data` is the payload and list totals come from
+ * `res.meta.pagination` (falling back to the page length).
  */
 export function createHttpDataProvider(basePath = '/api/v1'): DataProvider {
   const path = (resource: string, id?: string) =>
@@ -39,13 +40,12 @@ export function createHttpDataProvider(basePath = '/api/v1'): DataProvider {
 
   return {
     getList: async <T>(resource: string, params?: ListParams) => {
-      const res = await apiClient.get<T[] | ListResult<T>>(
-        `${path(resource)}${buildQuery(params)}`,
-      );
-      if (Array.isArray(res.data)) {
-        return { data: res.data, total: res.data.length };
-      }
-      return res.data;
+      const res = await apiClient.get<T[]>(`${path(resource)}${buildQuery(params)}`);
+      const items = Array.isArray(res.data) ? res.data : [];
+      return {
+        data: items,
+        total: res.meta?.pagination?.estimated_total ?? items.length,
+      };
     },
     getOne: async <T>(resource: string, id: string) => {
       const res = await apiClient.get<T>(path(resource, id));

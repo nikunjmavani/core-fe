@@ -28,16 +28,50 @@ const defaultConfig: HttpClientConfig = {
   credentials: 'include',
 };
 
-// No X-Organization-ID header: the backend scopes organization context from
-// the URL path (/api/v1/tenancy/organizations/:id/…), so a header would be
-// redundant state to keep in sync.
+// ------------------------------------------------------------------
+// Response envelope — core-be wraps every success as { data, meta }
+// ------------------------------------------------------------------
+/** Cursor-pagination block carried on list responses (inside `meta.pagination`). */
+export interface PaginationMeta {
+  per_page: number;
+  next: string | null;
+  has_more: boolean;
+  estimated_total?: number;
+}
+/** The `meta` object returned alongside every core-be success response. */
+export interface ResponseMeta {
+  request_id?: string;
+  pagination?: PaginationMeta;
+}
+/** What every apiClient method resolves to: the unwrapped payload + its meta. */
+export interface HttpResponse<T> {
+  data: T;
+  meta?: ResponseMeta;
+}
+
+/**
+ * core-be envelopes every success body as `{ data, meta }`. Detect that shape
+ * so we can unwrap to the payload; anything else passes through untouched
+ * (defensive — e.g. a non-enveloped legacy or third-party response).
+ */
+function isEnvelope(value: unknown): value is { data: unknown; meta?: ResponseMeta } {
+  return (
+    typeof value === 'object' && value !== null && 'data' in value && 'meta' in value
+  );
+}
+
+// No X-Organization-ID header: the backend scopes organization context from the
+// signed `org` claim in the access token (set via /auth/switch-to-organization),
+// not from a header or URL segment. (The upload domain is the lone server-side
+// reader of that header; the SPA never needs to send it.)
 function buildHeaders(idempotencyKey?: string, customHeaders?: HeadersInit): Headers {
   const headers = new Headers(customHeaders);
   headers.set('Content-Type', 'application/json');
   headers.set('X-Requested-With', 'XMLHttpRequest');
   headers.set('X-Request-ID', generateRequestId());
   if (idempotencyKey) {
-    headers.set('Idempotency-Key', idempotencyKey);
+    // core-be requires `X-Idempotency-Key` (min 16 chars) on its write routes.
+    headers.set('X-Idempotency-Key', idempotencyKey);
   }
 
   const accessToken = getAccessToken();
@@ -123,8 +157,8 @@ function buildRequestUrl(path: string): string {
  * A failed refresh means the session is gone: clear local auth and bail.
  */
 async function doRefreshAndReplay<T>(
-  replay: () => Promise<{ data: T }>,
-): Promise<{ data: T }> {
+  replay: () => Promise<HttpResponse<T>>,
+): Promise<HttpResponse<T>> {
   try {
     await refreshAccessToken();
   } catch (refreshError) {
@@ -134,7 +168,7 @@ async function doRefreshAndReplay<T>(
   return replay();
 }
 
-/** Write methods carry an auto-generated Idempotency-Key (server de-dupes). */
+/** Write methods carry an auto-generated X-Idempotency-Key (server de-dupes). */
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 async function request<T>(
@@ -142,7 +176,7 @@ async function request<T>(
   path: string,
   body?: unknown,
   options?: { skip401?: boolean },
-): Promise<{ data: T }> {
+): Promise<HttpResponse<T>> {
   const url = buildRequestUrl(path);
   const isRefreshUrl =
     path === API_ENDPOINTS.AUTH.REFRESH || url.endsWith(API_ENDPOINTS.AUTH.REFRESH);
@@ -182,7 +216,10 @@ async function request<T>(
     }
   }
 
-  const doOne = async (retryCount = 0, hasRefreshed = false): Promise<{ data: T }> => {
+  const doOne = async (
+    retryCount = 0,
+    hasRefreshed = false,
+  ): Promise<HttpResponse<T>> => {
     const response = await attemptFetch(retryCount);
 
     if (response.status === 401 && !options?.skip401 && !isRefreshUrl) {
@@ -222,9 +259,9 @@ async function request<T>(
         text.slice(0, 200),
       );
     }
-    let data: T;
+    let parsed: unknown;
     try {
-      data = JSON.parse(text) as T;
+      parsed = JSON.parse(text) as unknown;
     } catch {
       throw new HttpError(
         'Invalid JSON response',
@@ -234,7 +271,12 @@ async function request<T>(
         text.slice(0, 200),
       );
     }
-    return { data };
+    // core-be wraps every success as { data, meta }: unwrap to the payload and
+    // surface meta (request_id, pagination). Non-enveloped bodies pass through.
+    if (isEnvelope(parsed)) {
+      return { data: parsed.data as T, meta: parsed.meta };
+    }
+    return { data: parsed as T };
   };
 
   return doOne();
@@ -244,23 +286,23 @@ async function request<T>(
 // Public API (axios-like: .get().then(r => r.data))
 // ------------------------------------------------------------------
 export interface HttpClient {
-  get: <T>(url: string, options?: { skip401?: boolean }) => Promise<{ data: T }>;
+  get: <T>(url: string, options?: { skip401?: boolean }) => Promise<HttpResponse<T>>;
   post: <T>(
     url: string,
     body?: unknown,
     options?: { skip401?: boolean },
-  ) => Promise<{ data: T }>;
+  ) => Promise<HttpResponse<T>>;
   put: <T>(
     url: string,
     body?: unknown,
     options?: { skip401?: boolean },
-  ) => Promise<{ data: T }>;
+  ) => Promise<HttpResponse<T>>;
   patch: <T>(
     url: string,
     body?: unknown,
     options?: { skip401?: boolean },
-  ) => Promise<{ data: T }>;
-  delete: <T>(url: string, options?: { skip401?: boolean }) => Promise<{ data: T }>;
+  ) => Promise<HttpResponse<T>>;
+  delete: <T>(url: string, options?: { skip401?: boolean }) => Promise<HttpResponse<T>>;
 }
 
 function createHttpClient(_overrides?: Partial<HttpClientConfig>): HttpClient {

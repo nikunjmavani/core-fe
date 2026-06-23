@@ -94,6 +94,64 @@ describe('fetch-client', () => {
     });
   });
 
+  describe('core-be { data, meta } envelope', () => {
+    it('unwraps the envelope to the payload and surfaces meta.request_id', async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({ data: { foo: 'bar' }, meta: { request_id: 'req_1' } }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+
+      // res.data is the PAYLOAD, never the whole envelope (no double-unwrap).
+      const res = await apiClient.get<{ foo: string }>('/test');
+      expect(res.data).toEqual({ foo: 'bar' });
+      expect(res.meta?.request_id).toBe('req_1');
+    });
+
+    it('surfaces meta.pagination on list responses', async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: [{ id: 1 }, { id: 2 }],
+            meta: {
+              request_id: 'req_2',
+              pagination: {
+                per_page: 2,
+                next: 'cur_2',
+                has_more: true,
+                estimated_total: 9,
+              },
+            },
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+
+      const res = await apiClient.get<Array<{ id: number }>>('/things');
+      expect(res.data).toEqual([{ id: 1 }, { id: 2 }]);
+      expect(res.meta?.pagination).toEqual({
+        per_page: 2,
+        next: 'cur_2',
+        has_more: true,
+        estimated_total: 9,
+      });
+    });
+
+    it('passes a non-enveloped body through unchanged (defensive)', async () => {
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({ foo: 'bar' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+      const res = await apiClient.get<{ foo: string }>('/test');
+      expect(res.data).toEqual({ foo: 'bar' });
+      expect(res.meta).toBeUndefined();
+    });
+  });
+
   describe('request headers', () => {
     it('adds Authorization when token is set', async () => {
       setAccessToken(VALID_TOKEN);
@@ -202,7 +260,7 @@ describe('fetch-client', () => {
     });
   });
 
-  describe('Idempotency-Key', () => {
+  describe('X-Idempotency-Key', () => {
     const ok = () =>
       new Response(JSON.stringify({}), {
         status: 200,
@@ -218,8 +276,8 @@ describe('fetch-client', () => {
 
       const postHeaders = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
       const getHeaders = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;
-      expect(postHeaders.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
-      expect(getHeaders.get('Idempotency-Key')).toBeNull();
+      expect(postHeaders.get('X-Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+      expect(getHeaders.get('X-Idempotency-Key')).toBeNull();
     });
 
     it('the SAME key survives the 401 refresh replay (server can de-dupe)', async () => {
@@ -236,13 +294,13 @@ describe('fetch-client', () => {
 
       const first = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
       const replay = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;
-      expect(first.get('Idempotency-Key')).toBe(replay.get('Idempotency-Key'));
-      expect(first.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+      expect(first.get('X-Idempotency-Key')).toBe(replay.get('X-Idempotency-Key'));
+      expect(first.get('X-Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
     });
   });
 
   describe('write methods (PUT / DELETE)', () => {
-    it('DELETE and PUT both carry an auto-generated Idempotency-Key', async () => {
+    it('DELETE and PUT both carry an auto-generated X-Idempotency-Key', async () => {
       fetchMock.mockImplementation(() => Promise.resolve(ok()));
 
       await apiClient.delete('/things/1');
@@ -251,8 +309,8 @@ describe('fetch-client', () => {
       const deleteHeaders = (fetchMock.mock.calls[0][1] as RequestInit)
         .headers as Headers;
       const putHeaders = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;
-      expect(deleteHeaders.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
-      expect(putHeaders.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+      expect(deleteHeaders.get('X-Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+      expect(putHeaders.get('X-Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
     });
 
     it('DELETE 401 → shared refresh → replay succeeds', async () => {
@@ -265,15 +323,15 @@ describe('fetch-client', () => {
       expect(forceLogout).not.toHaveBeenCalled();
     });
 
-    it('PUT keeps the SAME Idempotency-Key across the 401 replay', async () => {
+    it('PUT keeps the SAME X-Idempotency-Key across the 401 replay', async () => {
       fetchMock.mockResolvedValueOnce(unauthorized()).mockResolvedValueOnce(ok());
 
       await apiClient.put('/things/1', { a: 1 });
 
       const first = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
       const replay = (fetchMock.mock.calls[1][1] as RequestInit).headers as Headers;
-      expect(first.get('Idempotency-Key')).toBe(replay.get('Idempotency-Key'));
-      expect(first.get('Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
+      expect(first.get('X-Idempotency-Key')).toBe(replay.get('X-Idempotency-Key'));
+      expect(first.get('X-Idempotency-Key')).toMatch(/[0-9a-f-]{36}/);
     });
   });
 
