@@ -557,7 +557,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 ### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
 
 - ✅ **FE-25** Memberships — `membershipWire` + `toMember` (role `{id,name}`→`OrgRole`, embedded `user`, status map, name→email fallback); live `listMembers`/`updateMemberStatus`/`removeMember`; `updateMemberRole` sends `role_id` (panel resolves it). _Files:_ organization-api. (Invitations = add-by-email handled in FE-34.)
-- ⬜ **FE-26** Roles (+ permissions catalog).
+- ✅ **FE-26** Roles — `roleWire` + `toRoleSummary` (tolerates missing permissions/member*count/description); live `listRoles`/`createRole`/`updateRole`/`deleteRole`. Permissions catalog already in contracts (`ASSIGNABLE_ROLE_PERMISSIONS`). \_Files:* organization-api.
 - ⬜ **FE-27** Billing (plans + subscriptions + mutations).
 - ⬜ **FE-28** API keys (+ rotate).
 - ⬜ **FE-29** Webhooks + notification-policies.

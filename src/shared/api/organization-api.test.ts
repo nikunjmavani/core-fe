@@ -9,17 +9,21 @@ vi.mock('@/core/config/env.ts', () => ({
   },
 }));
 
-const { getMock, patchMock, deleteMock } = vi.hoisted(() => ({
+const { getMock, postMock, patchMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
+  postMock: vi.fn(),
   patchMock: vi.fn(),
   deleteMock: vi.fn(),
 }));
 vi.mock('@/core/http/fetch-client.ts', () => ({
-  apiClient: { get: getMock, patch: patchMock, delete: deleteMock },
+  apiClient: { get: getMock, post: postMock, patch: patchMock, delete: deleteMock },
 }));
 
 import {
+  createRole,
+  deleteRole,
   listMembers,
+  listRoles,
   removeMember,
   updateMemberRole,
   updateMemberStatus,
@@ -47,6 +51,7 @@ const WIRE_MEMBER = {
 beforeEach(() => {
   useMockApiRef.value = false;
   getMock.mockReset();
+  postMock.mockReset();
   patchMock.mockReset();
   deleteMock.mockReset();
 });
@@ -132,5 +137,53 @@ describe('organization-api memberships (mock)', () => {
     const members = await listMembers();
     expect(Array.isArray(members)).toBe(true);
     expect(getMock).not.toHaveBeenCalled();
+  });
+});
+
+const ROLE_WIRE = {
+  id: ROL,
+  name: 'Admin',
+  description: 'Org admins',
+  is_system: true,
+  permissions: ['membership:manage'],
+  member_count: 3,
+};
+
+describe('organization-api roles (live)', () => {
+  it('maps the role wire to RoleSummary', async () => {
+    getMock.mockResolvedValue({ data: [ROLE_WIRE] });
+    const [role] = await listRoles();
+    expect(role).toMatchObject({
+      id: ROL,
+      name: 'Admin',
+      description: 'Org admins',
+      isSystem: true,
+      memberCount: 3,
+      permissions: ['membership:manage'],
+    });
+  });
+
+  it('defaults missing permissions / member_count / description', async () => {
+    getMock.mockResolvedValue({ data: [{ id: ROL, name: 'Viewer', is_system: true }] });
+    const [role] = await listRoles();
+    expect(role?.permissions).toEqual([]);
+    expect(role?.memberCount).toBe(0);
+    expect(role?.description).toBe('');
+  });
+
+  it('createRole posts the input and maps the result', async () => {
+    postMock.mockResolvedValue({ data: { ...ROLE_WIRE, is_system: false } });
+    await createRole({ name: 'X', description: 'd', permissions: ['role:read'] });
+    expect(postMock).toHaveBeenCalledWith(expect.stringContaining('/roles'), {
+      name: 'X',
+      description: 'd',
+      permissions: ['role:read'],
+    });
+  });
+
+  it('deleteRole deletes and returns the id', async () => {
+    deleteMock.mockResolvedValue({ data: null });
+    expect(await deleteRole('rol_x')).toEqual({ id: 'rol_x' });
+    expect(deleteMock).toHaveBeenCalledWith(expect.stringContaining('/roles/rol_x'));
   });
 });

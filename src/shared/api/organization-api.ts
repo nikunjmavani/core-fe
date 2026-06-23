@@ -213,52 +213,89 @@ export function resendInvitation(invitationId: string): Promise<Invitation> {
 
 // ── Roles ──
 
+// core-be role wire (snake_case). `permissions` / `member_count` may be absent
+// on the list shape — tolerate and default them.
+const roleWire = z.object({
+  id: publicId('rol'),
+  name: z.string(),
+  description: z.string().nullable().optional(),
+  is_system: z.boolean(),
+  permissions: z.array(z.string()).optional(),
+  member_count: z.number().int().nonnegative().optional(),
+});
+type RoleWire = z.infer<typeof roleWire>;
+
+function toRoleSummary(w: RoleWire): RoleSummary {
+  return {
+    id: w.id,
+    name: w.name,
+    description: w.description ?? '',
+    permissions: w.permissions ?? [],
+    memberCount: w.member_count ?? 0,
+    isSystem: w.is_system,
+  };
+}
+
 /** List roles defined in the active organization. */
-export function listRoles(): Promise<RoleSummary[]> {
-  // REPLACE_WITH_API: GET /api/v1/tenancy/organizations/{orgId}/roles
-  return mockResponse(orgMockStore.listRoles());
+export async function listRoles(): Promise<RoleSummary[]> {
+  if (config.useMockApi) return mockResponse(orgMockStore.listRoles());
+  const res = await apiClient.get<unknown>(`${ORG_API}/roles`);
+  return z.array(roleWire).parse(res.data).map(toRoleSummary);
 }
 
 /** Create a custom role. */
-export function createRole(input: {
+export async function createRole(input: {
   name: string;
   description: string;
   permissions: string[];
 }): Promise<RoleSummary> {
-  // REPLACE_WITH_API: POST /api/v1/tenancy/organizations/{orgId}/roles
-  const role: RoleSummary = {
-    id: `role_${Date.now()}`,
-    name: input.name,
-    description: input.description,
-    permissions: input.permissions,
-    memberCount: 0,
-    isSystem: false,
-  };
-  return mockResponse(orgMockStore.addRole(role));
+  if (config.useMockApi) {
+    const role: RoleSummary = {
+      id: `role_${Date.now()}`,
+      name: input.name,
+      description: input.description,
+      permissions: input.permissions,
+      memberCount: 0,
+      isSystem: false,
+    };
+    return mockResponse(orgMockStore.addRole(role));
+  }
+  const res = await apiClient.post<unknown>(`${ORG_API}/roles`, input);
+  return toRoleSummary(roleWire.parse(res.data));
 }
 
 /** Update a custom role. */
-export function updateRole(input: {
+export async function updateRole(input: {
   id: string;
   name: string;
   description: string;
   permissions: string[];
 }): Promise<RoleSummary> {
-  // REPLACE_WITH_API: PATCH /api/v1/tenancy/organizations/{orgId}/roles/{roleId}
-  return mockResponse(
-    orgMockStore.updateRole(input.id, {
-      name: input.name,
-      description: input.description,
-      permissions: input.permissions,
-    }),
-  );
+  if (config.useMockApi) {
+    return mockResponse(
+      orgMockStore.updateRole(input.id, {
+        name: input.name,
+        description: input.description,
+        permissions: input.permissions,
+      }),
+    );
+  }
+  const res = await apiClient.patch<unknown>(`${ORG_API}/roles/${input.id}`, {
+    name: input.name,
+    description: input.description,
+    permissions: input.permissions,
+  });
+  return toRoleSummary(roleWire.parse(res.data));
 }
 
 /** Delete a custom role. */
-export function deleteRole(roleId: string): Promise<{ id: string }> {
-  // REPLACE_WITH_API: DELETE /api/v1/tenancy/organizations/{orgId}/roles/{roleId}
-  orgMockStore.deleteRole(roleId);
-  return mockResponse({ id: roleId });
+export async function deleteRole(roleId: string): Promise<{ id: string }> {
+  if (config.useMockApi) {
+    orgMockStore.deleteRole(roleId);
+    return mockResponse({ id: roleId });
+  }
+  await apiClient.delete<unknown>(`${ORG_API}/roles/${roleId}`);
+  return { id: roleId };
 }
 
 // ── API keys ──
