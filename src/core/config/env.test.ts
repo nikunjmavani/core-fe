@@ -1,4 +1,4 @@
-import { config, resolveUseMockApi } from './env.ts';
+import { config, resolveLayoutWidth, resolveUseMockApi } from './env.ts';
 
 describe('resolveUseMockApi', () => {
   it('is false in test mode', () => {
@@ -40,7 +40,23 @@ describe('resolveUseMockApi', () => {
   });
 });
 
+describe('resolveLayoutWidth', () => {
+  it('defaults to contained', () => {
+    expect(resolveLayoutWidth(undefined)).toBe('contained');
+    expect(resolveLayoutWidth('contained')).toBe('contained');
+    expect(resolveLayoutWidth('anything-else')).toBe('contained');
+  });
+
+  it('returns full only for the explicit "full" flag', () => {
+    expect(resolveLayoutWidth('full')).toBe('full');
+  });
+});
+
 describe('config', () => {
+  it('config.layoutWidth is contained or full', () => {
+    expect(['contained', 'full']).toContain(config.layoutWidth);
+  });
+
   it('config.environment is a string', () => {
     expect(typeof config.environment).toBe('string');
     expect(['development', 'production', 'test']).toContain(config.environment);

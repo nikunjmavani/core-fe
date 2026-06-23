@@ -23,6 +23,7 @@ const envSchema = z.object({
   VITE_POSTHOG_KEY: z.string().optional(),
   VITE_POSTHOG_HOST: z.string().optional(),
   VITE_USE_MOCK_API: z.string().optional(),
+  VITE_LAYOUT_WIDTH: z.enum(['contained', 'full']).optional(),
   MODE: z.enum(['development', 'production', 'staging', 'test']).default('development'),
   DEV: z.boolean().default(false),
   PROD: z.boolean().default(false),
@@ -86,6 +87,14 @@ export function resolveUseMockApi(options: {
   return options.useMockApiFlag !== 'false';
 }
 
+/**
+ * App content layout width: `contained` centers content in a max-width 12-grid
+ * (default); `full` is edge-to-edge. @internal Exported for unit tests.
+ */
+export function resolveLayoutWidth(flag: string | undefined): 'contained' | 'full' {
+  return flag === 'full' ? 'full' : 'contained';
+}
+
 export const config = {
   /** Base URL for API calls. Empty in dev (Vite proxy). Set in production. */
   apiBaseUrl:
@@ -107,6 +116,12 @@ export const config = {
     isProd: env.PROD,
     useMockApiFlag: get('USE_MOCK_API'),
   }),
+
+  /**
+   * Content layout width: `contained` (centered 12-grid, default) or `full`
+   * (edge-to-edge). Set `VITE_LAYOUT_WIDTH=full` to opt in.
+   */
+  layoutWidth: resolveLayoutWidth(get('LAYOUT_WIDTH')),
 
   environment: env.MODE,
   isDevelopment: env.DEV,

@@ -1,5 +1,6 @@
 import { Link, Outlet, useNavigate, useParams } from '@tanstack/react-router';
 
+import { config } from '@/core/config/env.ts';
 import { PageTransition } from '@/lib/animations/PageTransition.tsx';
 import { cn } from '@/lib/utils.ts';
 import { logout } from '@/shared/auth/service.ts';
@@ -96,7 +97,12 @@ export function Component() {
           className="flex-1 overflow-y-auto p-4 pb-20 sm:p-6 md:pb-6"
           data-testid="main-content"
         >
-          <div className="mx-auto w-full max-w-screen-2xl">
+          <div
+            className={cn(
+              'w-full',
+              config.layoutWidth === 'contained' && 'mx-auto max-w-screen-2xl',
+            )}
+          >
             <PageTransition>
               <Outlet />
             </PageTransition>
