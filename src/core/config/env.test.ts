@@ -1,4 +1,9 @@
-import { config, resolveLayoutWidth, resolveUseMockApi } from './env.ts';
+import {
+  config,
+  resolveLayoutWidth,
+  resolveThemeLock,
+  resolveUseMockApi,
+} from './env.ts';
 
 describe('resolveUseMockApi', () => {
   it('is false in test mode', () => {
@@ -52,9 +57,22 @@ describe('resolveLayoutWidth', () => {
   });
 });
 
+describe('resolveThemeLock', () => {
+  it('is true only for the explicit "true" flag', () => {
+    expect(resolveThemeLock('true')).toBe(true);
+    expect(resolveThemeLock('false')).toBe(false);
+    expect(resolveThemeLock(undefined)).toBe(false);
+    expect(resolveThemeLock('1')).toBe(false);
+  });
+});
+
 describe('config', () => {
   it('config.layoutWidth is contained or full', () => {
     expect(['contained', 'full']).toContain(config.layoutWidth);
+  });
+
+  it('config.themeLock is a boolean', () => {
+    expect(typeof config.themeLock).toBe('boolean');
   });
 
   it('config.environment is a string', () => {

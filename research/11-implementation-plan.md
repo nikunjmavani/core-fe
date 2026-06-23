@@ -552,7 +552,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 - ⬜ **FE-57** Org brand theming (optional) — org `brand_color` → `--color-brand` (+ derived ramp); capability/module-gated. _Files:_ shared/tenancy, index.css brand tokens.
 - ✅ **FE-60** Layout width mode — `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = `contained` | `full`, default `contained`) + `resolveLayoutWidth`; AppShell content container = centered 12-grid vs full-window; documented in `.env.example`. _Files:_ core/config/env.ts, AppShell, .env.example. (Runtime Appearance toggle lands with the switcher, FE-56.)
 - ⬜ **FE-66** Shuffle theme — an Appearance **"Shuffle"** action that randomizes the preset (or generates fresh token values, create-tool style) and persists via `useThemeStore`. _Files:_ SettingsModal Appearance, shared theme registry.
-- ⬜ **FE-67** Theme-lock env — `config.themeLock` (`VITE_THEME_LOCK`): when `true`, hide the switcher + shuffle and pin the code-defined theme; default `false` allows web customization; document in `.env.example`. _Files:_ core/config/env.ts, useThemeStore, SettingsModal Appearance, .env.example.
+- ✅ **FE-67** Theme-lock env — `config.themeLock` (`VITE_THEME_LOCK=true`) + `resolveThemeLock`; documented in `.env.example`. The switcher/shuffle read it to hide controls when locked (wired with FE-56). _Files:_ core/config/env.ts, .env.example.
 
 ### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
 

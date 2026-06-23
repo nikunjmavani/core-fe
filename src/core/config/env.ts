@@ -24,6 +24,7 @@ const envSchema = z.object({
   VITE_POSTHOG_HOST: z.string().optional(),
   VITE_USE_MOCK_API: z.string().optional(),
   VITE_LAYOUT_WIDTH: z.enum(['contained', 'full']).optional(),
+  VITE_THEME_LOCK: z.string().optional(),
   MODE: z.enum(['development', 'production', 'staging', 'test']).default('development'),
   DEV: z.boolean().default(false),
   PROD: z.boolean().default(false),
@@ -95,6 +96,14 @@ export function resolveLayoutWidth(flag: string | undefined): 'contained' | 'ful
   return flag === 'full' ? 'full' : 'contained';
 }
 
+/**
+ * When true, the app is locked to the code-defined theme — the runtime theme
+ * switcher + shuffle are hidden. @internal Exported for unit tests.
+ */
+export function resolveThemeLock(flag: string | undefined): boolean {
+  return flag === 'true';
+}
+
 export const config = {
   /** Base URL for API calls. Empty in dev (Vite proxy). Set in production. */
   apiBaseUrl:
@@ -122,6 +131,12 @@ export const config = {
    * (edge-to-edge). Set `VITE_LAYOUT_WIDTH=full` to opt in.
    */
   layoutWidth: resolveLayoutWidth(get('LAYOUT_WIDTH')),
+
+  /**
+   * When true (`VITE_THEME_LOCK=true`), freeze the app to the code-defined theme
+   * — the runtime theme switcher + shuffle are hidden. Default: customizable.
+   */
+  themeLock: resolveThemeLock(get('THEME_LOCK')),
 
   environment: env.MODE,
   isDevelopment: env.DEV,
