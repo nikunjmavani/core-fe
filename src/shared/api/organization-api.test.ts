@@ -20,14 +20,21 @@ vi.mock('@/core/http/fetch-client.ts', () => ({
 }));
 
 import {
+  createApiKey,
   createRole,
   deleteRole,
+  getSubscription,
+  listApiKeys,
   listMembers,
   listRoles,
   removeMember,
+  revokeApiKey,
   updateMemberRole,
   updateMemberStatus,
+  updateSubscriptionPlan,
 } from './organization-api.ts';
+
+const TS = '2026-01-01T00:00:00.000Z';
 
 const USR = 'usr_abcdefghij0123456789x';
 const ROL = 'rol_abcdefghij0123456789x';
@@ -185,5 +192,81 @@ describe('organization-api roles (live)', () => {
     deleteMock.mockResolvedValue({ data: null });
     expect(await deleteRole('rol_x')).toEqual({ id: 'rol_x' });
     expect(deleteMock).toHaveBeenCalledWith(expect.stringContaining('/roles/rol_x'));
+  });
+});
+
+const KEY_WIRE = {
+  id: 'key_1',
+  name: 'CI token',
+  prefix: 'core_live_abcd',
+  created_at: TS,
+  last_used_at: null,
+  expires_at: null,
+};
+
+describe('organization-api api-keys (live)', () => {
+  it('maps the api-key wire to ApiKey', async () => {
+    getMock.mockResolvedValue({ data: [KEY_WIRE] });
+    const [key] = await listApiKeys();
+    expect(key).toMatchObject({
+      id: 'key_1',
+      name: 'CI token',
+      prefix: 'core_live_abcd',
+      createdAt: TS,
+    });
+    expect(key?.expiresAt).toBeUndefined();
+  });
+
+  it('createApiKey posts expires_in_days and returns the secret once', async () => {
+    postMock.mockResolvedValue({
+      data: { ...KEY_WIRE, secret: 'core_live_abcd_secret' },
+    });
+    const created = await createApiKey({ name: 'CI token', expiresInDays: '30' });
+    expect(created.secret).toBe('core_live_abcd_secret');
+    expect(postMock).toHaveBeenCalledWith(expect.stringContaining('/api-keys'), {
+      name: 'CI token',
+      expires_in_days: '30',
+    });
+  });
+
+  it('revokeApiKey deletes and returns the id', async () => {
+    deleteMock.mockResolvedValue({ data: null });
+    expect(await revokeApiKey('key_1')).toEqual({ id: 'key_1' });
+    expect(deleteMock).toHaveBeenCalledWith(expect.stringContaining('/api-keys/key_1'));
+  });
+});
+
+const SUB_WIRE = {
+  plan: 'pro',
+  status: 'active',
+  seats: 10,
+  seats_used: 4,
+  renews_at: TS,
+  amount_cents: 9900,
+  currency: 'usd',
+};
+
+describe('organization-api subscription (live)', () => {
+  it('maps the subscription wire to the domain shape', async () => {
+    getMock.mockResolvedValue({ data: SUB_WIRE });
+    const sub = await getSubscription();
+    expect(sub).toMatchObject({
+      plan: 'pro',
+      status: 'active',
+      seats: 10,
+      seatsUsed: 4,
+      renewsAt: TS,
+      amountCents: 9900,
+      currency: 'usd',
+    });
+  });
+
+  it('updateSubscriptionPlan patches the plan', async () => {
+    patchMock.mockResolvedValue({ data: { ...SUB_WIRE, plan: 'enterprise' } });
+    const sub = await updateSubscriptionPlan('enterprise');
+    expect(patchMock).toHaveBeenCalledWith(expect.stringContaining('/subscription'), {
+      plan: 'enterprise',
+    });
+    expect(sub.plan).toBe('enterprise');
   });
 });

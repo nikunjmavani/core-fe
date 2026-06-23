@@ -310,46 +310,83 @@ function randomHex(length: number): string {
   return out;
 }
 
+const apiKeyWire = z.object({
+  id: z.string(),
+  name: z.string(),
+  prefix: z.string(),
+  created_at: isoDateString,
+  last_used_at: isoDateString.nullable().optional(),
+  expires_at: isoDateString.nullable().optional(),
+});
+type ApiKeyWire = z.infer<typeof apiKeyWire>;
+
+function toApiKey(w: ApiKeyWire): ApiKey {
+  return {
+    id: w.id,
+    name: w.name,
+    prefix: w.prefix,
+    createdAt: w.created_at,
+    lastUsedAt: w.last_used_at ?? undefined,
+    expiresAt: w.expires_at ?? undefined,
+  };
+}
+
 /** List API keys for the active organization. */
-export function listApiKeys(): Promise<ApiKey[]> {
-  // REPLACE_WITH_API: GET /api/v1/tenancy/organizations/{orgId}/api-keys
-  return mockResponse(orgMockStore.listApiKeys());
+export async function listApiKeys(): Promise<ApiKey[]> {
+  if (config.useMockApi) return mockResponse(orgMockStore.listApiKeys());
+  const res = await apiClient.get<unknown>(`${ORG_API}/api-keys`);
+  return z.array(apiKeyWire).parse(res.data).map(toApiKey);
 }
 
 /** Create an API key. Returns the full secret exactly once. */
-export function createApiKey(input: {
+export async function createApiKey(input: {
   name: string;
   expiresInDays: '30' | '90' | '365' | 'never';
 }): Promise<ApiKeyWithSecret> {
-  // REPLACE_WITH_API: POST /api/v1/tenancy/organizations/{orgId}/api-keys
-  const now = Date.now();
-  const prefix = `core_live_${randomHex(4)}`;
-  const expiresAt =
-    input.expiresInDays === 'never'
-      ? undefined
-      : new Date(now + Number(input.expiresInDays) * 24 * 3600 * 1000).toISOString();
-  const apiKey: ApiKey = {
-    id: `key_${now}`,
+  if (config.useMockApi) {
+    const now = Date.now();
+    const prefix = `core_live_${randomHex(4)}`;
+    const expiresAt =
+      input.expiresInDays === 'never'
+        ? undefined
+        : new Date(now + Number(input.expiresInDays) * 24 * 3600 * 1000).toISOString();
+    const apiKey: ApiKey = {
+      id: `key_${now}`,
+      name: input.name,
+      prefix,
+      createdAt: new Date(now).toISOString(),
+      expiresAt,
+    };
+    orgMockStore.addApiKey(apiKey);
+    return mockResponse({ ...apiKey, secret: `${prefix}_${randomHex(32)}` });
+  }
+  const res = await apiClient.post<unknown>(`${ORG_API}/api-keys`, {
     name: input.name,
-    prefix,
-    createdAt: new Date(now).toISOString(),
-    expiresAt,
-  };
-  orgMockStore.addApiKey(apiKey);
-  return mockResponse({ ...apiKey, secret: `${prefix}_${randomHex(32)}` });
+    expires_in_days: input.expiresInDays,
+  });
+  const wire = apiKeyWire.extend({ secret: z.string() }).parse(res.data);
+  return { ...toApiKey(wire), secret: wire.secret };
 }
 
 /** Rename an API key. */
-export function renameApiKey(input: { id: string; name: string }): Promise<ApiKey> {
-  // REPLACE_WITH_API: PATCH /api/v1/tenancy/organizations/{orgId}/api-keys/{keyId}
-  return mockResponse(orgMockStore.renameApiKey(input.id, input.name));
+export async function renameApiKey(input: { id: string; name: string }): Promise<ApiKey> {
+  if (config.useMockApi) {
+    return mockResponse(orgMockStore.renameApiKey(input.id, input.name));
+  }
+  const res = await apiClient.patch<unknown>(`${ORG_API}/api-keys/${input.id}`, {
+    name: input.name,
+  });
+  return toApiKey(apiKeyWire.parse(res.data));
 }
 
 /** Revoke (delete) an API key. */
-export function revokeApiKey(keyId: string): Promise<{ id: string }> {
-  // REPLACE_WITH_API: DELETE /api/v1/tenancy/organizations/{orgId}/api-keys/{keyId}
-  orgMockStore.removeApiKey(keyId);
-  return mockResponse({ id: keyId });
+export async function revokeApiKey(keyId: string): Promise<{ id: string }> {
+  if (config.useMockApi) {
+    orgMockStore.removeApiKey(keyId);
+    return mockResponse({ id: keyId });
+  }
+  await apiClient.delete<unknown>(`${ORG_API}/api-keys/${keyId}`);
+  return { id: keyId };
 }
 
 // ── Subscription ──
@@ -360,24 +397,51 @@ const PLAN_PRICING: Record<Plan, { amountCents: number; seats: number }> = {
   enterprise: { amountCents: 49900, seats: 50 },
 };
 
+const subscriptionWire = z.object({
+  plan: z.enum(['free', 'pro', 'enterprise']),
+  status: z.enum(['active', 'trialing', 'past_due', 'canceled']),
+  seats: z.number().int().nonnegative(),
+  seats_used: z.number().int().nonnegative(),
+  renews_at: isoDateString,
+  amount_cents: z.number().int().nonnegative(),
+  currency: z.string(),
+});
+type SubscriptionWire = z.infer<typeof subscriptionWire>;
+
+function toSubscription(w: SubscriptionWire): Subscription {
+  return {
+    plan: w.plan,
+    status: w.status,
+    seats: w.seats,
+    seatsUsed: w.seats_used,
+    renewsAt: w.renews_at,
+    amountCents: w.amount_cents,
+    currency: w.currency,
+  };
+}
+
 /** Get the active organization's subscription. */
-export function getSubscription(): Promise<Subscription> {
-  // REPLACE_WITH_API: GET /api/v1/tenancy/organizations/{orgId}/subscription
-  return mockResponse(orgMockStore.getSubscription());
+export async function getSubscription(): Promise<Subscription> {
+  if (config.useMockApi) return mockResponse(orgMockStore.getSubscription());
+  const res = await apiClient.get<unknown>(`${ORG_API}/subscription`);
+  return toSubscription(subscriptionWire.parse(res.data));
 }
 
 /** Change the subscription plan (updates price + seat allotment). */
-export function updateSubscriptionPlan(plan: Plan): Promise<Subscription> {
-  // REPLACE_WITH_API: PATCH /api/v1/tenancy/organizations/{orgId}/subscription
-  // eslint-disable-next-line security/detect-object-injection -- plan is a constrained enum
-  const pricing = PLAN_PRICING[plan];
-  const current = orgMockStore.getSubscription();
-  return mockResponse(
-    orgMockStore.updateSubscription({
-      plan,
-      amountCents: pricing.amountCents,
-      seats: pricing.seats,
-      seatsUsed: Math.min(current.seatsUsed, pricing.seats),
-    }),
-  );
+export async function updateSubscriptionPlan(plan: Plan): Promise<Subscription> {
+  if (config.useMockApi) {
+    // eslint-disable-next-line security/detect-object-injection -- plan is a constrained enum
+    const pricing = PLAN_PRICING[plan];
+    const current = orgMockStore.getSubscription();
+    return mockResponse(
+      orgMockStore.updateSubscription({
+        plan,
+        amountCents: pricing.amountCents,
+        seats: pricing.seats,
+        seatsUsed: Math.min(current.seatsUsed, pricing.seats),
+      }),
+    );
+  }
+  const res = await apiClient.patch<unknown>(`${ORG_API}/subscription`, { plan });
+  return toSubscription(subscriptionWire.parse(res.data));
 }

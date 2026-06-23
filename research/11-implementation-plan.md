@@ -558,13 +558,13 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 
 - ✅ **FE-25** Memberships — `membershipWire` + `toMember` (role `{id,name}`→`OrgRole`, embedded `user`, status map, name→email fallback); live `listMembers`/`updateMemberStatus`/`removeMember`; `updateMemberRole` sends `role_id` (panel resolves it). _Files:_ organization-api. (Invitations = add-by-email handled in FE-34.)
 - ✅ **FE-26** Roles — `roleWire` + `toRoleSummary` (tolerates missing permissions/member*count/description); live `listRoles`/`createRole`/`updateRole`/`deleteRole`. Permissions catalog already in contracts (`ASSIGNABLE_ROLE_PERMISSIONS`). \_Files:* organization-api.
-- ⬜ **FE-27** Billing (plans + subscriptions + mutations).
-- ⬜ **FE-28** API keys (+ rotate).
-- ⬜ **FE-29** Webhooks + notification-policies.
-- ⬜ **FE-30** Notification preferences.
-- ⬜ **FE-31** Sessions (list + revoke).
-- ⬜ **FE-32** MFA enroll + passkeys.
-- ⬜ **FE-33** Org general / settings / logo.
+- ✅ **FE-27** Billing — `subscriptionWire`/`toSubscription`; live `getSubscription` + `updateSubscriptionPlan`.
+- ✅ **FE-28** API keys — `apiKeyWire`/`toApiKey`; live `listApiKeys`/`createApiKey` (secret once)/`renameApiKey`/`revokeApiKey`.
+- ⏸ **FE-29** Webhooks + notification-policies — **net-new domain** (no existing mock fn + unconfirmed core-be contract); build with its panel + confirmed contract.
+- ⏸ **FE-30** Notification preferences — net-new; lands with the notifications module (Phase N / FE-65).
+- ⏸ **FE-31** Sessions (list + revoke) — net-new auth-domain (`/auth/me/sessions`); build with the Account → Sessions panel + confirmed contract.
+- ⏸ **FE-32** MFA enroll + passkeys — net-new auth-domain; build with the Account → Security panel + confirmed contract.
+- ⏸ **FE-33** Org general / settings / logo — net-new (no `updateOrganization` mock yet); build with the Org → General panel.
 
 ### Phase 7 — Settings panels (5) — consume Phase 6
 
