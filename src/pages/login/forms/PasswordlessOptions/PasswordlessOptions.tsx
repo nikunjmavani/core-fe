@@ -6,6 +6,7 @@ import { API_BASE_PATH } from '@/core/config/constants.ts';
 import { config } from '@/core/config/env.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { performMockLogin } from '@/shared/auth/mock-auth.ts';
+import { establishSession } from '@/shared/auth/service.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
@@ -56,8 +57,11 @@ export function PasswordlessOptions() {
   const navigate = useNavigate();
   const [providers, setProviders] = useState<string[]>([]);
   const [magicMode, setMagicMode] = useState(false);
+  const [magicStep, setMagicStep] = useState<'email' | 'code'>('email');
   const [magicEmail, setMagicEmail] = useState('');
+  const [magicCode, setMagicCode] = useState('');
   const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -93,20 +97,43 @@ export function PasswordlessOptions() {
     toast.error('Passkeys require a configured backend.');
   };
 
-  const sendMagicLink = async () => {
+  const toggleMagic = () => {
+    setMagicMode((open) => !open);
+    setMagicStep('email');
+    setMagicCode('');
+  };
+
+  const sendMagicCode = async () => {
     const email = magicEmail.trim();
     if (!email) return;
     setSending(true);
     try {
       await authApi.magicLinkSend(email);
-      // Uniform message — never reveals whether the account exists.
-      toast.success('If an account exists, a sign-in link is on its way.');
-      setMagicMode(false);
-      setMagicEmail('');
+      // Always advance to code entry — the step appears whether or not the
+      // account exists, so nothing about account existence is revealed.
+      setMagicCode('');
+      setMagicStep('code');
+      toast.success(`If an account exists, a 6-digit code is on its way to ${email}.`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not send the link.');
+      toast.error(err instanceof Error ? err.message : 'Could not send the code.');
     } finally {
       setSending(false);
+    }
+  };
+
+  const verifyMagicCode = async () => {
+    const email = magicEmail.trim();
+    const code = magicCode.trim();
+    if (code.length !== 6) return;
+    setVerifying(true);
+    try {
+      const { accessToken } = await authApi.magicLinkVerify({ email, code });
+      await establishSession(accessToken);
+      void navigate({ to: '/', replace: true });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Invalid or expired code.');
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -139,7 +166,7 @@ export function PasswordlessOptions() {
         <Button
           type="button"
           variant="outline"
-          onClick={() => setMagicMode((v) => !v)}
+          onClick={toggleMagic}
           aria-expanded={magicMode}
           data-testid="login-magic-link"
         >
@@ -148,7 +175,7 @@ export function PasswordlessOptions() {
         </Button>
       </div>
 
-      {magicMode && (
+      {magicMode && magicStep === 'email' && (
         <div className="space-y-2" data-testid="magic-link-panel">
           <Input
             type="email"
@@ -156,18 +183,72 @@ export function PasswordlessOptions() {
             autoComplete="email"
             value={magicEmail}
             onChange={(e) => setMagicEmail(e.target.value)}
-            aria-label="Email for the magic sign-in link"
+            aria-label="Email for the sign-in code"
             data-testid="magic-link-email"
           />
           <Button
             type="button"
             className="w-full"
             disabled={sending || magicEmail.trim().length === 0}
-            onClick={sendMagicLink}
+            onClick={sendMagicCode}
             data-testid="magic-link-send"
           >
-            {sending ? 'Sending…' : 'Send sign-in link'}
+            {sending ? 'Sending…' : 'Send sign-in code'}
           </Button>
+        </div>
+      )}
+
+      {magicMode && magicStep === 'code' && (
+        <div className="space-y-2" data-testid="magic-link-code-panel">
+          <p className="text-muted-foreground text-sm">
+            Enter the 6-digit code sent to{' '}
+            <span className="text-foreground font-medium">{magicEmail.trim()}</span>.
+          </p>
+          <Input
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
+            placeholder="123456"
+            value={magicCode}
+            onChange={(e) => setMagicCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            aria-label="6-digit sign-in code"
+            data-testid="magic-link-code"
+          />
+          <Button
+            type="button"
+            className="w-full"
+            disabled={verifying || magicCode.trim().length !== 6}
+            onClick={verifyMagicCode}
+            data-testid="magic-link-verify"
+          >
+            {verifying ? 'Verifying…' : 'Verify & sign in'}
+          </Button>
+          <div className="flex items-center justify-between">
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs"
+              onClick={() => {
+                setMagicStep('email');
+                setMagicCode('');
+              }}
+              data-testid="magic-link-change-email"
+            >
+              Use a different email
+            </Button>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              className="h-auto p-0 text-xs"
+              disabled={sending}
+              onClick={sendMagicCode}
+              data-testid="magic-link-resend"
+            >
+              {sending ? 'Sending…' : 'Resend code'}
+            </Button>
+          </div>
         </div>
       )}
 

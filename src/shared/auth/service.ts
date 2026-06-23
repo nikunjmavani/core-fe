@@ -14,7 +14,7 @@ import {
   MOCK_USER,
 } from '@/shared/auth/mock-auth.ts';
 import { cancelTokenRefresh, scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
-import { clearSessionStart } from '@/shared/auth/session-lifetime.ts';
+import { clearSessionStart, markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { authTokenResponseSchema, authUserSchema } from '@/shared/auth/types.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
@@ -222,6 +222,32 @@ async function getCurrentUser(): Promise<AuthUser> {
     throw new Error(message);
   }
   return authUserSchema.parse(data);
+}
+
+/**
+ * Establish a fully authenticated session from a freshly minted access token —
+ * the single post-auth completion path shared by magic-link verify and OAuth
+ * return. Stores the token, starts the idle-session clock, loads the user
+ * profile, then schedules proactive refresh. Rolls the token back if the
+ * profile load fails so auth state is never left half-initialised.
+ */
+export async function establishSession(accessToken: string): Promise<void> {
+  setAccessToken(accessToken);
+  markSessionStart();
+  if (config.useMockApi) {
+    useAuthStore.getState().setUser(MOCK_USER);
+    scheduleTokenRefresh();
+    return;
+  }
+  try {
+    const user = await getCurrentUser();
+    useAuthStore.getState().setUser(user);
+    scheduleTokenRefresh();
+  } catch (error) {
+    clearAccessToken();
+    clearSessionStart();
+    throw error;
+  }
 }
 
 /**

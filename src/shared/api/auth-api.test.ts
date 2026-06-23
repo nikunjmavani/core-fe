@@ -51,8 +51,9 @@ describe('authApi passwordless / oauth (mock)', () => {
     await expect(authApi.magicLinkSend('a@b.test')).resolves.toBeUndefined();
   });
 
-  it('magicLinkVerify returns a token', async () => {
-    expect((await authApi.magicLinkVerify('tok')).accessToken).toBeTruthy();
+  it('magicLinkVerify returns a token for an { email, code }', async () => {
+    const res = await authApi.magicLinkVerify({ email: 'a@b.test', code: '123456' });
+    expect(res.accessToken).toBeTruthy();
   });
 
   it('resendVerification resolves without throwing', async () => {

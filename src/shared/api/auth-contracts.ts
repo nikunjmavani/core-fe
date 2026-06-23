@@ -72,3 +72,15 @@ export const mfaVerifySchema = z.object({
 });
 
 export type MfaVerifyInput = z.infer<typeof mfaVerifySchema>;
+
+// ── Magic link (passwordless 6-digit code) ──
+export const magicLinkVerifySchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required')
+    .pipe(z.email('Invalid email address')),
+  code: z.string().trim().min(1, 'Code is required').length(6, 'Code must be 6 digits'),
+});
+
+export type MagicLinkVerifyInput = z.infer<typeof magicLinkVerifySchema>;

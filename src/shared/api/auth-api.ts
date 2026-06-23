@@ -13,6 +13,7 @@ import { authUserSchema } from '@/shared/auth/types.ts';
 import type {
   ForgotPasswordInput,
   LoginInput,
+  MagicLinkVerifyInput,
   MfaVerifyInput,
   RegisterInput,
   ResetPasswordInput,
@@ -309,12 +310,16 @@ export const authApi = {
     }
   },
 
-  /** Exchange a magic-link token (from the email) for a session. */
-  magicLinkVerify: async (token: string): Promise<AuthTokenResponse> => {
+  /**
+   * Verify a magic-link 6-digit code (emailed after {@link magicLinkSend}) for a
+   * session. The backend auto-signs-up unknown emails, so this doubles as a
+   * passwordless register. Posts `{ email, code }` — never a URL token.
+   */
+  magicLinkVerify: async (data: MagicLinkVerifyInput): Promise<AuthTokenResponse> => {
     if (config.useMockApi) return mockToken();
     const response = await authFetch(
       `${authBase()}${API_ENDPOINTS.AUTH.MAGIC_LINK_VERIFY}`,
-      { method: 'POST', body: JSON.stringify({ token }) },
+      { method: 'POST', body: JSON.stringify({ email: data.email, code: data.code }) },
     );
     const json = (await response.json()) as unknown;
     if (!response.ok)
