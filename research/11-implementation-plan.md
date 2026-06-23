@@ -5,9 +5,9 @@ Status: **awaiting item-wise green-light** · Backend contract: core-be
 session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 (URL-as-source-of-truth) and the [[pages-url-mirror-design]] memory.
 
-> **Part I** is the design — **24 numbered decisions** (`D-01`…`D-24`, indexed
+> **Part I** is the design — **25 numbered decisions** (`D-01`…`D-25`, indexed
 > below, each traced to the items that build it). **Part II** is the commit-sized
-> plan — **42 build items** (`FE-01`…`FE-42`), each with a stable ID.
+> plan — **48 build items** (`FE-01`…`FE-48`), each with a stable ID.
 
 ---
 
@@ -18,32 +18,33 @@ session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 Every normative decision below carries a stable `D-` ID, the section that
 specifies it, and the Part II item(s) that build it. **24 decisions → 42 items.**
 
-| ID       | Decision                                                                          | Spec     | Built by                   |
-| -------- | --------------------------------------------------------------------------------- | -------- | -------------------------- |
-| **D-01** | Active org = JWT `org` claim; `me/context` is authoritative; URL only reflects it | §0, §2   | FE-05, FE-07, FE-08, FE-11 |
-| **D-02** | Dual-URL by type: PERSONAL → root, TEAM → `/organization/$slug`                   | §0, §3.1 | FE-19, FE-21, FE-22        |
-| **D-03** | One PERSONAL + N TEAM orgs; left switcher                                         | §1, §4   | FE-24                      |
-| **D-04** | Gate team-only UI on `capabilities.*` — never probe (422)                         | §1       | FE-15, FE-34…FE-37         |
-| **D-05** | Switch re-mints token + applies the inline delta (no extra `me/context`)          | §2       | FE-06                      |
-| **D-06** | `user` + `organizations[]` stable across a switch (flip `is_active` locally)      | §2       | FE-06, FE-07               |
-| **D-07** | 401 → refresh; refresh-401 → login; refresh preserves the switched org            | §2       | FE-10                      |
-| **D-08** | Three shared layouts: Auth / Public / Protected                                   | §3.2     | FE-16, FE-17, FE-18        |
-| **D-09** | Slug in team URL; immutable id resolved locally; `by-slug` fallback               | §3.1     | FE-22                      |
-| **D-10** | `/` resolver → onboarding \| personal `/dashboard` \| team-slug                   | §3.3     | FE-19                      |
-| **D-11** | Dual-mount: one shared `DashboardPage`, route markers at both URLs                | §3.4     | FE-20, FE-21, FE-22        |
-| **D-12** | Security gateway: sequential gates, first failure short-circuits                  | §3.7     | FE-09                      |
-| **D-13** | Six layered access gates **L1–L6**                                                | §3.7     | FE-10…FE-15                |
-| **D-14** | Defense-in-depth; the server is the boundary, FE gates are UX                     | §3.7     | FE-10…FE-15                |
-| **D-15** | `core/security/` access layer (folder structure)                                  | §3.7     | FE-09…FE-15                |
-| **D-16** | Switcher: personal/team navigation + create-team                                  | §4       | FE-24                      |
-| **D-17** | Branch on the body (not the 201); every flow ends at `me/context`                 | §5       | FE-05                      |
-| **D-18** | Magic-link is code-entry (`{email, code}`), not a link                            | §5       | FE-01                      |
-| **D-19** | OAuth start returns `{url}`; return via `/callback` → refresh                     | §5       | FE-02, FE-03               |
-| **D-20** | `mfa/login` uses `totp_code` / `recovery_code`                                    | §5       | FE-04                      |
-| **D-21** | One env var; every API has mock + live, identical domain shape                    | §6       | FE-25…FE-33                |
-| **D-22** | Mock data mirrors the mapped wire (offline parity)                                | §6       | FE-25…FE-33                |
-| **D-23** | Reconciliations: role object, no list-invitations, embedded `user`                | §6       | FE-25                      |
-| **D-24** | Doc / convention / memory ripple                                                  | §7       | FE-42                      |
+| ID       | Decision                                                                                                                   | Spec     | Built by                   |
+| -------- | -------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
+| **D-01** | Active org = JWT `org` claim; `me/context` is authoritative; URL only reflects it                                          | §0, §2   | FE-05, FE-07, FE-08, FE-11 |
+| **D-02** | Dual-URL by type: PERSONAL → root, TEAM → `/organization/$slug`                                                            | §0, §3.1 | FE-19, FE-21, FE-22        |
+| **D-03** | One PERSONAL + N TEAM orgs; left switcher                                                                                  | §1, §4   | FE-24                      |
+| **D-04** | Gate team-only UI on `capabilities.*` — never probe (422)                                                                  | §1       | FE-15, FE-34…FE-37         |
+| **D-05** | Switch re-mints token + applies the inline delta (no extra `me/context`)                                                   | §2       | FE-06                      |
+| **D-06** | `user` + `organizations[]` stable across a switch (flip `is_active` locally)                                               | §2       | FE-06, FE-07               |
+| **D-07** | 401 → refresh; refresh-401 → login; refresh preserves the switched org                                                     | §2       | FE-10                      |
+| **D-08** | Three shared layouts: Auth / Public / Protected                                                                            | §3.2     | FE-16, FE-17, FE-18        |
+| **D-09** | Slug in team URL; immutable id resolved locally; `by-slug` fallback                                                        | §3.1     | FE-22                      |
+| **D-10** | `/` resolver → onboarding \| personal `/dashboard` \| team-slug                                                            | §3.3     | FE-19                      |
+| **D-11** | Dual-mount: one shared `DashboardPage`, route markers at both URLs                                                         | §3.4     | FE-20, FE-21, FE-22        |
+| **D-12** | Security gateway: sequential gates, first failure short-circuits                                                           | §3.7     | FE-09                      |
+| **D-13** | Six layered access gates **L1–L6**                                                                                         | §3.7     | FE-10…FE-15                |
+| **D-14** | Defense-in-depth; the server is the boundary, FE gates are UX                                                              | §3.7     | FE-10…FE-15                |
+| **D-15** | `core/security/` access layer (folder structure)                                                                           | §3.7     | FE-09…FE-15                |
+| **D-16** | Switcher: personal/team navigation + create-team                                                                           | §4       | FE-24                      |
+| **D-17** | Branch on the body (not the 201); every flow ends at `me/context`                                                          | §5       | FE-05                      |
+| **D-18** | Magic-link is code-entry (`{email, code}`), not a link                                                                     | §5       | FE-01                      |
+| **D-19** | OAuth start returns `{url}`; return via `/callback` → refresh                                                              | §5       | FE-02, FE-03               |
+| **D-20** | `mfa/login` uses `totp_code` / `recovery_code`                                                                             | §5       | FE-04                      |
+| **D-21** | One env var; every API has mock + live, identical domain shape                                                             | §6       | FE-25…FE-33                |
+| **D-22** | Mock data mirrors the mapped wire (offline parity)                                                                         | §6       | FE-25…FE-33                |
+| **D-23** | Reconciliations: role object, no list-invitations, embedded `user`                                                         | §6       | FE-25                      |
+| **D-24** | Doc / convention / memory ripple                                                                                           | §7       | FE-42                      |
+| **D-25** | Cross-cutting UX layer: one `notify` module + error→message map + shared mutation wrapper + confirm/empty/error primitives | §8       | FE-43…FE-48                |
 
 ## 0. Why
 
@@ -317,14 +318,32 @@ export async function listMembers(): Promise<Member[]> {
   **dual-mount** note + the `core/security` access layer.
 - Memory: update [[pages-url-mirror-design]] and [[core-fe-be-integration-plan]].
 
+## 8. Cross-cutting UX layer (notify / errors / mutations)
+
+Today a global `<Toaster>` is mounted once (`routeTree.tsx`), but **13 call sites
+import `toast` from `sonner` directly**, each writing its own success/error
+strings + error extraction. The data-heavy Phase 6–7 work multiplies that drift.
+Centralize it — this is to UX what §3.7 is to access:
+
+- **`shared/notify`** — the single toast surface (`notify.success/error/info`,
+  stable de-dupe ids, promise/loading toasts). The **only** module importing `sonner`.
+- **`mapApiError`** — `ApiError` (`reason` / `code` / `status`) → one user-facing
+  string; feeds both `notify` and inline form errors (one wording everywhere).
+- **`useAppMutation`** — a thin TanStack wrapper: idempotency-key on writes +
+  cache invalidation + optimistic update + success/error `notify`, so every
+  Phase 6–7 mutation behaves identically (the 5 existing hooks refactor onto it).
+- **`ConfirmDialog`** + state primitives (`Skeleton` / `EmptyState` / route
+  `ErrorBoundary`) — shared destructive-action + loading/empty/error UX.
+- Global QueryCache `onError` routes failed loads through `notify` once.
+
 ---
 
 ## Part II — Implementation plan (item-wise)
 
-**42 build items** (`FE-01`…`FE-42`) across 8 phases — plus Phase 0 (already
+**48 build items** (`FE-01`…`FE-48`) across 9 phases — plus Phase 0 (already
 shipped). Each is commit-sized with a stable ID; review by ID — I build only
 green-lit items, in dependency order, each its own tested commit. Legend: ⬜ to
-build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P4 5 · P5 1 · P6 9 · P7 5 · P8 4.
+build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P4 5 · P5 1 · PF 6 · P6 9 · P7 5 · P8 4.
 
 ### Phase 0 — Already shipped
 
@@ -370,6 +389,17 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P4 5 · P5 1 · P6 9 
 
 - ⬜ **FE-24** Switcher rebuild — Personal + Teams + Create-team; uses **FE-06**; capability-aware. _Files:_ OrganizationSwitcher.
 
+### Phase F — Cross-cutting UX foundations (6) — land before Phases 6–7
+
+_IDs appended (`FE-43`…`FE-48`) so earlier IDs stay stable; by dependency this phase precedes Phases 6–7. Builds D-25._
+
+- ⬜ **FE-43** `shared/notify` toast module (the only importer of `sonner`); migrate the 13 direct call sites. _Files:_ shared/notify (+13 call sites).
+- ⬜ **FE-44** `mapApiError` — `ApiError` → one user string; used by notify + form errors. _Files:_ shared/errors.
+- ⬜ **FE-45** `useAppMutation` — idempotency-key + invalidate + optimistic + notify; refactor useMembers/useRoles/useApiKeys/useSubscription/useInvitations onto it. _Files:_ shared/hooks/useAppMutation (+5 hooks).
+- ⬜ **FE-46** Global query-error surfacing — QueryCache `onError` → notify (failed loads toast once). _Files:_ app query-client.
+- ⬜ **FE-47** `ConfirmDialog` — shared destructive-action confirm (remove member/role/key, delete org). _Files:_ shared/components/ConfirmDialog.
+- ⬜ **FE-48** State primitives — `Skeleton` / `EmptyState` + per-route `ErrorBoundary` for dashboard + panels. _Files:_ shared/components/{EmptyState,ErrorBoundary}.
+
 ### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
 
 - ⬜ **FE-25** Memberships (role `{id,name}`; invite = add-by-email; embed `user`).
@@ -400,9 +430,11 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P4 5 · P5 1 · P6 9 
 ### Sequencing & dependencies
 
 Critical path **FE-01 → FE-23** (auth → me/context → gateway+layouts → routing).
+**Phase F (FE-43…FE-48)** is cross-cutting — land it before Phases 6–7 so panels
+share one notify/mutation/error layer (FE-43/44 can land even earlier).
 **Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
-**Phase 7** depends on Phase 6. **Phase 8** is last. Cross-deps: FE-22 needs
-FE-12; FE-24 needs FE-06; FE-20 needs OD-1.
+**Phase 7** depends on Phase 6 + Phase F. **Phase 8** is last. Cross-deps: FE-22
+needs FE-12; FE-24 needs FE-06; FE-20 needs OD-1; FE-34…FE-37 use FE-45/FE-47.
 
 ### Open decisions
 
