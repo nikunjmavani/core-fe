@@ -496,7 +496,7 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1
 
 ### Phase 3 — Security gateway & shared layouts (10)
 
-- ⬜ **FE-09** Gateway composer + `gate.types` (sequential, short-circuit). _Files:_ core/security/gateway.ts, gate.types.ts.
+- ✅ **FE-09** Gateway composer + `gate.types` — `gateway(...gates)` runs gates sequentially, first throw short-circuits; `Gate`/`GateContext` types. _Files:_ core/security/gateway.ts, gate.types.ts, index.ts.
 - ⬜ **FE-10** Gate **L1** `requireSession` (token/refresh). _Files:_ core/security/gates/require-session.ts (+test).
 - ⬜ **FE-11** Gate **L2** `hydrateContext` (load `me/context`).
 - ⬜ **FE-12** Gate **L3** `resolveActiveOrg` (personal/team slug→id, membership, switch-on-nav).
