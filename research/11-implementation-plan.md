@@ -492,7 +492,7 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1
 
 - ✅ **FE-06** Switch service — `switchToOrganization`/`switchToPersonal` re-mint the token + apply the inline delta to the `useMeContext` cache (mock flips locally). _Files:_ shared/tenancy/switch.ts, me-context (exports).
 - ✅ **FE-07** Org store derives from context — `setActiveOrganization` (id/slug/type/status/capabilities/perms) + `deriveOrgContext(ctx)`, called from `establishSession` + switch. _Files:_ useOrganizationStore, organization-context, service, switch.
-- ⬜ **FE-08** Retire URL-as-source in guards. _Files:_ organization-context, guards.
+- ⏸ **FE-08** Retire URL-as-source in guards — **deferred to Phase 3/4**: the gateway's `resolveActiveOrg` gate (FE-12) + dual-URL routing (FE-19–23) replace `requireOrganizationContext`'s URL-sync; removing it standalone would break current org routing. Context-derivation already lands via FE-07. _Files:_ route-guards, organization-context.
 
 ### Phase 3 — Security gateway & shared layouts (10)
 
@@ -534,7 +534,7 @@ _Appended IDs (`FE-49`…`FE-52`, `FE-58`, `FE-59`); extends the gateway (Phase 
 
 _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by dependency this phase precedes Phases 6–7. Builds D-25, D-27._
 
-- ⬜ **FE-43** `shared/notify` toast module (the only importer of `sonner`); migrate the 13 direct call sites. _Files:_ shared/notify (+13 call sites).
+- ✅ **FE-43** `shared/notify` toast module (the only importer of `sonner` besides the `<Toaster>` mount); migrated all 12 `toast` call sites; added an eslint `no-restricted-imports` guard for `sonner`. _Files:_ shared/notify, eslint.config, 12 call sites.
 - ⬜ **FE-44** `mapApiError` — `ApiError` → one user string; used by notify + form errors. _Files:_ shared/errors.
 - ⬜ **FE-45** `useAppMutation` — idempotency-key + invalidate + optimistic + notify; refactor useMembers/useRoles/useApiKeys/useSubscription/useInvitations onto it. _Files:_ shared/hooks/useAppMutation (+5 hooks).
 - ⬜ **FE-46** Global query-error surfacing — QueryCache `onError` → notify (failed loads toast once). _Files:_ app query-client.

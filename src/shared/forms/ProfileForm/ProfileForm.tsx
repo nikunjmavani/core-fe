@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { type Control, Controller, useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -24,6 +23,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select.tsx';
 import { Textarea } from '@/shared/components/ui/textarea.tsx';
+import { notify } from '@/shared/notify/index.ts';
 
 import { type ProfileInput, profileSchema, TIMEZONES } from './contracts.ts';
 
@@ -110,7 +110,7 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
   const onConfirmedSubmit = handleSubmit((values) => {
     setShowConfirm(false);
     reset(values);
-    toast.success('Profile updated');
+    notify.success('Profile updated');
   });
 
   return (

@@ -69,7 +69,12 @@ export default defineConfig([
   // are the only direct lucide importers.
   {
     files: ['src/**/*.{ts,tsx}'],
-    ignores: ['src/shared/icons/**', 'src/shared/components/ui/**'],
+    ignores: [
+      'src/shared/icons/**',
+      'src/shared/components/ui/**',
+      'src/shared/notify/**',
+      'src/app/routes/routeTree.tsx',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -79,6 +84,11 @@ export default defineConfig([
               name: 'lucide-react',
               message:
                 "Import icons from '@/shared/icons/index.ts' (one-file icon-library swap).",
+            },
+            {
+              name: 'sonner',
+              message:
+                "Use '@/shared/notify' for toasts — the single toast surface (one place for durations/de-dupe/a11y).",
             },
           ],
         },

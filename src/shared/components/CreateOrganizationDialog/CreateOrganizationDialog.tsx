@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { type ReactNode, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 import { organizationDashboard } from '@/lib/routes/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
@@ -19,6 +18,7 @@ import {
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { Plus } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 import {
   createOrganization,
   type CreateOrganizationInput,
@@ -73,7 +73,7 @@ export function CreateOrganizationDialog({
       slug: requestedSlug === '' ? undefined : requestedSlug,
     });
     await queryClient.invalidateQueries({ queryKey: ['organizations'] });
-    toast.success(`Created ${org.name}`);
+    notify.success(`Created ${org.name}`);
     reset();
     setOpen(false);
     void navigate({ ...organizationDashboard(org.id), replace: true });

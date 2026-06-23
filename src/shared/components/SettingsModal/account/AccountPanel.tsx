@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -22,6 +21,7 @@ import {
 } from '@/shared/components/ui/card.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
 import { Copy, ShieldCheck, Trash2, TriangleAlert } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
@@ -54,9 +54,9 @@ export function AccountPanel() {
   const copyId = async () => {
     try {
       await navigator.clipboard.writeText(userId);
-      toast.success('Account ID copied');
+      notify.success('Account ID copied');
     } catch {
-      toast.error('Could not copy to clipboard');
+      notify.error('Could not copy to clipboard');
     }
   };
 
@@ -118,7 +118,7 @@ export function AccountPanel() {
             </div>
             <Button
               variant="outline"
-              onClick={() => toast.success('Account deactivated (mock)')}
+              onClick={() => notify.success('Account deactivated (mock)')}
               data-testid="account-deactivate"
             >
               Deactivate
@@ -160,7 +160,7 @@ export function AccountPanel() {
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               onClick={() => {
                 setConfirmDelete(false);
-                toast.success('Account deletion requested (mock)');
+                notify.success('Account deletion requested (mock)');
               }}
               data-testid="account-delete-confirm"
             >

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
@@ -13,6 +12,7 @@ import {
 import { Label } from '@/shared/components/ui/label.tsx';
 import { Switch } from '@/shared/components/ui/switch.tsx';
 import { Fingerprint, Laptop, Smartphone, Trash2 } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
@@ -68,7 +68,7 @@ export function AccountSecurityPanel() {
               checked={mfaEnabled}
               onCheckedChange={(v) => {
                 setMfaEnabled(v);
-                toast.success(v ? 'MFA enabled' : 'MFA disabled');
+                notify.success(v ? 'MFA enabled' : 'MFA disabled');
               }}
               data-testid="mfa-toggle"
             />
@@ -88,7 +88,7 @@ export function AccountSecurityPanel() {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => toast.success('Passkey registration started (mock)')}
+              onClick={() => notify.success('Passkey registration started (mock)')}
               data-testid="add-passkey"
             >
               <Fingerprint className="mr-2 h-4 w-4" />
@@ -110,7 +110,7 @@ export function AccountSecurityPanel() {
                 variant="ghost"
                 size="icon-sm"
                 aria-label={`Remove ${pk.name}`}
-                onClick={() => toast.success('Passkey removed (mock)')}
+                onClick={() => notify.success('Passkey removed (mock)')}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -145,7 +145,7 @@ export function AccountSecurityPanel() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => toast.success('Session revoked (mock)')}
+                  onClick={() => notify.success('Session revoked (mock)')}
                 >
                   Revoke
                 </Button>

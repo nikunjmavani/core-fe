@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { organizationDashboard } from '@/lib/routes/index.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
@@ -15,6 +14,7 @@ import {
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
 import { Loader2 } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import {
   ONBOARDING_STEPS,
@@ -178,16 +178,16 @@ export function OnboardingPage() {
 
       complete();
       if (failed > 0) {
-        toast.warning(
+        notify.warning(
           `Workspace ready — ${failed} invite${failed > 1 ? 's' : ''} couldn't be sent. You can resend from Members.`,
         );
       } else {
-        toast.success('Welcome! Your workspace is ready.');
+        notify.success('Welcome! Your workspace is ready.');
       }
       // The $organizationId guard syncs context, persists, and loads permissions.
       void navigate({ ...organizationDashboard(organizationId), replace: true });
     } catch {
-      toast.error('Something went wrong finishing setup. Please try again.');
+      notify.error('Something went wrong finishing setup. Please try again.');
     } finally {
       setSubmitting(false);
     }

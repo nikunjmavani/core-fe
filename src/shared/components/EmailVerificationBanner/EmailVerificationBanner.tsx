@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 import { authApi } from '@/shared/api/auth-api.ts';
 import { getAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import { Mail } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 function resendLabel(sending: boolean, sent: boolean): string {
   if (sent) return 'Sent';
@@ -32,9 +32,9 @@ export function EmailVerificationBanner() {
     try {
       await authApi.resendVerification(token);
       setSent(true);
-      toast.success('Verification email sent — check your inbox.');
+      notify.success('Verification email sent — check your inbox.');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not resend the email.');
+      notify.error(err instanceof Error ? err.message : 'Could not resend the email.');
     } finally {
       setSending(false);
     }

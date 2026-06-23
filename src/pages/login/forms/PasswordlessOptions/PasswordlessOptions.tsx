@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 
 import { config } from '@/core/config/env.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
@@ -10,6 +9,7 @@ import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
 import { Fingerprint, Github, Mail } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 function providerLabel(provider: string): string {
   if (provider === 'google') return 'Google';
@@ -87,7 +87,7 @@ export function PasswordlessOptions() {
       const url = await authApi.oauthStart(provider);
       window.location.assign(url);
     } catch (err) {
-      toast.error(
+      notify.error(
         err instanceof Error ? err.message : `Could not start ${provider} sign-in.`,
       );
     }
@@ -100,7 +100,7 @@ export function PasswordlessOptions() {
       void navigate({ to: '/', replace: true });
       return;
     }
-    toast.error('Passkeys require a configured backend.');
+    notify.error('Passkeys require a configured backend.');
   };
 
   const toggleMagic = () => {
@@ -119,9 +119,9 @@ export function PasswordlessOptions() {
       // account exists, so nothing about account existence is revealed.
       setMagicCode('');
       setMagicStep('code');
-      toast.success(`If an account exists, a 6-digit code is on its way to ${email}.`);
+      notify.success(`If an account exists, a 6-digit code is on its way to ${email}.`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not send the code.');
+      notify.error(err instanceof Error ? err.message : 'Could not send the code.');
     } finally {
       setSending(false);
     }
@@ -137,7 +137,7 @@ export function PasswordlessOptions() {
       await establishSession(accessToken);
       void navigate({ to: '/', replace: true });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Invalid or expired code.');
+      notify.error(err instanceof Error ? err.message : 'Invalid or expired code.');
     } finally {
       setVerifying(false);
     }

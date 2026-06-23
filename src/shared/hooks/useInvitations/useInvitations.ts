@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 import * as orgApi from '@/shared/api/organization-api.ts';
 import type { OrgRole } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 /**
  * Invitations of the active organization — list query + send/revoke/resend mutations.
@@ -24,10 +24,10 @@ export function useCreateInvitation() {
     mutationFn: (input: { email: string; role: OrgRole }) =>
       orgApi.createInvitation(input),
     onSuccess: (invitation) => {
-      toast.success(`Invitation sent to ${invitation.email}`);
+      notify.success(`Invitation sent to ${invitation.email}`);
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.invitations() });
     },
-    onError: () => toast.error('Could not send invitation'),
+    onError: () => notify.error('Could not send invitation'),
   });
 }
 
@@ -37,10 +37,10 @@ export function useRevokeInvitation() {
   return useMutation({
     mutationFn: (invitationId: string) => orgApi.revokeInvitation(invitationId),
     onSuccess: () => {
-      toast.success('Invitation revoked');
+      notify.success('Invitation revoked');
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.invitations() });
     },
-    onError: () => toast.error('Could not revoke invitation'),
+    onError: () => notify.error('Could not revoke invitation'),
   });
 }
 
@@ -50,9 +50,9 @@ export function useResendInvitation() {
   return useMutation({
     mutationFn: (invitationId: string) => orgApi.resendInvitation(invitationId),
     onSuccess: (invitation) => {
-      toast.success(`Invitation resent to ${invitation.email}`);
+      notify.success(`Invitation resent to ${invitation.email}`);
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.invitations() });
     },
-    onError: () => toast.error('Could not resend invitation'),
+    onError: () => notify.error('Could not resend invitation'),
   });
 }

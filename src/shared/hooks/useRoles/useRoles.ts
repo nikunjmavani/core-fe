@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 import * as orgApi from '@/shared/api/organization-api.ts';
 import type { RoleInput } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 /**
  * Roles of the active organization — list query + create/update/delete mutations.
@@ -20,10 +20,10 @@ export function useCreateRole() {
   return useMutation({
     mutationFn: (input: RoleInput) => orgApi.createRole(input),
     onSuccess: (role) => {
-      toast.success(`Role "${role.name}" created`);
+      notify.success(`Role "${role.name}" created`);
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.roles() });
     },
-    onError: () => toast.error('Could not create role'),
+    onError: () => notify.error('Could not create role'),
   });
 }
 
@@ -33,10 +33,10 @@ export function useUpdateRole() {
   return useMutation({
     mutationFn: (input: RoleInput & { id: string }) => orgApi.updateRole(input),
     onSuccess: (role) => {
-      toast.success(`Role "${role.name}" updated`);
+      notify.success(`Role "${role.name}" updated`);
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.roles() });
     },
-    onError: () => toast.error('Could not update role'),
+    onError: () => notify.error('Could not update role'),
   });
 }
 
@@ -46,9 +46,9 @@ export function useDeleteRole() {
   return useMutation({
     mutationFn: (roleId: string) => orgApi.deleteRole(roleId),
     onSuccess: () => {
-      toast.success('Role deleted');
+      notify.success('Role deleted');
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.roles() });
     },
-    onError: () => toast.error('Could not delete role'),
+    onError: () => notify.error('Could not delete role'),
   });
 }

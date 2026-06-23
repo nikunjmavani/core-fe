@@ -1,8 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 import * as orgApi from '@/shared/api/organization-api.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 /**
  * API keys of the active organization — list query + create/rename/revoke mutations.
@@ -20,7 +20,7 @@ export function useCreateApiKey() {
     mutationFn: (input: { name: string; expiresInDays: '30' | '90' | '365' | 'never' }) =>
       orgApi.createApiKey(input),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: orgQueryKeys.apiKeys() }),
-    onError: () => toast.error('Could not create API key'),
+    onError: () => notify.error('Could not create API key'),
   });
 }
 
@@ -30,10 +30,10 @@ export function useRenameApiKey() {
   return useMutation({
     mutationFn: (input: { id: string; name: string }) => orgApi.renameApiKey(input),
     onSuccess: () => {
-      toast.success('API key renamed');
+      notify.success('API key renamed');
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.apiKeys() });
     },
-    onError: () => toast.error('Could not rename API key'),
+    onError: () => notify.error('Could not rename API key'),
   });
 }
 
@@ -43,9 +43,9 @@ export function useRevokeApiKey() {
   return useMutation({
     mutationFn: (keyId: string) => orgApi.revokeApiKey(keyId),
     onSuccess: () => {
-      toast.success('API key revoked');
+      notify.success('API key revoked');
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.apiKeys() });
     },
-    onError: () => toast.error('Could not revoke API key'),
+    onError: () => notify.error('Could not revoke API key'),
   });
 }

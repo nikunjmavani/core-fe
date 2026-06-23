@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 import * as orgApi from '@/shared/api/organization-api.ts';
 import type { MembershipStatus, OrgRole } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 /**
  * Members of the active organization — list query + role/status/removal mutations.
@@ -21,10 +21,10 @@ export function useUpdateMemberRole() {
     mutationFn: (input: { membershipId: string; role: OrgRole }) =>
       orgApi.updateMemberRole(input),
     onSuccess: () => {
-      toast.success('Member role updated');
+      notify.success('Member role updated');
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.members() });
     },
-    onError: () => toast.error('Could not update role'),
+    onError: () => notify.error('Could not update role'),
   });
 }
 
@@ -34,10 +34,10 @@ export function useRemoveMember() {
   return useMutation({
     mutationFn: (membershipId: string) => orgApi.removeMember(membershipId),
     onSuccess: () => {
-      toast.success('Member removed');
+      notify.success('Member removed');
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.members() });
     },
-    onError: () => toast.error('Could not remove member'),
+    onError: () => notify.error('Could not remove member'),
   });
 }
 
@@ -48,11 +48,11 @@ export function useUpdateMemberStatus() {
     mutationFn: (input: { membershipId: string; status: MembershipStatus }) =>
       orgApi.updateMemberStatus(input),
     onSuccess: (member) => {
-      toast.success(
+      notify.success(
         member.status === 'suspended' ? 'Member suspended' : 'Member reactivated',
       );
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.members() });
     },
-    onError: () => toast.error('Could not update member'),
+    onError: () => notify.error('Could not update member'),
   });
 }

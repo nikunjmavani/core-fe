@@ -1,9 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 import * as orgApi from '@/shared/api/organization-api.ts';
 import type { Plan } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
+import { notify } from '@/shared/notify/index.ts';
 
 /**
  * Subscription of the active organization — query + plan-change mutation.
@@ -23,9 +23,9 @@ export function useUpdateSubscriptionPlan() {
   return useMutation({
     mutationFn: (plan: Plan) => orgApi.updateSubscriptionPlan(plan),
     onSuccess: (subscription) => {
-      toast.success(`Switched to the ${subscription.plan} plan`);
+      notify.success(`Switched to the ${subscription.plan} plan`);
       return queryClient.invalidateQueries({ queryKey: orgQueryKeys.subscription() });
     },
-    onError: () => toast.error('Could not change plan'),
+    onError: () => notify.error('Could not change plan'),
   });
 }
