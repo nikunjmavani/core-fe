@@ -563,7 +563,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 - ⏸ **FE-29** Webhooks + notification-policies — **net-new domain** (no existing mock fn + unconfirmed core-be contract); build with its panel + confirmed contract.
 - ⏸ **FE-30** Notification preferences — net-new; lands with the notifications module (Phase N / FE-65).
 - ✅ **FE-31** Sessions (list + revoke) — mock-first auth-domain (`/auth/me/sessions`): session-contracts/`toSession`, sessions-api (list + DELETE revoke, mock+live), in-memory mock store (current session never removable), useSessions/useRevokeSession, and the Account → Sessions panel (current-device badge, cap to non-current revoke via ConfirmDialog, states). _Files:_ session-contracts·sessions-api·session-mock-store·useSessions·AccountSessionsPanel.
-- ⏸ **FE-32** MFA enroll + passkeys — net-new auth-domain; build with the Account → Security panel + confirmed contract.
+- 🔶 **FE-32** MFA enroll (+ passkeys) — **MFA done** (mock-first): mfa-api/mfa-mock-store (begin/confirm/disable over `/auth/me/mfa`), useMfa hooks, and the Security panel's two-factor card (status badge → setup dialog: secret → 6-digit code → recovery codes; confirmed disable). _Files:_ mfa-api·mfa-mock-store·useMfa·AccountSecurityPanel. (Passkeys/WebAuthn registration remains a mock stub — follow-up.)
 - ⏸ **FE-33** Org general / settings / logo — net-new (no `updateOrganization` mock yet); build with the Org → General panel.
 
 ### Phase 7 — Settings panels (5) — consume Phase 6
