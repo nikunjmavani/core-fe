@@ -5,18 +5,18 @@ Status: **awaiting item-wise green-light** · Backend contract: core-be
 session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 (URL-as-source-of-truth) and the [[pages-url-mirror-design]] memory.
 
-> **Part I** is the design — **30 numbered decisions** (`D-01`…`D-30`, indexed
+> **Part I** is the design — **31 numbered decisions** (`D-01`…`D-31`, indexed
 > below, each traced to the items that build it). **Part II** is the commit-sized
-> plan — **60 build items** (`FE-01`…`FE-60`), each with a stable ID.
+> plan — **65 build items** (`FE-01`…`FE-65`), each with a stable ID.
 
 ---
 
 ## Part I — Design
 
-### Design decisions index (D-01…D-30)
+### Design decisions index (D-01…D-31)
 
 Every normative decision below carries a stable `D-` ID, the section that
-specifies it, and the Part II item(s) that build it. **30 decisions → 60 items.**
+specifies it, and the Part II item(s) that build it. **31 decisions → 65 items.**
 
 | ID       | Decision                                                                                                                                                                                                                                                                 | Spec     | Built by                   |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------- |
@@ -50,6 +50,7 @@ specifies it, and the Part II item(s) that build it. **30 decisions → 60 items
 | **D-28** | Global theming: shadcn-create-compatible OKLCH token contract; named presets via `data-theme` (× light/dark); runtime `mode + preset` switcher in Settings → Appearance; optional org brand → `--color-brand`. Semantic-token-only means one swap restyles every element | §9       | FE-54…FE-57                |
 | **D-29** | Login redirect: L1 captures the attempted URL as `?returnTo=`; every auth flow consumes it via the resolver; only same-origin relative paths honored (`safeReturnTo`, open-redirect guard) else resolver default                                                         | §3.9     | FE-58, FE-59               |
 | **D-30** | Layout width: `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = contained \| full, default contained) toggles `ProtectedLayout` between centered 12-grid and full-window; optional runtime override                                                                            | §9       | FE-60                      |
+| **D-31** | Notifications: in-app inbox (bell + center, mark read/all) on the core-be notification API, realtime via SSE/poll; opt-in desktop notifications via the Web Notification API (user-granted from prefs); a Notifications preferences tab (email / in-app / desktop)       | §10      | FE-61…FE-65                |
 
 ## 0. Why
 
@@ -435,14 +436,38 @@ element follows. This section makes that a product capability:
 The contract stays CSS-only — "a future theme is just a file of token values"
 (CLAUDE.md), now switchable at runtime and per preset.
 
+## 10. Notifications (in-app module + desktop)
+
+A first-class notification feature backed by the core-be notification API
+(confirm exact routes against the API surface):
+
+- **Inbox API** — list + unread-count + mark-read + mark-all-read (`*Wire` / `to*`,
+  mock+live like §6), e.g. `GET /me/notifications`, `…/unread-count`,
+  `PATCH /me/notifications/:id/read`, `POST /me/notifications/read-all`.
+- **Notification center** — a header **bell** with an unread badge opening a
+  panel/drawer (reuses `<Surface>`, FE-53) that lists items with read / mark-all
+  - empty/loading/error states (FE-48). Lives in `ProtectedLayout`.
+- **Realtime** — subscribe to new notifications via SSE/WebSocket if core-be
+  exposes a stream, else TanStack `refetchInterval` polling; new items invalidate
+  the inbox and bump the badge.
+- **Desktop notifications** — the **Web Notification API**: permission is
+  **user-initiated** (from the prefs toggle — never auto-prompted) and persisted;
+  while granted and the tab is backgrounded, new items raise an OS notification.
+  Denied / unsupported degrades to in-app only.
+- **Preferences tab** — Settings → Account → **Notifications**: per-category +
+  per-channel (email / in-app / desktop) toggles backed by the prefs API (FE-30);
+  the desktop toggle drives the permission prompt.
+
+The bell + center are gated by the same policy model (§3.8).
+
 ---
 
 ## Part II — Implementation plan (item-wise)
 
-**60 build items** (`FE-01`…`FE-60`) across 11 phases — plus Phase 0 (already
+**65 build items** (`FE-01`…`FE-65`) across 12 phases — plus Phase 0 (already
 shipped). Each is commit-sized with a stable ID; review by ID — I build only
 green-lit items, in dependency order, each its own tested commit. Legend: ⬜ to
-build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1 · PF 7 · PT 5 · P6 9 · P7 5 · P8 4.
+build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1 · PF 7 · PT 5 · PN 5 · P6 9 · P7 5 · P8 4.
 
 ### Phase 0 — Already shipped
 
@@ -539,7 +564,17 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`); builds D-28, D-30. FE-54 can land an
 - ⬜ **FE-35** Roles panel (list + create custom + permissions).
 - ⬜ **FE-36** Billing panel (personal: plans/upgrade; team: subscription mgmt).
 - ⬜ **FE-37** Integrations panel (API keys + webhooks).
-- ⬜ **FE-38** Account panels (Security MFA/passkeys, Sessions, Notifications, General).
+- ⬜ **FE-38** Account panels (Security MFA/passkeys, Sessions, General; Notifications = FE-65).
+
+### Phase N — Notifications (5) — feature module on the core-be notification API
+
+_Builds D-31; depends on Phase F (`<Surface>` / notify) + FE-30 (prefs API)._
+
+- ⬜ **FE-61** Notifications inbox API (mock+live) — `*Wire` / `to*`; list + unread-count + mark-read + mark-all-read; integration spec. _Files:_ shared/api/notifications-\*, mock store.
+- ⬜ **FE-62** Notification center UI — header **bell** + unread badge + `<Surface>` panel (list, read, mark-all; empty/loading/error). _Files:_ shared/components/NotificationCenter, ProtectedLayout.
+- ⬜ **FE-63** Realtime delivery — SSE/WebSocket subscribe if available, else `refetchInterval` poll; invalidate inbox + bump badge. _Files:_ shared/hooks/useNotifications, query client.
+- ⬜ **FE-64** Desktop notifications — Web Notification API permission (user-initiated), persist grant, raise an OS notification for new items when backgrounded; no-op if denied/unsupported. _Files:_ shared/notifications/desktop.ts.
+- ⬜ **FE-65** Notifications preferences tab — Settings → Account → Notifications: category × channel (email / in-app / desktop) toggles on the prefs API (FE-30); desktop toggle triggers FE-64 permission. _Files:_ SettingsModal AccountNotificationsPanel.
 
 ### Phase 8 — Responsive + polish + capstone (4)
 
@@ -559,10 +594,13 @@ share one notify / mutation / error / surface layer (FE-43/44 can land even earl
 **Phase T (FE-54…FE-57, FE-60)** theming + layout width are independent —
 FE-54/FE-60 (token contract / layout env) can land anytime; FE-56 (switcher)
 ships with Settings (Phase 7).
-**Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
-**Phase 7** depends on Phase 6 + Phase F + Phase 3A. **Phase 8** is last.
-Cross-deps: FE-22 needs FE-12; FE-24 needs FE-06; FE-20 needs OD-1; FE-34…FE-37
-use FE-45/FE-47 + FE-49…FE-52.
+**Phase N (FE-61…FE-65)** notifications depend on Phase F (`<Surface>` / notify)
+
+- the inbox API; the prefs tab (FE-65) uses FE-30.
+  **Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
+  **Phase 7** depends on Phase 6 + Phase F + Phase 3A. **Phase 8** is last.
+  Cross-deps: FE-22 needs FE-12; FE-24 needs FE-06; FE-20 needs OD-1; FE-34…FE-37
+  use FE-45/FE-47 + FE-49…FE-52.
 
 ### Open decisions
 
