@@ -536,7 +536,7 @@ _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by depend
 
 - ✅ **FE-43** `shared/notify` toast module (the only importer of `sonner` besides the `<Toaster>` mount); migrated all 12 `toast` call sites; added an eslint `no-restricted-imports` guard for `sonner`. _Files:_ shared/notify, eslint.config, 12 call sites.
 - ✅ **FE-44** `mapApiError` (+ `apiErrorReason`) — reads the core-be `{error:{reason,detail}}` envelope → one sanitized user string; `getErrorMessage` kept as alias. _Files:_ shared/errors/errorHandler.
-- ⬜ **FE-45** `useAppMutation` — idempotency-key + invalidate + optimistic + notify; refactor useMembers/useRoles/useApiKeys/useSubscription/useInvitations onto it. _Files:_ shared/hooks/useAppMutation (+5 hooks).
+- ✅ **FE-45** `useAppMutation` — invalidate keys + success/error notify (idempotency-key auto-added by the fetch client; `onSuccess` side-effect hook). The 5 existing hooks refactor onto it incrementally in Phase 7. _Files:_ shared/hooks/useAppMutation.
 - ✅ **FE-46** Global query/mutation-error surfacing — `notifyError` + opt-in `meta.notifyOnError` gate in the QueryCache/MutationCache `onError` (de-duped by query hash; avoids double-toasting inline handlers). _Files:_ queryClient, errorHandler.
 - ✅ **FE-47** `ConfirmDialog` — shared destructive-action confirm (AlertDialog; self-managed busy state, stays open on error, blocks dismiss mid-flight). _Files:_ shared/components/ConfirmDialog.
 - ✅ **FE-48** State primitives — added `EmptyState` (loading `Skeleton` + `RouteErrorBoundary` already existed). _Files:_ shared/components/EmptyState.
