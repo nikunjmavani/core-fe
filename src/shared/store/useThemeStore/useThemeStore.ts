@@ -1,14 +1,27 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type Theme = 'light' | 'dark' | 'system';
+import {
+  applyThemePreset,
+  DEFAULT_PRESET,
+  isThemePreset,
+  THEME_PRESETS,
+} from '@/shared/theme/index.ts';
+
+type Mode = 'light' | 'dark' | 'system';
 
 interface ThemeStore {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
+  /** Light/dark mode (name kept for back-compat with existing consumers). */
+  theme: Mode;
+  /** Active named accent preset (see `shared/theme`). */
+  preset: string;
+  setTheme: (theme: Mode) => void;
+  setPreset: (preset: string) => void;
+  /** Pick a random preset different from the current one. */
+  shuffleTheme: () => void;
 }
 
-function applyTheme(theme: Theme) {
+function applyMode(theme: Mode) {
   const root = document.documentElement;
   const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
@@ -21,17 +34,37 @@ function applyTheme(theme: Theme) {
 
 export const useThemeStore = create<ThemeStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       theme: 'system',
+      preset: DEFAULT_PRESET,
       setTheme: (theme) => {
-        applyTheme(theme);
+        applyMode(theme);
         set({ theme });
+      },
+      setPreset: (preset) => {
+        const next = isThemePreset(preset) ? preset : DEFAULT_PRESET;
+        applyThemePreset(next);
+        set({ preset: next });
+      },
+      shuffleTheme: () => {
+        const others = THEME_PRESETS.filter((p) => p.id !== get().preset);
+        const pool = others.length > 0 ? others : THEME_PRESETS;
+        // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme shuffle, not security-sensitive
+        const next = pool[Math.floor(Math.random() * pool.length)];
+        if (next) {
+          applyThemePreset(next.id);
+          set({ preset: next.id });
+        }
       },
     }),
     {
       name: 'theme-preference',
+      partialize: (state) => ({ theme: state.theme, preset: state.preset }),
       onRehydrateStorage: () => (state) => {
-        if (state) applyTheme(state.theme);
+        if (state) {
+          applyMode(state.theme);
+          applyThemePreset(state.preset);
+        }
       },
     },
   ),
@@ -44,7 +77,7 @@ if (typeof window !== 'undefined') {
   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
   const handler = () => {
     const { theme } = useThemeStore.getState();
-    if (theme === 'system') applyTheme('system');
+    if (theme === 'system') applyMode('system');
   };
 
   mediaQuery.addEventListener('change', handler, {
