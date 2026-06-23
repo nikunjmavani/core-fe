@@ -45,10 +45,8 @@ backend contract was pinned.
 - Active org = the token's `org` claim. **Switch** via `POST /auth/switch-to-organization { organization_id }` or `POST /auth/switch-to-personal` → **re-mints the token** and returns the **active-org delta inline** (no follow-up `/me/context`):
 
   ```ts
-  // switch response data
-  {
-    (access_token, active_organization, my_permissions, global_role);
-  }
+  // switch response `data`
+  const data = { access_token, active_organization, my_permissions, global_role };
   ```
 
 - `user` + `organizations[]` are **stable across a switch** — reuse from the
