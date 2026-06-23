@@ -10,6 +10,8 @@ export {
   AlertTriangle,
   ArrowDown,
   ArrowUp,
+  Bell,
+  BellOff,
   Boxes,
   Building2,
   Check,

@@ -9,6 +9,7 @@ import {
   preloadCommandPalette,
 } from '@/shared/components/CommandPalette/index.ts';
 import { EmailVerificationBanner } from '@/shared/components/EmailVerificationBanner/index.ts';
+import { NotificationCenter } from '@/shared/components/NotificationCenter/index.ts';
 import { OrganizationSwitcher } from '@/shared/components/OrganizationSwitcher/index.ts';
 import { SessionTimeoutDialog } from '@/shared/components/SessionTimeoutDialog/index.ts';
 import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
@@ -281,6 +282,9 @@ function Header() {
       </Button>
 
       <div className="flex-1" />
+
+      {/* Notifications */}
+      <NotificationCenter />
 
       {/* Theme toggle */}
       <DropdownMenu>
