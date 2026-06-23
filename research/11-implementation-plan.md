@@ -540,7 +540,7 @@ _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by depend
 - ✅ **FE-46** Global query/mutation-error surfacing — `notifyError` + opt-in `meta.notifyOnError` gate in the QueryCache/MutationCache `onError` (de-duped by query hash; avoids double-toasting inline handlers). _Files:_ queryClient, errorHandler.
 - ✅ **FE-47** `ConfirmDialog` — shared destructive-action confirm (AlertDialog; self-managed busy state, stays open on error, blocks dismiss mid-flight). _Files:_ shared/components/ConfirmDialog.
 - ✅ **FE-48** State primitives — added `EmptyState` (loading `Skeleton` + `RouteErrorBoundary` already existed). _Files:_ shared/components/EmptyState.
-- ⬜ **FE-53** `<Surface>` adaptive modal⇄right-drawer container (`Dialog` ⇄ `Sheet side="right"`; full-screen sheet ≤ sm); adopt in SettingsModal + create/edit dialogs. _Files:_ shared/components/Surface (+ SettingsModal). Builds D-27.
+- ✅ **FE-53** `<Surface>` adaptive modal⇄right-drawer container (radix Dialog; `as="modal"` centered vs `as="drawer"` right panel, full-screen sheet ≤ sm). Adopt in SettingsModal/dialogs incrementally. _Files:_ shared/components/Surface. Builds D-27.
 
 ### Phase T — Global theming & layout width (7) — land before Phases 7–8
 
