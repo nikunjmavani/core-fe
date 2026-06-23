@@ -174,7 +174,7 @@ npx shadcn@latest docs button dialog select
 5. **Install or update** — `npx shadcn@latest add`. When updating existing components, use `--dry-run` and `--diff` to preview changes first (see [Updating Components](#updating-components) below).
 6. **Fix imports in third-party components** — After adding components from community registries (e.g. `@bundui`, `@magicui`), check the added non-UI files for hardcoded import paths like `@/components/ui/...`. These won't match the project's actual aliases. Use `npx shadcn@latest info` to get the correct `ui` alias (e.g. `@workspace/ui/components`) and rewrite the imports accordingly. The CLI rewrites imports for its own UI files, but third-party registry components may use default paths that don't match the project.
 7. **Review added components** — After adding a component or block from any registry, **always read the added files and verify they are correct**. Check for missing sub-components (e.g. `SelectItem` without `SelectGroup`), missing imports, incorrect composition, or violations of the [Critical Rules](#critical-rules). Also replace any icon imports with the project's `iconLibrary` from the project context (e.g. if the registry item uses `lucide-react` but the project uses `hugeicons`, swap the imports and icon names accordingly). Fix all issues before moving on.
-8. **Registry must be explicit** — When the user asks to add a block or component, **do not guess the registry**. If no registry is specified (e.g. user says "add a login block" without specifying `@shadcn`, `@tailark`, etc.), ask which registry to use. Never default to a registry on behalf of the user.
+8. **Registry must be explicit** — When the user asks to add a block or component, **do not guess the registry**. If no registry is specified (e.g. user says "add a login block" without specifying `@shadcn`, `@tailark`, `owner/repo`, etc.), ask which registry to use. Never default to a registry on behalf of the user.
 9. **Switching presets** — Ask the user first: **overwrite**, **partial**, **merge**, or **skip**?
    - **Inspect current preset**: `npx shadcn@latest preset resolve`. Use `--json` when you need structured values.
    - **Inspect incoming preset**: `npx shadcn@latest preset decode <code>`. Use `preset url <code>` or `preset open <code>` to share or open the preset builder.
@@ -227,22 +227,28 @@ npx shadcn@latest preset resolve --json
 # Add components.
 npx shadcn@latest add button card dialog
 npx shadcn@latest add @magicui/shimmer-button
+npx shadcn@latest add owner/repo/item
 npx shadcn@latest add --all
 
 # Preview changes before adding/updating.
 npx shadcn@latest add button --dry-run
 npx shadcn@latest add button --diff button.tsx
 npx shadcn@latest add @acme/form --view button.tsx
+npx shadcn@latest add owner/repo/item --dry-run
 
 # Search registries.
 npx shadcn@latest search @shadcn -q "sidebar"
 npx shadcn@latest search @tailark -q "stats"
+npx shadcn@latest search owner/repo -q "login"
+npx shadcn@latest search                          # all configured registries
+npx shadcn@latest search @shadcn -q "menu" -t ui  # filter by item type
 
 # Get component docs and example URLs.
 npx shadcn@latest docs button dialog select
 
 # View registry item details (for items not yet installed).
 npx shadcn@latest view @shadcn/button
+npx shadcn@latest view owner/repo/item
 ```
 
 **Named presets:** `nova`, `vega`, `maia`, `lyra`, `mira`, `luma`
@@ -257,35 +263,5 @@ npx shadcn@latest view @shadcn/button
 - [rules/styling.md](./rules/styling.md) — Semantic colors, variants, className, spacing, size, truncate, dark mode, cn(), z-index
 - [rules/base-vs-radix.md](./rules/base-vs-radix.md) — asChild vs render, Select, ToggleGroup, Slider, Accordion
 - [cli.md](./cli.md) — Commands, flags, presets, templates
+- [registry.md](./registry.md) — Authoring source registries, `include`, item definitions, dependencies, GitHub registry rules
 - [customization.md](./customization.md) — Theming, CSS variables, extending components
-
-<!-- ───────────────────────────────────────────────────────────────────────── -->
-<!-- BEGIN core-fe project additions (local; not from skills.sh).                -->
-<!-- This block merges the former `shadcn-component-selection` skill into this   -->
-<!-- single canonical skill. The same policy also lives in the always-applied    -->
-<!-- rule `agent-os/rules/ui-sources.mdc`, so it survives `skills add` updates.    -->
-<!-- If you re-run `skills add shadcn/ui`, re-append this block.                  -->
-<!-- ───────────────────────────────────────────────────────────────────────── -->
-
-## Project rules — core-fe (read this too)
-
-This repo uses **this skill as the single source of truth for shadcn work** — both _how_ to build (everything above) and _where_ a component comes from (below). Project context (from `pnpm dlx shadcn@latest info`): framework **Vite**, Tailwind **v4** (`src/index.css`), style **new-york**, base **radix**, icons **lucide**, UI alias **`@/shared/components/ui`**, package manager **pnpm** (use `pnpm dlx shadcn@latest …`). Place components per `agent-os/skills/code-structure/SKILL.md` (shared vs page-specific). Add/refresh tests + `data-testid` per project rules.
-
-### Allowed UI sources (20) — use only these
-
-Use only components/blocks/templates from these sources; don't pull in other UI libraries. Canonical list also in `agent-os/rules/ui-sources.mdc`:
-
-`ui.shadcn.com`, `shadcn.io`, `shadcnstudio.com`, `ds.shadcn.com`, `shadcnblocks.com/blocks`, `shadcnblocks-admin.vercel.app`, `allshadcn.com`, `shadcnuikit.com`, `shadcn-ui-blocks.com`, `shadcnui-expansions.typeart.cc`, `shadcraft.com`, `registry.shadcraft.com`, `shadcntemplates.com`, `blocks.so`, `21st.dev/community/shadcn`, `diceui.com`, `reui.io`, `animate-ui.com`, `reactbits.dev`, `ui.elevenlabs.io`.
-
-### Selection workflow (where a block comes from)
-
-- **First traversal (initial build, user didn't ask for options):** research the 20 sources, pick the **single best** fit (code available, same stack, a11y, fit), and **implement it directly** — don't present options or ask. Optionally cite the chosen source with a direct link in your reply.
-- **User wants choice / asks to change:** present the **best 3** with direct links and one-line "why" each, then ask "Which? (1, 2, or 3)".
-- **Registry must be explicit when adding via CLI:** if the user names a block but not a registry (`@shadcn`, `@tailark`, …), ask which registry — never guess (matches the CLI workflow above).
-- **No good match:** use the closest option and adapt, or build on `ui.shadcn.com` primitives — say which.
-
-### How (always enforce)
-
-Follow the **Principles** and **Critical Rules** above (CLI-first; semantic tokens, never raw colors or manual `dark:`; `gap-*` not `space-*`; `size-*` for equal w/h; `cn()`; `data-icon` on button icons; full `Card`/`Tabs`/`Avatar`+`AvatarFallback` composition; `Alert`/`Empty`/`Skeleton`/`Badge`/`Separator`/`sonner` over custom markup; no manual overlay `z-index`). After `add`, review files and fix imports to the `@/shared/components/ui` alias and lucide icons.
-
-<!-- END core-fe project additions -->

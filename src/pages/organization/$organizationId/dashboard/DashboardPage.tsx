@@ -93,8 +93,8 @@ function DashboardSkeleton() {
   return (
     <div data-testid="dashboard-page" className="space-y-8">
       <div className="space-y-2">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-8 w-48 max-w-full" />
+        <Skeleton className="h-4 w-32 max-w-full" />
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => (
@@ -255,7 +255,7 @@ export function DashboardPage() {
           <h2 className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Your organizations
           </h2>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {ctx.organizations.map((o) => (
               <Card key={o.id} data-testid="dashboard-org-item">
                 <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">

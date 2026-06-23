@@ -5,6 +5,13 @@ import { ORGANIZATION } from '@/core/config/constants.ts';
 import { organizationPicker } from '@/lib/routes/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog.tsx';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select.tsx';
 import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import { Building2 } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
@@ -27,6 +34,8 @@ import { parseSettingsHash, settingsHash } from './settings-hash.ts';
 import { canViewSettingsSection } from './settings-permissions.ts';
 import type {
   OrganizationSettingsSection,
+  SettingsScope,
+  SettingsSection,
   SettingsSectionRef,
 } from './settings-sections.ts';
 import { sectionsForOrgType, SETTINGS_NAV } from './settings-sections.ts';
@@ -118,18 +127,49 @@ export function SettingsModal() {
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
       <DialogContent
-        className="h-[640px] max-w-[1100px] gap-0 overflow-hidden p-0 sm:rounded-xl"
+        className="h-dvh max-h-dvh w-full max-w-full gap-0 overflow-hidden rounded-none p-0 sm:h-[640px] sm:max-h-[85vh] sm:max-w-[1100px] sm:rounded-xl"
         data-testid="settings-modal"
       >
         <DialogTitle className="sr-only">Settings</DialogTitle>
-        <div className="grid h-full grid-cols-[260px_1fr]">
+        <div className="grid h-full min-h-0 grid-cols-1 sm:grid-cols-[240px_1fr]">
           <SettingsNav groups={visibleGroups} active={active} onSelect={goTo} />
-          <div className="overflow-y-auto px-8 py-6" data-testid="settings-content">
-            <ActivePanel
-              active={active}
-              hasOrganizationContext={hasOrganizationContext}
-              orgType={orgType}
-            />
+          <div className="flex min-h-0 flex-col">
+            {/* Mobile section picker — the sidebar is hidden below sm */}
+            <div className="shrink-0 border-b p-3 sm:hidden">
+              <Select
+                value={`${active.scope}/${active.section}`}
+                onValueChange={(v) => {
+                  const [scope, section] = v.split('/') as [SettingsScope, SettingsSection];
+                  goTo({ scope, section });
+                }}
+              >
+                <SelectTrigger className="w-full" data-testid="settings-mobile-section">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {visibleGroups
+                    .flatMap((group) => group.items)
+                    .map((item) => (
+                      <SelectItem
+                        key={`${item.scope}/${item.section}`}
+                        value={`${item.scope}/${item.section}`}
+                      >
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div
+              className="flex-1 overflow-y-auto px-4 py-5 sm:px-8 sm:py-6"
+              data-testid="settings-content"
+            >
+              <ActivePanel
+                active={active}
+                hasOrganizationContext={hasOrganizationContext}
+                orgType={orgType}
+              />
+            </div>
           </div>
         </div>
       </DialogContent>

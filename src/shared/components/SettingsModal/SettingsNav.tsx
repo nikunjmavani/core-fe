@@ -26,7 +26,7 @@ export function SettingsNav({ groups, active, onSelect }: SettingsNavProps) {
     <aside
       aria-label="Settings sections"
       data-testid="settings-nav"
-      className="bg-muted/30 flex h-full flex-col border-r"
+      className="bg-muted/30 hidden h-full flex-col border-r sm:flex"
     >
       <div className="p-3">
         <div className="relative">
@@ -72,7 +72,7 @@ export function SettingsNav({ groups, active, onSelect }: SettingsNavProps) {
                       aria-current={isActive ? 'page' : undefined}
                       data-testid={`settings-nav-${item.scope}-${item.section}`}
                       className={cn(
-                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors',
+                        'flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors',
                         isActive
                           ? 'bg-accent text-accent-foreground font-medium'
                           : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground',

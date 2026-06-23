@@ -14,11 +14,11 @@ export function Component() {
 
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center gap-4 p-8"
+      className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center sm:p-8"
       data-testid="not-found-page"
     >
-      <h1 className="text-foreground text-6xl font-bold">404</h1>
-      <p className="text-muted-foreground text-lg">
+      <h1 className="text-foreground text-5xl font-bold sm:text-6xl">404</h1>
+      <p className="text-muted-foreground max-w-md text-base sm:text-lg">
         The page you are looking for does not exist.
       </p>
       <Link

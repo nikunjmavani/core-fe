@@ -3,11 +3,11 @@ import { Link } from '@tanstack/react-router';
 export function Component() {
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center gap-4 p-8"
+      className="flex min-h-screen flex-col items-center justify-center gap-4 p-6 text-center sm:p-8"
       data-testid="unauthorized-page"
     >
-      <h1 className="text-foreground text-4xl font-bold">403</h1>
-      <p className="text-muted-foreground text-lg">
+      <h1 className="text-foreground text-3xl font-bold sm:text-4xl">403</h1>
+      <p className="text-muted-foreground max-w-md text-base sm:text-lg">
         You do not have permission to access this page.
       </p>
       <Link
