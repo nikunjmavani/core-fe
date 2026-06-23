@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 import type { LucideIcon } from '@/shared/icons/index.ts';
+import type { OrganizationType } from '@/shared/tenancy/me-context.ts';
 
 /**
  * Settings registry — two scopes, one modal (routing-and-tenancy.md §7).
@@ -54,6 +55,21 @@ export const DEFAULT_SETTINGS: SettingsSectionRef = {
   scope: 'account',
   section: 'profile',
 };
+
+/**
+ * Organization sections available per org type. **Personal** organizations are
+ * intentionally lean — General + Billing only (members/roles/integrations need
+ * a team). **Team** organizations get the full management set. `branches` is
+ * omitted until it has a backend. Permission gating (settings-permissions.ts)
+ * still applies on top of this.
+ */
+export function sectionsForOrgType(
+  type: OrganizationType,
+): readonly OrganizationSettingsSection[] {
+  return type === 'TEAM'
+    ? ['general', 'members', 'roles', 'billing', 'integrations']
+    : ['general', 'billing'];
+}
 
 interface SettingsNavItem {
   scope: SettingsScope;

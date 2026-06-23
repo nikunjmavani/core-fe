@@ -5,9 +5,11 @@ import { ORGANIZATION } from '@/core/config/constants.ts';
 import { organizationPicker } from '@/lib/routes/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog.tsx';
+import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import { Building2 } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+import type { OrganizationType } from '@/shared/tenancy/me-context.ts';
 
 import { AccountAppearancePanel } from './account/AccountAppearancePanel.tsx';
 import { AccountNotificationsPanel } from './account/AccountNotificationsPanel.tsx';
@@ -23,8 +25,11 @@ import { OrganizationMembersPanel } from './organization/OrganizationMembersPane
 import { OrganizationRolesPanel } from './organization/OrganizationRolesPanel.tsx';
 import { parseSettingsHash, settingsHash } from './settings-hash.ts';
 import { canViewSettingsSection } from './settings-permissions.ts';
-import type { SettingsSectionRef } from './settings-sections.ts';
-import { SETTINGS_NAV } from './settings-sections.ts';
+import type {
+  OrganizationSettingsSection,
+  SettingsSectionRef,
+} from './settings-sections.ts';
+import { sectionsForOrgType, SETTINGS_NAV } from './settings-sections.ts';
 import { SettingsNav } from './SettingsNav.tsx';
 
 /**
@@ -42,6 +47,9 @@ export function SettingsModal() {
   const user = useAuthStore((s) => s.user);
   const organizationId = useOrganizationStore((s) => s.organizationId);
   const permissions = useOrganizationStore((s) => s.permissions);
+  // Active org type (PERSONAL/TEAM) drives which org sections exist. Undefined
+  // while me/context loads → fall back to permission-only gating.
+  const orgType = useMeContext().data?.activeOrganization?.type;
   const navigate = useNavigate();
   const router = useRouter();
 
@@ -72,12 +80,18 @@ export function SettingsModal() {
     !!organizationId && organizationId !== ORGANIZATION.LOCALHOST_FALLBACK;
   const ctx = { role: user?.role ?? ('user' as const), permissions };
 
+  const allowedForOrgType = (section: OrganizationSettingsSection) =>
+    !orgType || sectionsForOrgType(orgType).includes(section);
+
   const visibleGroups = SETTINGS_NAV.map((group) =>
     group.scope === 'organization'
       ? {
           ...group,
           items: group.items.filter(
-            (item) => hasOrganizationContext && canViewSettingsSection(item, ctx),
+            (item) =>
+              hasOrganizationContext &&
+              canViewSettingsSection(item, ctx) &&
+              allowedForOrgType(item.section as OrganizationSettingsSection),
           ),
         }
       : group,
@@ -114,6 +128,7 @@ export function SettingsModal() {
             <ActivePanel
               active={active}
               hasOrganizationContext={hasOrganizationContext}
+              orgType={orgType}
             />
           </div>
         </div>
@@ -125,12 +140,21 @@ export function SettingsModal() {
 function ActivePanel({
   active,
   hasOrganizationContext,
+  orgType,
 }: {
   active: SettingsSectionRef;
   hasOrganizationContext: boolean;
+  orgType: OrganizationType | undefined;
 }) {
   if (active.scope === 'organization' && !hasOrganizationContext) {
     return <SelectOrganizationFirst />;
+  }
+  if (
+    active.scope === 'organization' &&
+    orgType &&
+    !sectionsForOrgType(orgType).includes(active.section as OrganizationSettingsSection)
+  ) {
+    return <SectionNotAvailable />;
   }
   switch (active.section) {
     case 'profile':
@@ -184,6 +208,23 @@ function SelectOrganizationFirst() {
       >
         Select organization
       </Button>
+    </div>
+  );
+}
+
+/** An org section that isn't available for this organization's type (e.g. a
+ * personal org has no Members/Roles). Reached only via a stale deep link. */
+function SectionNotAvailable() {
+  return (
+    <div
+      className="flex h-full flex-col items-center justify-center gap-2 text-center"
+      data-testid="settings-section-unavailable"
+    >
+      <h2 className="text-base font-semibold">Not available here</h2>
+      <p className="text-muted-foreground max-w-xs text-sm">
+        This section isn't available for a personal organization. Create or switch to a
+        team to manage it.
+      </p>
     </div>
   );
 }

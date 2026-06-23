@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { filterNav, SECTIONS_BY_SCOPE, SETTINGS_NAV } from './settings-sections.ts';
+import {
+  filterNav,
+  SECTIONS_BY_SCOPE,
+  sectionsForOrgType,
+  SETTINGS_NAV,
+} from './settings-sections.ts';
 
 describe('SETTINGS_NAV registry', () => {
   it('lists every section of both scopes exactly once', () => {
@@ -48,5 +53,20 @@ describe('filterNav', () => {
 
   it('returns no groups when nothing matches', () => {
     expect(filterNav(SETTINGS_NAV, 'zzznomatch')).toEqual([]);
+  });
+});
+
+describe('sectionsForOrgType', () => {
+  it('gives a team the full management set', () => {
+    const team = sectionsForOrgType('TEAM');
+    expect(team).toEqual(['general', 'members', 'roles', 'billing', 'integrations']);
+  });
+
+  it('keeps a personal org lean — General + Billing only', () => {
+    const personal = sectionsForOrgType('PERSONAL');
+    expect(personal).toEqual(['general', 'billing']);
+    expect(personal).not.toContain('members');
+    expect(personal).not.toContain('roles');
+    expect(personal).not.toContain('integrations');
   });
 });
