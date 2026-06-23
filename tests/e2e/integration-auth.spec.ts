@@ -1,12 +1,12 @@
 import { type APIRequestContext, expect, test } from '@playwright/test';
 
 /**
- * Real-stack contract e2e: exercises the LIVE core-be at http://localhost:3000
- * (not the mock layer). Covers positive (green) and negative (red→expected)
- * flows the frontend depends on. Auto-skips when the server is unreachable so
- * the mock e2e suite (against the FE dev server) is unaffected.
+ * Contract e2e: exercises the running core-be at http://localhost:3000 (not the
+ * mock layer). Covers positive (green) and negative (red→expected) flows the
+ * frontend depends on. Auto-skips when the server is unreachable so the mock
+ * e2e suite (against the FE dev server) is unaffected.
  *
- * Run: pnpm exec playwright test tests/e2e/real-backend.spec.ts
+ * Run: pnpm exec playwright test tests/e2e/integration-auth.spec.ts
  */
 const HOST = 'http://localhost:3000';
 const PASSWORD = 'Passw0rd!2026secure';
@@ -38,7 +38,7 @@ test.afterAll(async () => {
   await api?.dispose();
 });
 
-test.describe('core-be live server — real auth & tenancy contracts', () => {
+test.describe('core-be server — auth & tenancy contracts', () => {
   test.beforeEach(() => {
     test.skip(!serverUp, 'core-be is not reachable on http://localhost:3000');
   });
