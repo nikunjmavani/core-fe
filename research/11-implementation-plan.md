@@ -5,18 +5,18 @@ Status: **awaiting item-wise green-light** · Backend contract: core-be
 session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 (URL-as-source-of-truth) and the [[pages-url-mirror-design]] memory.
 
-> **Part I** is the design — **31 numbered decisions** (`D-01`…`D-31`, indexed
+> **Part I** is the design — **32 numbered decisions** (`D-01`…`D-32`, indexed
 > below, each traced to the items that build it). **Part II** is the commit-sized
-> plan — **65 build items** (`FE-01`…`FE-65`), each with a stable ID.
+> plan — **67 build items** (`FE-01`…`FE-67`), each with a stable ID.
 
 ---
 
 ## Part I — Design
 
-### Design decisions index (D-01…D-31)
+### Design decisions index (D-01…D-32)
 
 Every normative decision below carries a stable `D-` ID, the section that
-specifies it, and the Part II item(s) that build it. **31 decisions → 65 items.**
+specifies it, and the Part II item(s) that build it. **32 decisions → 67 items.**
 
 | ID       | Decision                                                                                                                                                                                                                                                                 | Spec     | Built by                   |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------- |
@@ -51,6 +51,7 @@ specifies it, and the Part II item(s) that build it. **31 decisions → 65 items
 | **D-29** | Login redirect: L1 captures the attempted URL as `?returnTo=`; every auth flow consumes it via the resolver; only same-origin relative paths honored (`safeReturnTo`, open-redirect guard) else resolver default                                                         | §3.9     | FE-58, FE-59               |
 | **D-30** | Layout width: `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = contained \| full, default contained) toggles `ProtectedLayout` between centered 12-grid and full-window; optional runtime override                                                                            | §9       | FE-60                      |
 | **D-31** | Notifications: in-app inbox (bell + center, mark read/all) on the core-be notification API, realtime via SSE/poll; opt-in desktop notifications via the Web Notification API (user-granted from prefs); a Notifications preferences tab (email / in-app / desktop)       | §10      | FE-61…FE-65                |
+| **D-32** | Theme customization gate: a web "shuffle / randomize theme" action; `config.themeLock` (`VITE_THEME_LOCK`) enables web theming or **freezes** the app to the code-defined theme (switcher + shuffle hidden)                                                              | §9       | FE-66, FE-67               |
 
 ## 0. Why
 
@@ -432,6 +433,11 @@ element follows. This section makes that a product capability:
   | `full`, default `contained`) switches the `ProtectedLayout` content container
   between a **centered 12-grid** (`max-w-screen-2xl mx-auto`) and **full-window**
   (fluid, edge-to-edge). Optional runtime override in Appearance.
+- **Shuffle.** An Appearance **"Shuffle theme"** action randomizes the preset (or
+  generates fresh token values, create-tool style) and persists it.
+- **Freeze (env).** `config.themeLock` (`VITE_THEME_LOCK` = `true`) locks the app
+  to the code-defined theme — switcher + shuffle hidden; default (`false`) allows
+  web customization.
 
 The contract stays CSS-only — "a future theme is just a file of token values"
 (CLAUDE.md), now switchable at runtime and per preset.
@@ -445,8 +451,8 @@ A first-class notification feature backed by the core-be notification API
   mock+live like §6), e.g. `GET /me/notifications`, `…/unread-count`,
   `PATCH /me/notifications/:id/read`, `POST /me/notifications/read-all`.
 - **Notification center** — a header **bell** with an unread badge opening a
-  panel/drawer (reuses `<Surface>`, FE-53) that lists items with read / mark-all
-  - empty/loading/error states (FE-48). Lives in `ProtectedLayout`.
+  panel/drawer (reuses `<Surface>`, FE-53) listing items with read and mark-all,
+  plus empty/loading/error states (FE-48). Lives in `ProtectedLayout`.
 - **Realtime** — subscribe to new notifications via SSE/WebSocket if core-be
   exposes a stream, else TanStack `refetchInterval` polling; new items invalidate
   the inbox and bump the badge.
@@ -464,10 +470,10 @@ The bell + center are gated by the same policy model (§3.8).
 
 ## Part II — Implementation plan (item-wise)
 
-**65 build items** (`FE-01`…`FE-65`) across 12 phases — plus Phase 0 (already
+**67 build items** (`FE-01`…`FE-67`) across 12 phases — plus Phase 0 (already
 shipped). Each is commit-sized with a stable ID; review by ID — I build only
 green-lit items, in dependency order, each its own tested commit. Legend: ⬜ to
-build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1 · PF 7 · PT 5 · PN 5 · P6 9 · P7 5 · P8 4.
+build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1 · PF 7 · PT 7 · PN 5 · P6 9 · P7 5 · P8 4.
 
 ### Phase 0 — Already shipped
 
@@ -536,15 +542,17 @@ _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by depend
 - ⬜ **FE-48** State primitives — `Skeleton` / `EmptyState` + per-route `ErrorBoundary` for dashboard + panels. _Files:_ shared/components/{EmptyState,ErrorBoundary}.
 - ⬜ **FE-53** `<Surface>` adaptive modal⇄right-drawer container (`Dialog` ⇄ `Sheet side="right"`; full-screen sheet ≤ sm); adopt in SettingsModal + create/edit dialogs. _Files:_ shared/components/Surface (+ SettingsModal). Builds D-27.
 
-### Phase T — Global theming & layout width (5) — land before Phases 7–8
+### Phase T — Global theming & layout width (7) — land before Phases 7–8
 
-_Appended IDs (`FE-54`…`FE-57`, `FE-60`); builds D-28, D-30. FE-54 can land anytime; FE-56 ships with Settings._
+_Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30, D-32. FE-54 can land anytime; FE-56 ships with Settings._
 
 - ⬜ **FE-54** Token-contract alignment + shadcn-create adapter — verify `@theme` covers the full shadcn variable set; documented name-map + a one-step "adopt a `ui.shadcn.com/create` export" path (their `--*` → our `--color-*`, radius, fonts). _Files:_ index.css, docs/reference/theming, scripts.
 - ⬜ **FE-55** Named theme presets — N presets (base/accent + radius + font) as token-override blocks applied via `data-theme` on `<html>`, composed with `.dark`. _Files:_ index.css (preset blocks), shared theme registry.
 - ⬜ **FE-56** Runtime theme switcher — extend `useThemeStore` → `{ mode, preset, radius? }` (persisted); apply `data-theme` + `.dark`; **Settings → Appearance** panel (mode + preset [+ accent/radius]). _Files:_ useThemeStore, SettingsModal Appearance panel.
 - ⬜ **FE-57** Org brand theming (optional) — org `brand_color` → `--color-brand` (+ derived ramp); capability/module-gated. _Files:_ shared/tenancy, index.css brand tokens.
 - ⬜ **FE-60** Layout width mode — `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = `contained` | `full`, default `contained`): `ProtectedLayout` content container = centered 12-grid (`max-w-screen-2xl mx-auto`) vs full-window (fluid); optional Appearance toggle; document in `.env.example`. _Files:_ core/config/env.ts, shared/layouts/ProtectedLayout, .env.example, SettingsModal Appearance.
+- ⬜ **FE-66** Shuffle theme — an Appearance **"Shuffle"** action that randomizes the preset (or generates fresh token values, create-tool style) and persists via `useThemeStore`. _Files:_ SettingsModal Appearance, shared theme registry.
+- ⬜ **FE-67** Theme-lock env — `config.themeLock` (`VITE_THEME_LOCK`): when `true`, hide the switcher + shuffle and pin the code-defined theme; default `false` allows web customization; document in `.env.example`. _Files:_ core/config/env.ts, useThemeStore, SettingsModal Appearance, .env.example.
 
 ### Phase 6 — API mock+live parity (9) — per domain: `*Wire` + `to*` mapper + both branches + integration spec
 
@@ -595,12 +603,11 @@ share one notify / mutation / error / surface layer (FE-43/44 can land even earl
 FE-54/FE-60 (token contract / layout env) can land anytime; FE-56 (switcher)
 ships with Settings (Phase 7).
 **Phase N (FE-61…FE-65)** notifications depend on Phase F (`<Surface>` / notify)
-
-- the inbox API; the prefs tab (FE-65) uses FE-30.
-  **Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
-  **Phase 7** depends on Phase 6 + Phase F + Phase 3A. **Phase 8** is last.
-  Cross-deps: FE-22 needs FE-12; FE-24 needs FE-06; FE-20 needs OD-1; FE-34…FE-37
-  use FE-45/FE-47 + FE-49…FE-52.
+and the inbox API; the prefs tab (FE-65) uses FE-30.
+**Phase 6 (FE-25…FE-33)** runs parallel to Phases 3–4 (pure data layer).
+**Phase 7** depends on Phase 6 + Phase F + Phase 3A. **Phase 8** is last.
+Cross-deps: FE-22 needs FE-12; FE-24 needs FE-06; FE-20 needs OD-1; FE-34…FE-37
+use FE-45/FE-47 + FE-49…FE-52.
 
 ### Open decisions
 
