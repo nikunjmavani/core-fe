@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryClient } from '@/core/http/queryClient.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { type MeContext, meContextQueryKey } from './me-context.ts';
 
@@ -122,6 +123,7 @@ beforeEach(() => {
   useMockApiRef.value = false;
   postMock.mockReset();
   setAccessTokenMock.mockReset();
+  useOrganizationStore.getState().clearOrganization();
   queryClient.setQueryData(meContextQueryKey, structuredClone(BASE_CTX));
 });
 
@@ -154,6 +156,9 @@ describe('tenancy/switch', () => {
     // user + org list are stable across a switch
     expect(result?.user.email).toBe('ada@acme.test');
     expect(result?.organizations).toHaveLength(2);
+    // org store is derived from the switched context
+    expect(useOrganizationStore.getState().organizationType).toBe('PERSONAL');
+    expect(useOrganizationStore.getState().organizationId).toBe(PERSONAL_ID);
   });
 
   it('posts the immutable org id on switch-to-organization (live)', async () => {

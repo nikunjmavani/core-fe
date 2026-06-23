@@ -1,6 +1,17 @@
 import { create } from 'zustand';
 
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
+import type {
+  OrganizationSummary,
+  OrganizationType,
+  OrgCapabilities,
+} from '@/shared/tenancy/me-context.ts';
+
+/** Map the me/context org status (uppercase) to the store's lowercase enum. */
+function toStoreStatus(org: OrganizationSummary | null): 'active' | 'suspended' | null {
+  if (!org) return null;
+  return org.status === 'ACTIVE' ? 'active' : 'suspended';
+}
 
 const LAST_ORGANIZATION_KEY = 'core-last-organization';
 
@@ -41,10 +52,19 @@ interface OrganizationStore {
   organizationSlug: string | null;
   /** Organization status from the membership response. */
   organizationStatus: 'active' | 'suspended' | null;
+  /** Active organization type (PERSONAL vs TEAM) — drives capability gating. */
+  organizationType: OrganizationType | null;
+  /** Active organization capabilities (team-only feature gates). */
+  capabilities: OrgCapabilities | null;
   /** Org-scoped permission codes the user holds in the active organization. */
   permissions: OrganizationPermission[];
 
   setOrganization: (id: string, slug: string, status?: 'active' | 'suspended') => void;
+  /** Derive the full active-org context from me/context (the canonical source). */
+  setActiveOrganization: (
+    org: OrganizationSummary | null,
+    permissions: OrganizationPermission[],
+  ) => void;
   /** Replace the active org's permission set (from the membership response). */
   setPermissions: (permissions: OrganizationPermission[]) => void;
   clearOrganization: () => void;
@@ -62,7 +82,19 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
   organizationId: null,
   organizationSlug: null,
   organizationStatus: null,
+  organizationType: null,
+  capabilities: null,
   permissions: [],
+
+  setActiveOrganization: (org, permissions) =>
+    set({
+      organizationId: org?.id ?? null,
+      organizationSlug: org?.slug ?? null,
+      organizationStatus: toStoreStatus(org),
+      organizationType: org?.type ?? null,
+      capabilities: org?.capabilities ?? null,
+      permissions,
+    }),
 
   setOrganization: (organizationId, organizationSlug, organizationStatus) =>
     set({
@@ -76,6 +108,8 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       organizationId: null,
       organizationSlug: null,
       organizationStatus: null,
+      organizationType: null,
+      capabilities: null,
       permissions: [],
     }),
 }));

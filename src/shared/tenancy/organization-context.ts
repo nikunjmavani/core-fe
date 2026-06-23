@@ -1,7 +1,11 @@
+import type { OrganizationPermission } from '@/core/rbac/policies.ts';
+import { organizationPermissionSchema } from '@/core/types/permissions.ts';
 import {
   persistOrganizationToStorage,
   useOrganizationStore,
 } from '@/shared/store/useOrganizationStore/index.ts';
+
+import type { MeContext } from './me-context.ts';
 
 /**
  * Organization context — **the URL is the single source of truth.**
@@ -29,7 +33,24 @@ export function syncOrganizationFromRoute(
   persistOrganizationToStorage(organizationId, slug);
 }
 
-/** Active organization id (derived cache — canonical value lives in the URL). */
+/** Active organization id (derived cache — canonical value is me/context). */
 export function getActiveOrganizationId(): string | null {
   return useOrganizationStore.getState().organizationId;
+}
+
+const VALID_PERMISSIONS = new Set<string>(organizationPermissionSchema.options);
+
+/**
+ * Derive the org store from the authoritative me/context — the active org's
+ * id / slug / type / status / capabilities plus the resolved org-scoped
+ * permissions. This is the context-driven source of org context (the URL no
+ * longer sources it); call it wherever me/context loads or changes.
+ */
+export function deriveOrgContext(ctx: MeContext): void {
+  const permissions = ctx.myPermissions.filter((p): p is OrganizationPermission =>
+    VALID_PERMISSIONS.has(p),
+  );
+  useOrganizationStore
+    .getState()
+    .setActiveOrganization(ctx.activeOrganization, permissions);
 }

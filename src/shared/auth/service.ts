@@ -23,6 +23,7 @@ import {
   type MeContext,
   meContextQueryKey,
 } from '@/shared/tenancy/me-context.ts';
+import { deriveOrgContext } from '@/shared/tenancy/organization-context.ts';
 
 import type { AuthUser } from './types.ts';
 
@@ -262,6 +263,7 @@ export async function establishSession(accessToken: string): Promise<void> {
   try {
     const ctx = await fetchMeContext();
     queryClient.setQueryData(meContextQueryKey, ctx);
+    deriveOrgContext(ctx);
     useAuthStore.getState().setUser(meContextToAuthUser(ctx));
     scheduleTokenRefresh();
   } catch (error) {

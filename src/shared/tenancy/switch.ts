@@ -15,6 +15,7 @@ import {
   organizationWire,
   toOrganization,
 } from './me-context.ts';
+import { deriveOrgContext } from './organization-context.ts';
 
 /**
  * Active-org switch response `data` (snake_case). Switching **re-mints the access
@@ -80,12 +81,20 @@ async function liveSwitch(
 export async function switchToOrganization(
   organizationId: string,
 ): Promise<MeContext | undefined> {
-  if (config.useMockApi) return mockSwitch((o) => o.id === organizationId);
-  return liveSwitch('/auth/switch-to-organization', { organization_id: organizationId });
+  const result = config.useMockApi
+    ? mockSwitch((o) => o.id === organizationId)
+    : await liveSwitch('/auth/switch-to-organization', {
+        organization_id: organizationId,
+      });
+  if (result) deriveOrgContext(result);
+  return result;
 }
 
 /** Switch the active organization to the caller's personal org. */
 export async function switchToPersonal(): Promise<MeContext | undefined> {
-  if (config.useMockApi) return mockSwitch((o) => o.type === 'PERSONAL');
-  return liveSwitch('/auth/switch-to-personal', {});
+  const result = config.useMockApi
+    ? mockSwitch((o) => o.type === 'PERSONAL')
+    : await liveSwitch('/auth/switch-to-personal', {});
+  if (result) deriveOrgContext(result);
+  return result;
 }
