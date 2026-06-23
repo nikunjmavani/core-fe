@@ -5,16 +5,13 @@ import { useForm } from 'react-hook-form';
 
 import { authApi } from '@/shared/api/auth-api.ts';
 import { type RegisterInput, registerSchema } from '@/shared/api/auth-contracts.ts';
-import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
-import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
-import { setAccessToken } from '@/shared/auth/token.ts';
+import { establishSession } from '@/shared/auth/service.ts';
 import { PasswordStrengthMeter } from '@/shared/components/PasswordStrengthMeter/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
 import { Eye, EyeOff } from '@/shared/icons/index.ts';
-import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -43,11 +40,7 @@ export function RegisterForm() {
     }
     try {
       const { accessToken } = await authApi.register(data);
-      setAccessToken(accessToken);
-      markSessionStart(); // start the absolute session-lifetime clock
-      const user = await authApi.me(accessToken);
-      useAuthStore.getState().setUser(user);
-      scheduleTokenRefresh();
+      await establishSession(accessToken);
       void navigate({ to: '/', replace: true });
     } catch (err) {
       setApiError(

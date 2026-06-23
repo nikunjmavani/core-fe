@@ -486,7 +486,7 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1
 - ✅ **FE-02** OAuth start `{url}` — fetch `GET /auth/oauth/:provider` → `window.location.assign(url)`. _Files:_ auth-api, PasswordlessOptions.
 - ✅ **FE-03** OAuth return — `/callback` calls `silentRefresh()` (POST `/auth/refresh` from the HttpOnly cookie) → profile → resolve root; failure → `/login` (OD-2 resolved: cookie→refresh). _Files:_ CallbackPage.
 - ✅ **FE-04** `mfa/login` → `totp_code`/`recovery_code` + recovery-code toggle; MfaForm now uses `establishSession`. _Files:_ auth-api, auth-contracts, MfaForm.
-- ⬜ **FE-05** `me/context` canonical post-auth (all flows → resolver). _Files:_ login/register forms, MfaForm, resolver.
+- ✅ **FE-05** `me/context` canonical post-auth — `establishSession` now loads `GET /auth/me/context`, seeds the React Query cache (`meContextQueryKey`) + header user; login/register/magic-link/MFA all route through it. _Files:_ service, me-context, useMeContext, LoginForm, RegisterForm.
 
 ### Phase 2 — me/context as org source (3)
 

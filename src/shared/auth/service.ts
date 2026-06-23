@@ -18,6 +18,11 @@ import { clearSessionStart, markSessionStart } from '@/shared/auth/session-lifet
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { authTokenResponseSchema, authUserSchema } from '@/shared/auth/types.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import {
+  fetchMeContext,
+  type MeContext,
+  meContextQueryKey,
+} from '@/shared/tenancy/me-context.ts';
 
 import type { AuthUser } from './types.ts';
 
@@ -224,12 +229,27 @@ async function getCurrentUser(): Promise<AuthUser> {
   return authUserSchema.parse(data);
 }
 
+/** Map the authoritative me/context payload → the lightweight header AuthUser. */
+function meContextToAuthUser(ctx: MeContext): AuthUser {
+  const name = [ctx.user.firstName, ctx.user.lastName].filter(Boolean).join(' ');
+  return {
+    id: ctx.user.id,
+    email: ctx.user.email,
+    role: ctx.globalRole ?? 'user',
+    name: name.length > 0 ? name : undefined,
+    avatarUrl: ctx.user.avatarUrl ?? undefined,
+    organizationId: ctx.activeOrganization?.id,
+  };
+}
+
 /**
  * Establish a fully authenticated session from a freshly minted access token —
- * the single post-auth completion path shared by magic-link verify and OAuth
- * return. Stores the token, starts the idle-session clock, loads the user
- * profile, then schedules proactive refresh. Rolls the token back if the
- * profile load fails so auth state is never left half-initialised.
+ * the single post-auth completion path shared by login, register, magic-link,
+ * and OAuth. Stores the token, starts the idle-session clock, then loads the
+ * authoritative session context (`GET /auth/me/context`) and seeds the React
+ * Query cache so the app has user + active-org + permissions with no extra
+ * round-trip, sets the header user, and schedules proactive refresh. Rolls the
+ * token back if the context load fails so auth state is never half-initialised.
  */
 export async function establishSession(accessToken: string): Promise<void> {
   setAccessToken(accessToken);
@@ -240,8 +260,9 @@ export async function establishSession(accessToken: string): Promise<void> {
     return;
   }
   try {
-    const user = await getCurrentUser();
-    useAuthStore.getState().setUser(user);
+    const ctx = await fetchMeContext();
+    queryClient.setQueryData(meContextQueryKey, ctx);
+    useAuthStore.getState().setUser(meContextToAuthUser(ctx));
     scheduleTokenRefresh();
   } catch (error) {
     clearAccessToken();

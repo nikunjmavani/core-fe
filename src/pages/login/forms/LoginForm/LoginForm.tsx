@@ -5,15 +5,12 @@ import { useForm } from 'react-hook-form';
 
 import { authApi, MfaRequiredError } from '@/shared/api/auth-api.ts';
 import { type LoginInput, loginSchema } from '@/shared/api/auth-contracts.ts';
-import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
-import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
-import { setAccessToken } from '@/shared/auth/token.ts';
+import { establishSession } from '@/shared/auth/service.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
 import { Eye, EyeOff } from '@/shared/icons/index.ts';
-import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 import { useCooldownClock } from '../../hooks/useCooldownClock/index.ts';
 import { PasswordlessOptions } from '../PasswordlessOptions/index.ts';
@@ -89,11 +86,7 @@ export function LoginForm() {
     setApiError(null);
     try {
       const { accessToken } = await authApi.login(data);
-      setAccessToken(accessToken);
-      markSessionStart(); // start the absolute session-lifetime clock
-      const user = await authApi.me(accessToken);
-      useAuthStore.getState().setUser(user);
-      scheduleTokenRefresh();
+      await establishSession(accessToken);
       setFailureCount(0);
       setCooldownUntil(null);
       const from = getRedirectPath(location);

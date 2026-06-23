@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { fetchMeContext } from '@/shared/tenancy/me-context.ts';
+import { fetchMeContext, meContextQueryKey } from '@/shared/tenancy/me-context.ts';
 
-/** Query key for the caller's session context. */
-export const meContextQueryKey = ['auth', 'me-context'] as const;
+/** Query key for the caller's session context (defined in the data module). */
+export { meContextQueryKey };
 
 /**
  * The caller's session context — user, active organization (+ status +

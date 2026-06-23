@@ -230,6 +230,9 @@ const MOCK_ME_CONTEXT: MeContext = {
   ],
 };
 
+/** React Query key for the caller's session context (`GET /auth/me/context`). */
+export const meContextQueryKey = ['auth', 'me-context'] as const;
+
 /**
  * The single authoritative read of the caller's session context: user, active
  * organization (+ status + capabilities), resolved permissions, global role, and

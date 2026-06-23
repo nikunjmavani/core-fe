@@ -1,6 +1,7 @@
 import { type Mock, vi } from 'vitest';
 
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import type { MeContext } from '@/shared/tenancy/me-context.ts';
 
 import { clearAccessToken, getAccessToken, setAccessToken } from './token.ts';
 import type { AuthUser } from './types.ts';
@@ -8,8 +9,18 @@ import type { AuthUser } from './types.ts';
 // Mock global fetch
 let fetchMock: ReturnType<typeof vi.fn>;
 
+const { fetchMeContextMock, setQueryDataMock } = vi.hoisted(() => ({
+  fetchMeContextMock: vi.fn(),
+  setQueryDataMock: vi.fn(),
+}));
+
 vi.mock('@/core/http/queryClient.ts', () => ({
-  queryClient: { clear: vi.fn() },
+  queryClient: { clear: vi.fn(), setQueryData: setQueryDataMock },
+}));
+
+vi.mock('@/shared/tenancy/me-context.ts', () => ({
+  fetchMeContext: fetchMeContextMock,
+  meContextQueryKey: ['auth', 'me-context'],
 }));
 
 vi.mock('@/shared/auth/refresh-timer.ts', () => ({
@@ -35,6 +46,42 @@ const MOCK_USER: AuthUser = {
   name: 'Test User',
 };
 
+const SAMPLE_CTX: MeContext = {
+  user: {
+    id: 'usr_1',
+    email: 'ada@acme.test',
+    isEmailVerified: true,
+    isMfaEnabled: false,
+    firstName: 'Ada',
+    lastName: 'Byron',
+    avatarUrl: null,
+    status: 'ACTIVE',
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  },
+  activeOrganization: {
+    id: 'org_1',
+    name: 'Acme',
+    slug: 'acme',
+    type: 'TEAM',
+    status: 'ACTIVE',
+    logoUrl: null,
+    capabilities: {
+      canInviteMembers: true,
+      canManageMembers: true,
+      canManageRoles: true,
+      canTransferOwnership: true,
+      canDelete: true,
+      canManageBilling: true,
+    },
+    createdAt: '2026-01-01T00:00:00.000Z',
+    updatedAt: '2026-01-01T00:00:00.000Z',
+  },
+  myPermissions: ['organization:read'],
+  globalRole: null,
+  organizations: [],
+};
+
 function mockResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -49,6 +96,7 @@ describe('auth/service', () => {
   let forceLogout: AuthServiceModule['forceLogout'];
   let logout: AuthServiceModule['logout'];
   let refreshAccessToken: AuthServiceModule['refreshAccessToken'];
+  let establishSession: AuthServiceModule['establishSession'];
 
   beforeAll(async () => {
     const mod = await import('./service.ts');
@@ -56,6 +104,7 @@ describe('auth/service', () => {
     forceLogout = mod.forceLogout;
     logout = mod.logout;
     refreshAccessToken = mod.refreshAccessToken;
+    establishSession = mod.establishSession;
   });
 
   beforeEach(() => {
@@ -212,6 +261,28 @@ describe('auth/service', () => {
 
       expect(getAccessToken()).toBeNull();
       expect(window.location.href).toBe('/login');
+    });
+  });
+
+  describe('establishSession', () => {
+    it('seeds the me/context cache + header user from one canonical read', async () => {
+      fetchMeContextMock.mockResolvedValueOnce(SAMPLE_CTX);
+
+      await establishSession(VALID_TOKEN);
+
+      expect(getAccessToken()).toBe(VALID_TOKEN);
+      expect(setQueryDataMock).toHaveBeenCalledWith(['auth', 'me-context'], SAMPLE_CTX);
+      const user = useAuthStore.getState().user;
+      expect(user?.email).toBe('ada@acme.test');
+      expect(user?.name).toBe('Ada Byron');
+      expect(user?.organizationId).toBe('org_1');
+    });
+
+    it('rolls the token back if the context load fails', async () => {
+      fetchMeContextMock.mockRejectedValueOnce(new Error('500'));
+
+      await expect(establishSession(VALID_TOKEN)).rejects.toThrow('500');
+      expect(getAccessToken()).toBeNull();
     });
   });
 });
