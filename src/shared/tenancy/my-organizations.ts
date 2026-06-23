@@ -26,6 +26,11 @@ export const createOrganizationSchema = z.object({
 
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;
 
+export const updateOrganizationSchema = z.object({
+  name: z.string().trim().min(1, 'Organization name is required').max(100),
+});
+export type UpdateOrganizationInput = z.infer<typeof updateOrganizationSchema>;
+
 const BASE = API_BASE_PATH;
 
 /** Organizations the signed-in user belongs to (mock fixture while unwired). */
@@ -89,4 +94,39 @@ export async function createOrganization(
     slug,
   });
   return organizationSchema.parse(res.data);
+}
+
+/**
+ * Rename an organization. Name-only by design — the slug drives URLs/API paths
+ * and is not editable here. Mock mode mutates the shared org list (like
+ * {@link createOrganization}) so the switcher reflects the new name after the
+ * `['organizations']` query invalidates.
+ */
+export async function updateOrganization(
+  id: string,
+  input: UpdateOrganizationInput,
+): Promise<Organization> {
+  // REPLACE_WITH_API: PATCH /api/v1/tenancy/organization
+  const payload = updateOrganizationSchema.parse(input);
+  if (config.useMockApi) {
+    const org = MY_ORGANIZATIONS_FIXTURE.find((o) => o.id === id);
+    if (!org) throw new Error('Organization not found');
+    org.name = payload.name;
+    return mockResponse({ ...org });
+  }
+  const res = await apiClient.patch<unknown>(`${BASE}/tenancy/organization`, {
+    name: payload.name,
+  });
+  const o = res.data as {
+    id: string;
+    name: string;
+    slug: string | null;
+    status?: string;
+  };
+  return organizationSchema.parse({
+    id: o.id,
+    name: o.name,
+    slug: o.slug ?? '',
+    status: (o.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'active' : 'suspended',
+  });
 }

@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -10,26 +11,43 @@ import {
 } from '@/shared/components/ui/card.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
+import { useUpdateOrganization } from '@/shared/hooks/useUpdateOrganization/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
 /**
- * Organization general settings — thin in-dialog view for org name & slug.
- * Dense surfaces (members, roles, billing, invitations) live on full pages —
- * see {@link './OrgQuickLinksSection.tsx'}.
- *
- * REPLACE_WITH_API: PATCH /api/v1/organizations/me
+ * Organization general settings — rename the active org (name-only; the slug
+ * drives URLs and is read-only here). Gated on an admin capability
+ * (`canManageMembers` — a personal org has it `false`). The editable name is
+ * derived as a local draft over the server value (no prop→state effect); saving
+ * full-updates via {@link useUpdateOrganization}.
  */
 export function OrganizationGeneralPanel() {
   const organizationId = useOrganizationStore((s) => s.organizationId);
   const organizationSlug = useOrganizationStore((s) => s.organizationSlug);
+  const canManage = useOrganizationStore(
+    (s) => s.capabilities?.canManageMembers ?? false,
+  );
+  const update = useUpdateOrganization();
+
   const { data: orgs } = useQuery({
     queryKey: ['organizations'],
     queryFn: listMyOrganizations,
   });
   const activeOrg = orgs?.find((o) => o.id === organizationId);
+
+  const serverName = activeOrg?.name ?? '';
+  const [draft, setDraft] = useState<string | null>(null);
+  const name = draft ?? serverName;
+  const trimmed = name.trim();
+  const dirty = trimmed !== serverName && trimmed.length > 0;
+
+  function save() {
+    if (!dirty) return;
+    update.mutate({ name: trimmed }, { onSuccess: () => setDraft(null) });
+  }
 
   return (
     <div className="space-y-6" data-testid="settings-section-org-general">
@@ -49,8 +67,10 @@ export function OrganizationGeneralPanel() {
             <Label htmlFor="org-name">Organization name</Label>
             <Input
               id="org-name"
-              defaultValue={activeOrg?.name ?? ''}
+              value={name}
+              onChange={(event) => setDraft(event.target.value)}
               placeholder="Acme Inc."
+              disabled={!canManage}
               data-testid="org-name"
             />
           </div>
@@ -58,19 +78,27 @@ export function OrganizationGeneralPanel() {
             <Label htmlFor="org-slug">Slug</Label>
             <Input
               id="org-slug"
-              defaultValue={activeOrg?.slug ?? organizationSlug ?? ''}
-              placeholder="acme"
+              value={activeOrg?.slug ?? organizationSlug ?? ''}
+              readOnly
+              disabled
               data-testid="org-slug"
             />
             <p className="text-muted-foreground text-xs">
-              Used in URLs and API paths. Lowercase letters, numbers, and hyphens only.
+              Used in URLs and API paths. Contact support to change it.
             </p>
           </div>
-          <div className="flex justify-end">
-            <Button size="sm" data-testid="org-general-save">
-              Save changes
-            </Button>
-          </div>
+          {canManage ? (
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                onClick={save}
+                disabled={!dirty || update.isPending}
+                data-testid="org-general-save"
+              >
+                Save changes
+              </Button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </div>
