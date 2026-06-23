@@ -7,6 +7,7 @@ import {
   CommandPaletteLazy,
   preloadCommandPalette,
 } from '@/shared/components/CommandPalette/index.ts';
+import { EmailVerificationBanner } from '@/shared/components/EmailVerificationBanner/index.ts';
 import { OrganizationSwitcher } from '@/shared/components/OrganizationSwitcher/index.ts';
 import { SessionTimeoutDialog } from '@/shared/components/SessionTimeoutDialog/index.ts';
 import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
@@ -89,6 +90,7 @@ export function Component() {
       {/* Main area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
+        <EmailVerificationBanner />
         <main
           id="main-content"
           className="flex-1 overflow-y-auto p-4 pb-20 sm:p-6 md:pb-6"
