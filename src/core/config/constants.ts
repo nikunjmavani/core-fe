@@ -29,9 +29,17 @@ export const API_ENDPOINTS = {
     FORGOT_PASSWORD: '/auth/password/forgot',
     RESET_PASSWORD: '/auth/password/reset',
     VERIFY_EMAIL: '/auth/email/verify',
-    MFA_VERIFY: '/auth/mfa/verify',
+    /** Complete the login second factor: POST { mfa_session_token, code } → token. */
+    MFA_LOGIN: '/auth/mfa/login',
     /** Redirect user here to start Google OAuth; backend redirects to Google then callback. */
     GOOGLE: '/auth/oauth/google',
+    /** GET → which social providers are configured (e.g. ["google","github"]). */
+    OAUTH_PROVIDERS: '/auth/oauth/providers',
+    /** Passwordless: POST { email } sends a sign-in code; verify exchanges it for a token. */
+    MAGIC_LINK_SEND: '/auth/magic-link/send',
+    MAGIC_LINK_VERIFY: '/auth/magic-link/verify',
+    /** Re-send the email-verification message (authenticated). */
+    RESEND_VERIFICATION: '/auth/email/resend-verification',
   },
 } as const;
 

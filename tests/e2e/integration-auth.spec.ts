@@ -178,4 +178,38 @@ test.describe('core-be server — auth & tenancy contracts', () => {
     });
     expect((await ctx.json()).data.active_organization.id).toBe(orgId);
   });
+
+  test('[+] oauth providers lists the configured social logins', async () => {
+    const res = await api.get('/api/v1/auth/oauth/providers');
+    expect(res.status()).toBe(200);
+    const providers = ((await res.json()) as { data: { providers: string[] } }).data
+      .providers;
+    expect(providers).toContain('google');
+  });
+
+  test('[+] magic-link send responds uniformly (no account enumeration)', async () => {
+    const email = uniqueEmail();
+    await signup(email);
+    const known = await api.post('/api/v1/auth/magic-link/send', { data: { email } });
+    const unknown = await api.post('/api/v1/auth/magic-link/send', {
+      data: { email: uniqueEmail() },
+    });
+    // Same 201 whether or not the account exists — a known email must not be
+    // distinguishable from an unknown one.
+    expect(known.status()).toBe(201);
+    expect(unknown.status()).toBe(201);
+  });
+
+  test('[+] resend email verification for a signed-in user', async () => {
+    const { res } = await signup();
+    const token = (await res.json()).data.access_token;
+    const resend = await api.post('/api/v1/auth/email/resend-verification', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(resend.status()).toBe(201);
+  });
+
+  test('[-] resend email verification without auth → 401', async () => {
+    expect((await api.post('/api/v1/auth/email/resend-verification')).status()).toBe(401);
+  });
 });

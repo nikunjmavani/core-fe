@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { authApi } from '@/shared/api/auth-api.ts';
+import { authApi, MfaRequiredError } from '@/shared/api/auth-api.ts';
 import { type LoginInput, loginSchema } from '@/shared/api/auth-contracts.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
 import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
@@ -99,6 +99,11 @@ export function LoginForm() {
       const from = getRedirectPath(location);
       void navigate({ to: from ?? '/', replace: true });
     } catch (err) {
+      if (err instanceof MfaRequiredError) {
+        // Second factor required — hand the short-lived session token to /mfa.
+        void navigate({ to: '/mfa', state: { mfaToken: err.mfaSessionToken } as never });
+        return;
+      }
       onSubmitError();
       setApiError(
         err instanceof Error ? err.message : 'Unable to sign in. Please try again later.',

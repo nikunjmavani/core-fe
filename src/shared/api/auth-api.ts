@@ -102,6 +102,20 @@ function mockToken(): Promise<AuthTokenResponse> {
   return mockResponse({ accessToken: MOCK_ACCESS_TOKEN });
 }
 
+/**
+ * Thrown by {@link authApi.login} when the account has MFA enabled: the caller
+ * must collect a second factor and call {@link authApi.mfaVerify} with the
+ * carried `mfaSessionToken` (it is NOT an access token).
+ */
+export class MfaRequiredError extends Error {
+  readonly mfaSessionToken: string;
+  constructor(mfaSessionToken: string) {
+    super('mfa_required');
+    this.name = 'MfaRequiredError';
+    this.mfaSessionToken = mfaSessionToken;
+  }
+}
+
 export const authApi = {
   login: async (data: LoginInput): Promise<AuthTokenResponse> => {
     // REPLACE_WITH_API: POST /api/v1/auth/login
@@ -117,6 +131,13 @@ export const authApi = {
     });
     const json = (await response.json()) as unknown;
     if (!response.ok) throwOnNotOk(response, json, `Login failed (${response.status})`);
+    const payload = unwrapEnvelope(json) as {
+      mfa_required?: boolean;
+      mfa_session_token?: string;
+    } | null;
+    if (payload?.mfa_required && typeof payload.mfa_session_token === 'string') {
+      throw new MfaRequiredError(payload.mfa_session_token);
+    }
     return extractAccessToken(json, `Authentication failed (${response.status})`);
   },
 
@@ -173,13 +194,16 @@ export const authApi = {
     return extractAccessToken(json, `Authentication failed (${response.status})`);
   },
 
-  mfaVerify: async (data: MfaVerifyInput, token: string): Promise<AuthTokenResponse> => {
-    // REPLACE_WITH_API: POST /api/v1/auth/mfa/verify
+  mfaVerify: async (
+    data: MfaVerifyInput,
+    mfaSessionToken: string,
+  ): Promise<AuthTokenResponse> => {
+    // Completes the login second factor. /auth/mfa/login is PUBLIC and reads the
+    // short-lived mfa_session_token from the body (NOT a Bearer access token).
     if (config.useMockApi) return mockToken();
-    const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.MFA_VERIFY}`, {
+    const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.MFA_LOGIN}`, {
       method: 'POST',
-      body: JSON.stringify(data),
-      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ mfa_session_token: mfaSessionToken, code: data.code }),
     });
     const json = (await response.json()) as unknown;
     if (!response.ok)
@@ -236,6 +260,76 @@ export const authApi = {
     if (!response.ok) {
       const json = (await response.json().catch(() => null)) as unknown;
       throwOnNotOk(response, json, `Profile update failed (${response.status})`);
+    }
+  },
+
+  /** List configured social providers (e.g. `['google','github']`); `[]` on failure. */
+  listOAuthProviders: async (): Promise<string[]> => {
+    // REPLACE_WITH_API handled inline: GET /api/v1/auth/oauth/providers
+    if (config.useMockApi) return mockResponse(['google']);
+    const response = await authFetch(
+      `${authBase()}${API_ENDPOINTS.AUTH.OAUTH_PROVIDERS}`,
+      { method: 'GET' },
+    );
+    if (!response.ok) return [];
+    const data = unwrapEnvelope((await response.json()) as unknown) as {
+      providers?: unknown;
+    } | null;
+    const providers = data?.providers;
+    return Array.isArray(providers)
+      ? providers.filter((p): p is string => typeof p === 'string')
+      : [];
+  },
+
+  /**
+   * Request a passwordless sign-in link/code. The response is uniform whether or
+   * not the account exists (no enumeration) — callers should never branch on it.
+   */
+  magicLinkSend: async (email: string): Promise<void> => {
+    if (config.useMockApi) {
+      await mockResponse(null);
+      return;
+    }
+    const response = await authFetch(
+      `${authBase()}${API_ENDPOINTS.AUTH.MAGIC_LINK_SEND}`,
+      { method: 'POST', body: JSON.stringify({ email }) },
+    );
+    if (!response.ok) {
+      const json = (await response.json().catch(() => null)) as unknown;
+      throwOnNotOk(
+        response,
+        json,
+        `Could not send the sign-in link (${response.status})`,
+      );
+    }
+  },
+
+  /** Exchange a magic-link token (from the email) for a session. */
+  magicLinkVerify: async (token: string): Promise<AuthTokenResponse> => {
+    if (config.useMockApi) return mockToken();
+    const response = await authFetch(
+      `${authBase()}${API_ENDPOINTS.AUTH.MAGIC_LINK_VERIFY}`,
+      { method: 'POST', body: JSON.stringify({ token }) },
+    );
+    const json = (await response.json()) as unknown;
+    if (!response.ok)
+      throwOnNotOk(response, json, `Magic-link sign-in failed (${response.status})`);
+    return extractAccessToken(json, `Authentication failed (${response.status})`);
+  },
+
+  /** Re-send the email-verification message for the signed-in user. */
+  resendVerification: async (token: string): Promise<void> => {
+    if (config.useMockApi) {
+      await mockResponse(null);
+      return;
+    }
+    const response = await authFetch(
+      `${authBase()}${API_ENDPOINTS.AUTH.RESEND_VERIFICATION}`,
+      { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!response.ok) {
+      const json = (await response.json().catch(() => null)) as unknown;
+      throwOnNotOk(response, json, `Could not resend verification (${response.status})`);
     }
   },
 };
