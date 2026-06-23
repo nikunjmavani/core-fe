@@ -143,6 +143,38 @@ test.describe('core-be — organization lifecycle', () => {
     });
     expect(res.status()).toBe(404);
   });
+
+  test('[+] idempotency replay: same key + body returns the same org', async () => {
+    const token = await signup();
+    const key = idem();
+    const slug = `replay-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`;
+    const headers = { Authorization: `Bearer ${token}`, 'X-Idempotency-Key': key };
+    const body = { name: 'Replay', slug };
+    const first = await api.post(`${API}/tenancy/organizations`, { headers, data: body });
+    const second = await api.post(`${API}/tenancy/organizations`, {
+      headers,
+      data: body,
+    });
+    expect(first.status()).toBe(201);
+    const id1 = ((await first.json()) as { data: { id: string } }).data.id;
+    const id2 = ((await second.json()) as { data: { id: string } }).data.id;
+    expect(id2).toBe(id1); // a replay returns the original resource, not a duplicate
+  });
+
+  test('[+] tenant isolation: a fresh user sees only their own orgs', async () => {
+    const tokenA = await signup();
+    const { org } = await createTeamAndSwitch(tokenA);
+    test.skip(!org, 'team creation unavailable on this deployment');
+
+    const tokenB = await signup();
+    const listB = await api.get(`${API}/tenancy/organizations`, {
+      headers: bearer(tokenB),
+    });
+    const ids = ((await listB.json()) as { data: Array<{ id: string }> }).data.map(
+      (o) => o.id,
+    );
+    expect(ids).not.toContain(org?.id);
+  });
 });
 
 test.describe('core-be — roles, members & permission catalog', () => {

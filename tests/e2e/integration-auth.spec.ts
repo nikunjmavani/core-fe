@@ -137,4 +137,45 @@ test.describe('core-be server — auth & tenancy contracts', () => {
     });
     expect([403, 404]).toContain(sw.status());
   });
+
+  test('[-] login with the correct email but the wrong password → 401', async () => {
+    const email = uniqueEmail();
+    await signup(email);
+    const res = await api.post('/api/v1/auth/login', {
+      data: { email, password: 'WrongPass!9999zz' },
+    });
+    expect(res.status()).toBe(401);
+  });
+
+  test('[-] refresh without the session cookie → 403', async () => {
+    expect((await api.post('/api/v1/auth/refresh')).status()).toBe(403);
+  });
+
+  test('[+] switch into a team you own re-mints a token scoped to it', async () => {
+    const { res } = await signup();
+    const token = (await res.json()).data.access_token;
+    const slug = `owned-${Date.now()}-${crypto.randomUUID().slice(0, 6)}`;
+    const create = await api.post('/api/v1/tenancy/organizations', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'X-Idempotency-Key': crypto.randomUUID(),
+      },
+      data: { name: 'Owned Team', slug },
+    });
+    expect(create.status()).toBe(201);
+    const orgId = (await create.json()).data.id;
+
+    const sw = await api.post('/api/v1/auth/switch-to-organization', {
+      headers: { Authorization: `Bearer ${token}` },
+      data: { organization_id: orgId },
+    });
+    expect([200, 201]).toContain(sw.status());
+    const teamToken = (await sw.json()).data.access_token;
+
+    // the re-minted token resolves the new team as the active organization
+    const ctx = await api.get('/api/v1/auth/me/context', {
+      headers: { Authorization: `Bearer ${teamToken}` },
+    });
+    expect((await ctx.json()).data.active_organization.id).toBe(orgId);
+  });
 });
