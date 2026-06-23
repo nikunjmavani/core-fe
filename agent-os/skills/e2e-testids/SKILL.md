@@ -11,7 +11,7 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 
 - User asks for "test ids", "e2e selectors", "data-testid", or "ids for playwright"
 - New page, form, dialog, table, or nav item is added
-- Before writing or extending `tests/e2e/*.spec.ts`
+- Before writing or extending `tests/e2e/*.{e2e,integration}.test.ts`
 - Page scaffolding or auto-implement completes UI work
 
 ## Rules

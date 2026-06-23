@@ -72,8 +72,8 @@
     "health:fix": "./scripts/validate/health-check.sh --fix",
     "report:code-review": "node scripts/reports/code-review-report.mjs",
     "before-commit-guard": "./scripts/validate/before-commit-guard.sh",
-    "test:visual": "rm -rf test-results && playwright test tests/e2e/visual.spec.ts",
-    "test:visual:update": "rm -rf test-results && playwright test tests/e2e/visual.spec.ts --update-snapshots",
+    "test:visual": "rm -rf test-results && playwright test tests/e2e/visual.e2e.test.ts",
+    "test:visual:update": "rm -rf test-results && playwright test tests/e2e/visual.e2e.test.ts --update-snapshots",
     "prepare": "husky"
   },
   "pnpm": {

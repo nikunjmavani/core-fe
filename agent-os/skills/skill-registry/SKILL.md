@@ -412,7 +412,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 - Skill: `agent-os/skills/e2e-testids/SKILL.md`
 - Inventory: `docs/reference/e2e-testids-inventory.md`
-- Specs: `tests/e2e/*.spec.ts` using `page.getByTestId(...)`
+- Specs: `tests/e2e/*.{e2e,integration}.test.ts` using `page.getByTestId(...)`
 
 **Auto-invocation:** With page-scaffolding, auto-implement UI, or when user prepares E2E tests.
 

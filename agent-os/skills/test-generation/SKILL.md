@@ -356,7 +356,7 @@ After generating the test file:
 
 Before writing E2E specs, ensure testids exist (invoke **e2e-testids** skill) and match `docs/reference/e2e-testids-inventory.md`.
 
-For pages with complex user flows, also create a Playwright E2E spec at `tests/e2e/<feature>.spec.ts`:
+For pages with complex user flows, also create a Playwright E2E spec at `tests/e2e/<feature>.e2e.test.ts`:
 
 ```ts
 import { test, expect } from '@playwright/test';

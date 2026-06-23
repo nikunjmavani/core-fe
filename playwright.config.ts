@@ -2,6 +2,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
+  // tests/e2e holds two kinds, both backend-convention named:
+  //   *.e2e.test.ts         — full-stack UI flows (mock FE)
+  //   *.integration.test.ts — contracts against the running core-be (:3000)
+  testMatch: /\.(e2e|integration)\.test\.ts$/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,

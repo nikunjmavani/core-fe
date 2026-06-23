@@ -6,7 +6,7 @@ import { expect, test } from '@playwright/test';
  * `/api` to http://localhost:3000 via vite.config `server.proxy`):
  *
  *   VITE_USE_MOCK_API=false pnpm dev          # terminal 1
- *   E2E_INTEGRATION=1 pnpm exec playwright test tests/e2e/integration-app.spec.ts
+ *   E2E_INTEGRATION=1 pnpm exec playwright test tests/e2e/app.integration.test.ts
  *
  * Gated behind E2E_INTEGRATION=1 so it never runs in the default mock e2e suite
  * (where the login form resolves client-side and makes no /auth/login call).

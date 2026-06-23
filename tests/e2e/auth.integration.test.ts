@@ -6,7 +6,7 @@ import { type APIRequestContext, expect, test } from '@playwright/test';
  * frontend depends on. Auto-skips when the server is unreachable so the mock
  * e2e suite (against the FE dev server) is unaffected.
  *
- * Run: pnpm exec playwright test tests/e2e/integration-auth.spec.ts
+ * Run: pnpm exec playwright test tests/e2e/auth.integration.test.ts
  */
 const HOST = 'http://localhost:3000';
 const PASSWORD = 'Passw0rd!2026secure';

@@ -106,14 +106,14 @@ See grep in `src/` or sections above for: `onboarding-*`, `accept-invite-*`, `or
 
 ## E2E specs (existing)
 
-| Spec                              | Test IDs used                                                                                      |
-| --------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `tests/e2e/auth.spec.ts`          | `login-form`, `login-email`, `login-password`, `login-submit`, `login-error`, `dashboard-page`     |
-| `tests/e2e/dashboard.spec.ts`     | `dashboard-page`, `dashboard-greeting`, `header`, `search-trigger`, `user-menu-trigger`, `sidebar` |
-| `tests/e2e/settings.spec.ts`      | `settings-modal`, `settings-section-security`, `settings-nav-organization-general`, `user-menu-*`  |
-| `tests/e2e/navigation.spec.ts`    | URLs + login redirect                                                                              |
-| `tests/e2e/accessibility.spec.ts` | login + dashboard pages                                                                            |
-| `tests/e2e/visual.spec.ts`        | Screenshots                                                                                        |
+| Spec                                  | Test IDs used                                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `tests/e2e/auth.e2e.test.ts`          | `login-form`, `login-email`, `login-password`, `login-submit`, `login-error`, `dashboard-page`     |
+| `tests/e2e/dashboard.e2e.test.ts`     | `dashboard-page`, `dashboard-greeting`, `header`, `search-trigger`, `user-menu-trigger`, `sidebar` |
+| `tests/e2e/settings.e2e.test.ts`      | `settings-modal`, `settings-section-security`, `settings-nav-organization-general`, `user-menu-*`  |
+| `tests/e2e/navigation.e2e.test.ts`    | URLs + login redirect                                                                              |
+| `tests/e2e/accessibility.e2e.test.ts` | login + dashboard pages                                                                            |
+| `tests/e2e/visual.e2e.test.ts`        | Screenshots                                                                                        |
 
 **Planned E2E (testids ready):** onboarding flow, org tabs, settings tabs, team URL `?team=`, passwordless buttons, accept-invite states.
 
