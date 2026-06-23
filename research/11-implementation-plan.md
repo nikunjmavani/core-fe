@@ -13,10 +13,10 @@ session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 
 ## Part I — Design
 
-### Design decisions index (D-01…D-24)
+### Design decisions index (D-01…D-25)
 
 Every normative decision below carries a stable `D-` ID, the section that
-specifies it, and the Part II item(s) that build it. **24 decisions → 42 items.**
+specifies it, and the Part II item(s) that build it. **25 decisions → 48 items.**
 
 | ID       | Decision                                                                                                                   | Spec     | Built by                   |
 | -------- | -------------------------------------------------------------------------------------------------------------------------- | -------- | -------------------------- |
