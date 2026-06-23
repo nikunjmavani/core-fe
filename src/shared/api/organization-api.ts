@@ -1,7 +1,12 @@
+import { z } from 'zod';
+
+import { API_BASE_PATH } from '@/core/config/constants.ts';
 import { config } from '@/core/config/env.ts';
+import { apiClient } from '@/core/http/fetch-client.ts';
 import { mockResponse } from '@/core/http/mock.ts';
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 import { organizationPermissionSchema } from '@/core/types/permissions.ts';
+import { isoDateString, publicId } from '@/core/types/wire.ts';
 import type {
   ApiKey,
   ApiKeyWithSecret,
@@ -14,6 +19,9 @@ import type {
   Subscription,
 } from '@/shared/api/organization-contracts.ts';
 import { fetchMeContext } from '@/shared/tenancy/me-context.ts';
+
+/** Active-org scoped tenancy base (active org comes from the token, not the URL). */
+const ORG_API = `${API_BASE_PATH}/tenancy/organization`;
 
 import { MY_PERMISSIONS_FIXTURE } from './organization-fixtures.ts';
 import { orgMockStore } from './organization-mock-store.ts';
@@ -63,35 +71,105 @@ export function acceptInvitation(invitationId: string): Promise<AcceptedInvitati
 
 // ── Members ──
 
-/** List members of the active organization. */
-export function listMembers(): Promise<Member[]> {
-  // REPLACE_WITH_API: GET /api/v1/tenancy/organizations/{orgId}/memberships
-  return mockResponse(orgMockStore.listMembers());
+// core-be membership wire (snake_case): role is a { id, name } object and the
+// user is embedded — both mapped to the flat camelCase Member domain shape.
+const membershipUserWire = z.object({
+  id: publicId('usr'),
+  email: z.string(),
+  first_name: z.string().nullable(),
+  last_name: z.string().nullable(),
+  avatar_url: z.string().nullable(),
+});
+const membershipWire = z.object({
+  id: z.string(),
+  user_id: publicId('usr'),
+  role_id: publicId('rol'),
+  status: z.enum(['ACTIVE', 'INVITED', 'SUSPENDED']),
+  joined_at: isoDateString.nullable(),
+  last_active_at: isoDateString.nullable().optional(),
+  user: membershipUserWire,
+  role: z.object({ id: publicId('rol'), name: z.string() }),
+});
+type MembershipWire = z.infer<typeof membershipWire>;
+
+function toMembershipStatus(status: MembershipWire['status']): MembershipStatus {
+  if (status === 'ACTIVE') return 'active';
+  if (status === 'SUSPENDED') return 'suspended';
+  return 'invited';
+}
+/** Map the org's role name to the FE's coarse OrgRole bucket (custom → member). */
+function toOrgRole(name: string): OrgRole {
+  const n = name.toLowerCase();
+  if (n === 'owner' || n === 'admin' || n === 'viewer') return n;
+  return 'member';
+}
+function toMember(w: MembershipWire): Member {
+  const fullName = [w.user.first_name, w.user.last_name].filter(Boolean).join(' ');
+  return {
+    id: w.id,
+    userId: w.user_id,
+    name: fullName.length > 0 ? fullName : w.user.email,
+    email: w.user.email,
+    role: toOrgRole(w.role.name),
+    status: toMembershipStatus(w.status),
+    avatarUrl: w.user.avatar_url ?? undefined,
+    joinedAt: w.joined_at ?? '',
+    lastActiveAt: w.last_active_at ?? undefined,
+  };
 }
 
-/** Update a member's role. */
-export function updateMemberRole(input: {
+/** List members of the active organization. */
+export async function listMembers(): Promise<Member[]> {
+  if (config.useMockApi) return mockResponse(orgMockStore.listMembers());
+  const res = await apiClient.get<unknown>(`${ORG_API}/memberships`);
+  return z.array(membershipWire).parse(res.data).map(toMember);
+}
+
+/**
+ * Update a member's role. Live sends the immutable `role_id` (the Members panel
+ * resolves it from the org's roles list); `role` drives the mock + optimistic UI.
+ */
+export async function updateMemberRole(input: {
   membershipId: string;
   role: OrgRole;
+  roleId?: string;
 }): Promise<Member> {
-  // REPLACE_WITH_API: PATCH /api/v1/tenancy/organizations/{orgId}/memberships/{membershipId}
-  return mockResponse(orgMockStore.updateMemberRole(input.membershipId, input.role));
+  if (config.useMockApi) {
+    return mockResponse(orgMockStore.updateMemberRole(input.membershipId, input.role));
+  }
+  if (!input.roleId) throw new Error('A role id is required to change a member role.');
+  const res = await apiClient.patch<unknown>(
+    `${ORG_API}/memberships/${input.membershipId}`,
+    { role_id: input.roleId },
+  );
+  return toMember(membershipWire.parse(res.data));
 }
 
 /** Suspend or reactivate a member. */
-export function updateMemberStatus(input: {
+export async function updateMemberStatus(input: {
   membershipId: string;
   status: MembershipStatus;
 }): Promise<Member> {
-  // REPLACE_WITH_API: PATCH /api/v1/tenancy/organizations/{orgId}/memberships/{membershipId}
-  return mockResponse(orgMockStore.updateMemberStatus(input.membershipId, input.status));
+  if (config.useMockApi) {
+    return mockResponse(
+      orgMockStore.updateMemberStatus(input.membershipId, input.status),
+    );
+  }
+  const res = await apiClient.patch<unknown>(
+    `${ORG_API}/memberships/${input.membershipId}`,
+    { status: input.status.toUpperCase() },
+  );
+  return toMember(membershipWire.parse(res.data));
 }
 
 /** Remove a member from the organization. */
-export function removeMember(membershipId: string): Promise<{ id: string }> {
-  // REPLACE_WITH_API: DELETE /api/v1/tenancy/organizations/{orgId}/memberships/{membershipId}
-  orgMockStore.removeMember(membershipId);
-  return mockResponse({ id: membershipId });
+export async function removeMember(membershipId: string): Promise<{ id: string }> {
+  if (config.useMockApi) {
+    orgMockStore.removeMember(membershipId);
+    return mockResponse({ id: membershipId });
+  }
+  await apiClient.delete<unknown>(`${ORG_API}/memberships/${membershipId}`);
+  return { id: membershipId };
 }
 
 // ── Invitations ──
