@@ -562,7 +562,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 - ✅ **FE-28** API keys — `apiKeyWire`/`toApiKey`; live `listApiKeys`/`createApiKey` (secret once)/`renameApiKey`/`revokeApiKey`.
 - ⏸ **FE-29** Webhooks + notification-policies — **net-new domain** (no existing mock fn + unconfirmed core-be contract); build with its panel + confirmed contract.
 - ⏸ **FE-30** Notification preferences — net-new; lands with the notifications module (Phase N / FE-65).
-- ⏸ **FE-31** Sessions (list + revoke) — net-new auth-domain (`/auth/me/sessions`); build with the Account → Sessions panel + confirmed contract.
+- ✅ **FE-31** Sessions (list + revoke) — mock-first auth-domain (`/auth/me/sessions`): session-contracts/`toSession`, sessions-api (list + DELETE revoke, mock+live), in-memory mock store (current session never removable), useSessions/useRevokeSession, and the Account → Sessions panel (current-device badge, cap to non-current revoke via ConfirmDialog, states). _Files:_ session-contracts·sessions-api·session-mock-store·useSessions·AccountSessionsPanel.
 - ⏸ **FE-32** MFA enroll + passkeys — net-new auth-domain; build with the Account → Security panel + confirmed contract.
 - ⏸ **FE-33** Org general / settings / logo — net-new (no `updateOrganization` mock yet); build with the Org → General panel.
 
