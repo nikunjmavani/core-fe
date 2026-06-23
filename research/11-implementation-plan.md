@@ -538,7 +538,7 @@ _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by depend
 - ✅ **FE-44** `mapApiError` (+ `apiErrorReason`) — reads the core-be `{error:{reason,detail}}` envelope → one sanitized user string; `getErrorMessage` kept as alias. _Files:_ shared/errors/errorHandler.
 - ⬜ **FE-45** `useAppMutation` — idempotency-key + invalidate + optimistic + notify; refactor useMembers/useRoles/useApiKeys/useSubscription/useInvitations onto it. _Files:_ shared/hooks/useAppMutation (+5 hooks).
 - ⬜ **FE-46** Global query-error surfacing — QueryCache `onError` → notify (failed loads toast once). _Files:_ app query-client.
-- ⬜ **FE-47** `ConfirmDialog` — shared destructive-action confirm (remove member/role/key, delete org). _Files:_ shared/components/ConfirmDialog.
+- ✅ **FE-47** `ConfirmDialog` — shared destructive-action confirm (AlertDialog; self-managed busy state, stays open on error, blocks dismiss mid-flight). _Files:_ shared/components/ConfirmDialog.
 - ⬜ **FE-48** State primitives — `Skeleton` / `EmptyState` + per-route `ErrorBoundary` for dashboard + panels. _Files:_ shared/components/{EmptyState,ErrorBoundary}.
 - ⬜ **FE-53** `<Surface>` adaptive modal⇄right-drawer container (`Dialog` ⇄ `Sheet side="right"`; full-screen sheet ≤ sm); adopt in SettingsModal + create/edit dialogs. _Files:_ shared/components/Surface (+ SettingsModal). Builds D-27.
 
