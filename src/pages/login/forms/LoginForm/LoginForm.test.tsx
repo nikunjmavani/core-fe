@@ -17,6 +17,11 @@ vi.mock('@/shared/api/auth-api.ts', () => ({
   authApi: {
     login: vi.fn(),
     me: vi.fn(),
+    listOAuthProviders: vi.fn(() => Promise.resolve(['google'])),
+    magicLinkSend: vi.fn(),
+  },
+  MfaRequiredError: class MfaRequiredError extends Error {
+    mfaSessionToken = '';
   },
 }));
 
@@ -81,7 +86,7 @@ describe('LoginForm', () => {
 
   it('renders Sign in with Google button', async () => {
     renderForm();
-    expect(await screen.findByTestId('login-google')).toBeInTheDocument();
+    expect(await screen.findByTestId('login-oauth-google')).toBeInTheDocument();
     expect(screen.getByText(/Sign in with Google/)).toBeInTheDocument();
   });
 });

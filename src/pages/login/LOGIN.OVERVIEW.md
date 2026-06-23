@@ -22,7 +22,8 @@ or the dashboard (`/`).
 - `login-form` — the email/password form root
 - `login-email`, `login-password`, `login-password-toggle`, `login-submit`
 - `login-email-error`, `login-password-error`, `login-error`
-- `login-google`, `login-passkey`, `login-magic-link`
+- `login-oauth-<provider>` (e.g. `login-oauth-google`, `login-oauth-github`), `login-passkey`, `login-magic-link`
+- `magic-link-email`, `magic-link-send` (magic-link panel)
 - `login-link-forgot-password`, `login-link-sign-up`
 
 ## Related

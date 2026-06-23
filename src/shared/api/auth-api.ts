@@ -265,20 +265,25 @@ export const authApi = {
 
   /** List configured social providers (e.g. `['google','github']`); `[]` on failure. */
   listOAuthProviders: async (): Promise<string[]> => {
-    // REPLACE_WITH_API handled inline: GET /api/v1/auth/oauth/providers
+    // Best-effort discovery: GET /api/v1/auth/oauth/providers. Never throws — a
+    // failure just means no social buttons render (the form still works).
     if (config.useMockApi) return mockResponse(['google']);
-    const response = await authFetch(
-      `${authBase()}${API_ENDPOINTS.AUTH.OAUTH_PROVIDERS}`,
-      { method: 'GET' },
-    );
-    if (!response.ok) return [];
-    const data = unwrapEnvelope((await response.json()) as unknown) as {
-      providers?: unknown;
-    } | null;
-    const providers = data?.providers;
-    return Array.isArray(providers)
-      ? providers.filter((p): p is string => typeof p === 'string')
-      : [];
+    try {
+      const response = await authFetch(
+        `${authBase()}${API_ENDPOINTS.AUTH.OAUTH_PROVIDERS}`,
+        { method: 'GET' },
+      );
+      if (!response.ok) return [];
+      const data = unwrapEnvelope((await response.json()) as unknown) as {
+        providers?: unknown;
+      } | null;
+      const providers = data?.providers;
+      return Array.isArray(providers)
+        ? providers.filter((p): p is string => typeof p === 'string')
+        : [];
+    } catch {
+      return [];
+    }
   },
 
   /**

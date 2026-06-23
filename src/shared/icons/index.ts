@@ -24,6 +24,7 @@ export {
   Eye,
   EyeOff,
   Fingerprint,
+  Github,
   Laptop,
   LayoutDashboard,
   Loader2,
