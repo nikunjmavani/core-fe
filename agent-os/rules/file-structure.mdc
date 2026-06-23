@@ -342,12 +342,15 @@ Auth infrastructure (token storage, refresh timer, idle timeout, login/logout se
 
 ## Tests
 
-| Type | Location |
+| Type | Location & file name |
 |------|----------|
 | Unit (component, hook, form, util, store) | Colocated `<Name>.test.{ts,tsx}` next to source |
 | Page integration (cross-component flow in this island) | `pages/<page>/__tests__/integration/` |
-| E2E (full browser, cross-page) | `tests/e2e/` at project root (Playwright) |
+| Full-stack UI flow (mock backend) | `tests/e2e/<name>.e2e.test.ts` (Playwright) |
+| Backend contract (against the running core-be on :3000) | `tests/e2e/<name>.integration.test.ts` (Playwright) |
 | Load | `tests/load/` (k6) |
+
+**`tests/e2e/` file naming mirrors core-be's `<name>.<kind>.test.ts`** (the backend uses `.unit.`/`.integration.`/`.contract.`/`.e2e.`): full-stack mock UI flows are **`<name>.e2e.test.ts`**; contracts that hit the running backend are **`<name>.integration.test.ts`** (self-contained — inline the signup/server-up helpers; no shared e2e util). `playwright.config.ts` matches `/\.(e2e|integration)\.test\.ts$/`; Vitest excludes `tests/e2e`, so these never run as unit tests. Colocated unit/component tests keep plain `<Name>.test.{ts,tsx}` (not renamed to `.unit.`). Never use `.spec.ts`, or the words "real"/"live", in test file names.
 
 **Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
 

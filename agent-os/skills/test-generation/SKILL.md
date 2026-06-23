@@ -23,23 +23,23 @@ Use this skill when:
 
 ### 1. Determine Test Type
 
-| Source Location                                      | Test Type        | Template                                                                                |
-| ---------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------- |
-| `src/shared/components/**/*.tsx`                     | Component test   | [Component Template](#component-template)                                               |
-| `src/shared/forms/**/*.tsx`                          | Form test        | [Form Template](#form-template)                                                         |
-| `src/shared/layouts/**/*.tsx`                        | Layout test      | [Component Template](#component-template)                                               |
-| `src/pages/**/components/**/*.tsx`                   | Component test   | `__tests__/unit/components/<Name>.test.tsx` — [Component Template](#component-template) |
-| `src/pages/**/forms/**/*.tsx`                        | Form test        | `__tests__/unit/forms/<Name>.test.tsx` — [Form Template](#form-template)                |
-| `src/pages/**/components/*Page.tsx` or `*Layout.tsx` | Page/layout test | `__tests__/unit/page.test.tsx` — [Page Template](#page-template)                        |
-| `src/stores/**/*.ts`                                 | Store test       | [Store Template](#store-template)                                                       |
-| `src/core/**/*.ts`                                   | Service test     | [Service Template](#service-template)                                                   |
-| `src/lib/**/*.ts`                                    | Utility test     | [Utility Template](#utility-template)                                                   |
-| `src/pages/**/hooks/**/*.ts`                         | Hook test        | `__tests__/unit/hooks/<Name>.test.ts` — [Hook Template](#hook-template)                 |
+| Source Location                                     | Test Type        | Template                                                                         |
+| --------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------- |
+| `src/shared/components/**/*.tsx`                    | Component test   | [Component Template](#component-template)                                        |
+| `src/shared/forms/**/*.tsx`                         | Form test        | [Form Template](#form-template)                                                  |
+| `src/shared/layouts/**/*.tsx`                       | Layout test      | [Component Template](#component-template)                                        |
+| `src/pages/**/components/<X>/<X>.tsx`               | Component test   | `<X>.test.tsx` beside source — [Component Template](#component-template)         |
+| `src/pages/**/forms/<X>Form/<X>Form.tsx`            | Form test        | `<X>Form.test.tsx` beside source — [Form Template](#form-template)               |
+| `src/pages/**/<Page>Page.tsx` or `<Page>Layout.tsx` | Page/layout test | `<Page>Page.test.tsx` beside it at island root — [Page Template](#page-template) |
+| `src/stores/**/*.ts`                                | Store test       | [Store Template](#store-template)                                                |
+| `src/core/**/*.ts`                                  | Service test     | [Service Template](#service-template)                                            |
+| `src/lib/**/*.ts`                                   | Utility test     | [Utility Template](#utility-template)                                            |
+| `src/pages/**/hooks/use<X>/use<X>.ts`               | Hook test        | `use<X>.test.ts` beside source — [Hook Template](#hook-template)                 |
 
 ### 2. Create Test File
 
-- **`src/pages/**`route islands:** under`**tests**/unit/`mirroring`components/`, `hooks/`, `forms/`(import source via`../../components/...`). Island `api.ts`→`**tests**/unit/api.test.ts`.
-- **`shared/`, `core/`, `lib/`, `stores/`:** colocated next to source (`.test.tsx` / `.test.ts`).
+- **Colocated beside source everywhere** — `src/pages/**` islands, `shared/`, `core/`, `lib/`, `stores/` all put `<Name>.test.{ts,tsx}` in the same folder as `<Name>`. (A page's cross-component _integration_ flows may additionally live in `pages/<page>/__tests__/integration/`.)
+- **E2E / integration** (`tests/e2e/`, Playwright): full-stack mock UI flow → `<name>.e2e.test.ts`; contract against the running core-be → `<name>.integration.test.ts`. Never `.spec.ts`.
 
 See `agent-os/skills/route-island/SKILL.md` and `src/lib/routes/__tests__/README.md`.
 

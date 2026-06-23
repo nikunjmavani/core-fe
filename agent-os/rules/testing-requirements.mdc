@@ -13,14 +13,14 @@ When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if 
 ## Rules
 
 1. Every component (`*.tsx`) in `src/shared/components/`, `src/shared/forms/`, `src/shared/layouts/` MUST have a colocated `*.test.tsx` file
-2. Every component/hook/form under **`src/pages/**` route islands** MUST have a test under that island’s **`__tests__/unit/`** mirroring `components/`, `hooks/`, `forms/` (see `route-island` skill). Main page: `__tests__/unit/page.test.tsx`
+2. Every component/hook/form under **`src/pages/**` route islands** MUST ship a colocated `*.test.ts(x)` **beside its source** (folder-per-unit: `components/<X>/<X>.tsx` + `<X>.test.tsx`). The island's top-level `<Page>Page.tsx`/`<Page>Layout.tsx` ships `<Page>Page.test.tsx` next to it.
 3. Every service/utility (`*.ts`) in `src/core/`, `src/lib/`, `src/stores/` MUST have a colocated `*.test.ts` file
-4. Every TanStack Query hook in **shared/core** MUST have colocated `*.test.ts`; in **pages** islands use `__tests__/unit/hooks/`
+4. Every TanStack Query hook MUST ship a colocated `*.test.ts` beside its source (`hooks/use<X>/use<X>.test.ts`) — in both shared and page islands
 5. Component tests MUST include `vitest-axe` accessibility assertions (`toHaveNoViolations()`)
-6. **Colocated** (same directory as source): `shared/`, `core/`, `lib/`, `stores/`. **Not** beside sources in `pages/` islands — use `__tests__/unit/`
-6. All components MUST have `data-testid` attributes following the naming convention below
-7. Coverage thresholds: 80% branches, functions, lines, statements (enforced in `vitest.config.ts`)
-8. Vitest includes `src/**/__tests__/**/*.{test,spec}.{ts,tsx}` (see `vitest.config.ts`)
+6. **Colocated beside source everywhere** — `shared/`, `core/`, `lib/`, `stores/`, AND `pages/` islands. Cross-component *integration* flows for a page may additionally live in `pages/<page>/__tests__/integration/`
+7. All components MUST have `data-testid` attributes following the naming convention below
+8. Coverage thresholds: 80% branches, functions, lines, statements (enforced in `vitest.config.ts`)
+9. Vitest runs colocated `src/**/*.test.{ts,tsx}` (plus `src/**/__tests__/**`); it **excludes** `tests/e2e` (Playwright owns those)
 
 ## data-testid Convention
 
@@ -34,11 +34,27 @@ When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if 
 
 ## Naming Convention
 
-| Source File        | Test File (shared/core/lib/stores) | Test file (pages island) |
-| ------------------ | ---------------------------------- | -------------------------- |
-| `Button.tsx`       | `Button.test.tsx` (colocated)      | `__tests__/unit/components/Button.test.tsx` |
-| `useThemeStore.ts` | `useThemeStore.test.ts`            | `__tests__/unit/hooks/useFoo.test.ts` |
-| `DashboardPage.tsx`| —                                  | `__tests__/unit/page.test.tsx` |
+Colocated beside source **everywhere** (shared/core/lib/stores AND pages islands):
+
+| Source File         | Colocated test (same folder)   |
+| ------------------- | ------------------------------ |
+| `Button.tsx`        | `Button.test.tsx`              |
+| `useMeContext.ts`   | `useMeContext.test.ts`         |
+| `DashboardPage.tsx` | `DashboardPage.test.tsx`       |
+
+## E2E & integration tests (`tests/e2e/`)
+
+Playwright specs follow core-be's `<name>.<kind>.test.ts` (the backend uses
+`.unit.`/`.integration.`/`.contract.`/`.e2e.`):
+
+- **`<name>.e2e.test.ts`** — full-stack UI flow against the mock backend.
+- **`<name>.integration.test.ts`** — contract against the running core-be (:3000);
+  self-contained (inline signup/server-up/bearer helpers, no shared util), and
+  auto-skips when the server is unreachable. The UI-through-to-backend spec
+  (`app.integration.test.ts`) is gated behind `E2E_INTEGRATION=1` + `VITE_USE_MOCK_API=false`.
+
+`playwright.config.ts` matches `/\.(e2e|integration)\.test\.ts$/`; Vitest excludes
+`tests/e2e`. **Never** use `.spec.ts`, or the words "real"/"live", in test file names.
 
 ## Exceptions (no test required)
 
@@ -58,7 +74,7 @@ When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if 
 | vitest-axe                  | Accessibility assertions (auto-extended in setup)    |
 | @testing-library/user-event | Realistic user interactions                          |
 | @axe-core/playwright        | E2E accessibility scanning                           |
-| Playwright                  | E2E browser tests (Chromium, Firefox, Mobile Safari) |
+| Playwright                  | E2E browser tests (Chromium — the single maintained project) |
 | Stryker                     | Mutation testing (CI-only, weekly)                   |
 
 ## Auto-Trigger (No User Input Required)

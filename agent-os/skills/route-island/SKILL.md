@@ -152,11 +152,12 @@ Dialogs are **URL-driven** — the parent list page reads `useRouterState` to kn
 
 ## Tests
 
-| Test type                                  | Location                                                                          |
-| ------------------------------------------ | --------------------------------------------------------------------------------- |
-| Unit (component, hook, form, store)        | Colocated `<Name>.test.{ts,tsx}` next to source                                   |
-| Cross-component integration in this island | `__tests__/integration/`                                                          |
-| Browser E2E (full app)                     | Project `tests/e2e/` (Playwright) — document flows in island `<PAGE>.OVERVIEW.md` |
+| Test type                                  | Location                                                                                    |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| Unit (component, hook, form, store)        | Colocated `<Name>.test.{ts,tsx}` next to source                                             |
+| Cross-component integration in this island | `__tests__/integration/`                                                                    |
+| Browser E2E (full app, mock backend)       | `tests/e2e/<name>.e2e.test.ts` (Playwright) — document flows in island `<PAGE>.OVERVIEW.md` |
+| Backend contract (running core-be :3000)   | `tests/e2e/<name>.integration.test.ts` (Playwright) — self-contained, auto-skips when down  |
 
 **Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
 

@@ -359,9 +359,9 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
   - **Security:** `tests/security/` (optional) — E2E for auth boundaries, CSP
   - **Performance:** `tests/performance/` (optional) — Lighthouse, bundle-size
 - **Domain tests:** Colocated in `src/` — `src/pages/<name>/*.test.tsx`, `src/shared/**/*.test.tsx`, `src/core/**/*.test.ts` (no `src/domains/` or `__tests__` dirs)
-- **E2E:** `tests/e2e/` (Playwright)
+- **E2E + integration:** `tests/e2e/` (Playwright). File names mirror core-be's `<name>.<kind>.test.ts`: **`<name>.e2e.test.ts`** = full-stack UI flow (mock backend); **`<name>.integration.test.ts`** = contract against the running core-be (:3000), self-contained + auto-skips when down. `playwright.config.ts` matches `/\.(e2e|integration)\.test\.ts$/`; never `.spec.ts` nor the words "real"/"live" in test names.
 - **Load (k6):** `tests/load/` (e.g. `tests/load/k6/scenarios/` when multiple scenarios)
-- Unit/integration run with Vitest; E2E with Playwright; load with k6
+- Unit/integration run with Vitest (colocated `*.test.ts(x)`, excludes `tests/e2e`); E2E/integration with Playwright; load with k6
 - **Strict test colocation (validator-enforced):** every component (incl. each island's `<Page>Page/Layout.tsx` and flat-group files) and every hook ships a colocated `*.test.ts(x)` — `pnpm validate:structure` fails without it. Exemptions: route/manifest/contracts/search/fixtures/constants, barrels, OVERVIEW docs.
 
 **Mock map** (every mock is tagged `REPLACE_WITH_API`; dev-only — production builds reject mock mode):
