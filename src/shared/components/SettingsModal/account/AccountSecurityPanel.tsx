@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import type { MfaEnrollment } from '@/shared/api/mfa-api.ts';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog/index.ts';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -9,72 +11,221 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/shared/components/ui/dialog.tsx';
+import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
-import { Switch } from '@/shared/components/ui/switch.tsx';
-import { Fingerprint, Laptop, Smartphone, Trash2 } from '@/shared/icons/index.ts';
+import {
+  useBeginMfaEnrollment,
+  useConfirmMfaEnrollment,
+  useDisableMfa,
+  useMfaStatus,
+} from '@/shared/hooks/useMfa/index.ts';
+import { Fingerprint, ShieldCheck, Trash2 } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
-// REPLACE_WITH_API: GET /api/v1/users/me/sessions
-const SESSIONS = [
-  {
-    id: 's1',
-    device: 'MacBook Pro',
-    browser: 'Chrome · San Francisco',
-    current: true,
-    icon: Laptop,
-  },
-  {
-    id: 's2',
-    device: 'iPhone 15',
-    browser: 'Safari · San Francisco',
-    current: false,
-    icon: Smartphone,
-  },
-];
-
-// REPLACE_WITH_API: GET /api/v1/users/me/passkeys
+// REPLACE_WITH_API: GET /auth/me/passkeys (WebAuthn registration is a follow-up).
 const PASSKEYS = [
   { id: 'p1', name: 'MacBook Touch ID', createdAt: '2026-02-10T10:00:00.000Z' },
 ];
 
+/** Two-factor card: real setup (secret → code → recovery codes) + disable. */
+function MfaCard() {
+  const { data: mfaEnabled = false } = useMfaStatus();
+  const begin = useBeginMfaEnrollment();
+  const confirm = useConfirmMfaEnrollment();
+  const disable = useDisableMfa();
+
+  const [setupOpen, setSetupOpen] = useState(false);
+  const [enrollment, setEnrollment] = useState<MfaEnrollment | null>(null);
+  const [code, setCode] = useState('');
+  const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [disableOpen, setDisableOpen] = useState(false);
+
+  function closeSetup() {
+    setSetupOpen(false);
+    setEnrollment(null);
+    setCode('');
+    setRecoveryCodes(null);
+    setConfirmError(null);
+  }
+
+  function handleStartSetup() {
+    setCode('');
+    setConfirmError(null);
+    setRecoveryCodes(null);
+    begin
+      .mutateAsync()
+      .then((result) => {
+        setEnrollment(result);
+        setSetupOpen(true);
+      })
+      .catch(() => notify.error('Could not start setup. Please try again.'));
+  }
+
+  function handleSubmitCode() {
+    setConfirmError(null);
+    confirm
+      .mutateAsync(code)
+      .then((result) => setRecoveryCodes(result.recoveryCodes))
+      .catch(() =>
+        setConfirmError('That code didn’t match. Enter the current 6-digit code.'),
+      );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-base">Two-factor authentication</CardTitle>
+            <CardDescription>Require an authenticator code at sign-in.</CardDescription>
+          </div>
+          <Badge variant={mfaEnabled ? 'success' : 'secondary'} data-testid="mfa-status">
+            {mfaEnabled ? 'Enabled' : 'Disabled'}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {mfaEnabled ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setDisableOpen(true)}
+            data-testid="mfa-disable"
+          >
+            Disable two-factor
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            onClick={handleStartSetup}
+            disabled={begin.isPending}
+            data-testid="mfa-setup"
+          >
+            <ShieldCheck className="mr-2 h-4 w-4" />
+            Set up two-factor
+          </Button>
+        )}
+      </CardContent>
+
+      <Dialog
+        open={setupOpen}
+        onOpenChange={(open) => {
+          if (!open) closeSetup();
+        }}
+      >
+        <DialogContent data-testid="mfa-setup-dialog">
+          {recoveryCodes ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Save your recovery codes</DialogTitle>
+                <DialogDescription>
+                  Store these somewhere safe. Each one works once if you lose your device.
+                </DialogDescription>
+              </DialogHeader>
+              <ul
+                className="bg-muted grid grid-cols-2 gap-2 rounded-md p-3 font-mono text-sm"
+                data-testid="mfa-recovery-codes"
+              >
+                {recoveryCodes.map((rc) => (
+                  <li key={rc}>{rc}</li>
+                ))}
+              </ul>
+              <DialogFooter>
+                <Button onClick={closeSetup} data-testid="mfa-done">
+                  Done
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Set up two-factor authentication</DialogTitle>
+                <DialogDescription>
+                  Add this secret to your authenticator app, then enter the 6-digit code.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div
+                  className="bg-muted rounded-md p-3 font-mono text-sm break-all"
+                  data-testid="mfa-secret"
+                >
+                  {enrollment?.secret}
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="mfa-code">6-digit code</Label>
+                  <Input
+                    id="mfa-code"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
+                    placeholder="123456"
+                    data-testid="mfa-code"
+                  />
+                  {confirmError ? (
+                    <p className="text-destructive text-xs" role="alert">
+                      {confirmError}
+                    </p>
+                  ) : null}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="ghost" onClick={closeSetup}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmitCode}
+                  disabled={code.length < 6 || confirm.isPending}
+                  data-testid="mfa-verify"
+                >
+                  Verify &amp; enable
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={disableOpen}
+        onOpenChange={setDisableOpen}
+        title="Disable two-factor authentication?"
+        description="Your account will be less protected. You can turn it back on anytime."
+        confirmLabel="Disable"
+        destructive
+        onConfirm={async () => {
+          await disable.mutateAsync();
+        }}
+      />
+    </Card>
+  );
+}
+
 /**
- * Security section — multi-factor authentication, passkeys, and active
- * sessions. Backed by mock data until the auth backend is wired.
+ * Security section — two-factor authentication (real setup/disable flow, FE-32)
+ * and passkeys. Active sessions live in their own panel (FE-31), so they are no
+ * longer duplicated here.
  */
 export function AccountSecurityPanel() {
-  const [mfaEnabled, setMfaEnabled] = useState(false);
-
   return (
     <div className="space-y-6" data-testid="settings-section-security">
       <SectionHeader
         title="Security"
-        description="Two-factor authentication, passkeys, and active sessions."
+        description="Two-factor authentication and passkeys."
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Two-factor authentication</CardTitle>
-          <CardDescription>
-            Add an extra layer of security with an authenticator app.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="mfa-toggle">Require a code at sign-in</Label>
-            <Switch
-              id="mfa-toggle"
-              checked={mfaEnabled}
-              onCheckedChange={(v) => {
-                setMfaEnabled(v);
-                notify.success(v ? 'MFA enabled' : 'MFA disabled');
-              }}
-              data-testid="mfa-toggle"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <MfaCard />
 
       <Card>
         <CardHeader>
@@ -114,42 +265,6 @@ export function AccountSecurityPanel() {
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Active sessions</CardTitle>
-          <CardDescription>Devices currently signed in to your account.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {SESSIONS.map((session) => (
-            <div
-              key={session.id}
-              className="flex items-center justify-between rounded-md border px-3 py-2"
-              data-testid={`session-${session.id}`}
-            >
-              <div className="flex items-center gap-3">
-                <session.icon className="text-muted-foreground h-5 w-5" />
-                <div>
-                  <p className="flex items-center gap-2 text-sm font-medium">
-                    {session.device}
-                    {session.current && <Badge variant="success">This device</Badge>}
-                  </p>
-                  <p className="text-muted-foreground text-xs">{session.browser}</p>
-                </div>
-              </div>
-              {!session.current && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => notify.success('Session revoked (mock)')}
-                >
-                  Revoke
-                </Button>
-              )}
             </div>
           ))}
         </CardContent>
