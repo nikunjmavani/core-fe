@@ -513,6 +513,8 @@ Each track: rewire mock fns → `apiClient` with the **new contract**, define wi
 
 ## 7. Backend coordination register (decision D2)
 
+> ✅ **RESOLVED 2026-06-23 — every item is implemented in core-be (commit `d6b34355` + PR #775). See §11 for the as-built flows. Retained below as history.**
+
 File these with the `core-be` team; FE proceeds with the documented interim where possible.
 
 | ID       | Gap                                                                                          | FE interim                                                         | Ask                                                                                    |
@@ -551,3 +553,214 @@ File these with the `core-be` team; FE proceeds with the documented interim wher
 - [ ] Docs/skills/rules in §5 updated (esp. the `CLAUDE.md` URL-context axiom).
 - [ ] Backend coordination register (§7) filed with owners.
 - [ ] `pnpm health` + patch-coverage + E2E green; k6 baseline captured.
+
+---
+
+## 10. Execution breakdown (PR-by-PR)
+
+Verified against working-tree state on 2026-06-20 (your uncommitted WIP does **not** yet implement any item below). M1 is broken into small, independently-reviewable PRs in dependency order. Each PR = one logical commit, must leave `pnpm health` green, ships its own tests, and updates the coverage ratchet upward (never down). M2–M4 are listed at task granularity (each becomes its own small PR when reached).
+
+**Branching:** work off `docs/be-integration-plan` (or a fresh `feat/be-integration` cut from `main`); one branch per PR, squash-merge. Mock mode stays the dev default until M4; every PR keeps the `config.useMockApi` path working so the app is never broken in dev.
+
+### M1 — Foundation + RBAC + thin vertical slice
+
+> **Goal / exit:** real `login (+MFA) → org picker → switch → dashboard` against the live API, with permission + status gating, and refresh that preserves the active org.
+
+---
+
+#### PR-1 — HTTP envelope unwrap + pagination (F1)
+
+- **Problem.** `apiClient.request()` returns `{ data: JSON.parse(body) }`, so `res.data` is the whole `{data,meta}` envelope. Lists lose `meta.pagination`.
+- **Files.** `src/core/http/fetch-client.ts` (unwrap `body.data`; surface `meta`); **new** `src/core/http/pagination.ts` (`Paginated<T>` + `toPaginated()` mapper); `src/core/data-provider/http-data-provider/http-data-provider.ts` (consume payload + `meta.pagination`); `src/core/http/fetch-client.test.ts`.
+- **Change.** `request<T>()` validates a loose envelope (`data` present, `meta.request_id: string`), returns `{ data: body.data as T, meta }`. 204/empty → `{ data: undefined }`. Keep bearer/idempotency/`X-Request-ID`/`credentials:'include'`; **do not** add `X-Organization-ID`.
+- **Acceptance.** `res.data` is the payload; `meta.request_id` reachable; list → `Paginated<T>`; malformed envelope → `HttpError`; **double-unwrap regression test** added.
+- **Tests.** _unit_: unwrap, meta, Paginated mapping (`next`/`has_more`/optional `estimated_total`), 204, malformed. _security_: no-org-header tripwire still passes.
+- **Commit.** `feat(http): unwrap core-be {data,meta} envelope + Paginated<T>`
+
+#### PR-2 — Shared wire helpers (F2)
+
+- **Files.** **new** `src/core/types/wire.ts` (`publicId(prefix)` → `^<prefix>_[a-z0-9]{21}$`, `isoDateString`, `decimalString`→cents) + `wire.test.ts`.
+- **Acceptance.** `publicId('org')` accepts `org_<21 lc>` and rejects uppercase/wrong-length/missing-prefix; date + money helpers round-trip.
+- **Tests.** _unit_ only.
+- **Commit.** `feat(contracts): shared zod wire helpers (publicId/date/decimal)`
+
+#### PR-3 — Public-ID param fix (F5)
+
+- **Problem (verified).** `params.ts:17` `org_[A-Za-z0-9]{1,32}`, `:30` `inv_[A-Za-z0-9]{1,64}` — wrong charset + length.
+- **Files.** `src/lib/routes/params.ts` (use `publicId('org')`/`publicId('inv')`); `params.test.ts`.
+- **Acceptance.** canonical 21-char lowercase ids pass; uppercase / 20–22-char / no-prefix → `null` → `notFound()`.
+- **Tests.** _unit_ (accept/reject matrix); _integration_ (`/organization/ORG_…` → 404; valid → resolves).
+- **Commit.** `fix(routing): align public-id param schemas with core-be (_[a-z0-9]{21})`
+
+#### PR-4 — Error model + content-type guard (F6)
+
+- **Files.** `src/core/http/fetch-client.ts` (parse BE error envelope → `HttpError{status,code,message}`); `src/shared/auth/service.ts` (`authFetch` content-type guard before `.json()`); `src/shared/errors/HttpError.ts` (add `code`); **new** `docs/reference/api-errors.md`; tests.
+- **Acceptance.** error envelope → typed `HttpError`; non-JSON (HTML 502) → graceful `HttpError`, not `SyntaxError`; `sanitizeServerMessage` still strips SQL/paths/stacks.
+- **Tests.** _unit_ (envelope→HttpError, non-JSON, sanitizer); _integration_ (403→redirect, 409→form error, 422→field errors).
+- **Commit.** `feat(http): map core-be error envelope to HttpError + content-type guard`
+
+#### PR-5 — `/auth/me/context` spine + auth/user contract realignment (F4, D1-part)
+
+- **Files.** **new** `src/shared/tenancy/me-context.ts` (`fetchMeContext()` + wire schema/transform); `src/shared/auth/types.ts` (`User`: `first_name`/`last_name`, `is_email_verified`, `is_mfa_enabled`, `status`, drop `role`/`name`; `organizationId`→`personal_organization_id`); `src/shared/api/auth-api.ts` (envelope unwrap; `me`→`/users/me` shape); `src/shared/auth/service.ts` (`silentRefresh` → `fetchMeContext` hydration); `src/shared/store/useAuthStore` (user + global role); `src/shared/store/useOrganizationStore` (status enum `active|suspended|archived`); tests.
+- **Acceptance.** boot → silent refresh → me/context hydrates auth+org stores; `active_organization:null` → org picker/onboarding; permissions populated from `my_permissions`.
+- **Tests.** _unit_ (MeContext transform: null org, archived, perms); _integration_ (boot hydration; null-org redirect).
+- **Commit.** `feat(tenancy): adopt /auth/me/context as auth+org context spine`
+
+#### PR-6 — Switch-on-navigation + token swap (F3, R4)
+
+- **Problem (verified).** `route-guards.ts:33` resolves org via `findMembership` + `ensurePermissionsFor` (module-level race) with **no switch**; org calls will 403.
+- **Files.** **new** `src/shared/tenancy/switch-organization.ts` (`switchToOrganization(orgId)` → POST switch → `setAccessToken` → `scheduleTokenRefresh`; `switchToPersonal()`); `src/app/guards/route-guards.ts` (`requireOrganizationContext` = parse → `switchToOrganization` (403→`notFound()`) → `fetchMeContext` → store sync); `src/shared/tenancy/organization-membership.ts` (delete `ensurePermissionsFor`/`permissionsLoadedFor`; `findMembership` → picker-source only); `src/shared/tenancy/organization-context.ts` (status `archived`; fix stale "org header" docstring); tests.
+- **Acceptance.** entering an org route switches + swaps token + hydrates that org's perms; rapid A→B→A ends on the correct org (no race); non-member → 404 (no leak); token stays memory-only.
+- **Tests.** _unit_ (token swap + reschedule; 403 map; failure doesn't clobber token); _integration_ (switch→me/context; **SC3 race regression**; 401 refresh preserves active org); _security_ (token memory-only after switch; not broadcast).
+- **Commit.** `feat(tenancy): switch-on-navigation active-org with atomic token swap`
+
+#### PR-7 — MFA-aware login + enveloped auth (F7, D1)
+
+- **Files.** `src/shared/api/auth-api.ts` (`login` → discriminated `LoginResult`; **new** `mfaLogin`; unwrap `{data}`); `src/shared/api/auth-contracts.ts`; `src/pages/login/forms/LoginForm/LoginForm.tsx` (branch token vs mfa); `src/pages/mfa/forms/MfaForm/MfaForm.tsx` (`/auth/mfa/login`); CAPTCHA token behind a flag (§7-G); tests.
+- **Acceptance.** login token → dashboard; login `mfa_required` → `/mfa` (carry `mfa_session_token`) → mfa-login → dashboard; bad TOTP → error.
+- **Tests.** _unit_ (both branches, recovery-code, envelope unwrap); _integration_ (login→mfa→dashboard; token→dashboard); _security_ (interim mfa token never stored as access token).
+- **Commit.** `feat(auth): MFA-aware login + enveloped auth responses`
+
+#### PR-8 — RBAC route wiring (R1, R2, R3)
+
+- **Problem (verified).** `requirePermission` never wired in `routeTree.tsx`; dashboard manifest declares `organization:read` but its `beforeLoad` doesn't enforce it; `requireFeature` empty stub.
+- **Files.** `src/app/routes/routeTree.tsx` (add `requireManifestPermission(manifest)` to org-route `beforeLoad`, after status gate, `preload` early-return); `src/app/guards/route-guards.ts` (`requireActiveOrganization` handles `suspended`+`archived`; implement `requireFeature` via `capabilities`); audit each org manifest's `permission` vs the **18-code catalog**; tests.
+- **Acceptance.** member lacking `organization:read` → `/unauthorized`; super_admin bypass; suspended/archived → `/suspended`; preload no-ops.
+- **Tests.** _unit_ (`requireManifestPermission`; status mapping; feature gate); _integration_ (gated route blocked; bypass); _security_ (no direct-URL bypass).
+- **Commit.** `feat(rbac): enforce manifest.permission + real status/feature gates`
+
+#### PR-9 — Organizations domain (D2) + dashboard data
+
+- **Problem (verified).** `my-organizations.ts:42` `Array.isArray(res.data)` breaks on envelope; `:76` `organizationSchema.parse(res.data)` parses envelope; `organizationSchema` has required `slug` + only `active|suspended`.
+- **Files.** `src/shared/tenancy/my-organizations.ts` (Paginated list unwrap; create 201; snake→camel transform); `src/shared/api/organization-contracts.ts` (`Organization` wire schema: nullable `slug`, `type PERSONAL|TEAM`, `status ACTIVE|SUSPENDED|ARCHIVED`, `capabilities`); dashboard fetch wiring; tests.
+- **Acceptance.** org picker lists real orgs; create returns + appears; PERSONAL (null slug) handled.
+- **Tests.** _unit_ (Organization transform incl. null slug/all statuses; paginated list; create 201); _integration_ (list→picker; create flow).
+- **Commit.** `feat(tenancy): wire organizations list/create to core-be`
+
+#### PR-10 — M1 docs + axiom correction (part of §5)
+
+- **Files.** `CLAUDE.md` (replace "org context travels in the URL path" → switch-on-navigation; envelope/snake_case/Paginated; MFA login); `docs/reference/routing-and-tenancy.md`; `src/app/guards/GUARDS.OVERVIEW.md`; `docs/reference/security-model.md`; `route-island` + `code-structure` skills.
+- **Acceptance.** docs/skills match the implemented model; `pnpm docs:lint` green.
+- **Commit.** `docs: switch-on-navigation org model + envelope conventions`
+
+**M1 exit gate:** `pnpm health` green; integration suite covers login/MFA/switch/refresh/RBAC/suspended; one E2E happy path (`login → picker → switch → dashboard`) green against a test API.
+
+### M2 — Org-admin CRUD (one PR per domain)
+
+- **D3 Memberships** — list (IDs-only; resolve role names via D5; **file §7-B/§7-E**), status PATCH, remove, `/permissions`. Tests: transform, CRUD integration, `membership:manage` gate.
+- **D4 Invitations** — two-step create (membership→invite by `membership_id`), list (`include_total`), revoke, resend, pending, accept (`?token=` → `/accept-invite`), decline. Derive status from timestamps; wrapped-vs-bare unwrap. **File §7-C.** Tests: status-derivation, full invite/accept flow, gate.
+- **D5 Roles & permissions** — roles CRUD (no perms on create), separate `PUT roles/{id}/permissions {permission_codes}`, catalog (`GET /tenancy/permissions` = 18 codes); align `organizationPermissionSchema` to exactly those 18; split role-meta vs role-perms UI. Tests: catalog parse, set-replace, system-role read-only, gate.
+- **D6 API keys** — CRUD + rotate; nested `{api_key, raw_key}` on create/rotate (secret shown once); scopes = real perm codes. Tests: nested unwrap, secret-once, scope ⊆ caller perms, gate.
+
+### M3 — Billing + account (one PR per domain)
+
+- **D7 Billing** — plans (decimal-string pricing), subscriptions under `/billing/*` (list/get/create/change-plan/cancel/resume); drop FE `Plan` enum + `PLAN_PRICING` + seats; map `renewsAt→current_period_end`; handle UPPERCASE status + casing trap. **File §7-F.** Tests: Plan/Subscription transforms, casing, change-plan/cancel/resume, gates.
+- **D8 Profile/settings/notifications** — `/users/me` (split name; no role/jobTitle; email read-only), avatar key flow, settings (boolean theme — reconcile `useThemeStore` `system`), notification-preferences (tuple-array full-replace), org notification-policies. Tests: transforms, round-trips, self-only gate.
+
+### M4 — Hardening
+
+- **C1 Caching** — `me/context` + org list behind TanStack Query (proper fix for SC2; reinforces SC3). Tests: cache hit/invalidation.
+- **C2 Resilience** — retry jitter in `exponentialDelay` (SC4/MV-2); optional circuit breaker.
+- **Mocks/config** — delete `organization-mock-store.ts` + fixtures (or keep strictly dev-gated per CLAUDE map); update `knip.jsonc` + `sonar-project.properties`; confirm `useMockApi` hard-off in prod/staging.
+- **Tests** — full E2E suite (§6); k6 baselines (`me/context`+switch concurrency; paginated lists; login burst); raise coverage ratchet.
+- **Docs** — finish §5 register (`docs/reference/api-errors.md`, remaining skill/rule edits).
+
+### Non-backend quick wins (independent — fold in opportunistically)
+
+These need no backend and can land any time (separately offered earlier): idle-timeout `mousemove`/`scroll` removal, `redirect` validation at `validateSearch`. _(Retry jitter is folded into C2.)_
+
+### Suggested first move
+
+PR-1 → PR-2 → PR-3 are pure FE, fully unit-testable today with zero backend dependency, and de-risk the envelope/casing/id foundation everything else builds on. Recommend starting there even before the `core-be` coordination items (§7) come back.
+
+---
+
+## 11. Backend status update — REQ-1…7 RESOLVED (2026-06-23)
+
+`core-be` shipped the full coordination set in commit **`d6b34355`** ("membership management overhaul, billing seat model & API contract docs (REQ-1–7)") plus PR **#775** (`auth-otp-signup-flows`). **Merged to `dev`; not yet in `origin/main`** — the one residual dependency is getting it onto the FE's target release line. **There are no remaining backend blockers; M1–M3 are all buildable against the real API.** §7 above is retained as history.
+
+### As-built flows (supersede §4 domain tracks where noted)
+
+- **Members embed identity (was D3 / CR-8).** `GET /tenancy/organization/memberships` (and `/:id`) now return — by default (no `expand`), batched (no N+1), `MEMBERSHIP_READ`-gated:
+  `{ …membership, user:{ id, email, first_name, last_name, avatar_url }, role:{ id, name }, invitation:{ id, expires_at }|null }` (invitation only on INVITED rows). The members table works directly; the §7-B workaround is dropped.
+- **Role change (was D3 / CR-9).** `PATCH /tenancy/organization/memberships/:id { role_id }` (and/or `{ status }`; ≥1 required) → updated membership with embedded `role`. Same privilege-escalation guard as create.
+- **Invite = add-member-by-email (was D4 / CR-10). ⚠️ BREAKING:** standalone `POST /organization/invitations` (create) is **removed**. Invite via `POST /tenancy/organization/memberships { email, role_id, expires_in_days? }` (`MEMBERSHIP_MANAGE`, `X-Idempotency-Key`) → provisions a pending user if the email is new, creates an INVITED membership, emails a token. Remaining invitation routes (list/revoke/resend/pending/accept/decline) stay. Accept: `POST /api/v1/invitations/:id/accept { token }` requires auth + **verified email** + email-match → flips ACTIVE. Errors carry `error.reason` = `seat_limit_reached` | `membership_already_exists`.
+- **Billing seats/features (was D7 / CR-13).** Plan exposes `features:{…}` + `limits:{ seats:number|null }` (null = unlimited; seeded Free=1/Starter=5/Pro=25). Subscription exposes `seats_total` + `seats_used` (derived from active+invited count). Server-enforced: 409 `error.reason=seat_limit_reached` on add/reactivate over cap; over-cap downgrade auto-suspends excess. FE keeps the seats UI.
+- **me/context + switch schemas (CR-4 / CR-5).** Both emit `{data,meta}` schemas in `openapi.json`. ⚠ `active_organization.capabilities` is sent at runtime but **missing from the spec schema** — type-gen from the spec alone misses it; the FE wire schema must add it.
+- **Error branching (CR-2).** `code` stays coarse; branch on the additive **`error.reason`** slug on 4xx: `seat_limit_reached`, `membership_already_exists`, `organization_slug_exists`, `invitation_revoked`, `invitation_already_accepted`, `invitation_expired`.
+
+### New auth flows the FE must now support (D1 / D8 additions)
+
+Signup/OTP/magic-link are **OTP-code based** (not link-token). All `{data,meta}`, POST→201, CAPTCHA via `X-Captcha-Token`.
+
+- **`POST /auth/signup` `{ email, password, first_name?, last_name? }`** → `{ access_token, session_id? }` (login-shaped) or `{ mfa_required, mfa_session_token }`. The **same body claims** a pre-provisioned invited row (server decides by inspecting the existing row — no request-side flag); account starts unverified, login allowed pre-verification. 409 `emailAlreadyRegistered` if a real account exists. _(Spec gap: 201 has no response schema — mirror login.)_
+- **Email OTP:** `POST /auth/email/verify { email, code (6-digit) }` → `{ message }`, sets verified; `POST /auth/email/resend-verification` (authed) re-issues. (15-min TTL, 5 attempts, 60s cooldown.)
+- **Magic-link OTP:** `POST /auth/magic-link/send { email }` → `{ message, expires_in_minutes }` (uniform for new/existing; auto-signs-up unknown email); `POST /auth/magic-link/verify { email, code (6-digit) }` → token + sets verified.
+- **Invited-new-user onboarding:** signup(claim) → email/verify → invitations/:id/accept; OR magic-link send→verify (verifies inline) → accept; OR OAuth login (claims + verifies) → accept.
+
+### Personal vs Team organizations (every signup auto-provisions a personal org)
+
+**Auto-provisioning.** Every _completed_ auth flow creates exactly one **PERSONAL** org for the user — idempotent (DB enforces one-per-owner), gated on `PERSONAL_ORGANIZATION_ENABLED`, best-effort (never fails auth): email+password `POST /auth/signup`, OAuth, magic-link, **and all of their invited-account claim paths**. **Exception:** an invited user added by email who has **not yet claimed** (never logged in) has **no** personal org — it's created at claim. So "every user has a personal org" holds only _after_ first auth.
+
+|                  | PERSONAL                   | TEAM                                                                    |
+| ---------------- | -------------------------- | ----------------------------------------------------------------------- |
+| `type`           | `PERSONAL`                 | `TEAM`                                                                  |
+| `slug`           | **null**                   | required kebab                                                          |
+| members          | owner only (single-member) | multi-member                                                            |
+| per owner        | **at most 1** (DB index)   | up to `MAX_TEAM_ORGANIZATIONS_PER_OWNER`                                |
+| `capabilities.*` | all **false**              | all **true**                                                            |
+| created via      | auto on signup             | `POST /tenancy/organizations {name,slug}` (forces TEAM; caller = owner) |
+
+**Blocked on a personal org → HTTP 422** (`assertTeamOrganization`, not 403): add-member/invite (`errors:personalOrganizationNoMembers`), create role (`errors:personalOrganizationNoRoles`), transfer-ownership + delete (`errors:personalOrganizationImmutable`). Both org types still give the owner a full-permission `Owner` role — the restriction is by org **type**, not RBAC.
+
+**Surfacing:**
+
+- After a fresh signup the token's active-org claim is the **personal org** (default-active resolver is personal-first), so `me/context.active_organization` is the personal org — **not null**; the user always lands somewhere.
+- The personal org **IS included** in `me/context.organizations[]` and `GET /tenancy/organizations` (owner-matched). The switcher must render a list entry with `slug: null` + all-false capabilities; distinguish it by `type === 'PERSONAL'` (or match `personal_organization_id`).
+- `GET /users/me` → `personal_organization_id` (null if disabled/unclaimed) + `capabilities { personal_organizations, team_organizations }` (deployment flags).
+- `POST /auth/switch-to-personal` (no body) re-mints to the personal org (never 403; 404 only if disabled/missing).
+
+**FE implications (fold into the plan):**
+
+- **Onboarding/resolver (F4):** fresh signup → personal org is active → land on a personal-scoped dashboard, **not** the onboarding/empty state. Route to onboarding only when there is genuinely no active org (team-only deployment, or unclaimed invitee → `switch-to-personal` 404).
+- **Org switcher (D2):** group/label **Personal** vs **Team**; "Create organization" (= a TEAM org) is the explicit collaborate CTA; the personal entry has no slug.
+- **Member/role/invite UI (D3–D5):** gate by the org's `capabilities` flags (hide/disable on personal); treat a 422 `errors:personalOrganization*` as the backstop, not an auth error.
+- **Billing (D7):** hide billing on `type === 'PERSONAL'` (see residual ask #5).
+
+### Residual minor BE asks (non-blocking)
+
+1. Land `auth-otp-signup-flows` on `main` (currently `dev` only).
+2. Add a 201 response schema to `POST /auth/signup`.
+3. Add `capabilities` to `active_organization` / `organizations[]` in the me/context spec schema.
+4. (cosmetic) magic-link route summaries still say "token"; body is an OTP `code`.
+5. Decide whether **PERSONAL orgs may have subscriptions/billing** — there is currently **no `assertTeamOrganization` guard in the billing domain**, so personal-org subscription changes aren't type-blocked. If they shouldn't be allowed, add a guard; the FE hides billing on personal orgs regardless.
+
+### Plan impact
+
+- §7 register: **closed** (all resolved; 4 minor residuals above).
+- Domain tracks: **D3** simplifies (identity embedded; role-change exists), **D4** simplifies (invite = add-member) **but** gains signup-claim + OTP wiring, **D7** keeps seats, **D1/D8** gain signup/OTP/magic-link/claim flows.
+- M1 still starts at **PR-1 → PR-3** (pure FE). No milestone is backend-blocked.
+
+---
+
+## 12. Update — backend shipped on `dev` (2026-06-23, `origin/dev` @ `f8a22e32`)
+
+A re-check against current `origin/dev` (earlier reads were 3 commits stale) confirms the backend is **complete**; §11's residual asks are essentially closed and two FE-facing optimizations landed.
+
+**Shipped:**
+
+- **#788** — `can_manage_billing` capability (TEAM `true` / PERSONAL `false`; rides on every org response incl. `me/context`) + `assertTeamOrganization('BILLING')` on subscription create/change-plan/cancel/resume (personal → **422 `errors:personalOrganizationNoBilling`**). **Both OpenAPI gaps also fixed** (signup 201 schema + `capabilities`/`type` on the org schema). → §11 residual asks **#2, #3, #5 are DONE**. (Org `slug` stays non-nullable in the spec; personal slug is `null` at runtime → FE keys off `type === 'PERSONAL'`.)
+- **#789** — **switch** (`switch-to-organization`/`-personal`) now returns the **active-org delta** `{ access_token, active_organization, my_permissions, global_role }`; **accept** (`/tenancy/invitations/:id/accept`) now returns **`organization_id`**.
+- **#790** — BE published **`core-be/docs/reference/api/frontend-auth-guide.md`** — the authoritative client-integration guide (token-in-memory, single-flight reactive refresh, envelope single-unwrap, switch = re-mint + swap, header matrix, a full reference `auth.js`). **The FE auth layer should mirror it.**
+- Remaining residual: **#1** (land these on `main` for production — currently `dev` only) and **#4** (cosmetic magic-link "token"→"code" wording). Both non-blocking.
+
+**Refinements to fold into the build (supersede where they differ from §3–§11 / research/09):**
+
+1. **Gate on the intersection** — show an action only when the org **capability is available AND** the caller **holds the permission** (research/09 said "or"; the guide says AND). e.g. billing = `can_manage_billing` ∧ `subscription:*`.
+2. **Switch is one call** (F3/PR-6): switch → swap in-memory token → repaint from the returned `active_organization` + `my_permissions` → flip `is_active` in the cached `organizations[]`. **No post-switch `GET /auth/me/context`**; re-fetch full context only on cold reload.
+3. **Team-join is a straight line**: `accept` → use returned `organization_id` → `switch-to-organization`.
+4. **Invited-new-user join** (authoritative): accept requires a **verified** email (`403 errors:invitationRequiresVerifiedEmail`). A brand-new invitee verifies via **magic-link/OAuth** (claims placeholder + verifies + provisions personal org in one step) or **signup + `email/verify {code}`**, then accept→switch. **Don't hard-block the UI on `is_email_verified === false`** — route through verification for the accept action.
+5. **Contract tweaks** for the FE Zod layer: notification field is **`message`** (+`data`/`action_url`/`action_label`), not `body`; `GET /users/me` adds optional `is_mfa_enabled` + `capabilities {personal_organizations, team_organizations}` + `personal_organization_id`; public-id prefixes are **2–5 chars** (`am_`, `whk_`, …) over `[a-z0-9]{21}`; error branching uses **`error.reason`** (6 slugs: `seat_limit_reached`, `membership_already_exists`, `organization_slug_exists`, `invitation_revoked`, `invitation_already_accepted`, `invitation_expired`) + `error.code`/`type`/`errors[]`.
+6. **Removed invitation routes** (research/09 D4): list/create/pending/decline are gone — **invite = `POST .../memberships {email, role_id}`**, **join = `accept`**. Only revoke + resend remain under `/tenancy/organization/invitations`.
+
+**Net: backend complete on `dev`; no FE blockers. FE work proceeds per §10 (PR-1 → …), with the auth layer mirroring `frontend-auth-guide.md`.**
