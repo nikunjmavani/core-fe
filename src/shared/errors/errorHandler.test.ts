@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { AppError } from './AppError.ts';
-import { getErrorMessage, reportError } from './errorHandler.ts';
+import {
+  apiErrorReason,
+  getErrorMessage,
+  mapApiError,
+  reportError,
+} from './errorHandler.ts';
 import { HttpError } from './HttpError.ts';
 
 vi.mock('@sentry/react', () => ({
@@ -85,6 +90,36 @@ describe('getErrorMessage', () => {
     expect(getErrorMessage('string error')).toBe('An unexpected error occurred');
     expect(getErrorMessage(null)).toBe('An unexpected error occurred');
     expect(getErrorMessage(42)).toBe('An unexpected error occurred');
+  });
+});
+
+describe('mapApiError / apiErrorReason (core-be envelope)', () => {
+  it('prefers the human error.detail from the envelope', () => {
+    const err = new HttpError('HTTP 422', 422, '/x', 'POST', {
+      error: { reason: 'validation_failed', detail: 'Email already in use' },
+    });
+    expect(mapApiError(err)).toBe('Email already in use');
+  });
+
+  it('falls back to a bare { message } when no envelope detail', () => {
+    const err = new HttpError('HTTP 400', 400, '/x', 'POST', { message: 'Bad input' });
+    expect(mapApiError(err)).toBe('Bad input');
+  });
+
+  it('exposes the machine reason for branching', () => {
+    const err = new HttpError('HTTP 401', 401, '/x', 'POST', {
+      error: { reason: 'invalid_credentials', detail: 'Bad email or password' },
+    });
+    expect(apiErrorReason(err)).toBe('invalid_credentials');
+  });
+
+  it('returns undefined reason for non-HTTP errors', () => {
+    expect(apiErrorReason(new Error('boom'))).toBeUndefined();
+    expect(apiErrorReason('nope')).toBeUndefined();
+  });
+
+  it('getErrorMessage remains an alias of mapApiError', () => {
+    expect(getErrorMessage).toBe(mapApiError);
   });
 });
 

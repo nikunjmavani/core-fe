@@ -535,7 +535,7 @@ _Appended IDs (`FE-49`…`FE-52`, `FE-58`, `FE-59`); extends the gateway (Phase 
 _IDs appended (`FE-43`…`FE-48`, `FE-53`) so earlier IDs stay stable; by dependency this phase precedes Phases 6–7. Builds D-25, D-27._
 
 - ✅ **FE-43** `shared/notify` toast module (the only importer of `sonner` besides the `<Toaster>` mount); migrated all 12 `toast` call sites; added an eslint `no-restricted-imports` guard for `sonner`. _Files:_ shared/notify, eslint.config, 12 call sites.
-- ⬜ **FE-44** `mapApiError` — `ApiError` → one user string; used by notify + form errors. _Files:_ shared/errors.
+- ✅ **FE-44** `mapApiError` (+ `apiErrorReason`) — reads the core-be `{error:{reason,detail}}` envelope → one sanitized user string; `getErrorMessage` kept as alias. _Files:_ shared/errors/errorHandler.
 - ⬜ **FE-45** `useAppMutation` — idempotency-key + invalidate + optimistic + notify; refactor useMembers/useRoles/useApiKeys/useSubscription/useInvitations onto it. _Files:_ shared/hooks/useAppMutation (+5 hooks).
 - ⬜ **FE-46** Global query-error surfacing — QueryCache `onError` → notify (failed loads toast once). _Files:_ app query-client.
 - ⬜ **FE-47** `ConfirmDialog` — shared destructive-action confirm (remove member/role/key, delete org). _Files:_ shared/components/ConfirmDialog.

@@ -83,17 +83,51 @@ function sanitizeServerMessage(message: string, status: number): string {
   return message;
 }
 
+/** Core-be error envelope fields read from an HttpError response body. */
+interface ApiErrorEnvelope {
+  /** Machine-readable code for branching (e.g. 'invalid_credentials'). */
+  reason?: string;
+  /** Human-readable detail safe to surface to the user. */
+  detail?: string;
+  /** Bare `{ message }` body (non-enveloped responses). */
+  message?: string;
+}
+
+function readEnvelope(data: unknown): ApiErrorEnvelope {
+  if (!data || typeof data !== 'object') return {};
+  const body = data as { error?: unknown; message?: unknown };
+  const err = (typeof body.error === 'object' && body.error ? body.error : {}) as {
+    reason?: unknown;
+    detail?: unknown;
+  };
+  return {
+    reason: typeof err.reason === 'string' ? err.reason : undefined,
+    detail: typeof err.detail === 'string' ? err.detail : undefined,
+    message: typeof body.message === 'string' ? body.message : undefined,
+  };
+}
+
 /**
- * Extract a user-friendly message from an error.
+ * The machine-readable error `reason` code (core-be error envelope) for
+ * branching logic — e.g. mapping a specific failure to a field error. Returns
+ * `undefined` when absent or the error is not an HTTP error.
  */
-export function getErrorMessage(error: unknown): string {
-  if (error instanceof AppError) {
-    return error.message;
-  }
+export function apiErrorReason(error: unknown): string | undefined {
+  return isHttpError(error) ? readEnvelope(error.data).reason : undefined;
+}
+
+/**
+ * Map any thrown value to ONE user-facing message — the single source of error
+ * wording for `notify` and inline form errors. Prefers the core-be human
+ * `error.detail`, then a bare `message`, then a status-based fallback; server
+ * strings are sanitized so internals (SQL / stack / paths) never leak.
+ */
+export function mapApiError(error: unknown): string {
+  if (error instanceof AppError) return error.message;
 
   if (isHttpError(error)) {
-    const data = error.data as { message?: string } | undefined;
-    const serverMessage = data?.message;
+    const env = readEnvelope(error.data);
+    const serverMessage = env.detail ?? env.message;
     if (typeof serverMessage === 'string') {
       return sanitizeServerMessage(serverMessage, error.status);
     }
@@ -102,9 +136,10 @@ export function getErrorMessage(error: unknown): string {
     );
   }
 
-  if (error instanceof Error) {
-    return error.message;
-  }
+  if (error instanceof Error) return error.message;
 
   return 'An unexpected error occurred';
 }
+
+/** @deprecated Prefer {@link mapApiError}; kept as an alias for back-compat. */
+export const getErrorMessage = mapApiError;
