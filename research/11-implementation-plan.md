@@ -10,7 +10,7 @@ session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 
 ---
 
-# Part I — Design
+## Part I — Design
 
 ## 0. Why
 
@@ -209,9 +209,8 @@ only; `core/security` owns access.
 
 - Source: `me/context.organizations` (personal + teams), `is_active` flag.
 - **Personal** → `switchToPersonal()` → store token + delta → `navigate('/dashboard')`.
-- **Team** → `switchToOrganization(id)` (immutable id from the org) → store token
-  - delta → `navigate('/organization/$slug/dashboard')`. Flip `is_active` locally;
-    no extra `/me/context`.
+- **Team** → `switchToOrganization(id)` → store token + delta →
+  `navigate('/organization/$slug/dashboard')`; flip `is_active` locally (no extra `/me/context`).
 - Group **Personal** (top) + **Teams** + a "Create team" action
   (`POST /tenancy/organizations` + switch). Apply `impeccable` /
   `high-end-visual-design` for switcher + dashboard polish.
@@ -287,7 +286,7 @@ export async function listMembers(): Promise<Member[]> {
 
 ---
 
-# Part II — Implementation plan (item-wise)
+## Part II — Implementation plan (item-wise)
 
 Each item is **commit-sized**: one concern, with files + an acceptance check.
 Review per item; I build only green-lit items, in order, each its own tested
