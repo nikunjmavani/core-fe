@@ -5,12 +5,45 @@ Status: **awaiting item-wise green-light** · Backend contract: core-be
 session · Supersedes parts of `docs/reference/routing-and-tenancy.md`
 (URL-as-source-of-truth) and the [[pages-url-mirror-design]] memory.
 
-> **Part I** is the design (what / why / how). **Part II** is the commit-sized,
-> item-wise plan — **42 build items** (`FE-01`…`FE-42`), each with a stable ID.
+> **Part I** is the design — **24 numbered decisions** (`D-01`…`D-24`, indexed
+> below, each traced to the items that build it). **Part II** is the commit-sized
+> plan — **42 build items** (`FE-01`…`FE-42`), each with a stable ID.
 
 ---
 
 ## Part I — Design
+
+### Design decisions index (D-01…D-24)
+
+Every normative decision below carries a stable `D-` ID, the section that
+specifies it, and the Part II item(s) that build it. **24 decisions → 42 items.**
+
+| ID       | Decision                                                                          | Spec     | Built by                   |
+| -------- | --------------------------------------------------------------------------------- | -------- | -------------------------- |
+| **D-01** | Active org = JWT `org` claim; `me/context` is authoritative; URL only reflects it | §0, §2   | FE-05, FE-07, FE-08, FE-11 |
+| **D-02** | Dual-URL by type: PERSONAL → root, TEAM → `/organization/$slug`                   | §0, §3.1 | FE-19, FE-21, FE-22        |
+| **D-03** | One PERSONAL + N TEAM orgs; left switcher                                         | §1, §4   | FE-24                      |
+| **D-04** | Gate team-only UI on `capabilities.*` — never probe (422)                         | §1       | FE-15, FE-34…FE-37         |
+| **D-05** | Switch re-mints token + applies the inline delta (no extra `me/context`)          | §2       | FE-06                      |
+| **D-06** | `user` + `organizations[]` stable across a switch (flip `is_active` locally)      | §2       | FE-06, FE-07               |
+| **D-07** | 401 → refresh; refresh-401 → login; refresh preserves the switched org            | §2       | FE-10                      |
+| **D-08** | Three shared layouts: Auth / Public / Protected                                   | §3.2     | FE-16, FE-17, FE-18        |
+| **D-09** | Slug in team URL; immutable id resolved locally; `by-slug` fallback               | §3.1     | FE-22                      |
+| **D-10** | `/` resolver → onboarding \| personal `/dashboard` \| team-slug                   | §3.3     | FE-19                      |
+| **D-11** | Dual-mount: one shared `DashboardPage`, route markers at both URLs                | §3.4     | FE-20, FE-21, FE-22        |
+| **D-12** | Security gateway: sequential gates, first failure short-circuits                  | §3.7     | FE-09                      |
+| **D-13** | Six layered access gates **L1–L6**                                                | §3.7     | FE-10…FE-15                |
+| **D-14** | Defense-in-depth; the server is the boundary, FE gates are UX                     | §3.7     | FE-10…FE-15                |
+| **D-15** | `core/security/` access layer (folder structure)                                  | §3.7     | FE-09…FE-15                |
+| **D-16** | Switcher: personal/team navigation + create-team                                  | §4       | FE-24                      |
+| **D-17** | Branch on the body (not the 201); every flow ends at `me/context`                 | §5       | FE-05                      |
+| **D-18** | Magic-link is code-entry (`{email, code}`), not a link                            | §5       | FE-01                      |
+| **D-19** | OAuth start returns `{url}`; return via `/callback` → refresh                     | §5       | FE-02, FE-03               |
+| **D-20** | `mfa/login` uses `totp_code` / `recovery_code`                                    | §5       | FE-04                      |
+| **D-21** | One env var; every API has mock + live, identical domain shape                    | §6       | FE-25…FE-33                |
+| **D-22** | Mock data mirrors the mapped wire (offline parity)                                | §6       | FE-25…FE-33                |
+| **D-23** | Reconciliations: role object, no list-invitations, embedded `user`                | §6       | FE-25                      |
+| **D-24** | Doc / convention / memory ripple                                                  | §7       | FE-42                      |
 
 ## 0. Why
 
