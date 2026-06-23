@@ -578,7 +578,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 
 _Builds D-31; depends on Phase F (`<Surface>` / notify) + FE-30 (prefs API)._
 
-- ⬜ **FE-61** Notifications inbox API (mock+live) — `*Wire` / `to*`; list + unread-count + mark-read + mark-all-read; integration spec. _Files:_ shared/api/notifications-\*, mock store.
+- ✅ **FE-61** Notifications inbox API (mock+live) — `notificationWire`/`toNotification`, `unreadCountWire`; `listNotifications`/`getUnreadCount`/`markNotificationRead`/`markAllNotificationsRead` over `/me/notifications`; in-memory mock store + fixtures + query keys. _Files:_ shared/api/notification-contracts·notifications-api·notification-mock-store·notification-fixtures·notification-query-keys.
 - ⬜ **FE-62** Notification center UI — header **bell** + unread badge + `<Surface>` panel (list, read, mark-all; empty/loading/error). _Files:_ shared/components/NotificationCenter, ProtectedLayout.
 - ⬜ **FE-63** Realtime delivery — SSE/WebSocket subscribe if available, else `refetchInterval` poll; invalidate inbox + bump badge. _Files:_ shared/hooks/useNotifications, query client.
 - ⬜ **FE-64** Desktop notifications — Web Notification API permission (user-initiated), persist grant, raise an OS notification for new items when backgrounded; no-op if denied/unsupported. _Files:_ shared/notifications/desktop.ts.
