@@ -9,21 +9,24 @@ vi.mock('@/core/config/env.ts', () => ({
   },
 }));
 
-const { getMock, postMock, patchMock } = vi.hoisted(() => ({
+const { getMock, postMock, patchMock, putMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
   patchMock: vi.fn(),
+  putMock: vi.fn(),
 }));
 vi.mock('@/core/http/fetch-client.ts', () => ({
-  apiClient: { get: getMock, post: postMock, patch: patchMock },
+  apiClient: { get: getMock, post: postMock, patch: patchMock, put: putMock },
 }));
 
 import { notificationMockStore } from './notification-mock-store.ts';
 import {
+  getNotificationPreferences,
   getUnreadCount,
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  updateNotificationPreferences,
 } from './notifications-api.ts';
 
 const NTF = `ntf_${'0'.repeat(20)}1`;
@@ -42,6 +45,7 @@ beforeEach(() => {
   getMock.mockReset();
   postMock.mockReset();
   patchMock.mockReset();
+  putMock.mockReset();
   notificationMockStore.reset();
 });
 
@@ -108,5 +112,52 @@ describe('notifications-api (mock branch)', () => {
     expect(await getUnreadCount()).toBe(1);
     await markAllNotificationsRead();
     expect(await getUnreadCount()).toBe(0);
+  });
+});
+
+describe('notification preferences (mock branch)', () => {
+  beforeEach(() => {
+    useMockApiRef.value = true;
+  });
+
+  it('returns the default preference matrix (4 categories × 3 channels)', async () => {
+    const prefs = await getNotificationPreferences();
+    expect(prefs).toHaveLength(12);
+    expect(prefs.filter((p) => p.channel === 'desktop').every((p) => !p.enabled)).toBe(
+      true,
+    );
+  });
+
+  it('full-replaces the preference set', async () => {
+    const next = [
+      { category: 'system' as const, channel: 'email' as const, enabled: false },
+    ];
+    const result = await updateNotificationPreferences(next);
+    expect(result).toEqual(next);
+    expect(await getNotificationPreferences()).toEqual(next);
+  });
+});
+
+describe('notification preferences (live branch)', () => {
+  it('maps the in_app wire channel to inApp', async () => {
+    getMock.mockResolvedValue({
+      data: [{ category: 'member', channel: 'in_app', enabled: true }],
+    });
+    const prefs = await getNotificationPreferences();
+    expect(prefs).toEqual([{ category: 'member', channel: 'inApp', enabled: true }]);
+  });
+
+  it('PUTs the wire body on full-replace', async () => {
+    putMock.mockResolvedValue({
+      data: [{ category: 'billing', channel: 'in_app', enabled: false }],
+    });
+    const result = await updateNotificationPreferences([
+      { category: 'billing', channel: 'inApp', enabled: false },
+    ]);
+    expect(putMock).toHaveBeenCalledWith(
+      expect.stringContaining('/me/notification-preferences'),
+      { preferences: [{ category: 'billing', channel: 'in_app', enabled: false }] },
+    );
+    expect(result).toEqual([{ category: 'billing', channel: 'inApp', enabled: false }]);
   });
 });

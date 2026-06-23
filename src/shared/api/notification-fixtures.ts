@@ -1,4 +1,8 @@
-import type { Notification } from './notification-contracts.ts';
+import {
+  type Notification,
+  notificationCategorySchema,
+  type NotificationPreference,
+} from './notification-contracts.ts';
 
 /** A valid `ntf_<21 lowercase-alnum>` public id for mock data. */
 function ntfId(n: number): string {
@@ -47,3 +51,15 @@ export const NOTIFICATIONS_FIXTURE: Notification[] = [
     createdAt: '2026-06-19T08:00:00.000Z',
   },
 ];
+
+/**
+ * REPLACE_WITH_API: default notification preferences (`GET
+ * /me/notification-preferences`). Email + in-app on for every category; desktop
+ * off until the user opts in (it needs an OS permission grant).
+ */
+export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreference[] =
+  notificationCategorySchema.options.flatMap((category) => [
+    { category, channel: 'email', enabled: true },
+    { category, channel: 'inApp', enabled: true },
+    { category, channel: 'desktop', enabled: false },
+  ]);

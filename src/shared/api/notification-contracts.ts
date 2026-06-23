@@ -59,3 +59,54 @@ export function toNotification(wire: NotificationWire): Notification {
 export const unreadCountWireSchema = z.object({
   unread_count: z.number().int().nonnegative(),
 });
+
+/** Delivery channels for a notification category. */
+export const notificationChannelSchema = z.enum(['email', 'inApp', 'desktop']);
+export type NotificationChannel = z.infer<typeof notificationChannelSchema>;
+
+/** A single category × channel delivery preference (domain shape). */
+export const notificationPreferenceSchema = z.object({
+  category: notificationCategorySchema,
+  channel: notificationChannelSchema,
+  enabled: z.boolean(),
+});
+export type NotificationPreference = z.infer<typeof notificationPreferenceSchema>;
+
+/** Wire form — core-be uses snake_case `in_app` for the in-app channel. */
+export const notificationPreferenceWireSchema = z.object({
+  category: notificationCategorySchema,
+  channel: z.enum(['email', 'in_app', 'desktop']),
+  enabled: z.boolean(),
+});
+export type NotificationPreferenceWire = z.infer<typeof notificationPreferenceWireSchema>;
+
+const CHANNEL_FROM_WIRE: Record<
+  NotificationPreferenceWire['channel'],
+  NotificationChannel
+> = { email: 'email', in_app: 'inApp', desktop: 'desktop' };
+const CHANNEL_TO_WIRE: Record<
+  NotificationChannel,
+  NotificationPreferenceWire['channel']
+> = { email: 'email', inApp: 'in_app', desktop: 'desktop' };
+
+/** Map a wire preference to the UI domain shape. */
+export function toNotificationPreference(
+  wire: NotificationPreferenceWire,
+): NotificationPreference {
+  return {
+    category: wire.category,
+    channel: CHANNEL_FROM_WIRE[wire.channel],
+    enabled: wire.enabled,
+  };
+}
+
+/** Map a domain preference back to the wire shape (for full-replace PUT). */
+export function toNotificationPreferenceWire(
+  pref: NotificationPreference,
+): NotificationPreferenceWire {
+  return {
+    category: pref.category,
+    channel: CHANNEL_TO_WIRE[pref.channel],
+    enabled: pref.enabled,
+  };
+}

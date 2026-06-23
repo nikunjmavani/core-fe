@@ -1,5 +1,8 @@
-import type { Notification } from './notification-contracts.ts';
-import { NOTIFICATIONS_FIXTURE } from './notification-fixtures.ts';
+import type { Notification, NotificationPreference } from './notification-contracts.ts';
+import {
+  DEFAULT_NOTIFICATION_PREFERENCES,
+  NOTIFICATIONS_FIXTURE,
+} from './notification-fixtures.ts';
 
 /**
  * In-memory mock inbox for the notifications domain. The mock API layer
@@ -11,7 +14,12 @@ function clone(items: Notification[]): Notification[] {
   return items.map((n) => ({ ...n }));
 }
 
+function clonePrefs(prefs: NotificationPreference[]): NotificationPreference[] {
+  return prefs.map((p) => ({ ...p }));
+}
+
 let items: Notification[] = clone(NOTIFICATIONS_FIXTURE);
+let preferences: NotificationPreference[] = clonePrefs(DEFAULT_NOTIFICATION_PREFERENCES);
 
 export const notificationMockStore = {
   list(): Notification[] {
@@ -27,7 +35,14 @@ export const notificationMockStore = {
   markAllRead(): void {
     items = items.map((n) => ({ ...n, isRead: true }));
   },
+  listPreferences(): NotificationPreference[] {
+    return clonePrefs(preferences);
+  },
+  setPreferences(next: NotificationPreference[]): void {
+    preferences = clonePrefs(next);
+  },
   reset(): void {
     items = clone(NOTIFICATIONS_FIXTURE);
+    preferences = clonePrefs(DEFAULT_NOTIFICATION_PREFERENCES);
   },
 };
