@@ -25,6 +25,13 @@ test.describe('Responsive @ 320px', () => {
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
   });
 
+  test('dashboard (app shell) fits with no horizontal scroll', async ({ page }) => {
+    await registerNewUserAndGoToDashboard(page);
+    await expect(page.getByTestId('dashboard-page')).toBeVisible();
+    // Sidebar is an off-canvas drawer on mobile; content must not overflow.
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
+  });
+
   test('settings modal uses the mobile section picker (sidebar hidden) and fits', async ({
     page,
   }) => {

@@ -176,13 +176,13 @@ function Sidebar({
             activeOptions={{ exact: true }}
             activeProps={{
               className: cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
                 'bg-sidebar-accent text-sidebar-accent-foreground',
               ),
             }}
             inactiveProps={{
               className: cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
                 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
               ),
             }}
@@ -241,7 +241,7 @@ function Header() {
 
   return (
     <header
-      className="bg-background flex h-14 items-center gap-4 border-b px-4"
+      className="bg-background flex h-14 items-center gap-2 border-b px-4 sm:gap-4 sm:px-6"
       data-testid="header"
     >
       {/* Mobile menu toggle */}
@@ -259,7 +259,7 @@ function Header() {
       {/* Search trigger — preload on hover for faster first open */}
       <Button
         variant="outline"
-        className="text-muted-foreground hidden h-8 w-64 justify-start gap-2 sm:flex"
+        className="text-muted-foreground hidden h-8 w-48 justify-start gap-2 sm:flex lg:w-64"
         onClick={() => useUIStore.getState().setCommandPaletteOpen(true)}
         onMouseEnter={preloadCommandPalette}
         onFocus={preloadCommandPalette}
