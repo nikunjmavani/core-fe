@@ -1,6 +1,7 @@
 import { notFound, redirect } from '@tanstack/react-router';
 
 import { parseOrganizationIdParam } from '@/lib/routes/params.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import type { Organization } from '@/shared/tenancy/my-organizations.ts';
 import { syncOrganizationFromRoute } from '@/shared/tenancy/organization-context.ts';
 import {
@@ -38,7 +39,7 @@ export async function requireOrganizationContext(
   const organization = await findMembership(organizationId);
   if (!organization) throw notFound();
 
-  syncOrganizationFromRoute(organization.id, organization.slug);
+  syncOrganizationFromRoute(organization.id, organization.slug, organization.status);
   await ensurePermissionsFor(organization.id);
   return organization;
 }
@@ -49,8 +50,15 @@ export async function requireOrganizationContext(
  * redirect-looping). Mock-mode organizations are always active.
  */
 export function requireActiveOrganization(organizationId: string): void {
-  // REPLACE_WITH_API: read status + subscription from the membership response.
-  const status: 'active' | 'suspended' = 'active';
+  const store = useOrganizationStore.getState();
+  // Guard: requireOrganizationContext must have run first (it syncs status).
+  if (store.organizationId !== organizationId) {
+    // Status not synced for this org yet — treat as active to avoid false
+    // positives during boot / route transitions. The guard re-runs after
+    // requireOrganizationContext completes (preloadStaleTime: 0).
+    return;
+  }
+  const status = store.organizationStatus ?? 'active';
   if (status !== 'active') {
     throw redirect({
       to: '/organization/$organizationId/suspended',

@@ -21,3 +21,16 @@ export function parseOrganizationIdParam(raw: string): OrganizationPublicId | nu
   const result = organizationIdParamSchema.safeParse(raw);
   return result.success ? brandOrganizationId(result.data) : null;
 }
+
+/* ── Invitation ID param ─────────────────────────────────────────── */
+
+/** Invitation ID as it appears in URLs: `inv_` + random suffix. */
+export const invitationIdParamSchema = z
+  .string()
+  .regex(/^inv_[A-Za-z0-9]{1,64}$/, 'invalid invitation id');
+
+/** Parse a raw `$invitationId` param; `null` when malformed. */
+export function parseInvitationIdParam(raw: string): string | null {
+  const result = invitationIdParamSchema.safeParse(raw);
+  return result.success ? result.data : null;
+}

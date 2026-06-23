@@ -9,9 +9,11 @@ export const organizationSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
+  status: z.enum(['active', 'suspended']).optional().default('active'),
 });
 
 export type Organization = z.infer<typeof organizationSchema>;
+export type OrganizationStatus = z.infer<typeof organizationSchema>['status'];
 
 export const createOrganizationSchema = z.object({
   name: z.string().trim().min(1, 'Organization name is required').max(100),
@@ -28,8 +30,8 @@ const BASE = API_BASE_PATH;
 
 /** Organizations the signed-in user belongs to (mock fixture while unwired). */
 const MY_ORGANIZATIONS_FIXTURE: Organization[] = [
-  { id: 'org_acme', name: 'Acme Inc.', slug: 'acme' },
-  { id: 'org_globex', name: 'Globex', slug: 'globex' },
+  { id: 'org_acme', name: 'Acme Inc.', slug: 'acme', status: 'active' },
+  { id: 'org_globex', name: 'Globex', slug: 'globex', status: 'active' },
 ];
 
 export async function listMyOrganizations(): Promise<Organization[]> {
@@ -62,7 +64,12 @@ export async function createOrganization(
     : deriveOrganizationSlug(payload.name);
   const slug = derivedSlug.length ? derivedSlug : 'org';
   if (config.useMockApi) {
-    const org: Organization = { id: `org_${Date.now()}`, name: payload.name, slug };
+    const org: Organization = {
+      id: `org_${Date.now()}`,
+      name: payload.name,
+      slug,
+      status: 'active',
+    };
     // Session-persistent like orgMockStore: the new org shows up in listMyOrganizations().
     MY_ORGANIZATIONS_FIXTURE.push(org);
     return mockResponse(org);

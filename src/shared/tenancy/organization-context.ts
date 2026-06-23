@@ -14,10 +14,17 @@ import {
  * pick a redirect target. Multi-tab correctness follows: each tab's URL
  * carries its own organization. (docs/reference/routing-and-tenancy.md §4)
  */
-export function syncOrganizationFromRoute(organizationId: string, slug: string): void {
+export function syncOrganizationFromRoute(
+  organizationId: string,
+  slug: string,
+  status?: 'active' | 'suspended',
+): void {
   const store = useOrganizationStore.getState();
-  if (store.organizationId !== organizationId) {
-    store.setOrganization(organizationId, slug);
+  if (
+    store.organizationId !== organizationId ||
+    store.organizationStatus !== (status ?? null)
+  ) {
+    store.setOrganization(organizationId, slug, status);
   }
   persistOrganizationToStorage(organizationId, slug);
 }

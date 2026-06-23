@@ -4,6 +4,7 @@ import {
   createRouter,
   HeadContent,
   lazyRouteComponent,
+  notFound,
   Outlet,
   redirect,
 } from '@tanstack/react-router';
@@ -16,6 +17,7 @@ import {
 } from '@/app/guards/route-guards.ts';
 import { redirectIfAuthenticated, requireAuth } from '@/core/rbac/guards.ts';
 import { APP_TITLE, composePageTitle, manifestHead } from '@/lib/routes/page-head.ts';
+import { parseInvitationIdParam } from '@/lib/routes/params.ts';
 import { manifest as acceptInviteManifest } from '@/pages/accept-invite/accept-invite.manifest.ts';
 import { manifest as callbackManifest } from '@/pages/callback/callback.manifest.ts';
 import { manifest as forgotPasswordManifest } from '@/pages/forgot-password/forgot-password.manifest.ts';
@@ -194,6 +196,7 @@ const resetPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/reset-password',
   head: manifestHead(resetPasswordManifest),
+  beforeLoad: () => redirectIfAuthenticated(),
   component: ResetPasswordPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -202,6 +205,7 @@ const verifyEmailRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/verify-email',
   head: manifestHead(verifyEmailManifest),
+  beforeLoad: () => redirectIfAuthenticated(),
   component: VerifyEmailPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -210,6 +214,7 @@ const mfaRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/mfa',
   head: manifestHead(mfaManifest),
+  beforeLoad: () => redirectIfAuthenticated(),
   component: MfaPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -238,6 +243,9 @@ const acceptInviteRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/accept-invite/$invitationId',
   head: manifestHead(acceptInviteManifest),
+  beforeLoad: ({ params }) => {
+    if (!parseInvitationIdParam(params.invitationId)) throw notFound();
+  },
   component: AcceptInvitePage,
   errorComponent: RouteErrorBoundary,
 });

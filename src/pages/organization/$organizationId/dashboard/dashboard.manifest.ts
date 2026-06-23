@@ -10,7 +10,7 @@ export const manifest = {
   path: '/organization/$organizationId/dashboard',
   title: 'Dashboard',
   testId: 'dashboard-page',
-  permission: null,
+  permission: 'organization:read',
   kind: 'leaf',
   children: [],
 } as const satisfies PageManifest;

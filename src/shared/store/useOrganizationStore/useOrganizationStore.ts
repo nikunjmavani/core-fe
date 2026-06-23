@@ -39,10 +39,12 @@ export function persistOrganizationToStorage(id: string, slug: string): void {
 interface OrganizationStore {
   organizationId: string | null;
   organizationSlug: string | null;
+  /** Organization status from the membership response. */
+  organizationStatus: 'active' | 'suspended' | null;
   /** Org-scoped permission codes the user holds in the active organization. */
   permissions: OrganizationPermission[];
 
-  setOrganization: (id: string, slug: string) => void;
+  setOrganization: (id: string, slug: string, status?: 'active' | 'suspended') => void;
   /** Replace the active org's permission set (from the membership response). */
   setPermissions: (permissions: OrganizationPermission[]) => void;
   clearOrganization: () => void;
@@ -59,11 +61,21 @@ interface OrganizationStore {
 export const useOrganizationStore = create<OrganizationStore>((set) => ({
   organizationId: null,
   organizationSlug: null,
+  organizationStatus: null,
   permissions: [],
 
-  setOrganization: (organizationId, organizationSlug) =>
-    set({ organizationId, organizationSlug }),
+  setOrganization: (organizationId, organizationSlug, organizationStatus) =>
+    set({
+      organizationId,
+      organizationSlug,
+      organizationStatus: organizationStatus ?? null,
+    }),
   setPermissions: (permissions) => set({ permissions }),
   clearOrganization: () =>
-    set({ organizationId: null, organizationSlug: null, permissions: [] }),
+    set({
+      organizationId: null,
+      organizationSlug: null,
+      organizationStatus: null,
+      permissions: [],
+    }),
 }));
