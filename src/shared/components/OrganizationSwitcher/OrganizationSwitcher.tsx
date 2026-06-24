@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 
@@ -14,9 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu.tsx';
+import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import { Building2, Check, ChevronsUpDown, Plus } from '@/shared/icons/index.ts';
-import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
-import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
+import type { OrganizationSummary } from '@/shared/tenancy/me-context.ts';
+import { switchToPersonal } from '@/shared/tenancy/switch.ts';
 
 interface OrganizationSwitcherProps {
   /** Extra classes for the trigger button (e.g. `flex-1` inside the sidebar). */
@@ -26,9 +26,13 @@ interface OrganizationSwitcherProps {
 }
 
 /**
- * Active-organization switcher. Lives at the top of the sidebar (to the right of
- * the product icon): lists the user's organizations, re-resolves org permissions
- * on switch, and exposes a "Create organization" action via a dialog.
+ * Active-organization switcher (dual-URL aware, FE-24). Lists the user's
+ * organizations from `me/context` (the authoritative set, including the personal
+ * org). Switching to a **team** org navigates to its
+ * `/organization/$organizationId/dashboard` — the org guard performs the
+ * switch-on-navigation. Switching to the **personal** org has no URL to drive
+ * the switch, so it calls `switchToPersonal()` (re-mints the token) then lands
+ * on the root `/dashboard`.
  */
 export function OrganizationSwitcher({
   className,
@@ -36,25 +40,25 @@ export function OrganizationSwitcher({
 }: OrganizationSwitcherProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const navigate = useNavigate();
-  const organizationId = useOrganizationStore((s) => s.organizationId);
-  const organizationSlug = useOrganizationStore((s) => s.organizationSlug);
+  const { data: ctx, isLoading } = useMeContext();
 
-  const { data: orgs = [], isLoading } = useQuery({
-    queryKey: ['organizations'],
-    queryFn: listMyOrganizations,
-  });
+  const orgs = ctx?.organizations ?? [];
+  const activeId = ctx?.activeOrganization?.id;
+  const activeName = ctx?.activeOrganization?.name ?? 'Select organization';
 
-  const activeName =
-    orgs.find((o) => o.id === organizationId)?.name ??
-    organizationSlug ??
-    'Select organization';
+  async function applySelect(org: OrganizationSummary) {
+    if (org.id === activeId) return;
+    if (org.type === 'PERSONAL') {
+      await switchToPersonal();
+      void navigate({ to: '/dashboard' });
+      return;
+    }
+    void navigate(organizationDashboard(org.id));
+  }
 
-  // The URL drives organization context: navigating to the new organization's
-  // dashboard runs the $organizationId guard, which syncs the store, persists
-  // the last-used choice, and refetches permissions.
-  const handleSelect = (id: string) => {
-    void navigate(organizationDashboard(id));
-  };
+  function selectOrg(org: OrganizationSummary) {
+    applySelect(org).catch(() => undefined);
+  }
 
   return (
     <>
@@ -79,12 +83,12 @@ export function OrganizationSwitcher({
           {orgs.map((org) => (
             <DropdownMenuItem
               key={org.id}
-              onClick={() => handleSelect(org.id)}
-              data-testid={`organization-switcher-option-${org.slug}`}
+              onClick={() => selectOrg(org)}
+              data-testid={`organization-switcher-option-${org.slug ?? 'personal'}`}
             >
               <Building2 className="mr-2 h-4 w-4 opacity-70" />
               <span className="truncate">{org.name}</span>
-              {org.id === organizationId && <Check className="ml-auto h-4 w-4" />}
+              {org.id === activeId && <Check className="ml-auto h-4 w-4" />}
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />

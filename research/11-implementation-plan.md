@@ -522,13 +522,13 @@ _Appended IDs (`FE-49`…`FE-52`, `FE-58`, `FE-59`); extends the gateway (Phase 
 
 - ✅ **FE-19** Root resolver — `resolveRootTarget(ctx)` dual-URL decision (none→onboarding, PERSONAL→`/dashboard`, TEAM→`/organization/$slug/dashboard`; slugless team→onboarding). Pure + tested; wired into the `/` route in the Phase-4 route restructure. _Files:_ organization-resolver.
 - ✅ **FE-20** Promote dashboard UI → `shared/components/Dashboard/` — the team island's `DashboardPage` is now a thin wrapper rendering `<Dashboard/>`; both the personal `/dashboard` space (FE-21) and the team space reuse the same surface. Testids unchanged. _Files:_ shared/components/Dashboard, DashboardPage. Verified: unit (4) + dashboard e2e (3/3) green.
-- 🔶 **FE-21** Personal `/dashboard` space — pathless `personal-app` shell route (requireAuth → mounts the shared AppShell) + `/dashboard` leaf reusing DashboardPage→`<Dashboard/>`. Additive: the team `/organization/$organizationId/*` space is untouched. _Files:_ routeTree. Verified: route exists + auth-guarded (navigation e2e) + Dashboard renders (unit). (Making it the **default** for personal-active-org users = the resolver wire FE-19/23; AppShell dual-mode nav links follow.)
+- ✅ **FE-21** Personal `/dashboard` space — pathless `personal-app` shell (requireAuth → AppShell) + `/dashboard` leaf reusing DashboardPage→`<Dashboard/>`; resolver lands personal-active-org users here (FE-19); AppShell nav is dual-mode (`DashboardNavLink`: personal→`/dashboard`, team→org URL). _Files:_ routeTree, AppShell. Verified: 810 unit + 64 e2e.
 - 🔶 **FE-22** Team space — **kept at `/organization/$organizationId/*`** (deliberate): the ratified switch-on-navigation decision favors the immutable id, and the dual-URL personal-vs-team split is delivered via FE-19/21 **without** the high-churn `$organizationId`→`$organizationSlug` rename across guards/AppShell/page-dir. Slug URLs remain a possible future cosmetic migration; the team space is fully functional today.
 - ✅ **FE-23** routeTree wiring — `/` resolver rewired to me/context (`resolveRootRedirect`: none→onboarding, PERSONAL→`/dashboard`, TEAM→`/organization/$organizationId/dashboard`) + personal `/dashboard` route live; e2e helper drops the picker step, navigation spec + visual baselines updated. Verified: 810 unit + 64 e2e green. _Files:_ routeTree, organization-resolver, e2e-auth, navigation.e2e.
 
 ### Phase 5 — Org switcher (1)
 
-- ⬜ **FE-24** Switcher rebuild — Personal + Teams + Create-team; uses **FE-06**; capability-aware. _Files:_ OrganizationSwitcher.
+- ✅ **FE-24** Switcher rebuild — sources orgs from `me/context` (authoritative, incl. the personal org + `type`), dual-URL navigation: a **team** org → `/organization/$organizationId/dashboard` (guard switch-on-nav), the **personal** org → `switchToPersonal()` (FE-06, re-mints token) then root `/dashboard`; Create-org action retained. _Files:_ OrganizationSwitcher. Verified: 3 unit + shell e2e.
 
 ### Phase F — Cross-cutting UX foundations (6) — land before Phases 6–7
 
