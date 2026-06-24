@@ -7,32 +7,92 @@ This project uses **Model Context Protocol (MCP)** servers in Cursor for AI-assi
 ```mermaid
 flowchart LR
   subgraph local["Local only"]
-    C[Cursor IDE]
+    C[Cursor / Claude Code]
     M[agent-os/mcp/mcp.json]
   end
-  subgraph mcps["MCP servers"]
-    C7[Context7]
+  subgraph fe["Frontend"]
+    C7[context7]
     S[shadcn]
-    T[Tailwind]
+    T[tailwindcss]
+  end
+  subgraph shared["Shared services (with core-be)"]
+    GH[github]
     BE[core-be-api]
+    SE[sentry]
+    SG[semgrep]
+    SQ[sonarqube]
+    ST[stripe]
+    PM[postman]
+  end
+  subgraph infra["Infra / backend-shared"]
+    NE[neon]
+    RW[railway]
+    AW[aws]
+    RE[redis]
+    RS[resend]
+  end
+  subgraph dev["Local dev tools"]
+    CG[codegraph]
+    HR[headroom]
   end
   C --> M
-  M --> C7
-  M --> S
-  M --> T
-  M --> BE
+  M --> fe
+  M --> shared
+  M --> infra
+  M --> dev
 ```
 
 ---
 
 ## MCPs used in this repo
 
-| MCP             | Purpose                                                                                |
-| --------------- | -------------------------------------------------------------------------------------- |
-| **context7**    | Up-to-date library docs (React, Vite, TanStack Query, Zod, etc.). Requires an API key. |
-| **shadcn**      | Browse and add shadcn/ui components via CLI.                                           |
-| **tailwindcss** | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.                          |
-| **core-be-api** | Backend API discovery and `call_api` when the backend runs with MCP enabled.           |
+The full server set is shared with **core-be** (`pnpm`-parity tooling) plus the
+two FE-only servers. The committed template is `agent-os/mcp/mcp.example.json`;
+the real, gitignored config is `agent-os/mcp/mcp.json` (the `.mcp.json` and
+`.cursor/mcp.json` symlinks point into it).
+
+### Frontend-specific
+
+| MCP             | Purpose                                                                 |
+| --------------- | ----------------------------------------------------------------------- |
+| **context7**    | Up-to-date library docs (React, Vite, TanStack Query, Zod, …). API key. |
+| **shadcn**      | Browse and add shadcn/ui components via CLI.                            |
+| **tailwindcss** | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.           |
+
+### Shared with core-be
+
+| MCP             | Purpose                                                         | Auth / env                         |
+| --------------- | --------------------------------------------------------------- | ---------------------------------- |
+| **github**      | Repos, PRs, issues, Actions, code search.                       | OAuth (prompted on first use)      |
+| **core-be-api** | Backend API discovery + `call_api` when core-be runs with MCP.  | backend on `:3000` w/ MCP enabled  |
+| **sentry**      | Error monitoring, issue triage, releases.                       | OAuth                              |
+| **semgrep**     | Static security scanning (mirrors the CI semgrep lane).         | none (`uvx`)                       |
+| **sonarqube**   | Local code-quality gate (mirrors `pnpm sonar:scan`).            | `SONARQUBE_TOKEN`, `SONARQUBE_URL` |
+| **stripe**      | Billing/payments API (org billing surfaces).                    | OAuth                              |
+| **postman**     | API collections + request testing against the backend contract. | OAuth                              |
+
+### Infra / backend-shared (rarely needed from the FE)
+
+| MCP         | Purpose                              | Auth / env                |
+| ----------- | ------------------------------------ | ------------------------- |
+| **neon**    | Postgres (Neon) database inspection. | OAuth                     |
+| **railway** | Deploy platform (backend).           | Railway login (`npx`)     |
+| **aws**     | AWS APIs (`ap-south-1`).             | AWS creds / SSO (`uvx`)   |
+| **redis**   | Redis inspection.                    | `REDIS_URL`               |
+| **resend**  | Transactional email.                 | `RESEND_API_KEY` (Docker) |
+
+### Local dev tools (auto-start pair)
+
+| MCP           | Purpose                                | Requires           |
+| ------------- | -------------------------------------- | ------------------ |
+| **codegraph** | Code-graph navigation across the repo. | `codegraph` binary |
+| **headroom**  | Context compression for long sessions. | `headroom` binary  |
+
+> The `infra` servers come from core-be and stay in the config for cross-repo
+> work on the same machine; remove any you don't use from
+> `agent-os/mcp/mcp.json` to keep your session start clean. `aws`/`redis`/
+> `resend`/`sonarqube` need the env vars above exported in your shell (the same
+> ones core-be uses); `github`/`sentry`/`stripe`/`neon`/`postman` use OAuth.
 
 ---
 
@@ -53,27 +113,15 @@ If `agent-os/mcp/mcp.example.json` does not exist, create `agent-os/mcp/mcp.json
 1. Get an API key from [context7.com/dashboard](https://context7.com/dashboard).
 2. Open `agent-os/mcp/mcp.json` and replace `YOUR_CONTEXT7_API_KEY` with your key in the `context7` server args.
 
-Example (do not commit the real key):
+Only the `context7` server needs an inline key — everything else uses OAuth or
+shell env vars (see the tables above). The full 17-server set is in
+`agent-os/mcp/mcp.example.json`; you typically edit just this one line (do not
+commit the real key — `agent-os/mcp/mcp.json` is gitignored):
 
 ```json
-{
-  "mcpServers": {
-    "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_CONTEXT7_API_KEY"]
-    },
-    "shadcn": {
-      "command": "npx",
-      "args": ["shadcn@latest", "mcp"]
-    },
-    "tailwindcss": {
-      "command": "npx",
-      "args": ["-y", "tailwindcss-mcp-server"]
-    },
-    "core-be-api": {
-      "url": "http://localhost:3000/api/v1/mcp"
-    }
-  }
+"context7": {
+  "command": "npx",
+  "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_CONTEXT7_API_KEY"]
 }
 ```
 
