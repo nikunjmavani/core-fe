@@ -1,7 +1,9 @@
 import { isNotFound } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { queryClient } from '@/core/http/queryClient.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+import { type MeContext, meContextQueryKey } from '@/shared/tenancy/me-context.ts';
 import { resetPermissionCacheForTests } from '@/shared/tenancy/organization-membership.ts';
 
 import {
@@ -20,10 +22,26 @@ vi.mock('@/shared/api/organization-api.ts', () => ({
   getMyPermissions: vi.fn().mockResolvedValue(['organization:read']),
 }));
 
+const { switchToOrganizationMock } = vi.hoisted(() => ({
+  switchToOrganizationMock: vi.fn(),
+}));
+vi.mock('@/shared/tenancy/switch.ts', () => ({
+  switchToOrganization: switchToOrganizationMock,
+}));
+
+function seedActiveOrg(id: string) {
+  queryClient.setQueryData(meContextQueryKey, {
+    activeOrganization: { id },
+  } as unknown as MeContext);
+}
+
 describe('requireOrganizationContext', () => {
   beforeEach(() => {
     resetPermissionCacheForTests();
     useOrganizationStore.getState().clearOrganization();
+    queryClient.removeQueries({ queryKey: meContextQueryKey });
+    switchToOrganizationMock.mockReset();
+    switchToOrganizationMock.mockResolvedValue(undefined);
     localStorage.clear();
   });
 
@@ -42,6 +60,18 @@ describe('requireOrganizationContext', () => {
     expect(useOrganizationStore.getState().organizationId).toBe('org_acme');
     expect(useOrganizationStore.getState().organizationSlug).toBe('acme');
     expect(useOrganizationStore.getState().permissions).toEqual(['organization:read']);
+  });
+
+  it('switches the active org when the URL targets a different org (FE-24)', async () => {
+    seedActiveOrg('org_personal');
+    await requireOrganizationContext('acme');
+    expect(switchToOrganizationMock).toHaveBeenCalledWith('org_acme');
+  });
+
+  it('does not switch when the URL org is already the active one', async () => {
+    seedActiveOrg('org_acme');
+    await requireOrganizationContext('acme');
+    expect(switchToOrganizationMock).not.toHaveBeenCalled();
   });
 });
 

@@ -1,13 +1,16 @@
 import { notFound, redirect } from '@tanstack/react-router';
 
+import { queryClient } from '@/core/http/queryClient.ts';
 import { parseOrganizationSlugParam } from '@/lib/routes/params.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+import { type MeContext, meContextQueryKey } from '@/shared/tenancy/me-context.ts';
 import type { Organization } from '@/shared/tenancy/my-organizations.ts';
 import { syncOrganizationFromRoute } from '@/shared/tenancy/organization-context.ts';
 import {
   ensurePermissionsFor,
   findMembershipBySlug,
 } from '@/shared/tenancy/organization-membership.ts';
+import { switchToOrganization } from '@/shared/tenancy/switch.ts';
 
 /**
  * Organization-scoped route guards — composable `beforeLoad` functions
@@ -41,6 +44,14 @@ export async function requireOrganizationContext(
   if (!organization) throw notFound();
 
   syncOrganizationFromRoute(organization.id, organization.slug, organization.status);
+  // Switch-on-navigation: when the URL targets a different org than the cached
+  // active one, switch the active-org context (me/context cache + access token)
+  // so the switcher, dashboard, and RBAC all reflect the org in the URL.
+  const activeId =
+    queryClient.getQueryData<MeContext>(meContextQueryKey)?.activeOrganization?.id;
+  if (activeId !== organization.id) {
+    await switchToOrganization(organization.id);
+  }
   await ensurePermissionsFor(organization.id);
   return organization;
 }
