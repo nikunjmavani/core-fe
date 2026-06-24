@@ -1,4 +1,5 @@
 import { Link, Outlet, useNavigate, useParams } from '@tanstack/react-router';
+import type { ReactNode } from 'react';
 
 import { config } from '@/core/config/env.ts';
 import { PageTransition } from '@/lib/animations/PageTransition.tsx';
@@ -53,6 +54,46 @@ const NAV_ITEMS: ({
 } & AccessCheck)[] = [
   { id: 'dashboard', segment: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
 ];
+
+/**
+ * Dual-URL dashboard nav link: a team org (org id in the URL) links to its
+ * `/organization/$organizationId/dashboard`; a personal org (no org param)
+ * links to the root `/dashboard`. Styling is passed in so the sidebar + mobile
+ * bars stay visually distinct.
+ */
+function DashboardNavLink({
+  organizationId,
+  testId,
+  activeClassName,
+  inactiveClassName,
+  children,
+}: {
+  organizationId: string;
+  testId: string;
+  activeClassName: string;
+  inactiveClassName: string;
+  children: ReactNode;
+}) {
+  const shared = {
+    activeOptions: { exact: true } as const,
+    activeProps: { className: activeClassName },
+    inactiveProps: { className: inactiveClassName },
+    'data-testid': testId,
+  };
+  return organizationId ? (
+    <Link
+      to="/organization/$organizationId/dashboard"
+      params={{ organizationId }}
+      {...shared}
+    >
+      {children}
+    </Link>
+  ) : (
+    <Link to="/dashboard" {...shared}>
+      {children}
+    </Link>
+  );
+}
 
 /**
  * Main authenticated layout with collapsible sidebar + header.
@@ -115,26 +156,16 @@ export function Component() {
         data-testid="mobile-bottom-bar"
       >
         {navItems.map((item) => (
-          <Link
+          <DashboardNavLink
             key={item.id}
-            to="/organization/$organizationId/dashboard"
-            params={{ organizationId }}
-            activeOptions={{ exact: true }}
-            activeProps={{
-              className: cn(
-                'flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium text-foreground bg-muted/50',
-              ),
-            }}
-            inactiveProps={{
-              className: cn(
-                'flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground',
-              ),
-            }}
-            data-testid={`nav-${item.id}`}
+            organizationId={organizationId}
+            testId={`nav-${item.id}`}
+            activeClassName="flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium text-foreground bg-muted/50"
+            inactiveClassName="flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           >
             <item.icon className="h-5 w-5" aria-hidden />
             <span>{item.label}</span>
-          </Link>
+          </DashboardNavLink>
         ))}
       </nav>
 
@@ -175,28 +206,22 @@ function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 space-y-1 p-3" aria-label="Main navigation">
         {navItems.map((item) => (
-          <Link
+          <DashboardNavLink
             key={item.id}
-            to="/organization/$organizationId/dashboard"
-            params={{ organizationId }}
-            activeOptions={{ exact: true }}
-            activeProps={{
-              className: cn(
-                'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
-                'bg-sidebar-accent text-sidebar-accent-foreground',
-              ),
-            }}
-            inactiveProps={{
-              className: cn(
-                'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
-                'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
-              ),
-            }}
-            data-testid={`nav-${item.id}`}
+            organizationId={organizationId}
+            testId={`nav-${item.id}`}
+            activeClassName={cn(
+              'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+              'bg-sidebar-accent text-sidebar-accent-foreground',
+            )}
+            inactiveClassName={cn(
+              'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+              'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
+            )}
           >
             <item.icon className="h-4 w-4" />
             {item.label}
-          </Link>
+          </DashboardNavLink>
         ))}
       </nav>
 
