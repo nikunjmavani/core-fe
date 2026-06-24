@@ -84,9 +84,10 @@ describe('useThemeStore', () => {
     // icons ride along the shuffle — values stay valid
     expect(['thin', 'regular', 'bold']).toContain(state.iconWeight);
     expect(['lucide', 'tabler', 'phosphor']).toContain(state.iconLibrary);
-    // TEMP: shuffle cycles the auth + app layout preview designs (≠ previous)
-    expect(state.authVariant).not.toBe(0);
-    expect(state.appVariant).not.toBe(0);
+    // TEMP preview axes (layout/toast) are gated OFF by default, so a plain
+    // shuffle leaves them untouched.
+    expect(state.authVariant).toBe(0);
+    expect(state.appVariant).toBe(0);
   });
 
   it('updateLook sets one axis and switches to the custom look', () => {

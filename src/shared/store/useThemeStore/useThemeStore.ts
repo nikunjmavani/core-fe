@@ -23,6 +23,7 @@ import {
   nextToastPosition,
   nextToastVariant,
   normalizeLook,
+  SHUFFLE_TEMP,
   shuffleIcons,
 } from '@/shared/theme/index.ts';
 
@@ -142,11 +143,20 @@ export const useThemeStore = create<ThemeStore>()(
           customTheme: next,
           iconWeight: icons.weight,
           iconLibrary: icons.library,
-          // TEMP: cycle the Auth + App layout + toast preview designs on shuffle.
-          authVariant: nextAuthVariant(get().authVariant),
-          appVariant: nextAppVariant(get().appVariant),
-          toastVariant: nextToastVariant(get().toastVariant),
-          toastPosition: nextToastPosition(get().toastPosition),
+          // TEMP previews — each gated by a SHUFFLE_TEMP switch (flip on/off on
+          // request); when off, shuffle leaves that axis untouched.
+          authVariant: SHUFFLE_TEMP.authLayout
+            ? nextAuthVariant(get().authVariant)
+            : get().authVariant,
+          appVariant: SHUFFLE_TEMP.appLayout
+            ? nextAppVariant(get().appVariant)
+            : get().appVariant,
+          toastVariant: SHUFFLE_TEMP.toastVariant
+            ? nextToastVariant(get().toastVariant)
+            : get().toastVariant,
+          toastPosition: SHUFFLE_TEMP.toastPosition
+            ? nextToastPosition(get().toastPosition)
+            : get().toastPosition,
         });
       },
     }),

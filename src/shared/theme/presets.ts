@@ -320,12 +320,28 @@ export const DEFAULT_TOAST_POSITION: ToastPosition = 'top-right';
 
 /** TEMP (toast preview): a different toast position than the current one. */
 export function nextToastPosition(current: string): ToastPosition {
+  const others = TOAST_POSITIONS.filter((p) => p !== current);
   // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic toast preview, not security
-  const i = Math.floor(Math.random() * TOAST_POSITIONS.length);
-  const pick = TOAST_POSITIONS[i] ?? DEFAULT_TOAST_POSITION;
-  if (pick !== current) return pick;
-  return TOAST_POSITIONS[(i + 1) % TOAST_POSITIONS.length] ?? DEFAULT_TOAST_POSITION;
+  return others[Math.floor(Math.random() * others.length)] ?? DEFAULT_TOAST_POSITION;
 }
+
+/**
+ * TEMP shuffle switches — gate which PREVIEW axes `shuffleTheme()` rolls. The core
+ * look (accent / chart / fonts / radius / icons) ALWAYS shuffles; these only
+ * toggle the temporary previews, and are OFF by default so a normal shuffle stays
+ * calm. Flip on/off on request; delete the whole block (+ the gated axes) when the
+ * previews are retired.
+ */
+export const SHUFFLE_TEMP = {
+  /** Cycle the AuthLayout (login screen) preview design on shuffle. */
+  authLayout: false,
+  /** Cycle the AppLayout (app shell) preview design on shuffle. */
+  appLayout: false,
+  /** Roll the custom-toast design on shuffle. */
+  toastVariant: false,
+  /** Roll the toast position on shuffle. */
+  toastPosition: false,
+};
 
 /**
  * Apply a generated full look (shadcn-create-style): accent colour, chart

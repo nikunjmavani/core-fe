@@ -29,6 +29,7 @@ export {
   nextToastVariant,
   normalizeLook,
   randomThemeHue,
+  SHUFFLE_TEMP,
   shuffleIcons,
   THEME_PRESETS,
   type ThemePreset,
