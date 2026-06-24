@@ -498,14 +498,14 @@ build · ✅ shipped. **Counts:** P1 5 · P2 3 · P3 10 · P3A 6 · P4 5 · P5 1
 
 - ✅ **FE-09** Gateway composer + `gate.types` — `gateway(...gates)` runs gates sequentially, first throw short-circuits; `Gate`/`GateContext` types. _Files:_ core/security/gateway.ts, gate.types.ts, index.ts.
 - ✅ **FE-10** Gate **L1** `requireSession` — delegates to `requireAuth`, carries `returnTo`. _Files:_ core/security/gates/require-session.ts.
-- ⬜ **FE-11** Gate **L2** `hydrateContext` (load `me/context`) — wires with Phase 4 (layout `beforeLoad`).
-- ⬜ **FE-12** Gate **L3** `resolveActiveOrg` (personal/team slug→id, membership, switch-on-nav) — Phase 4 (routing-coupled).
-- ⬜ **FE-13** Gate **L4** `requireOrgStatus` (suspended/archived) — Phase 4 (wraps `requireActiveOrganization`).
+- 🔶 **FE-11** Gate **L2** `hydrateContext` — `me/context` is loaded by `establishSession` (FE-05) post-auth and by the `/` resolver; `resolveActiveOrg` consumes it. No separate gate needed (the context is hydrated before the org chain runs).
+- ✅ **FE-12** Gate `resolveActiveOrg` (validate `$organizationId`, membership, sync store + perms) — `app/guards/org-gates.ts`, composed into the org-shell route. _Files:_ org-gates, routeTree.
+- ✅ **FE-13** Gate `requireOrgStatus` (suspended/archived → `/suspended`) — `app/guards/org-gates.ts`, composed into the org dashboard route. _Files:_ org-gates, routeTree.
 - ✅ **FE-14** Gate **L5** `requirePermissionGate(permission)` — binds the manifest permission → `requirePermission`. _Files:_ require-permission.ts.
 - ✅ **FE-15** Gate **L6** `requireCapabilityGate(capability)` — exhaustive capability read (personal=all false → blocked). _Files:_ require-capability.ts.
-- ⬜ **FE-16** `ProtectedLayout` (from today's `AppShell`) wired to its gateway. _Files:_ shared/layouts/ProtectedLayout.
+- 🔶 **FE-16** Protected layout — the shared `AppShell` **is** the protected layout, mounted by both guarded shell routes (org-shell via OrganizationLayout, personal-shell directly), each with its `beforeLoad` gateway (requireSession [+resolveActiveOrg]). A separate `ProtectedLayout` component is unnecessary given the two distinct guard chains. _Files:_ AppShell, routeTree.
 - ✅ **FE-17** `PublicLayout` (new, minimal centered chrome — callback/unauthorized/onboarding/accept-invite/404). _Files:_ shared/layouts/PublicLayout. (Mounted as a route layout in Phase 4.)
-- ⬜ **FE-18** `AuthLayout` — wire the `redirectIfAuthenticated` gateway.
+- ✅ **FE-18** `AuthLayout` gateway — `redirectIfAuthenticated` consolidated onto the pathless `auth-shell` route (one guard for every auth page) instead of repeated on all 6 children. _Files:_ routeTree. Verified: auth + navigation e2e.
 
 ### Phase 3A — Route authorization, deny matrix & login redirect (6)
 

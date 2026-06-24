@@ -150,6 +150,9 @@ const rootRoute = createRootRoute({
 const authShellRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'auth-shell',
+  // Guest-only gateway (FE-18): a signed-in user never sees any auth page —
+  // one redirect here covers every child (login, register, reset, mfa, …).
+  beforeLoad: () => redirectIfAuthenticated(),
   component: () => (
     <Suspense fallback={<FullPageSpinner />}>
       <AuthLayout>
@@ -165,8 +168,6 @@ const loginRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/login',
   head: manifestHead(loginManifest),
-  // Guest-only (layer 0.5): a signed-in user never sees the login form.
-  beforeLoad: () => redirectIfAuthenticated(),
   // `redirect` = post-login return path, set by requireAuth (validated in
   // LoginForm). Optional return type keeps `search` optional for plain links.
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
@@ -180,7 +181,6 @@ const registerRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/register',
   head: manifestHead(registerManifest),
-  beforeLoad: () => redirectIfAuthenticated(),
   component: RegisterPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -189,7 +189,6 @@ const forgotPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/forgot-password',
   head: manifestHead(forgotPasswordManifest),
-  beforeLoad: () => redirectIfAuthenticated(),
   component: ForgotPasswordPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -198,7 +197,6 @@ const resetPasswordRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/reset-password',
   head: manifestHead(resetPasswordManifest),
-  beforeLoad: () => redirectIfAuthenticated(),
   component: ResetPasswordPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -207,7 +205,6 @@ const verifyEmailRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/verify-email',
   head: manifestHead(verifyEmailManifest),
-  beforeLoad: () => redirectIfAuthenticated(),
   component: VerifyEmailPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -216,7 +213,6 @@ const mfaRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/mfa',
   head: manifestHead(mfaManifest),
-  beforeLoad: () => redirectIfAuthenticated(),
   component: MfaPage,
   errorComponent: RouteErrorBoundary,
 });
