@@ -10,6 +10,8 @@ export const organizationSchema = z.object({
   name: z.string(),
   slug: z.string(),
   status: z.enum(['active', 'suspended']).optional().default('active'),
+  /** Organization logo (data URL in mock mode; a CDN URL once the API lands). */
+  logoUrl: z.string().nullable().optional().default(null),
 });
 
 export type Organization = z.infer<typeof organizationSchema>;
@@ -27,7 +29,9 @@ export const createOrganizationSchema = z.object({
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>;
 
 export const updateOrganizationSchema = z.object({
-  name: z.string().trim().min(1, 'Organization name is required').max(100),
+  name: z.string().trim().min(1, 'Organization name is required').max(100).optional(),
+  /** `null` clears the logo; a string sets it (data URL in mock, CDN URL live). */
+  logoUrl: z.string().nullable().optional(),
 });
 export type UpdateOrganizationInput = z.infer<typeof updateOrganizationSchema>;
 
@@ -35,8 +39,8 @@ const BASE = API_BASE_PATH;
 
 /** Organizations the signed-in user belongs to (mock fixture while unwired). */
 const MY_ORGANIZATIONS_FIXTURE: Organization[] = [
-  { id: 'org_acme', name: 'Acme Inc.', slug: 'acme', status: 'active' },
-  { id: 'org_globex', name: 'Globex', slug: 'globex', status: 'active' },
+  { id: 'org_acme', name: 'Acme Inc.', slug: 'acme', status: 'active', logoUrl: null },
+  { id: 'org_globex', name: 'Globex', slug: 'globex', status: 'active', logoUrl: null },
 ];
 
 export async function listMyOrganizations(): Promise<Organization[]> {
@@ -48,12 +52,19 @@ export async function listMyOrganizations(): Promise<Organization[]> {
   // core-be returns UPPERCASE status + a nullable slug (null for personal orgs)
   // + type/capabilities. Map to the FE Organization shape.
   return data.map((raw) => {
-    const o = raw as { id: string; name: string; slug: string | null; status?: string };
+    const o = raw as {
+      id: string;
+      name: string;
+      slug: string | null;
+      status?: string;
+      logo_url?: string | null;
+    };
     return organizationSchema.parse({
       id: o.id,
       name: o.name,
       slug: o.slug ?? '',
       status: (o.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'active' : 'suspended',
+      logoUrl: o.logo_url ?? null,
     });
   });
 }
@@ -84,6 +95,7 @@ export async function createOrganization(
       name: payload.name,
       slug,
       status: 'active',
+      logoUrl: null,
     };
     // Session-persistent like orgMockStore: the new org shows up in listMyOrganizations().
     MY_ORGANIZATIONS_FIXTURE.push(org);
@@ -111,22 +123,26 @@ export async function updateOrganization(
   if (config.useMockApi) {
     const org = MY_ORGANIZATIONS_FIXTURE.find((o) => o.id === id);
     if (!org) throw new Error('Organization not found');
-    org.name = payload.name;
+    if (payload.name !== undefined) org.name = payload.name;
+    if (payload.logoUrl !== undefined) org.logoUrl = payload.logoUrl;
     return mockResponse({ ...org });
   }
   const res = await apiClient.patch<unknown>(`${BASE}/tenancy/organization`, {
-    name: payload.name,
+    ...(payload.name !== undefined ? { name: payload.name } : {}),
+    ...(payload.logoUrl !== undefined ? { logo_url: payload.logoUrl } : {}),
   });
   const o = res.data as {
     id: string;
     name: string;
     slug: string | null;
     status?: string;
+    logo_url?: string | null;
   };
   return organizationSchema.parse({
     id: o.id,
     name: o.name,
     slug: o.slug ?? '',
     status: (o.status ?? 'ACTIVE').toUpperCase() === 'ACTIVE' ? 'active' : 'suspended',
+    logoUrl: o.logo_url ?? null,
   });
 }

@@ -18,19 +18,22 @@ import {
 describe('listMyOrganizations', () => {
   it('returns parsed organizations from API response', async () => {
     const mockData = [
-      { id: 'org-1', name: 'Acme', slug: 'acme' },
+      { id: 'org-1', name: 'Acme', slug: 'acme', logo_url: 'https://cdn.test/acme.png' },
       { id: 'org-2', name: 'Beta', slug: 'beta' },
     ];
     vi.mocked(apiClient.get).mockResolvedValue({ data: mockData });
 
     const result = await listMyOrganizations();
     expect(result).toHaveLength(2);
+    // snake_case logo_url maps to logoUrl; absent → null (FE-33).
     expect(result[0]).toEqual({
       id: 'org-1',
       name: 'Acme',
       slug: 'acme',
       status: 'active',
+      logoUrl: 'https://cdn.test/acme.png',
     });
+    expect(result[1]?.logoUrl).toBeNull();
   });
 
   it('returns empty array when API returns non-array', async () => {
@@ -63,7 +66,7 @@ describe('createOrganization', () => {
         slug: 'gamma',
       },
     );
-    expect(result).toEqual({ ...created, status: 'active' });
+    expect(result).toEqual({ ...created, status: 'active', logoUrl: null });
   });
 
   it('derives a slug from the name when none is provided', async () => {

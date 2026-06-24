@@ -73,5 +73,39 @@ describe('OrganizationGeneralPanel', () => {
     renderWithProviders(<OrganizationGeneralPanel />);
     await waitFor(() => expect(screen.getByTestId('org-name')).toBeDisabled());
     expect(screen.queryByTestId('org-general-save')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('org-logo-upload')).not.toBeInTheDocument();
+  });
+
+  it('uploads a logo as a data URL (FE-33)', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationGeneralPanel />);
+    await screen.findByTestId('org-logo-preview');
+    const file = new File(['logo-bytes'], 'logo.png', { type: 'image/png' });
+    await user.upload(screen.getByTestId('org-logo-input'), file);
+    await waitFor(() =>
+      expect(updateMock).toHaveBeenCalledWith(
+        'org_acme',
+        expect.objectContaining({ logoUrl: expect.stringContaining('data:image/png') }),
+      ),
+    );
+  });
+
+  it('removes an existing logo (FE-33)', async () => {
+    listMock.mockResolvedValue([
+      {
+        id: 'org_acme',
+        name: 'Acme Inc.',
+        slug: 'acme',
+        status: 'active',
+        logoUrl: 'data:image/png;base64,AAAA',
+      },
+    ]);
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationGeneralPanel />);
+    const remove = await screen.findByTestId('org-logo-remove');
+    await user.click(remove);
+    await waitFor(() =>
+      expect(updateMock).toHaveBeenCalledWith('org_acme', { logoUrl: null }),
+    );
   });
 });
