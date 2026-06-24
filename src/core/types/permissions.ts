@@ -30,6 +30,7 @@ export const organizationPermissionSchema = z.enum([
   'webhook:read',
   'webhook:manage',
   'audit-log:read',
+  'upload:manage',
 ]);
 
 export type OrganizationPermission = z.infer<typeof organizationPermissionSchema>;
