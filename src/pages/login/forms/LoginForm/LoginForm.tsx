@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 
 import { authApi, MfaRequiredError } from '@/shared/api/auth-api.ts';
 import { type LoginInput, loginSchema } from '@/shared/api/auth-contracts.ts';
+import { isSafeRedirectPath } from '@/shared/auth/redirect-safety.ts';
 import { establishSession } from '@/shared/auth/service.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
@@ -14,7 +15,6 @@ import { Eye, EyeOff } from '@/shared/icons/index.ts';
 
 import { useCooldownClock } from '../../hooks/useCooldownClock/index.ts';
 import { PasswordlessOptions } from '../PasswordlessOptions/index.ts';
-import { isSafeRedirectPath } from './redirect-safety.ts';
 
 /** Only allow internal relative paths to prevent open-redirect attacks. */
 /** Read redirect path from location (TanStack: search.redirect; React Router legacy: state.from.pathname). */
@@ -84,17 +84,21 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginInput) => {
     setApiError(null);
+    const from = getRedirectPath(location);
     try {
       const { accessToken } = await authApi.login(data);
       await establishSession(accessToken);
       setFailureCount(0);
       setCooldownUntil(null);
-      const from = getRedirectPath(location);
       void navigate({ to: from ?? '/', replace: true });
     } catch (err) {
       if (err instanceof MfaRequiredError) {
-        // Second factor required — hand the short-lived session token to /mfa.
-        void navigate({ to: '/mfa', state: { mfaToken: err.mfaSessionToken } as never });
+        // Second factor required — hand the short-lived session token to /mfa,
+        // carrying the returnTo so MFA can honor it post-verify (FE-59).
+        void navigate({
+          to: '/mfa',
+          state: { mfaToken: err.mfaSessionToken, redirect: from } as never,
+        });
         return;
       }
       onSubmitError();

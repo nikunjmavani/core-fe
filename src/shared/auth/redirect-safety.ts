@@ -1,13 +1,13 @@
 /**
- * Same-origin path guard for the post-login redirect target.
+ * Same-origin path guard for post-auth redirects (the `?redirect=` / `returnTo`
+ * target). Shared by every auth flow (login, MFA, …) — pages can't import from
+ * each other, so this lives in `shared/auth`. The security suite
+ * (tests/security/redirect-safety.security.test.ts) imports it directly.
  *
  * Rejects absolute URLs, protocol-relative paths (`//`), scheme smuggling
  * (`://`), backslashes (browsers normalize `/\` to `//`), and embedded control
  * characters / whitespace (browsers strip these, so `/<TAB>/evil.com` can
- * collapse into a protocol-relative open redirect). Lives outside LoginForm.tsx
- * so the component file only exports components (react-refresh) and the security
- * suite (tests/security/redirect-safety.security.test.ts) can import it without
- * pulling the form tree.
+ * collapse into a protocol-relative open redirect).
  */
 
 /** True if any char is a C0 control / space (≤ 0x20) or DEL (0x7F). */
@@ -27,4 +27,9 @@ export function isSafeRedirectPath(path: string): boolean {
     !path.includes('://') &&
     !path.includes('\\')
   );
+}
+
+/** Narrow an unknown value to a safe same-origin redirect path, else `undefined`. */
+export function safeRedirect(value: unknown): string | undefined {
+  return typeof value === 'string' && isSafeRedirectPath(value) ? value : undefined;
 }

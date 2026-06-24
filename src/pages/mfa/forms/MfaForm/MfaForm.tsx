@@ -5,13 +5,14 @@ import { useForm } from 'react-hook-form';
 
 import { authApi } from '@/shared/api/auth-api.ts';
 import { type MfaVerifyInput, mfaVerifySchema } from '@/shared/api/auth-contracts.ts';
+import { safeRedirect } from '@/shared/auth/redirect-safety.ts';
 import { establishSession } from '@/shared/auth/service.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { FormError } from '@/shared/forms/FormError/index.ts';
 
-type LocationState = { mfaToken?: string };
+type LocationState = { mfaToken?: string; redirect?: string };
 
 export function MfaForm() {
   const [apiError, setApiError] = useState<string | null>(null);
@@ -41,7 +42,8 @@ export function MfaForm() {
     try {
       const { accessToken } = await authApi.mfaVerify(data, mfaToken);
       await establishSession(accessToken);
-      void navigate({ to: '/', replace: true });
+      // Honor the returnTo carried from login (FE-59), else the `/` resolver.
+      void navigate({ to: safeRedirect(state?.redirect) ?? '/', replace: true });
     } catch (err) {
       setApiError(err instanceof Error ? err.message : 'Invalid code. Please try again.');
     }
