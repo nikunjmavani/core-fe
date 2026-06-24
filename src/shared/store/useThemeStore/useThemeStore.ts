@@ -12,12 +12,14 @@ import {
   DEFAULT_ICON_WEIGHT,
   DEFAULT_MENU,
   DEFAULT_PRESET,
+  DEFAULT_TOAST_VARIANT,
   GENERATED_PRESET,
   type GeneratedTheme,
   generateTheme,
   isThemePreset,
   nextAppVariant,
   nextAuthVariant,
+  nextToastVariant,
   normalizeLook,
   shuffleIcons,
 } from '@/shared/theme/index.ts';
@@ -43,6 +45,8 @@ interface ThemeStore {
   authVariant: number;
   /** TEMP: AppLayout preview shell index (0..2); rolled by shuffle. */
   appVariant: number;
+  /** TEMP: custom-toast design index (0..N-1); rolled by shuffle + the picker. */
+  toastVariant: number;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
   /** Set one axis of the custom look (accent/chart/font/radius); switches to custom. */
@@ -51,6 +55,8 @@ interface ThemeStore {
   setMenu: (id: string) => void;
   setIconWeight: (id: string) => void;
   setIconLibrary: (id: string) => void;
+  /** TEMP: set the custom-toast design index (Appearance preview). */
+  setToastVariant: (index: number) => void;
   /** Generate + apply a fresh full look (shadcn-create style). */
   shuffleTheme: () => void;
 }
@@ -78,6 +84,7 @@ export const useThemeStore = create<ThemeStore>()(
       iconLibrary: DEFAULT_ICON_LIBRARY,
       authVariant: 0,
       appVariant: 0,
+      toastVariant: DEFAULT_TOAST_VARIANT,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -110,6 +117,7 @@ export const useThemeStore = create<ThemeStore>()(
         // The @/shared/icons barrel subscribes to this and lazy-loads the set.
         set({ iconLibrary: id });
       },
+      setToastVariant: (index) => set({ toastVariant: index }),
       shuffleTheme: () => {
         // Generate a fresh full look each time (colour + chart + fonts + radius,
         // shadcn-create style) rather than cycling a fixed preset list. Icons
@@ -126,9 +134,10 @@ export const useThemeStore = create<ThemeStore>()(
           customTheme: next,
           iconWeight: icons.weight,
           iconLibrary: icons.library,
-          // TEMP: cycle the Auth + App layout preview designs on shuffle.
+          // TEMP: cycle the Auth + App layout + toast preview designs on shuffle.
           authVariant: nextAuthVariant(get().authVariant),
           appVariant: nextAppVariant(get().appVariant),
+          toastVariant: nextToastVariant(get().toastVariant),
         });
       },
     }),
@@ -144,6 +153,7 @@ export const useThemeStore = create<ThemeStore>()(
         iconLibrary: state.iconLibrary,
         authVariant: state.authVariant,
         appVariant: state.appVariant,
+        toastVariant: state.toastVariant,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

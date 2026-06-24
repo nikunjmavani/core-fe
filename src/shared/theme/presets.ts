@@ -290,6 +290,22 @@ export function nextAppVariant(current: number): number {
 }
 
 /**
+ * TEMP (toast design preview): the available custom-toast designs. The store
+ * holds the active index; `CustomToast` maps it to one of these. Remove together
+ * with the `toastVariant` store field + the CustomToast design map.
+ */
+export const TOAST_VARIANTS = ['soft', 'solid', 'outline', 'accent'] as const;
+export type ToastVariant = (typeof TOAST_VARIANTS)[number];
+export const DEFAULT_TOAST_VARIANT = 0;
+
+/** TEMP (toast preview): a different toast-design index than the current one. */
+export function nextToastVariant(current: number): number {
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic toast preview, not security
+  const v = Math.floor(Math.random() * TOAST_VARIANTS.length);
+  return v === current ? (v + 1) % TOAST_VARIANTS.length : v;
+}
+
+/**
  * Apply a generated full look (shadcn-create-style): accent colour, chart
  * palette, body + heading fonts, and corner radius — all inline on `<html>` so
  * it overrides the base `@theme` tokens in both light and dark (CSP-safe; no

@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/shared/components/ui/select.tsx';
 import { Check, Monitor, Moon, Sparkles, Sun } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import {
   ACCENT_COLORS,
@@ -28,6 +29,8 @@ import {
   ICON_LIBRARIES,
   ICON_WEIGHTS,
   MENU_STYLES,
+  TOAST_VARIANTS,
+  type ToastVariant,
 } from '@/shared/theme/index.ts';
 
 const THEMES = [
@@ -44,6 +47,12 @@ const THEMES = [
 const RADIUS_OPTIONS = Object.entries(GENERATED_RADII).map(([id, r]) => ({
   id,
   label: r.label,
+}));
+
+/** TEMP: toast-design choices for the preview picker. */
+const TOAST_VARIANT_OPTIONS = TOAST_VARIANTS.map((id) => ({
+  id,
+  label: id.charAt(0).toUpperCase() + id.slice(1),
 }));
 
 /** Accent / chart colour swatches (fixed catalog; colours come from .theme-dot-* CSS). */
@@ -219,6 +228,8 @@ export function AccountAppearancePanel() {
   const setIconWeight = useThemeStore((s) => s.setIconWeight);
   const setIconLibrary = useThemeStore((s) => s.setIconLibrary);
   const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
+  const toastVariant = useThemeStore((s) => s.toastVariant);
+  const setToastVariant = useThemeStore((s) => s.setToastVariant);
 
   if (config.themeLock) {
     return (
@@ -380,6 +391,77 @@ export function AccountAppearancePanel() {
               onPick={setIconLibrary}
               testPrefix="iconlib"
             />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card data-testid="toast-preview-card">
+        <CardHeader>
+          <CardTitle className="text-base">Notifications</CardTitle>
+          <CardDescription>
+            Temporary — pick a toast design, then fire a sample to preview it.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <FieldLabel>Toast design</FieldLabel>
+            <Choices
+              ariaLabel="Toast design"
+              value={TOAST_VARIANTS[toastVariant] ?? TOAST_VARIANTS[0]}
+              options={TOAST_VARIANT_OPTIONS}
+              onPick={(id) => setToastVariant(TOAST_VARIANTS.indexOf(id as ToastVariant))}
+              testPrefix="toast"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                notify.success('Changes saved', {
+                  description: 'Your settings are live.',
+                })
+              }
+              data-testid="toast-preview-success"
+            >
+              Success
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                notify.error('Something went wrong', { description: 'Please try again.' })
+              }
+              data-testid="toast-preview-error"
+            >
+              Error
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                notify.warning('Heads up', { description: 'This action needs a review.' })
+              }
+              data-testid="toast-preview-warning"
+            >
+              Warning
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                notify.info('Did you know?', {
+                  description: 'Shuffle also rolls this design.',
+                })
+              }
+              data-testid="toast-preview-info"
+            >
+              Info
+            </Button>
           </div>
         </CardContent>
       </Card>
