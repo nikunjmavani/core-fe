@@ -162,6 +162,18 @@ export const useThemeStore = create<ThemeStore>()(
     }),
     {
       name: 'theme-preference',
+      version: 1,
+      // v1: the TEMP auth/app layout previews no longer persist — drop any stored
+      // values so everyone returns to the default (variant 0) layouts.
+      migrate: (persisted) => {
+        if (persisted && typeof persisted === 'object') {
+          const next: Record<string, unknown> = { ...persisted };
+          delete next.authVariant;
+          delete next.appVariant;
+          return next as unknown as ThemeStore;
+        }
+        return persisted as ThemeStore;
+      },
       partialize: (state) => ({
         theme: state.theme,
         preset: state.preset,
@@ -170,8 +182,6 @@ export const useThemeStore = create<ThemeStore>()(
         menu: state.menu,
         iconWeight: state.iconWeight,
         iconLibrary: state.iconLibrary,
-        authVariant: state.authVariant,
-        appVariant: state.appVariant,
         toastVariant: state.toastVariant,
         toastPosition: state.toastPosition,
       }),
