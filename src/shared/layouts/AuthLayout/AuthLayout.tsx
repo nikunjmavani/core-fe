@@ -1,6 +1,7 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
+import { ThemeModeToggle } from '@/shared/components/ThemeModeToggle/index.ts';
 import { Boxes, ShieldCheck, Sparkles, Users, Zap } from '@/shared/icons/index.ts';
 
 interface AuthLayoutProps {
@@ -144,13 +145,16 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <span className="text-sm font-semibold">Core</span>
           </Link>
 
-          <Link
-            to={isLogin ? '/register' : '/login'}
-            className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-            data-testid="auth-switch-link"
-          >
-            {isLogin ? 'Create an account' : 'Sign in'}
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeModeToggle />
+            <Link
+              to={isLogin ? '/register' : '/login'}
+              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+              data-testid="auth-switch-link"
+            >
+              {isLogin ? 'Create an account' : 'Sign in'}
+            </Link>
+          </div>
         </div>
 
         <main

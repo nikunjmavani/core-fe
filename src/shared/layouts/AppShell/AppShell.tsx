@@ -14,6 +14,7 @@ import { NotificationCenter } from '@/shared/components/NotificationCenter/index
 import { OrganizationSwitcher } from '@/shared/components/OrganizationSwitcher/index.ts';
 import { SessionTimeoutDialog } from '@/shared/components/SessionTimeoutDialog/index.ts';
 import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
+import { ThemeModeToggle } from '@/shared/components/ThemeModeToggle/index.ts';
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -32,14 +33,10 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  Monitor,
-  Moon,
   Search,
   Settings,
-  Sun,
 } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
 /**
@@ -244,7 +241,6 @@ function Sidebar({
 function Header() {
   const user = useAuthStore((s) => s.user);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
-  const { theme, setTheme } = useThemeStore();
   const navigate = useNavigate();
 
   const initials = user?.name
@@ -268,10 +264,6 @@ function Header() {
       // forceLogout handles the redirect
     }
   };
-
-  let ThemeIcon = Monitor;
-  if (theme === 'dark') ThemeIcon = Moon;
-  else if (theme === 'light') ThemeIcon = Sun;
 
   return (
     <header
@@ -312,24 +304,7 @@ function Header() {
       <NotificationCenter />
 
       {/* Theme toggle */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label="Toggle theme">
-            <ThemeIcon className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setTheme('light')}>
-            <Sun className="mr-2 h-4 w-4" /> Light
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme('dark')}>
-            <Moon className="mr-2 h-4 w-4" /> Dark
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme('system')}>
-            <Monitor className="mr-2 h-4 w-4" /> System
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ThemeModeToggle />
 
       {/* User menu */}
       <DropdownMenu>
