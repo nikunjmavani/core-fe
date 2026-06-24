@@ -2,13 +2,18 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import {
+  applyBaseColor,
   applyGeneratedTheme,
+  applyMenuStyle,
   applyThemePreset,
+  DEFAULT_BASE,
+  DEFAULT_MENU,
   DEFAULT_PRESET,
   GENERATED_PRESET,
   type GeneratedTheme,
   generateTheme,
   isThemePreset,
+  normalizeLook,
 } from '@/shared/theme/index.ts';
 
 type Mode = 'light' | 'dark' | 'system';
@@ -18,11 +23,19 @@ interface ThemeStore {
   theme: Mode;
   /** Active named accent preset (see `shared/theme`); `custom` when generated. */
   preset: string;
-  /** The last generated look (accent + font + radius), when `preset` is `custom`. */
+  /** The active generated look (accent + chart + fonts + radius) when custom. */
   customTheme: GeneratedTheme | null;
+  /** Neutral base colour (orthogonal — applies under any preset). */
+  baseId: string;
+  /** Menu surface style (orthogonal). */
+  menu: string;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
-  /** Generate + apply a fresh full look — colour, font, radius (shadcn-create style). */
+  /** Set one axis of the custom look (accent/chart/font/radius); switches to custom. */
+  updateLook: (partial: Partial<GeneratedTheme>) => void;
+  setBaseColor: (id: string) => void;
+  setMenu: (id: string) => void;
+  /** Generate + apply a fresh full look (shadcn-create style). */
   shuffleTheme: () => void;
 }
 
@@ -43,6 +56,8 @@ export const useThemeStore = create<ThemeStore>()(
       theme: 'system',
       preset: DEFAULT_PRESET,
       customTheme: null,
+      baseId: DEFAULT_BASE,
+      menu: DEFAULT_MENU,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -52,8 +67,23 @@ export const useThemeStore = create<ThemeStore>()(
         applyThemePreset(next);
         set({ preset: next, customTheme: null });
       },
+      updateLook: (partial) => {
+        // Seed from the current custom look (or defaults when on a named preset),
+        // change one axis, and switch to the custom look.
+        const next = { ...normalizeLook(get().customTheme), ...partial };
+        applyGeneratedTheme(next);
+        set({ preset: GENERATED_PRESET, customTheme: next });
+      },
+      setBaseColor: (id) => {
+        applyBaseColor(id);
+        set({ baseId: id });
+      },
+      setMenu: (id) => {
+        applyMenuStyle(id);
+        set({ menu: id });
+      },
       shuffleTheme: () => {
-        // Generate a fresh full look each time (colour + font + radius,
+        // Generate a fresh full look each time (colour + chart + fonts + radius,
         // shadcn-create style) rather than cycling a fixed preset list.
         const next = generateTheme(get().customTheme);
         applyGeneratedTheme(next);
@@ -66,10 +96,14 @@ export const useThemeStore = create<ThemeStore>()(
         theme: state.theme,
         preset: state.preset,
         customTheme: state.customTheme,
+        baseId: state.baseId,
+        menu: state.menu,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           applyMode(state.theme);
+          applyBaseColor(state.baseId ?? DEFAULT_BASE);
+          applyMenuStyle(state.menu ?? DEFAULT_MENU);
           if (state.preset === GENERATED_PRESET && state.customTheme != null) {
             applyGeneratedTheme(state.customTheme);
           } else {

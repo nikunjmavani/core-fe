@@ -4,10 +4,9 @@ export interface ThemePreset {
 }
 
 /**
- * Built-in theme presets. `default` uses the base `@theme` palette (no
- * `data-theme` attribute); the others apply accent overrides via the
- * `[data-theme='<id>']` blocks in `src/index.css`, composed with the `.dark`
- * class so light/dark mode and the preset are independent axes.
+ * Built-in accent presets. `default` uses the base `@theme` palette (no
+ * `data-theme`); the others apply accent overrides via the `[data-theme='<id>']`
+ * blocks in `src/index.css`, composed with `.dark`.
  */
 export const THEME_PRESETS: readonly ThemePreset[] = [
   { id: 'default', label: 'Default' },
@@ -17,32 +16,33 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
 
 export const DEFAULT_PRESET = 'default';
 
-/** Synthetic preset id for a shuffled/generated theme (not in THEME_PRESETS). */
+/** Synthetic preset id for a shuffled/generated look (not in THEME_PRESETS). */
 export const GENERATED_PRESET = 'custom';
 
 export function isThemePreset(id: string): boolean {
   return THEME_PRESETS.some((preset) => preset.id === id);
 }
 
-// ── Generated ("shuffle") theme ──────────────────────────────────────────────
+// ── Catalogs (Appearance pickers) ────────────────────────────────────────────
 
-/** A full generated look: accent hue + font + corner radius (shadcn-create style). */
-export interface GeneratedTheme {
-  /** Accent hue, 0–359. */
-  hue: number;
-  /** Key into {@link GENERATED_FONTS}. */
-  fontId: string;
-  /** Key into {@link GENERATED_RADII}. */
-  radiusId: string;
-}
+/** Named accent colours → hue, for the Theme-colour and Chart-colour pickers. */
+export const ACCENT_COLORS = [
+  { id: 'rose', label: 'Rose', hue: 12 },
+  { id: 'orange', label: 'Orange', hue: 50 },
+  { id: 'amber', label: 'Amber', hue: 75 },
+  { id: 'lime', label: 'Lime', hue: 130 },
+  { id: 'emerald', label: 'Emerald', hue: 160 },
+  { id: 'teal', label: 'Teal', hue: 190 },
+  { id: 'blue', label: 'Blue', hue: 255 },
+  { id: 'violet', label: 'Violet', hue: 290 },
+  { id: 'pink', label: 'Pink', hue: 350 },
+] as const;
 
 const DEFAULT_FONT_STACK = "'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif";
 
 /**
- * Web-safe `--font-sans` stacks for the generator. The CSP is `font-src 'self'`,
- * so remote fonts (e.g. Google Fonts) can't load — these are families already
- * present on common OSes, giving a visibly different feel without a network
- * fetch.
+ * Web-safe `--font-sans` / `--font-heading` stacks. The CSP is `font-src 'self'`,
+ * so remote fonts can't load — these are families already on common OSes.
  */
 export const GENERATED_FONTS: Record<string, { label: string; stack: string }> = {
   inter: { label: 'Inter / system', stack: DEFAULT_FONT_STACK },
@@ -68,16 +68,65 @@ export const GENERATED_FONTS: Record<string, { label: string; stack: string }> =
 
 /** Base (lg) corner radius in rem; sm/md/xl derive from it. */
 export const GENERATED_RADII: Record<string, { label: string; base: number }> = {
-  sharp: { label: 'Sharp', base: 0 },
+  sharp: { label: 'None', base: 0 },
   default: { label: 'Default', base: 0.5 },
   rounded: { label: 'Rounded', base: 0.75 },
   round: { label: 'Round', base: 1 },
 };
 
+/** Neutral tints — applied via `data-base` CSS blocks (mode-correct). */
+export const BASE_COLORS = [
+  { id: 'neutral', label: 'Neutral' },
+  { id: 'stone', label: 'Stone' },
+  { id: 'slate', label: 'Slate' },
+  { id: 'olive', label: 'Olive' },
+] as const;
+export const DEFAULT_BASE = 'neutral';
+
+/** Menu surface styles — applied via `data-menu`. */
+export const MENU_STYLES = [
+  { id: 'default', label: 'Default' },
+  { id: 'translucent', label: 'Translucent' },
+] as const;
+export const DEFAULT_MENU = 'default';
+
 const FONT_IDS = Object.keys(GENERATED_FONTS);
 const RADIUS_IDS = Object.keys(GENERATED_RADII);
 
-/** Accent tokens the presets + the generator drive (mirrors the index.css blocks). */
+// ── Generated look ───────────────────────────────────────────────────────────
+
+/** A full generated look — accent + chart anchor + body/heading font + radius. */
+export interface GeneratedTheme {
+  hue: number;
+  chartHue: number;
+  bodyFontId: string;
+  headingFontId: string;
+  radiusId: string;
+}
+
+const DEFAULT_LOOK: GeneratedTheme = {
+  hue: 290,
+  chartHue: 290,
+  bodyFontId: 'inter',
+  headingFontId: 'inter',
+  radiusId: 'default',
+};
+
+/** Fill a partial/legacy look with defaults (older state stored only fontId). */
+export function normalizeLook(
+  look: (Partial<GeneratedTheme> & { fontId?: string }) | null,
+): GeneratedTheme {
+  const l = look ?? {};
+  const legacyFont = l.fontId;
+  return {
+    hue: l.hue ?? DEFAULT_LOOK.hue,
+    chartHue: l.chartHue ?? DEFAULT_LOOK.chartHue,
+    bodyFontId: l.bodyFontId ?? legacyFont ?? DEFAULT_LOOK.bodyFontId,
+    headingFontId: l.headingFontId ?? legacyFont ?? DEFAULT_LOOK.headingFontId,
+    radiusId: l.radiusId ?? DEFAULT_LOOK.radiusId,
+  };
+}
+
 const ACCENT_VARS = [
   '--color-primary',
   '--color-ring',
@@ -88,15 +137,14 @@ const ACCENT_FG_VARS = [
   '--color-primary-foreground',
   '--color-sidebar-primary-foreground',
 ] as const;
-/** Shape tokens (font + radius scale) the generator drives. */
 const SHAPE_VARS = [
   '--font-sans',
+  '--font-heading',
   '--radius-sm',
   '--radius-md',
   '--radius-lg',
   '--radius-xl',
 ] as const;
-/** Chart series tokens — a cohesive palette spread around the accent hue. */
 const CHART_VARS = [
   '--color-chart-1',
   '--color-chart-2',
@@ -104,10 +152,10 @@ const CHART_VARS = [
   '--color-chart-4',
   '--color-chart-5',
 ] as const;
-/** Hue offsets (deg) from the accent for chart-1..5 (mode-shared tokens). */
 const CHART_HUE_OFFSETS = [0, 50, 120, 200, 280] as const;
 
-/** Remove any inline generated vars so a named preset (CSS) takes over. */
+/** Remove any inline generated vars (accent/font/radius/chart). Leaves the
+ *  orthogonal `data-base` / `data-menu` axes untouched. */
 function clearGeneratedTheme(): void {
   const root = document.documentElement;
   for (const v of [...ACCENT_VARS, ...ACCENT_FG_VARS, ...SHAPE_VARS, ...CHART_VARS]) {
@@ -116,9 +164,9 @@ function clearGeneratedTheme(): void {
 }
 
 /**
- * Apply a named preset by setting `data-theme` on `<html>` (cleared for the
- * default). Also clears any generated inline vars (accent + font + radius) so
- * the preset's CSS wins. Unknown ids fall back to the default.
+ * Apply a named preset via `data-theme` (cleared for the default), clearing any
+ * generated accent/font/radius/chart vars first. Unknown ids fall back to the
+ * default. Pairs with the `.dark` class; orthogonal to base colour + menu.
  */
 export function applyThemePreset(id: string): void {
   clearGeneratedTheme();
@@ -131,13 +179,16 @@ export function applyThemePreset(id: string): void {
   }
 }
 
-/** A random accent hue (0–359) for the theme generator. */
+function norm(hue: number): number {
+  return ((Math.round(hue) % 360) + 360) % 360;
+}
+
+/** A random accent hue (0–359). */
 export function randomThemeHue(): number {
   // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme generation, not security
   return Math.floor(Math.random() * 360);
 }
 
-/** Shortest distance between two hues on the 0–360 colour wheel. */
 function hueDistance(a: number, b: number): number {
   const d = Math.abs(a - b) % 360;
   return Math.min(d, 360 - d);
@@ -162,51 +213,76 @@ function pickId(ids: readonly string[], exclude: string | null): string {
   return pool[idx] ?? ids[0] ?? DEFAULT_PRESET;
 }
 
-/** Generate a fresh full look (accent + font + radius); each axis differs from `current`. */
+/** Generate a fresh full look; each axis differs from `current`. */
 export function generateTheme(current: GeneratedTheme | null): GeneratedTheme {
+  const hue = nextRandomHue(current?.hue ?? null);
   return {
-    hue: nextRandomHue(current?.hue ?? null),
-    fontId: pickId(FONT_IDS, current?.fontId ?? null),
+    hue,
+    chartHue: nextRandomHue(hue),
+    bodyFontId: pickId(FONT_IDS, current?.bodyFontId ?? null),
+    headingFontId: pickId(FONT_IDS, current?.headingFontId ?? null),
     radiusId: pickId(RADIUS_IDS, current?.radiusId ?? null),
   };
 }
 
 /**
- * Apply a generated full-look theme (shadcn-create-style "shuffle"): accent
- * colour + typography + corner radius. Everything is set inline on `<html>` so
- * it overrides the base `@theme` tokens in both light and dark (CSP-safe;
- * mirrors the org-brand engine — no injected `<style>`, no remote fonts). Unlike
- * the fixed presets, every call is a fresh look.
+ * Apply a generated full look (shadcn-create-style): accent colour, chart
+ * palette, body + heading fonts, and corner radius — all inline on `<html>` so
+ * it overrides the base `@theme` tokens in both light and dark (CSP-safe; no
+ * injected `<style>`, no remote fonts). Orthogonal to base colour + menu.
  */
-export function applyGeneratedTheme(theme: GeneratedTheme): void {
+export function applyGeneratedTheme(input: GeneratedTheme): void {
+  const theme = normalizeLook(input);
   const root = document.documentElement;
 
-  // Accent — a mid-lightness, saturated hue reads on light and dark.
-  const h = ((Math.round(theme.hue) % 360) + 360) % 360;
-  const accent = `oklch(0.58 0.21 ${h})`;
+  const accent = `oklch(0.58 0.21 ${norm(theme.hue)})`;
   const onAccent = 'oklch(0.985 0 0)';
-  // A named preset block must not also apply on top of the generated vars.
   delete root.dataset.theme;
   for (const v of ACCENT_VARS) root.style.setProperty(v, accent);
   for (const v of ACCENT_FG_VARS) root.style.setProperty(v, onAccent);
 
-  // Typography — whole-app font via --font-sans.
-  const font = GENERATED_FONTS[theme.fontId];
-  root.style.setProperty('--font-sans', font?.stack ?? DEFAULT_FONT_STACK);
+  root.style.setProperty(
+    '--font-sans',
+    GENERATED_FONTS[theme.bodyFontId]?.stack ?? DEFAULT_FONT_STACK,
+  );
+  root.style.setProperty(
+    '--font-heading',
+    GENERATED_FONTS[theme.headingFontId]?.stack ?? DEFAULT_FONT_STACK,
+  );
 
-  // Corner radius — derive the sm/md/lg/xl scale from a base (lg) value.
   const base = GENERATED_RADII[theme.radiusId]?.base ?? 0.5;
   root.style.setProperty('--radius-sm', `${base * 0.5}rem`);
   root.style.setProperty('--radius-md', `${base * 0.75}rem`);
   root.style.setProperty('--radius-lg', `${base}rem`);
   root.style.setProperty('--radius-xl', `${base * 1.5}rem`);
 
-  // Chart palette — 5 cohesive series hues spread around the accent. These are
-  // mode-shared tokens, so a single saturated value reads in light and dark.
+  const chart = norm(theme.chartHue);
   let series = 0;
   for (const offset of CHART_HUE_OFFSETS) {
     series += 1;
-    const ch = (h + offset) % 360;
-    root.style.setProperty(`--color-chart-${series}`, `oklch(0.64 0.17 ${ch})`);
+    root.style.setProperty(
+      `--color-chart-${series}`,
+      `oklch(0.64 0.17 ${(chart + offset) % 360})`,
+    );
+  }
+}
+
+/** Apply a neutral base colour via `data-base` (cleared for `neutral`/unknown). */
+export function applyBaseColor(id: string): void {
+  const root = document.documentElement;
+  if (id === DEFAULT_BASE || !BASE_COLORS.some((b) => b.id === id)) {
+    delete root.dataset.base;
+  } else {
+    root.dataset.base = id;
+  }
+}
+
+/** Apply a menu surface style via `data-menu` (cleared for `default`/unknown). */
+export function applyMenuStyle(id: string): void {
+  const root = document.documentElement;
+  if (id === 'translucent') {
+    root.dataset.menu = 'translucent';
+  } else {
+    delete root.dataset.menu;
   }
 }

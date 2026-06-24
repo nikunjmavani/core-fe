@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  applyBaseColor,
   applyGeneratedTheme,
+  applyMenuStyle,
   applyThemePreset,
   GENERATED_FONTS,
   GENERATED_PRESET,
@@ -21,6 +23,7 @@ const GENERATED_VARS = [
   '--color-primary-foreground',
   '--color-sidebar-primary-foreground',
   '--font-sans',
+  '--font-heading',
   '--radius-sm',
   '--radius-md',
   '--radius-lg',
@@ -33,8 +36,11 @@ const GENERATED_VARS = [
 ];
 
 afterEach(() => {
-  delete document.documentElement.dataset.theme;
-  for (const v of GENERATED_VARS) document.documentElement.style.removeProperty(v);
+  const root = document.documentElement;
+  delete root.dataset.theme;
+  delete root.dataset.base;
+  delete root.dataset.menu;
+  for (const v of GENERATED_VARS) root.style.removeProperty(v);
 });
 
 describe('theme presets', () => {
@@ -66,7 +72,13 @@ describe('theme presets', () => {
 });
 
 describe('generated themes (shuffle)', () => {
-  const sample = { hue: 200, fontId: 'serif', radiusId: 'round' };
+  const sample = {
+    hue: 200,
+    chartHue: 320,
+    bodyFontId: 'serif',
+    headingFontId: 'mono',
+    radiusId: 'round',
+  };
 
   it('GENERATED_PRESET is not a named preset', () => {
     expect(isThemePreset(GENERATED_PRESET)).toBe(false);
@@ -86,26 +98,26 @@ describe('generated themes (shuffle)', () => {
     expect(nextRandomHue(null)).toBeLessThan(360);
   });
 
-  it('generateTheme yields a valid full look (hue + known font + known radius)', () => {
+  it('generateTheme yields a valid full look (hue + chart + known fonts + radius)', () => {
     const t = generateTheme(null);
     expect(t.hue).toBeGreaterThanOrEqual(0);
     expect(t.hue).toBeLessThan(360);
-    expect(GENERATED_FONTS[t.fontId]).toBeDefined();
+    expect(t.chartHue).toBeLessThan(360);
+    expect(GENERATED_FONTS[t.bodyFontId]).toBeDefined();
+    expect(GENERATED_FONTS[t.headingFontId]).toBeDefined();
     expect(GENERATED_RADII[t.radiusId]).toBeDefined();
   });
 
-  it('applyGeneratedTheme sets accent + font + radius and clears data-theme', () => {
+  it('applyGeneratedTheme sets accent + fonts + radius + chart, clears data-theme', () => {
     applyThemePreset('violet'); // start from a named preset
     applyGeneratedTheme(sample);
     const style = document.documentElement.style;
     expect(document.documentElement.dataset.theme).toBeUndefined();
-    expect(style.getPropertyValue('--color-primary')).toContain('oklch');
     expect(style.getPropertyValue('--color-primary')).toContain('200');
-    // font + radius + chart palette are part of the generated "full look"
-    expect(style.getPropertyValue('--font-sans')).toContain('Georgia');
+    expect(style.getPropertyValue('--font-sans')).toContain('Georgia'); // serif
+    expect(style.getPropertyValue('--font-heading')).toContain('Courier'); // mono
     expect(style.getPropertyValue('--radius-lg')).toBe('1rem');
     expect(style.getPropertyValue('--color-chart-1')).toContain('oklch');
-    expect(style.getPropertyValue('--color-chart-5')).toContain('oklch');
     expect(style.getPropertyValue('--color-sidebar-ring')).toContain('oklch');
   });
 
@@ -115,8 +127,27 @@ describe('generated themes (shuffle)', () => {
     const style = document.documentElement.style;
     expect(style.getPropertyValue('--color-primary')).toBe('');
     expect(style.getPropertyValue('--font-sans')).toBe('');
+    expect(style.getPropertyValue('--font-heading')).toBe('');
     expect(style.getPropertyValue('--radius-lg')).toBe('');
     expect(style.getPropertyValue('--color-chart-1')).toBe('');
     expect(document.documentElement.dataset.theme).toBe('violet');
+  });
+});
+
+describe('orthogonal base colour + menu', () => {
+  it('applyBaseColor sets/clears data-base', () => {
+    applyBaseColor('stone');
+    expect(document.documentElement.dataset.base).toBe('stone');
+    applyBaseColor('neutral');
+    expect(document.documentElement.dataset.base).toBeUndefined();
+    applyBaseColor('bogus');
+    expect(document.documentElement.dataset.base).toBeUndefined();
+  });
+
+  it('applyMenuStyle sets/clears data-menu', () => {
+    applyMenuStyle('translucent');
+    expect(document.documentElement.dataset.menu).toBe('translucent');
+    applyMenuStyle('default');
+    expect(document.documentElement.dataset.menu).toBeUndefined();
   });
 });

@@ -8,32 +8,53 @@ import { AccountAppearancePanel } from './AccountAppearancePanel.tsx';
 
 describe('AccountAppearancePanel', () => {
   beforeEach(() => {
-    useThemeStore.setState({ theme: 'system', preset: 'default', customTheme: null });
-    delete document.documentElement.dataset.theme;
+    useThemeStore.setState({
+      theme: 'system',
+      preset: 'default',
+      customTheme: null,
+      baseId: 'neutral',
+      menu: 'default',
+    });
+    const root = document.documentElement;
+    delete root.dataset.theme;
+    delete root.dataset.base;
+    delete root.dataset.menu;
   });
 
-  it('renders the panel with theme + accent pickers', () => {
+  it('renders the mode + colour + type pickers', () => {
     render(<AccountAppearancePanel />);
     expect(screen.getByTestId('settings-section-appearance')).toBeInTheDocument();
     expect(screen.getByTestId('theme-dark')).toBeInTheDocument();
-    expect(screen.getByTestId('preset-violet')).toBeInTheDocument();
+    expect(screen.getByTestId('accent-violet')).toBeInTheDocument();
+    expect(screen.getByTestId('chart-blue')).toBeInTheDocument();
+    expect(screen.getByTestId('base-stone')).toBeInTheDocument();
+    expect(screen.getByTestId('font-body')).toBeInTheDocument();
+    expect(screen.getByTestId('radius-round')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-translucent')).toBeInTheDocument();
     expect(screen.getByTestId('theme-shuffle')).toBeInTheDocument();
   });
 
-  it('selecting an accent preset applies it via the store', async () => {
+  it('picking an accent colour switches to the custom look', async () => {
     const user = userEvent.setup();
     render(<AccountAppearancePanel />);
-    await user.click(screen.getByTestId('preset-violet'));
-    expect(useThemeStore.getState().preset).toBe('violet');
-    expect(document.documentElement.dataset.theme).toBe('violet');
+    await user.click(screen.getByTestId('accent-violet'));
+    expect(useThemeStore.getState().preset).toBe('custom');
+    expect(useThemeStore.getState().customTheme?.hue).toBe(290);
+    expect(await screen.findByTestId('preset-custom')).toBeInTheDocument();
   });
 
-  it('shuffle generates a custom theme and shows the custom indicator', async () => {
+  it('picking a base colour applies it via data-base (orthogonal)', async () => {
     const user = userEvent.setup();
-    useThemeStore.setState({ theme: 'system', preset: 'violet' });
+    render(<AccountAppearancePanel />);
+    await user.click(screen.getByTestId('base-stone'));
+    expect(useThemeStore.getState().baseId).toBe('stone');
+    expect(document.documentElement.dataset.base).toBe('stone');
+  });
+
+  it('shuffle generates a custom look', async () => {
+    const user = userEvent.setup();
     render(<AccountAppearancePanel />);
     await user.click(screen.getByTestId('theme-shuffle'));
     expect(useThemeStore.getState().preset).toBe('custom');
-    expect(await screen.findByTestId('preset-custom')).toBeInTheDocument();
   });
 });

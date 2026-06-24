@@ -35,7 +35,7 @@ export function ThemeShowcase() {
     preset === GENERATED_PRESET
       ? [
           'Custom',
-          customTheme && GENERATED_FONTS[customTheme.fontId]?.label,
+          customTheme && GENERATED_FONTS[customTheme.bodyFontId]?.label,
           customTheme && GENERATED_RADII[customTheme.radiusId]?.label,
         ]
           .filter(Boolean)

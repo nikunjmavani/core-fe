@@ -63,6 +63,7 @@
 
   /* Font families */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* Animations */
@@ -151,6 +152,125 @@
   --color-sidebar-primary-foreground: oklch(0.205 0 0);
 }
 
+/* ── Base colour (data-base) — tint the neutral surfaces/borders, keeping each
+   token's per-mode lightness so light/dark stay correct. `neutral` = no block. */
+[data-base='stone'] {
+  --color-background: oklch(1 0.004 60);
+  --color-card: oklch(1 0.004 60);
+  --color-popover: oklch(1 0.004 60);
+  --color-muted: oklch(0.97 0.005 60);
+  --color-secondary: oklch(0.97 0.005 60);
+  --color-accent: oklch(0.97 0.005 60);
+  --color-border: oklch(0.922 0.006 60);
+  --color-input: oklch(0.922 0.006 60);
+  --color-sidebar: oklch(0.985 0.004 60);
+  --color-sidebar-accent: oklch(0.97 0.005 60);
+  --color-sidebar-border: oklch(0.922 0.006 60);
+}
+.dark[data-base='stone'] {
+  --color-background: oklch(0.145 0.004 60);
+  --color-card: oklch(0.205 0.005 60);
+  --color-popover: oklch(0.205 0.005 60);
+  --color-muted: oklch(0.269 0.006 60);
+  --color-secondary: oklch(0.269 0.006 60);
+  --color-accent: oklch(0.269 0.006 60);
+  --color-border: oklch(0.269 0.006 60);
+  --color-input: oklch(0.269 0.006 60);
+  --color-sidebar: oklch(0.205 0.005 60);
+  --color-sidebar-accent: oklch(0.269 0.006 60);
+  --color-sidebar-border: oklch(0.269 0.006 60);
+}
+[data-base='slate'] {
+  --color-background: oklch(1 0.005 255);
+  --color-card: oklch(1 0.005 255);
+  --color-popover: oklch(1 0.005 255);
+  --color-muted: oklch(0.97 0.007 255);
+  --color-secondary: oklch(0.97 0.007 255);
+  --color-accent: oklch(0.97 0.007 255);
+  --color-border: oklch(0.922 0.009 255);
+  --color-input: oklch(0.922 0.009 255);
+  --color-sidebar: oklch(0.985 0.005 255);
+  --color-sidebar-accent: oklch(0.97 0.007 255);
+  --color-sidebar-border: oklch(0.922 0.009 255);
+}
+.dark[data-base='slate'] {
+  --color-background: oklch(0.145 0.006 255);
+  --color-card: oklch(0.205 0.008 255);
+  --color-popover: oklch(0.205 0.008 255);
+  --color-muted: oklch(0.269 0.009 255);
+  --color-secondary: oklch(0.269 0.009 255);
+  --color-accent: oklch(0.269 0.009 255);
+  --color-border: oklch(0.269 0.009 255);
+  --color-input: oklch(0.269 0.009 255);
+  --color-sidebar: oklch(0.205 0.008 255);
+  --color-sidebar-accent: oklch(0.269 0.009 255);
+  --color-sidebar-border: oklch(0.269 0.009 255);
+}
+[data-base='olive'] {
+  --color-background: oklch(1 0.008 110);
+  --color-card: oklch(1 0.008 110);
+  --color-popover: oklch(1 0.008 110);
+  --color-muted: oklch(0.97 0.011 110);
+  --color-secondary: oklch(0.97 0.011 110);
+  --color-accent: oklch(0.97 0.011 110);
+  --color-border: oklch(0.922 0.014 110);
+  --color-input: oklch(0.922 0.014 110);
+  --color-sidebar: oklch(0.985 0.008 110);
+  --color-sidebar-accent: oklch(0.97 0.011 110);
+  --color-sidebar-border: oklch(0.922 0.014 110);
+}
+.dark[data-base='olive'] {
+  --color-background: oklch(0.145 0.009 110);
+  --color-card: oklch(0.205 0.011 110);
+  --color-popover: oklch(0.205 0.011 110);
+  --color-muted: oklch(0.269 0.013 110);
+  --color-secondary: oklch(0.269 0.013 110);
+  --color-accent: oklch(0.269 0.013 110);
+  --color-border: oklch(0.269 0.013 110);
+  --color-input: oklch(0.269 0.013 110);
+  --color-sidebar: oklch(0.205 0.011 110);
+  --color-sidebar-accent: oklch(0.269 0.013 110);
+  --color-sidebar-border: oklch(0.269 0.013 110);
+}
+
+/* ── Accent swatches (Appearance pickers) — fixed catalog hues ── */
+.theme-dot-rose {
+  background-color: oklch(0.58 0.21 12);
+}
+.theme-dot-orange {
+  background-color: oklch(0.58 0.21 50);
+}
+.theme-dot-amber {
+  background-color: oklch(0.58 0.21 75);
+}
+.theme-dot-lime {
+  background-color: oklch(0.58 0.21 130);
+}
+.theme-dot-emerald {
+  background-color: oklch(0.58 0.21 160);
+}
+.theme-dot-teal {
+  background-color: oklch(0.58 0.21 190);
+}
+.theme-dot-blue {
+  background-color: oklch(0.58 0.21 255);
+}
+.theme-dot-violet {
+  background-color: oklch(0.58 0.21 290);
+}
+.theme-dot-pink {
+  background-color: oklch(0.58 0.21 350);
+}
+
+/* ── Menu style (data-menu) — translucent dropdowns/popovers/selects ── */
+[data-menu='translucent'] [data-slot='dropdown-menu-content'],
+[data-menu='translucent'] [data-slot='popover-content'],
+[data-menu='translucent'] [data-slot='select-content'] {
+  background-color: color-mix(in oklch, var(--color-popover) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
 /* ── Keyframes ── */
 @keyframes accordion-down {
   from {
@@ -227,6 +347,14 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading, var(--font-sans));
   }
 
   /* ── Pointer cursor on interactive elements ──

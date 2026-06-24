@@ -45,22 +45,30 @@ Named presets are applied via a `data-theme="<id>"` attribute on `<html>`,
 composed with the `.dark` class — so light/dark **mode** and the **preset** are
 independent axes. A runtime switcher (Settings → Appearance) sets both.
 
-The **"Shuffle theme"** action (shadcn-create style) does _not_ cycle the named
-presets — it **generates a fresh full look** each click: a random **accent hue**,
-**font** (`--font-sans`), **corner radius** (the `--radius-sm/md/lg/xl` scale,
-derived from a base), and a cohesive **chart palette** (`--color-chart-1..5`,
-spread around the accent hue). The accent drives the same tokens a preset
-overrides (`--color-primary` / `--color-ring` / `--color-sidebar-primary` /
-`--color-sidebar-ring` + foregrounds). Only **mode-shared** tokens are shuffled —
-the neutral surfaces (`background` / `card` / `muted` / `secondary` / `accent` /
-`border`), which the `.dark` block flips per mode, are deliberately left to the
-base palette so a single inline value can't break one mode. Everything is set
-**inline** on `<html>` so it works in both light and dark (CSP-safe — no injected
-`<style>`, and fonts are **web-safe stacks** only since the CSP is
+Settings → Appearance is a shadcn-create-style studio with a per-axis picker for
+each part of the look: **accent colour** and **chart colour** (named hues from
+`ACCENT_COLORS`), **base colour**, **body + heading font**, **radius**, and
+**menu style** — plus **Shuffle**.
+
+The **"Shuffle theme"** action does _not_ cycle the named presets — it
+**generates a fresh full look** each click: a random **accent hue**, **chart
+anchor**, **body + heading fonts** (`--font-sans` / `--font-heading`), and
+**corner radius** (the `--radius-sm/md/lg/xl` scale, derived from a base). The
+accent drives the same tokens a preset overrides (`--color-primary` /
+`--color-ring` / `--color-sidebar-primary` / `--color-sidebar-ring` +
+foregrounds) and the chart anchor spreads into `--color-chart-1..5`. Everything
+is set **inline** on `<html>` so it works in both light and dark (CSP-safe — no
+injected `<style>`, and fonts are **web-safe stacks** only since the CSP is
 `font-src 'self'`; mirrors the org-brand engine), mutually exclusive with the
 `data-theme` presets. The store records it as `preset: 'custom'` +
-`customTheme: { hue, fontId, radiusId }`, so it persists across reloads and the
-panel shows a live **Custom — _Font · Radius_** indicator. The font/radius
-catalogs live in `GENERATED_FONTS` / `GENERATED_RADII` (`shared/theme`). When
-`VITE_THEME_LOCK=true`, the switcher and shuffle are hidden and the app is pinned
-to the code-defined theme.
+`customTheme: { hue, chartHue, bodyFontId, headingFontId, radiusId }`, so it
+persists across reloads. Catalogs live in `GENERATED_FONTS` / `GENERATED_RADII` /
+`ACCENT_COLORS` (`shared/theme`).
+
+**Two orthogonal axes** apply on top of any preset/look and persist
+independently: **base colour** (`data-base='stone'|'slate'|'olive'`; `neutral` =
+no attribute) tints the neutral surfaces via mode-correct CSS blocks — the one
+exception to "neutrals stay neutral", done as predefined sets rather than a free
+picker so light/dark both read right; and **menu style** (`data-menu='translucent'`)
+makes dropdowns/popovers/selects glassy. When `VITE_THEME_LOCK=true`, the switcher
+and shuffle are hidden and the app is pinned to the code-defined theme.
