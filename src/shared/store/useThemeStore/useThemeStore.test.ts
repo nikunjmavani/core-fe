@@ -8,11 +8,13 @@ describe('useThemeStore', () => {
       customTheme: null,
       baseId: 'neutral',
       menu: 'default',
+      iconWeight: 'regular',
     });
     const root = document.documentElement;
     delete root.dataset.theme;
     delete root.dataset.base;
     delete root.dataset.menu;
+    root.style.removeProperty('--icon-stroke');
     for (const v of [
       '--color-primary',
       '--color-ring',
@@ -88,7 +90,7 @@ describe('useThemeStore', () => {
     );
   });
 
-  it('setBaseColor / setMenu apply via data-attributes', () => {
+  it('setBaseColor / setMenu / setIconWeight apply orthogonally', () => {
     useThemeStore.getState().setBaseColor('stone');
     expect(useThemeStore.getState().baseId).toBe('stone');
     expect(document.documentElement.dataset.base).toBe('stone');
@@ -96,6 +98,10 @@ describe('useThemeStore', () => {
     useThemeStore.getState().setMenu('translucent');
     expect(useThemeStore.getState().menu).toBe('translucent');
     expect(document.documentElement.dataset.menu).toBe('translucent');
+
+    useThemeStore.getState().setIconWeight('bold');
+    expect(useThemeStore.getState().iconWeight).toBe('bold');
+    expect(document.documentElement.style.getPropertyValue('--icon-stroke')).toBe('2.5');
   });
 
   it('setPreset clears a generated custom look (keeps base/menu)', () => {

@@ -90,6 +90,14 @@ export const MENU_STYLES = [
 ] as const;
 export const DEFAULT_MENU = 'default';
 
+/** Icon weight — drives Lucide `stroke-width` via the `--icon-stroke` var. */
+export const ICON_WEIGHTS = [
+  { id: 'thin', label: 'Thin', width: 1.5 },
+  { id: 'regular', label: 'Regular', width: 2 },
+  { id: 'bold', label: 'Bold', width: 2.5 },
+] as const;
+export const DEFAULT_ICON_WEIGHT = 'regular';
+
 const FONT_IDS = Object.keys(GENERATED_FONTS);
 const RADIUS_IDS = Object.keys(GENERATED_RADII);
 
@@ -284,5 +292,16 @@ export function applyMenuStyle(id: string): void {
     root.dataset.menu = 'translucent';
   } else {
     delete root.dataset.menu;
+  }
+}
+
+/** Apply an icon weight via `--icon-stroke` (cleared for the regular default). */
+export function applyIconWeight(id: string): void {
+  const root = document.documentElement;
+  const weight = ICON_WEIGHTS.find((w) => w.id === id);
+  if (!weight || weight.id === DEFAULT_ICON_WEIGHT) {
+    root.style.removeProperty('--icon-stroke');
+  } else {
+    root.style.setProperty('--icon-stroke', String(weight.width));
   }
 }

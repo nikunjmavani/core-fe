@@ -47,8 +47,8 @@ independent axes. A runtime switcher (Settings → Appearance) sets both.
 
 Settings → Appearance is a shadcn-create-style studio with a per-axis picker for
 each part of the look: **accent colour** and **chart colour** (named hues from
-`ACCENT_COLORS`), **base colour**, **body + heading font**, **radius**, and
-**menu style** — plus **Shuffle**.
+`ACCENT_COLORS`), **base colour**, **body + heading font**, **radius**, **menu
+style**, and **icon weight** — plus **Shuffle**.
 
 The **"Shuffle theme"** action does _not_ cycle the named presets — it
 **generates a fresh full look** each click: a random **accent hue**, **chart
@@ -65,10 +65,13 @@ injected `<style>`, and fonts are **web-safe stacks** only since the CSP is
 persists across reloads. Catalogs live in `GENERATED_FONTS` / `GENERATED_RADII` /
 `ACCENT_COLORS` (`shared/theme`).
 
-**Two orthogonal axes** apply on top of any preset/look and persist
+**Three orthogonal axes** apply on top of any preset/look and persist
 independently: **base colour** (`data-base='stone'|'slate'|'olive'`; `neutral` =
 no attribute) tints the neutral surfaces via mode-correct CSS blocks — the one
 exception to "neutrals stay neutral", done as predefined sets rather than a free
-picker so light/dark both read right; and **menu style** (`data-menu='translucent'`)
-makes dropdowns/popovers/selects glassy. When `VITE_THEME_LOCK=true`, the switcher
+picker so light/dark both read right; **menu style** (`data-menu='translucent'`)
+makes dropdowns/popovers/selects glassy; and **icon weight** drives every Lucide
+icon's `stroke-width` through the `--icon-stroke` var (`svg.lucide` rule). A true
+multi-library icon swap was scoped out — icons are statically bundled, so that
+is a build-time choice, not a runtime token. When `VITE_THEME_LOCK=true`, the switcher
 and shuffle are hidden and the app is pinned to the code-defined theme.

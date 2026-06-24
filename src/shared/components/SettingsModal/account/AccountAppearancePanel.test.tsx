@@ -31,6 +31,7 @@ describe('AccountAppearancePanel', () => {
     expect(screen.getByTestId('font-body')).toBeInTheDocument();
     expect(screen.getByTestId('radius-round')).toBeInTheDocument();
     expect(screen.getByTestId('menu-translucent')).toBeInTheDocument();
+    expect(screen.getByTestId('icon-bold')).toBeInTheDocument();
     expect(screen.getByTestId('theme-shuffle')).toBeInTheDocument();
   });
 
@@ -49,6 +50,13 @@ describe('AccountAppearancePanel', () => {
     await user.click(screen.getByTestId('base-stone'));
     expect(useThemeStore.getState().baseId).toBe('stone');
     expect(document.documentElement.dataset.base).toBe('stone');
+  });
+
+  it('picking an icon weight applies it (orthogonal)', async () => {
+    const user = userEvent.setup();
+    render(<AccountAppearancePanel />);
+    await user.click(screen.getByTestId('icon-bold'));
+    expect(useThemeStore.getState().iconWeight).toBe('bold');
   });
 
   it('shuffle generates a custom look', async () => {

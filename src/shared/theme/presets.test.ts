@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   applyBaseColor,
   applyGeneratedTheme,
+  applyIconWeight,
   applyMenuStyle,
   applyThemePreset,
   GENERATED_FONTS,
@@ -40,6 +41,7 @@ afterEach(() => {
   delete root.dataset.theme;
   delete root.dataset.base;
   delete root.dataset.menu;
+  root.style.removeProperty('--icon-stroke');
   for (const v of GENERATED_VARS) root.style.removeProperty(v);
 });
 
@@ -149,5 +151,12 @@ describe('orthogonal base colour + menu', () => {
     expect(document.documentElement.dataset.menu).toBe('translucent');
     applyMenuStyle('default');
     expect(document.documentElement.dataset.menu).toBeUndefined();
+  });
+
+  it('applyIconWeight sets/clears --icon-stroke', () => {
+    applyIconWeight('bold');
+    expect(document.documentElement.style.getPropertyValue('--icon-stroke')).toBe('2.5');
+    applyIconWeight('regular'); // default → cleared
+    expect(document.documentElement.style.getPropertyValue('--icon-stroke')).toBe('');
   });
 });

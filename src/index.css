@@ -356,6 +356,10 @@
   h6 {
     font-family: var(--font-heading, var(--font-sans));
   }
+  /* Icon weight — Lucide stroke-width, driven by the Appearance picker. */
+  svg.lucide {
+    stroke-width: var(--icon-stroke, 2);
+  }
 
   /* ── Pointer cursor on interactive elements ──
      Tailwind v4 Preflight no longer forces `cursor: pointer` on <button>, so
