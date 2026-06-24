@@ -108,6 +108,8 @@ flowchart TB
 | [security-model.md](reference/security-model.md)                   | **Frontend security model** — threats covered, CSP delivery, accepted risks, backend's half               |
 | [third-party-comparison.md](reference/third-party-comparison.md)   | Keep/swap verdicts for major dependencies (charts, analytics, routing)                                    |
 | [ui-components-sourcing.md](reference/ui-components-sourcing.md)   | shadcn-first UI workflow (`npx shadcn add`, research sites)                                               |
+| [design.md](reference/design.md)                                   | **Design language** — aesthetic POV, typography, colour, motion, themeability principles                  |
+| [theming.md](reference/theming.md)                                 | **Theming mechanics** — token map, shadcn-create adoption, Shuffle + swappable icon engine                |
 | [dependency-upgrades.md](reference/dependency-upgrades.md)         | Audits, Dependabot, and intentional version pins                                                          |
 | [route-island-structure.md](reference/route-island-structure.md)   | **Per-route folders** — same layout for every route/sub-route; import boundaries                          |
 | [routes-and-ui.md](reference/routes-and-ui.md)                     | **Live frontend routes** (and backend APIs they use) and **UI** (shadcn component library and primitives) |

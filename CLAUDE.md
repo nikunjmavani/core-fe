@@ -47,7 +47,7 @@ budgets, k6 load, cache cleanup, and Dependabot CI triage run as scheduled/event
 - **Git workflow:** docs/process/git-workflow.md
 - **Routing & tenancy (implemented spec):** docs/reference/routing-and-tenancy.md
 - **SonarQube local quality gate:** docs/reference/quality/sonarqube-local.md
-- **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/dependency-upgrades.md, docs/reference/internationalization.md
+- **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/design.md (design language), docs/reference/theming.md, docs/reference/dependency-upgrades.md, docs/reference/internationalization.md
 
 ## Architecture Overview
 
