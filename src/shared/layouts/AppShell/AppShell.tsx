@@ -26,6 +26,7 @@ import {
 } from '@/shared/components/ui/dropdown-menu.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
 import { type AccessCheck, useVisibleNav } from '@/shared/hooks/useCan/index.ts';
+import { useOrgBrand } from '@/shared/hooks/useOrgBrand/index.ts';
 import {
   Boxes,
   LayoutDashboard,
@@ -104,6 +105,8 @@ export function Component() {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   // Capability/permission-gated nav (FE-51); dashboard has no requirement.
   const navItems = useVisibleNav(NAV_ITEMS);
+  // Apply the active org's brand accent → --color-brand (FE-57; no-op without one).
+  useOrgBrand();
   // Canonical organization context comes from the URL ($organizationId).
   const { organizationId = '' } = useParams({ strict: false });
 

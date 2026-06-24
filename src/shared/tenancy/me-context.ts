@@ -25,6 +25,7 @@ export const organizationWire = z.object({
   type: z.enum(['PERSONAL', 'TEAM']),
   status: z.enum(['ACTIVE', 'SUSPENDED', 'ARCHIVED']),
   logo_url: z.string().nullable(),
+  brand_color: z.string().nullable().optional(),
   capabilities: orgCapabilitiesWire,
   created_at: isoDateString,
   updated_at: isoDateString,
@@ -75,6 +76,8 @@ export interface OrganizationSummary {
   type: OrganizationType;
   status: OrganizationStatusValue;
   logoUrl: string | null;
+  /** Optional per-org accent (hex/oklch) → `--color-brand` (FE-57); absent until the backend sends it. */
+  brandColor?: string | null;
   capabilities: OrgCapabilities;
   createdAt: string;
   updatedAt: string;
@@ -117,6 +120,7 @@ export function toOrganization(w: z.infer<typeof organizationWire>): Organizatio
     type: w.type,
     status: w.status,
     logoUrl: w.logo_url,
+    brandColor: w.brand_color ?? null,
     capabilities: toCapabilities(w.capabilities),
     createdAt: w.created_at,
     updatedAt: w.updated_at,
