@@ -417,7 +417,11 @@ function TopNavShell({
         data-testid="header"
       >
         <BrandLogo />
-        <OrganizationSwitcher className="hidden w-44 sm:block" align="start" />
+        {/* Wrapper owns the responsive hide + width so the switcher keeps its
+            own flex layout (a display override would wrap the chevron). */}
+        <div className="hidden w-44 shrink-0 sm:block">
+          <OrganizationSwitcher className="w-full" align="start" />
+        </div>
         <Separator orientation="vertical" className="mx-1 hidden h-6 md:block" />
         <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
           <NavList
