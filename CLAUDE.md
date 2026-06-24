@@ -94,7 +94,7 @@ Every directory under `src/pages/` that corresponds to a frontend URL path **mus
 
 1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/acme/dashboard` → `pages/organization/$organizationSlug/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. One exception: `/` is a pure resolver route (redirect only, no island).
 2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationSlug/` → `organization-slug.route.tsx`, `ORGANIZATION_SLUG.OVERVIEW.md`).
-3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppShell via the `pages/organization/$organizationSlug/` layout island (the org guard boundary). No grouping directories under `pages/`.
+3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppLayout via the `pages/organization/$organizationSlug/` layout island (the org guard boundary). No grouping directories under `pages/`.
 4. **Code used by 2+ page islands lives in `shared/`** (e.g. `shared/api/auth-api.ts`, `shared/tenancy/`).
 5. **Settings is a global hash modal, not a route space** — `#settings/<scope>/<section>` opens `shared/components/SettingsModal/` over any page (see `agent-os/rules/file-structure.mdc` → Settings hash modal). Full spec: `docs/reference/routing-and-tenancy.md`.
 
@@ -119,7 +119,7 @@ src/pages/
     └── $organizationSlug/             ← /organization/acme — org guard boundary
         ├── organization-slug.route.tsx     ($param folder → strip-$ kebab prefix)
         ├── organization-slug.manifest.ts       kind: 'layout', children: [dashboard, suspended]
-        ├── OrganizationLayout.tsx        mounts shared AppShell
+        ├── OrganizationLayout.tsx        mounts shared AppLayout
         ├── ORGANIZATION_SLUG.OVERVIEW.md
         ├── dashboard/               ← …/dashboard — full island (api, contracts, hooks/, components/)
         ├── suspended/               ← …/suspended — status-guard target
@@ -214,7 +214,7 @@ src/shared/
 ├── hooks/
 │   ├── use<X>/                      # cross-page custom hooks — folder-per-unit
 │   └── useList/, useOne/, useCreate/, useUpdate/, useDelete/   # standard CRUD hooks
-├── layouts/<Name>/                  # AuthLayout, AppShell — folder-per-unit
+├── layouts/<Name>/                  # AuthLayout, AppLayout — folder-per-unit
 └── store/                           # global Zustand
     ├── useThemeStore/
     ├── useUIStore/

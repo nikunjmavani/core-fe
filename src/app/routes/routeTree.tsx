@@ -100,9 +100,9 @@ const DashboardPage = lazyRouteComponent(
   () => import('@/pages/organization/$organizationSlug/dashboard/dashboard.route.tsx'),
   'Component',
 );
-// Personal-org space reuses the shared AppShell directly (no org param in URL).
+// Personal-org space reuses the shared AppLayout directly (no org param in URL).
 const PersonalShell = lazyRouteComponent(
-  () => import('@/shared/layouts/AppShell/index.ts'),
+  () => import('@/shared/layouts/AppLayout/index.ts'),
   'Component',
 );
 const SuspendedPage = lazyRouteComponent(

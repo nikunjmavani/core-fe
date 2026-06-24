@@ -161,7 +161,7 @@ flowchart TB
     D[Root shell - routeTree.tsx]
     E[Public: login, register, unauthorized]
     F[Auth guards - beforeLoad]
-    G[AppShell]
+    G[AppLayout]
     H[Pages: dashboard, onboarding, accept-invite, settings]
   end
   A --> B --> C --> D

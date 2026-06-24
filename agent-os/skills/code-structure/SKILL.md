@@ -73,7 +73,7 @@ src/
 │   ├── hooks/                    cross-page hooks + standard CRUD hooks
 │   │   ├── use<X>/               custom hooks
 │   │   └── useList/, useOne/, useCreate/, useUpdate/, useDelete/
-│   ├── layouts/<Name>/           AuthLayout, AppShell
+│   ├── layouts/<Name>/           AuthLayout, AppLayout
 │   └── store/use<X>Store/        global Zustand (useAuthStore, useOrganizationStore, useThemeStore, useUIStore, useOnboardingStore)
 │
 └── lib/                          Pure utilities (no side effects)

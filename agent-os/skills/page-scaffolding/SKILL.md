@@ -25,7 +25,7 @@ From the user's request:
 - **Page name** — lowercase kebab-case (e.g., "Settings page" → `settings`; "create org" → `create-organization`)
 - **URL path** — default `/<name>`; verify with route tree if ambiguous
 - **`kind`** — `leaf` (no children) or `layout` (has child routes)
-- **Protected?** — yes for pages under `AppShell`; no for auth pages
+- **Protected?** — yes for pages under `AppLayout`; no for auth pages
 - **Permission** — e.g., `organization:read`; `null` if just auth-gated
 - **Resource vs custom?** — resource page if it maps to a backend CRUD entity (organizations, members, etc.); custom otherwise
 

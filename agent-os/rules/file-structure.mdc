@@ -12,7 +12,7 @@ Canonical layout for everything under `src/`. Read before adding any file. The r
 
 1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/org_8fK2x/dashboard` → `pages/organization/$organizationId/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders with full-word names. One exception: `/` is a pure resolver route (redirect only, no island).
 2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `<Page>Layout.tsx`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `src/app/routes/routeTree.tsx` and `docs/reference/routes-and-ui.md`. `$param` folders derive their prefix mechanically (strip `$`, kebab-case).
-3. **Page shells live in `shared/layouts/`** — `AuthLayout` via the pathless `auth-shell` route; `AppShell` via the `pages/organization/$organizationId/` layout island (the org guard boundary). No grouping directories under `pages/`.
+3. **Page shells live in `shared/layouts/`** — `AuthLayout` via the pathless `auth-shell` route; `AppLayout` via the `pages/organization/$organizationId/` layout island (the org guard boundary). No grouping directories under `pages/`.
 4. **Promotion ladder:** one page → inside that page; a page + its OWN nested children → that page's `shared/` (family-shared, e.g. `pages/organization/$organizationId/shared/`); pages from different families or any `src/shared` component → root `src/shared/` (`shared/api/auth-api.ts`, `shared/tenancy/`, …).
 5. **Settings is a global hash modal, not a route space** — `#settings/<scope>/<section>` (see "Settings hash modal" below). Full routing/tenancy spec: `docs/reference/routing-and-tenancy.md`.
 
@@ -31,7 +31,7 @@ src/
 └── index.css
 ```
 
-**`src/core/`** is the irreducible platform kernel — only framework-agnostic, app-state-free services: `http/`, `rbac/`, `config/`, `data-provider/`, `resources/`, `types/`, `version/`. **Anything app-shell-y, React-Provider-y, or app-state-dependent lives outside `core/`:**
+**`src/core/`** is the irreducible platform kernel — only framework-agnostic, app-state-free services: `http/`, `rbac/`, `config/`, `data-provider/`, `resources/`, `types/`, `version/`. **Anything app-layout-y, React-Provider-y, or app-state-dependent lives outside `core/`:**
 - App-shell bootstrap (Sentry init, web-vitals, PostHog setup) → **`src/app/`** (`app/analytics/`, `app/observability/`)
 - Runtime infrastructure used by every layer (auth token + service, errors handling) → **`src/shared/`** (`shared/auth/`, `shared/errors/`)
 - Zustand client state → **`src/shared/store/<X>Store/`** (folder-per-unit) — all 5 stores including `useAuthStore` and `useOrganizationStore`
@@ -292,7 +292,7 @@ src/shared/
 │   ├── use<X>/                             cross-page custom hooks
 │   ├── useList/, useOne/                   standard CRUD hooks (Refine-style)
 │   ├── useCreate/, useUpdate/, useDelete/
-├── layouts/<Name>/{...}                    RootLayout, AppShell, AuthLayout
+├── layouts/<Name>/{...}                    RootLayout, AppLayout, AuthLayout
 └── store/                                  GLOBAL Zustand stores
     ├── useThemeStore/{...}
     ├── useUIStore/{...}

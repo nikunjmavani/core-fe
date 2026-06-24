@@ -6,8 +6,8 @@ import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 import { OrganizationLayout } from './OrganizationLayout.tsx';
 
 describe('OrganizationLayout', () => {
-  it('mounts the shared AppShell', async () => {
+  it('mounts the shared AppLayout', async () => {
     renderWithProviders(<OrganizationLayout />);
-    expect(await screen.findByTestId('app-shell')).toBeInTheDocument();
+    expect(await screen.findByTestId('app-layout')).toBeInTheDocument();
   });
 });

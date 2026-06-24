@@ -29,7 +29,7 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 | -------------------- | --------------------------------------- | ------------------------------- |
 | Page container       | `<route>-page`                          | `dashboard-page`                |
 | Page heading         | `<route>-heading` or `<route>-greeting` | `dashboard-greeting`            |
-| Layout shell         | `<layout>-layout`                       | `auth-layout`, `app-shell`      |
+| Layout shell         | `<layout>-layout`                       | `auth-layout`, `app-layout`     |
 | Form wrapper         | `<form>-form`                           | `login-form`                    |
 | Form field           | `<form>-<field>`                        | `login-email`                   |
 | Submit               | `<form>-submit`                         | `register-submit`               |

@@ -263,7 +263,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 **Project-specific implementations:**
 
-- Skip-navigation links in AuthLayout and AppShell
+- Skip-navigation links in AuthLayout and AppLayout
 - `aria-sort` on DataTableColumnHeader
 - `scope="col"` on TableHead
 - `aria-label` on OTP inputs, dialog close buttons, pagination selects

@@ -108,7 +108,7 @@ export function Component() {
   const { organizationSlug = '' } = useParams({ strict: false });
 
   return (
-    <div className="bg-background flex h-screen overflow-hidden" data-testid="app-shell">
+    <div className="bg-background flex h-screen overflow-hidden" data-testid="app-layout">
       <a
         href="#main-content"
         className="focus:bg-background focus:text-foreground sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:underline"

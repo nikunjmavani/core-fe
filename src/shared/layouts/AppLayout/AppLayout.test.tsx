@@ -9,13 +9,13 @@ vi.mock('@/core/http/fetch-client.ts', () => ({
 
 import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 
-import { Component as AppShell } from './AppShell.tsx';
+import { Component as AppLayout } from './AppLayout.tsx';
 
-describe('AppShell', () => {
-  it('renders the app shell: sidebar, header, main region, mobile nav', async () => {
-    const { findByTestId } = renderWithProviders(<AppShell />);
+describe('AppLayout', () => {
+  it('renders the app layout: sidebar, header, main region, mobile nav', async () => {
+    const { findByTestId } = renderWithProviders(<AppLayout />);
 
-    expect(await findByTestId('app-shell')).toBeInTheDocument();
+    expect(await findByTestId('app-layout')).toBeInTheDocument();
     expect(await findByTestId('sidebar')).toBeInTheDocument();
     expect(await findByTestId('header')).toBeInTheDocument();
     expect(await findByTestId('main-content')).toBeInTheDocument();
@@ -23,7 +23,7 @@ describe('AppShell', () => {
   });
 
   it('exposes the primary navigation and user menu controls', async () => {
-    const { findAllByTestId, findByTestId } = renderWithProviders(<AppShell />);
+    const { findAllByTestId, findByTestId } = renderWithProviders(<AppLayout />);
 
     // nav links render twice by design: sidebar + mobile bottom bar
     expect(await findAllByTestId('nav-dashboard')).toHaveLength(2);
@@ -32,8 +32,8 @@ describe('AppShell', () => {
   });
 
   it('has no accessibility violations', async () => {
-    const { container, findByTestId } = renderWithProviders(<AppShell />);
-    await findByTestId('app-shell');
+    const { container, findByTestId } = renderWithProviders(<AppLayout />);
+    await findByTestId('app-layout');
 
     const results = await axe(container);
     expect(results).toHaveNoViolations();

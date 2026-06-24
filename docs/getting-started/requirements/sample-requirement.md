@@ -12,7 +12,7 @@ Notifications page where users see a list of notifications and can mark all as r
 
 ### Where
 
-New page at `/notifications`, under the authenticated dashboard (AppShell).
+New page at `/notifications`, under the authenticated dashboard (AppLayout).
 
 ### Acceptance criteria
 
@@ -34,7 +34,7 @@ New page at `/notifications`, under the authenticated dashboard (AppShell).
 
 ### UI / Behavior (if applicable)
 
-- **Layout:** AppShell (same as dashboard, with sidebar and header).
+- **Layout:** AppLayout (same as dashboard, with sidebar and header).
 - **Forms/inputs:** Optional filter dropdown: "All" / "Unread" (can be phase 2).
 - **Actions:** "Mark all as read" (button, top right); clicking a row can mark that notification as read (optional).
 - **Validation / errors:** Show toast or inline error on API failure; retry button in error state.

@@ -554,8 +554,8 @@ core-fe/
 │   │   │       ├── useUpdate.ts
 │   │   │       └── [1 test file]
 │   │   ├── layouts/
-│   │   │   ├── AppShell/
-│   │   │   │   ├── AppShell.tsx
+│   │   │   ├── AppLayout/
+│   │   │   │   ├── AppLayout.tsx
 │   │   │   │   ├── index.ts
 │   │   │   │   └── [1 test file]
 │   │   │   └── AuthLayout/

@@ -41,7 +41,7 @@ The template from `docs/getting-started/requirement-format.md`:
 
 ### UI / Behavior (if applicable)
 
-- **Layout:** AppShell
+- **Layout:** AppLayout
 - **Forms/inputs:** ...
 - **Actions:** ...
 - **Validation / errors:** ...
@@ -90,7 +90,7 @@ Once the user provides a requirement (Option A or B), the agent runs **all** of 
 2. **Follow page-scaffolding skill** (`agent-os/skills/page-scaffolding/SKILL.md`) if creating a new page:
    - Scaffold all standard files.
    - Add `data-testid` attributes on all interactive elements.
-   - Use the correct layout (AppShell, AuthLayout, etc.).
+   - Use the correct layout (AppLayout, AuthLayout, etc.).
 
 3. **Register route** in `src/app/routes/routeTree.tsx`:
    - Lazy import: `lazy: () => import('@/pages/<name>/<name>.route.tsx').then((m) => ({ default: m.Component }))`.
@@ -180,7 +180,7 @@ User provides requirement
 
 - **Never ask** "Do you want tests?", "Should I register the route?", "Do you need RBAC?", "Should I update docs?" — the answer is always yes.
 - **Only ask** when a required piece of information is genuinely missing and cannot be inferred (e.g. the user says "add a page" but doesn't specify the URL path and it can't be inferred from context).
-- **Infer defaults** when possible: protected route, AppShell, permission name from page name.
+- **Infer defaults** when possible: protected route, AppLayout, permission name from page name.
 - **Fix everything before responding**: the user should see clean code, passing lint, passing types, and colocated tests — not a follow-up question.
 
 ---
