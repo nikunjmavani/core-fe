@@ -363,9 +363,16 @@
 }
 
 /* Elevation shown under a sticky header once content scrolls beneath it.
-   Uses the always-dark `overlay` token so the shadow reads in light + dark. */
+   Mode-aware via `--color-foreground` (which flips with .dark): a soft dark
+   shadow on the light surface, and a faint light separator on the dark surface —
+   a fixed dark shadow would be invisible there. Same rule, the token adapts. */
 .scroll-shadow-top {
-  box-shadow: 0 8px 10px -10px color-mix(in oklch, var(--color-overlay) 35%, transparent);
+  box-shadow: 0 6px 10px -8px
+    color-mix(in oklch, var(--color-foreground) 22%, transparent);
+}
+.dark .scroll-shadow-top {
+  box-shadow: 0 6px 10px -8px
+    color-mix(in oklch, var(--color-foreground) 14%, transparent);
 }
 
 /* ── Base layer resets ── */
