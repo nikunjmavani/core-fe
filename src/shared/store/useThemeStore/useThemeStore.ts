@@ -16,6 +16,7 @@ import {
   type GeneratedTheme,
   generateTheme,
   isThemePreset,
+  nextAuthVariant,
   normalizeLook,
   shuffleIcons,
 } from '@/shared/theme/index.ts';
@@ -37,6 +38,8 @@ interface ThemeStore {
   iconWeight: string;
   /** Icon library — lucide (default) | tabler | phosphor (orthogonal). */
   iconLibrary: string;
+  /** TEMP: AuthLayout preview design index (0..2); rolled by shuffle. */
+  authVariant: number;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
   /** Set one axis of the custom look (accent/chart/font/radius); switches to custom. */
@@ -70,6 +73,7 @@ export const useThemeStore = create<ThemeStore>()(
       menu: DEFAULT_MENU,
       iconWeight: DEFAULT_ICON_WEIGHT,
       iconLibrary: DEFAULT_ICON_LIBRARY,
+      authVariant: 0,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -118,6 +122,8 @@ export const useThemeStore = create<ThemeStore>()(
           customTheme: next,
           iconWeight: icons.weight,
           iconLibrary: icons.library,
+          // TEMP: cycle the AuthLayout preview design on shuffle.
+          authVariant: nextAuthVariant(get().authVariant),
         });
       },
     }),
@@ -131,6 +137,7 @@ export const useThemeStore = create<ThemeStore>()(
         menu: state.menu,
         iconWeight: state.iconWeight,
         iconLibrary: state.iconLibrary,
+        authVariant: state.authVariant,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

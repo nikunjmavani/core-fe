@@ -1,8 +1,10 @@
 import { Link, useLocation } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 
+import { cn } from '@/lib/utils.ts';
 import { ThemeModeToggle } from '@/shared/components/ThemeModeToggle/index.ts';
 import { Boxes, ShieldCheck, Sparkles, Users, Zap } from '@/shared/icons/index.ts';
+import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -32,35 +34,74 @@ const STATS = [
   { value: 'SOC 2', label: 'compliant' },
 ] as const;
 
-/**
- * Unified auth layout — an innovative split screen.
- *
- * Left: a fixed black brand panel (consistent in light & dark) with an animated
- * dot grid, feature highlights, and live stats. Right: the centered auth form.
- * On mobile the brand panel collapses and only the form (with a compact logo) shows.
- */
-export function AuthLayout({ children }: AuthLayoutProps) {
-  const location = useLocation();
-  const isLogin = location.pathname === '/login';
+// ── Shared pieces ────────────────────────────────────────────────────────────
 
+function SkipLink() {
+  return (
+    <a
+      href="#main-content"
+      className="focus:bg-background focus:text-foreground sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:underline"
+    >
+      Skip to main content
+    </a>
+  );
+}
+
+/** Theme toggle + the login/register switch link (shared by every variant). */
+function AuthControls() {
+  const { pathname } = useLocation();
+  const isLogin = pathname === '/login';
+  return (
+    <div className="flex items-center gap-3">
+      <ThemeModeToggle />
+      <Link
+        to={isLogin ? '/register' : '/login'}
+        className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
+        data-testid="auth-switch-link"
+      >
+        {isLogin ? 'Create an account' : 'Sign in'}
+      </Link>
+    </div>
+  );
+}
+
+function BrandMark({ className }: { className?: string }) {
+  return (
+    <Link to="/login" className={cn('flex items-center gap-2.5', className)}>
+      <div className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-lg">
+        <Boxes className="h-5 w-5" />
+      </div>
+      <span className="text-lg font-semibold tracking-tight">Core</span>
+    </Link>
+  );
+}
+
+/** The animated form slot — owns `auth-form-container`, re-keyed per route. */
+function AuthForm({ children }: { children: ReactNode }) {
+  const { pathname } = useLocation();
+  return (
+    <div
+      key={pathname}
+      className="animate-fade-in-up w-full"
+      data-testid="auth-form-container"
+    >
+      {children}
+    </div>
+  );
+}
+
+// ── Variant 0 — Split (default) ──────────────────────────────────────────────
+
+function SplitAuth({ children }: AuthLayoutProps) {
   return (
     <div className="flex min-h-screen" data-testid="auth-layout">
-      <a
-        href="#main-content"
-        className="focus:bg-background focus:text-foreground sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:underline"
-      >
-        Skip to main content
-      </a>
+      <SkipLink />
 
-      {/* ── Left brand panel (hidden on mobile) — atmosphere comes from the
-           active accent (--color-primary), so it re-tints with theme + shuffle ── */}
       <div className="bg-brand text-brand-foreground relative hidden w-1/2 flex-col overflow-hidden lg:flex xl:w-[55%]">
-        {/* Accent wash over the deep base */}
         <div
           className="from-primary/25 via-primary/5 to-primary/15 absolute inset-0 bg-gradient-to-br"
           aria-hidden="true"
         />
-        {/* Dot grid (accent-tinted) */}
         <svg
           className="text-primary/[0.12] absolute inset-0 h-full w-full"
           aria-hidden="true"
@@ -72,24 +113,16 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </defs>
           <rect width="100%" height="100%" fill="url(#auth-dots)" />
         </svg>
-        {/* Soft accent glow orbs */}
         <div className="bg-primary/30 absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl" />
         <div className="bg-primary/20 absolute right-[-10%] bottom-[-15%] h-96 w-96 rounded-full blur-3xl" />
-        {/* Accent seam where the panel meets the form */}
         <div
           className="via-primary/40 absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent to-transparent"
           aria-hidden="true"
         />
 
         <div className="relative z-10 flex flex-1 flex-col justify-between p-10 xl:p-14">
-          {/* Logo + status */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="bg-primary text-primary-foreground shadow-primary/30 flex h-9 w-9 items-center justify-center rounded-lg shadow-lg">
-                <Boxes className="h-5 w-5" />
-              </div>
-              <span className="text-lg font-semibold tracking-tight">Core</span>
-            </div>
+            <BrandMark />
             <span className="border-brand-foreground/15 bg-brand-foreground/5 text-brand-foreground/70 flex items-center gap-2 rounded-full border px-3 py-1 text-xs">
               <span className="relative flex h-2 w-2">
                 <span className="bg-success absolute inline-flex h-full w-full animate-ping rounded-full opacity-75" />
@@ -99,7 +132,6 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             </span>
           </div>
 
-          {/* Headline + features */}
           <div className="max-w-md space-y-10">
             <div className="space-y-4">
               <span className="border-primary/30 bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
@@ -129,7 +161,6 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             </ul>
           </div>
 
-          {/* Stats */}
           <div className="border-primary/20 flex items-center gap-8 border-t pt-6">
             {STATS.map((s) => (
               <div key={s.label}>
@@ -141,10 +172,8 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         </div>
       </div>
 
-      {/* ── Right auth form ── */}
       <div className="bg-background flex w-full flex-col lg:w-1/2 xl:w-[45%]">
         <div className="flex items-center justify-between p-5 sm:p-6 lg:justify-end">
-          {/* Mobile logo */}
           <Link
             to="/login"
             className="flex items-center gap-2 lg:hidden"
@@ -155,32 +184,111 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             </div>
             <span className="text-sm font-semibold">Core</span>
           </Link>
-
-          <div className="flex items-center gap-3">
-            <ThemeModeToggle />
-            <Link
-              to={isLogin ? '/register' : '/login'}
-              className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors"
-              data-testid="auth-switch-link"
-            >
-              {isLogin ? 'Create an account' : 'Sign in'}
-            </Link>
-          </div>
+          <AuthControls />
         </div>
 
         <main
           id="main-content"
           className="flex flex-1 items-center justify-center px-5 pb-12 sm:px-6"
         >
-          <div
-            key={location.pathname}
-            className="animate-fade-in-up w-full max-w-[400px]"
-            data-testid="auth-form-container"
-          >
-            {children}
+          <div className="w-full max-w-[400px]">
+            <AuthForm>{children}</AuthForm>
           </div>
         </main>
       </div>
     </div>
   );
+}
+
+// ── Variant 1 — Spotlight (TEMP preview) ─────────────────────────────────────
+
+function SpotlightAuth({ children }: AuthLayoutProps) {
+  return (
+    <div
+      className="bg-brand text-brand-foreground relative flex min-h-screen flex-col overflow-hidden"
+      data-testid="auth-layout"
+    >
+      <SkipLink />
+      <div
+        className="from-primary/25 via-primary/5 to-primary/20 pointer-events-none absolute inset-0 bg-gradient-to-br"
+        aria-hidden="true"
+      />
+      <div
+        className="bg-primary/30 pointer-events-none absolute top-1/2 left-1/2 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+        aria-hidden="true"
+      />
+
+      <header className="relative z-10 flex items-center justify-between p-5 sm:p-6">
+        <BrandMark />
+        <AuthControls />
+      </header>
+
+      <main
+        id="main-content"
+        className="relative z-10 flex flex-1 items-center justify-center px-5 pb-12 sm:px-6"
+      >
+        <div className="w-full max-w-[420px]">
+          <div className="mb-6 text-center">
+            <span className="border-primary/30 bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+              <Sparkles className="h-3 w-3" /> Operations, unified
+            </span>
+          </div>
+          <div className="border-border bg-background text-foreground rounded-2xl border p-6 shadow-2xl sm:p-8">
+            <AuthForm>{children}</AuthForm>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// ── Variant 2 — Minimal (TEMP preview) ───────────────────────────────────────
+
+function MinimalAuth({ children }: AuthLayoutProps) {
+  return (
+    <div
+      className="bg-background text-foreground flex min-h-screen flex-col"
+      data-testid="auth-layout"
+    >
+      <SkipLink />
+      <header className="relative flex items-center justify-between px-5 py-4 sm:px-8">
+        <BrandMark />
+        <AuthControls />
+        <div
+          className="via-primary/40 absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent to-transparent"
+          aria-hidden="true"
+        />
+      </header>
+
+      <main
+        id="main-content"
+        className="flex flex-1 items-center justify-center px-5 py-12 sm:px-6"
+      >
+        <div className="w-full max-w-[400px]">
+          <div className="border-border bg-card rounded-xl border p-6 shadow-sm sm:p-8">
+            <div
+              className="bg-primary mx-auto mb-6 h-1 w-10 rounded-full"
+              aria-hidden="true"
+            />
+            <AuthForm>{children}</AuthForm>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/**
+ * Auth layout shell for the sign-in / sign-up surfaces.
+ *
+ * Variant 0 (default) is the split brand panel + form. Variants 1 (spotlight)
+ * and 2 (minimal) are TEMP design previews selected by `authVariant`, which
+ * Shuffle cycles — so the auth screen restyles as you shuffle the theme. Remove
+ * the variants + the `authVariant` store field once a design is chosen.
+ */
+export function AuthLayout({ children }: AuthLayoutProps) {
+  const variant = useThemeStore((s) => s.authVariant);
+  if (variant === 1) return <SpotlightAuth>{children}</SpotlightAuth>;
+  if (variant === 2) return <MinimalAuth>{children}</MinimalAuth>;
+  return <SplitAuth>{children}</SplitAuth>;
 }

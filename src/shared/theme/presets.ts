@@ -263,6 +263,19 @@ export function shuffleIcons(current: { weight: string; library: string }): {
   };
 }
 
+/** How many AuthLayout preview designs exist (TEMP — see AuthLayout variants). */
+export const AUTH_VARIANT_COUNT = 3;
+
+/**
+ * TEMP (auth-layout preview): a different design index in 0..N-1. Remove
+ * together with the `authVariant` store field + the AuthLayout variants.
+ */
+export function nextAuthVariant(current: number): number {
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic layout preview, not security
+  const v = Math.floor(Math.random() * AUTH_VARIANT_COUNT);
+  return v === current ? (v + 1) % AUTH_VARIANT_COUNT : v;
+}
+
 /**
  * Apply a generated full look (shadcn-create-style): accent colour, chart
  * palette, body + heading fonts, and corner radius — all inline on `<html>` so

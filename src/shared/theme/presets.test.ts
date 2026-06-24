@@ -11,6 +11,7 @@ import {
   GENERATED_RADII,
   generateTheme,
   isThemePreset,
+  nextAuthVariant,
   nextRandomHue,
   randomThemeHue,
   shuffleIcons,
@@ -168,6 +169,17 @@ describe('orthogonal base colour + menu', () => {
     // ~50% / ~35% per roll → effectively certain to flip at least once in 60.
     expect(weightChanged).toBe(true);
     expect(libraryChanged).toBe(true);
+  });
+
+  it('nextAuthVariant returns a different design index in range (TEMP)', () => {
+    for (const current of [0, 1, 2]) {
+      for (let i = 0; i < 20; i += 1) {
+        const v = nextAuthVariant(current);
+        expect(v).toBeGreaterThanOrEqual(0);
+        expect(v).toBeLessThan(3);
+        expect(v).not.toBe(current);
+      }
+    }
   });
 
   it('applyIconWeight sets/clears --icon-stroke', () => {

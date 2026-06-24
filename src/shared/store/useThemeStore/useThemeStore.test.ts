@@ -10,6 +10,7 @@ describe('useThemeStore', () => {
       menu: 'default',
       iconWeight: 'regular',
       iconLibrary: 'lucide',
+      authVariant: 0,
     });
     const root = document.documentElement;
     delete root.dataset.theme;
@@ -82,6 +83,8 @@ describe('useThemeStore', () => {
     // icons ride along the shuffle — values stay valid
     expect(['thin', 'regular', 'bold']).toContain(state.iconWeight);
     expect(['lucide', 'tabler', 'phosphor']).toContain(state.iconLibrary);
+    // TEMP: shuffle cycles the auth-layout preview design (≠ the previous one)
+    expect(state.authVariant).not.toBe(0);
   });
 
   it('updateLook sets one axis and switches to the custom look', () => {
