@@ -27,15 +27,15 @@ import {
   useDisableMfa,
   useMfaStatus,
 } from '@/shared/hooks/useMfa/index.ts';
+import {
+  usePasskeys,
+  useRegisterPasskey,
+  useRemovePasskey,
+} from '@/shared/hooks/usePasskeys/index.ts';
 import { Fingerprint, ShieldCheck, Trash2 } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
-
-// REPLACE_WITH_API: GET /auth/me/passkeys (WebAuthn registration is a follow-up).
-const PASSKEYS = [
-  { id: 'p1', name: 'MacBook Touch ID', createdAt: '2026-02-10T10:00:00.000Z' },
-];
 
 /** Two-factor card: real setup (secret → code → recovery codes) + disable. */
 function MfaCard() {
@@ -212,10 +212,124 @@ function MfaCard() {
   );
 }
 
+/** Passkeys card: list + named registration + revoke (FE-32, mock-first). */
+function PasskeysCard() {
+  const { data: passkeys = [] } = usePasskeys();
+  const register = useRegisterPasskey();
+  const remove = useRemovePasskey();
+  const [addOpen, setAddOpen] = useState(false);
+  const [name, setName] = useState('');
+
+  function closeAdd() {
+    setAddOpen(false);
+    setName('');
+  }
+
+  function submitAdd() {
+    register
+      .mutateAsync(name.trim() || 'New passkey')
+      .then(closeAdd)
+      .catch(() => undefined);
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-base">Passkeys</CardTitle>
+            <CardDescription>
+              Sign in without a password using your device.
+            </CardDescription>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setAddOpen(true)}
+            data-testid="add-passkey"
+          >
+            <Fingerprint className="mr-2 h-4 w-4" />
+            Add passkey
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {passkeys.length === 0 ? (
+          <p className="text-muted-foreground text-sm" data-testid="passkeys-empty">
+            No passkeys yet. Add one to sign in without a password.
+          </p>
+        ) : (
+          passkeys.map((passkey) => (
+            <div
+              key={passkey.id}
+              className="flex items-center justify-between rounded-md border px-3 py-2"
+              data-testid="passkey-row"
+            >
+              <div className="flex items-center gap-2 text-sm">
+                <Fingerprint className="text-muted-foreground h-4 w-4" />
+                {passkey.name}
+              </div>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Remove ${passkey.name}`}
+                onClick={() => remove.mutate(passkey.id)}
+                disabled={remove.isPending}
+                data-testid="passkey-remove"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))
+        )}
+      </CardContent>
+
+      <Dialog
+        open={addOpen}
+        onOpenChange={(open) => {
+          if (!open) closeAdd();
+        }}
+      >
+        <DialogContent data-testid="passkey-add-dialog">
+          <DialogHeader>
+            <DialogTitle>Add a passkey</DialogTitle>
+            <DialogDescription>
+              Name it so you can recognize it later. Your device will prompt you to create
+              the passkey.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="passkey-name">Name</Label>
+            <Input
+              id="passkey-name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="MacBook Touch ID"
+              data-testid="passkey-name"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={closeAdd}>
+              Cancel
+            </Button>
+            <Button
+              onClick={submitAdd}
+              disabled={register.isPending}
+              data-testid="passkey-add-submit"
+            >
+              Add passkey
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
 /**
  * Security section — two-factor authentication (real setup/disable flow, FE-32)
- * and passkeys. Active sessions live in their own panel (FE-31), so they are no
- * longer duplicated here.
+ * and passkeys (list / register / revoke, FE-32). Active sessions live in their
+ * own panel (FE-31), so they are no longer duplicated here.
  */
 export function AccountSecurityPanel() {
   return (
@@ -227,48 +341,7 @@ export function AccountSecurityPanel() {
 
       <MfaCard />
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Passkeys</CardTitle>
-              <CardDescription>
-                Sign in without a password using your device.
-              </CardDescription>
-            </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => notify.success('Passkey registration started (mock)')}
-              data-testid="add-passkey"
-            >
-              <Fingerprint className="mr-2 h-4 w-4" />
-              Add passkey
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {PASSKEYS.map((pk) => (
-            <div
-              key={pk.id}
-              className="flex items-center justify-between rounded-md border px-3 py-2"
-            >
-              <div className="flex items-center gap-2 text-sm">
-                <Fingerprint className="text-muted-foreground h-4 w-4" />
-                {pk.name}
-              </div>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label={`Remove ${pk.name}`}
-                onClick={() => notify.success('Passkey removed (mock)')}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <PasskeysCard />
     </div>
   );
 }

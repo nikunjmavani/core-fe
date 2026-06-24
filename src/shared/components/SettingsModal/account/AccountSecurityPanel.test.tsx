@@ -3,18 +3,33 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
-const { useMfaStatusMock, beginMutateAsync, confirmMutateAsync, disableMutateAsync } =
-  vi.hoisted(() => ({
-    useMfaStatusMock: vi.fn(),
-    beginMutateAsync: vi.fn(),
-    confirmMutateAsync: vi.fn(),
-    disableMutateAsync: vi.fn(),
-  }));
+const {
+  useMfaStatusMock,
+  beginMutateAsync,
+  confirmMutateAsync,
+  disableMutateAsync,
+  usePasskeysMock,
+  registerMutateAsync,
+  removePasskeyMutate,
+} = vi.hoisted(() => ({
+  useMfaStatusMock: vi.fn(),
+  beginMutateAsync: vi.fn(),
+  confirmMutateAsync: vi.fn(),
+  disableMutateAsync: vi.fn(),
+  usePasskeysMock: vi.fn(),
+  registerMutateAsync: vi.fn(),
+  removePasskeyMutate: vi.fn(),
+}));
 vi.mock('@/shared/hooks/useMfa/index.ts', () => ({
   useMfaStatus: useMfaStatusMock,
   useBeginMfaEnrollment: () => ({ mutateAsync: beginMutateAsync, isPending: false }),
   useConfirmMfaEnrollment: () => ({ mutateAsync: confirmMutateAsync, isPending: false }),
   useDisableMfa: () => ({ mutateAsync: disableMutateAsync, isPending: false }),
+}));
+vi.mock('@/shared/hooks/usePasskeys/index.ts', () => ({
+  usePasskeys: usePasskeysMock,
+  useRegisterPasskey: () => ({ mutateAsync: registerMutateAsync, isPending: false }),
+  useRemovePasskey: () => ({ mutate: removePasskeyMutate, isPending: false }),
 }));
 vi.mock('@/shared/notify/index.ts', () => ({
   notify: { success: vi.fn(), error: vi.fn() },
@@ -31,6 +46,17 @@ beforeEach(() => {
   });
   confirmMutateAsync.mockResolvedValue({ recoveryCodes: ['AAAA-1111', 'BBBB-2222'] });
   disableMutateAsync.mockResolvedValue(undefined);
+  usePasskeysMock.mockReturnValue({
+    data: [
+      {
+        id: 'pk_1',
+        name: 'MacBook Touch ID',
+        createdAt: '2026-02-10T10:00:00.000Z',
+        lastUsedAt: null,
+      },
+    ],
+  });
+  registerMutateAsync.mockResolvedValue({ id: 'pk_2', name: 'YubiKey' });
 });
 
 describe('AccountSecurityPanel', () => {
@@ -64,6 +90,22 @@ describe('AccountSecurityPanel', () => {
     await user.click(screen.getByTestId('mfa-disable'));
     await user.click(screen.getByTestId('confirm-accept'));
     await waitFor(() => expect(disableMutateAsync).toHaveBeenCalledTimes(1));
+  });
+
+  it('registers a passkey via the add dialog (FE-32)', async () => {
+    const user = userEvent.setup();
+    render(<AccountSecurityPanel />);
+    await user.click(screen.getByTestId('add-passkey'));
+    await user.type(await screen.findByTestId('passkey-name'), 'YubiKey');
+    await user.click(screen.getByTestId('passkey-add-submit'));
+    await waitFor(() => expect(registerMutateAsync).toHaveBeenCalledWith('YubiKey'));
+  });
+
+  it('revokes a passkey (FE-32)', async () => {
+    const user = userEvent.setup();
+    render(<AccountSecurityPanel />);
+    await user.click(screen.getByTestId('passkey-remove'));
+    expect(removePasskeyMutate).toHaveBeenCalledWith('pk_1');
   });
 
   it('has no accessibility violations', async () => {
