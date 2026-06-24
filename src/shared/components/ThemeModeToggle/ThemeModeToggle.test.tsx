@@ -9,7 +9,7 @@ import { ThemeModeToggle } from './ThemeModeToggle.tsx';
 // Real theme store (a Zustand store works in jsdom). Plain render — the toggle
 // is routing-free, so no providers are needed.
 beforeEach(() => {
-  useThemeStore.setState({ theme: 'system' });
+  useThemeStore.setState({ theme: 'system', preset: 'default', customHue: null });
 });
 
 describe('ThemeModeToggle', () => {
@@ -32,5 +32,14 @@ describe('ThemeModeToggle', () => {
     await user.click(screen.getByTestId('theme-toggle'));
     await user.click(await screen.findByTestId('theme-light'));
     expect(useThemeStore.getState().theme).toBe('light');
+  });
+
+  it('offers a quick Shuffle that generates a custom theme', async () => {
+    const user = userEvent.setup();
+    render(<ThemeModeToggle />);
+
+    await user.click(screen.getByTestId('theme-toggle'));
+    await user.click(await screen.findByTestId('theme-shuffle-menu'));
+    expect(useThemeStore.getState().preset).toBe('custom');
   });
 });
