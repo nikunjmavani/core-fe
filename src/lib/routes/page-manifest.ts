@@ -1,4 +1,7 @@
-import type { OrganizationPermission } from '@/core/types/permissions.ts';
+import type {
+  OrganizationPermission,
+  OrgCapabilityKey,
+} from '@/core/types/permissions.ts';
 
 /**
  * Shape for `<page>.manifest.ts` in every route island (leaf or layout).
@@ -23,6 +26,17 @@ export type PageManifest = {
   testId: string;
   /** Loader permission; `null` when inherited or public. */
   permission: OrganizationPermission | null;
+  /**
+   * Org-type capability required to enter (L6). Omit for routes with no
+   * capability requirement; a personal org has every capability `false`.
+   */
+  capability?: OrgCapabilityKey;
+  /**
+   * What a denied access resolves to: `'unauthorized'` (403 page — "you can't
+   * do this") or `'notFound'` (404 — hide the surface's existence). Default
+   * `'unauthorized'`.
+   */
+  onDeny?: 'unauthorized' | 'notFound';
   /** `layout` = has `<Outlet />` and `children`; `leaf` = terminal UI. */
   kind: RouteIslandKind;
   /**

@@ -1,6 +1,34 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { gateway } from './gateway.ts';
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+
+import { gateway, gatewayFromPolicy } from './gateway.ts';
+
+const ctx = {
+  location: { pathname: '/x', search: '', hash: '', href: '/x' },
+  params: {},
+};
+
+function signIn() {
+  useAuthStore.setState({
+    user: { id: 'u', email: 'a@b.test', role: 'user' },
+    isAuthenticated: true,
+  });
+}
+
+function setCaps(value: boolean) {
+  useOrganizationStore.setState({
+    capabilities: {
+      canInviteMembers: value,
+      canManageMembers: value,
+      canManageRoles: value,
+      canTransferOwnership: value,
+      canDelete: value,
+      canManageBilling: value,
+    },
+  });
+}
 
 describe('gateway', () => {
   it('runs gates in order and threads the context', async () => {
@@ -41,5 +69,45 @@ describe('gateway', () => {
 
   it('passes when there are no gates', async () => {
     await expect(gateway<unknown>()({})).resolves.toBeUndefined();
+  });
+});
+
+describe('gatewayFromPolicy (default-deny)', () => {
+  beforeEach(() => {
+    useOrganizationStore.getState().clearOrganization();
+  });
+
+  it('requires a session even for an empty policy', async () => {
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+    await expect(gatewayFromPolicy({})(ctx)).rejects.toBeDefined();
+  });
+
+  it('lets an authed user through an empty policy', async () => {
+    signIn();
+    await expect(gatewayFromPolicy({})(ctx)).resolves.toBeUndefined();
+  });
+
+  it('adds the permission gate when the policy names one', async () => {
+    signIn();
+    useOrganizationStore.setState({ permissions: [] });
+    await expect(
+      gatewayFromPolicy({ permission: 'membership:read' })(ctx),
+    ).rejects.toBeDefined();
+    useOrganizationStore.setState({ permissions: ['membership:read'] });
+    await expect(
+      gatewayFromPolicy({ permission: 'membership:read' })(ctx),
+    ).resolves.toBeUndefined();
+  });
+
+  it('adds the capability gate when the policy names one', async () => {
+    signIn();
+    setCaps(false);
+    await expect(
+      gatewayFromPolicy({ capability: 'canManageMembers' })(ctx),
+    ).rejects.toBeDefined();
+    setCaps(true);
+    await expect(
+      gatewayFromPolicy({ capability: 'canManageMembers' })(ctx),
+    ).resolves.toBeUndefined();
   });
 });

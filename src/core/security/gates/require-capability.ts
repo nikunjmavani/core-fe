@@ -1,18 +1,12 @@
 import { redirect } from '@tanstack/react-router';
 
 import { AUTH_ROUTES } from '@/core/config/constants.ts';
+import type { OrgCapabilityKey } from '@/core/types/permissions.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import type { Gate } from '../gate.types.ts';
 
-/** Org-type capability keys (team-only feature gates), mirroring me/context. */
-export type OrgCapabilityKey =
-  | 'canInviteMembers'
-  | 'canManageMembers'
-  | 'canManageRoles'
-  | 'canTransferOwnership'
-  | 'canDelete'
-  | 'canManageBilling';
+export type { OrgCapabilityKey };
 
 /** Exhaustive read — avoids object-injection and stays type-checked. */
 export function capabilityValue(
