@@ -1,6 +1,4 @@
-import { redirect } from '@tanstack/react-router';
-
-import { AUTH_ROUTES } from '@/core/config/constants.ts';
+import { denyAccess, type DenyMode } from '@/core/rbac/guards.ts';
 import type { OrgCapabilityKey } from '@/core/types/permissions.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
@@ -34,14 +32,17 @@ export function capabilityValue(
 /**
  * **L6 — org-type capability.** Factory: a personal org has every capability
  * `false`, so team-only surfaces (members, roles, …) are blocked there — by the
- * capability, never by probing the API (which 422s on personal). Redirects to
- * `/unauthorized` when the active org lacks the capability.
+ * capability, never by probing the API (which 422s on personal). Denies per
+ * `onDeny` — `/unauthorized` by default, or a 404 that hides the surface (FE-52).
  */
-export function requireCapabilityGate(capability: OrgCapabilityKey): Gate {
+export function requireCapabilityGate(
+  capability: OrgCapabilityKey,
+  onDeny?: DenyMode,
+): Gate {
   return () => {
     const caps = useOrganizationStore.getState().capabilities;
     if (!caps || !capabilityValue(caps, capability)) {
-      throw redirect({ to: AUTH_ROUTES.UNAUTHORIZED });
+      denyAccess(onDeny);
     }
   };
 }

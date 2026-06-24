@@ -1,4 +1,4 @@
-import { redirect } from '@tanstack/react-router';
+import { notFound, redirect } from '@tanstack/react-router';
 
 import { AUTH_ROUTES } from '@/core/config/constants.ts';
 import { hasPermission, type OrganizationPermission } from '@/core/rbac/policies.ts';
@@ -6,18 +6,37 @@ import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
+ * How an *authorization* denial surfaces (FE-52): `'unauthorized'` → the 403
+ * page ("you can't do this"); `'notFound'` → a 404 that hides the surface's
+ * very existence (for sensitive routes where even "exists but forbidden" leaks
+ * information). Defaults to `'unauthorized'`. An *authentication* failure always
+ * redirects to login regardless — being a guest is not a route secret.
+ */
+export type DenyMode = 'unauthorized' | 'notFound';
+
+/** Throw the configured denial (FE-52). Never returns. */
+export function denyAccess(onDeny: DenyMode = 'unauthorized'): never {
+  if (onDeny === 'notFound') throw notFound();
+  throw redirect({ to: AUTH_ROUTES.UNAUTHORIZED });
+}
+
+/**
  * Route loader/`beforeLoad` guard — throws a redirect if the user lacks an
  * org-scoped permission in the active organization.
  *
- * Redirects to `/login` when unauthenticated, or `/unauthorized` when authenticated
- * but missing the permission.
+ * Redirects to `/login` when unauthenticated; otherwise denies per `onDeny`
+ * (`/unauthorized` by default, or `notFound()` to hide a sensitive surface).
  *
  * @param permission - The required org-scoped permission code.
+ * @param onDeny - How an authorization denial surfaces (default `'unauthorized'`).
  *
  * @example
  * beforeLoad: () => requirePermission('membership:read');
  */
-export function requirePermission(permission: OrganizationPermission): void {
+export function requirePermission(
+  permission: OrganizationPermission,
+  onDeny?: DenyMode,
+): void {
   const { user, isAuthenticated } = useAuthStore.getState();
 
   if (!(isAuthenticated && user)) {
@@ -26,7 +45,7 @@ export function requirePermission(permission: OrganizationPermission): void {
 
   const { permissions } = useOrganizationStore.getState();
   if (!hasPermission({ role: user.role, permissions }, permission)) {
-    throw redirect({ to: AUTH_ROUTES.UNAUTHORIZED });
+    denyAccess(onDeny);
   }
 }
 

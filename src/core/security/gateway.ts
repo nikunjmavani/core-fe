@@ -1,3 +1,4 @@
+import type { DenyMode } from '@/core/rbac/guards.ts';
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 
 import type { Gate } from './gate.types.ts';
@@ -33,6 +34,8 @@ export interface RoutePolicy {
   permission?: OrganizationPermission | null;
   capability?: OrgCapabilityKey;
   module?: string;
+  /** How an authorization denial surfaces (FE-52): 403 page vs hide-as-404. */
+  onDeny?: DenyMode;
 }
 
 /**
@@ -44,8 +47,12 @@ export interface RoutePolicy {
  */
 export function gatewayFromPolicy(policy: RoutePolicy) {
   const gates: Gate[] = [requireSession];
-  if (policy.permission) gates.push(requirePermissionGate(policy.permission));
-  if (policy.capability) gates.push(requireCapabilityGate(policy.capability));
+  if (policy.permission) {
+    gates.push(requirePermissionGate(policy.permission, policy.onDeny));
+  }
+  if (policy.capability) {
+    gates.push(requireCapabilityGate(policy.capability, policy.onDeny));
+  }
   if (policy.module) gates.push(requireModuleGate(policy.module));
   return gateway(...gates);
 }
