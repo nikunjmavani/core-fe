@@ -1,8 +1,6 @@
-import { organizationDashboard, organizationPicker } from '@/lib/routes/index.ts';
-import { getLastOrganizationFromStorage } from '@/shared/store/useOrganizationStore/index.ts';
+import { organizationDashboard } from '@/lib/routes/index.ts';
 
-import type { MeContext } from './me-context.ts';
-import { listMyOrganizations } from './my-organizations.ts';
+import { fetchMeContext, type MeContext } from './me-context.ts';
 
 /**
  * Dual-URL root target (research/11 §3.3, D-02/D-10): the active org from
@@ -39,28 +37,21 @@ export function resolveRootTarget(ctx: MeContext): RootTarget {
 
 type RootRedirect =
   | ReturnType<typeof organizationDashboard>
-  | ReturnType<typeof organizationPicker>
+  | { readonly to: '/dashboard' }
   | { readonly to: '/onboarding' };
 
 /**
- * `/` resolver (docs/reference/routing-and-tenancy.md §2): the root URL keeps
- * no UI — it redirects to the last-used organization's dashboard, else the
- * `/organization` picker, else `/onboarding` when the user has no
- * organizations yet. The last-used organization is validated against current
- * memberships so a stale storage entry can't redirect into a 404.
+ * `/` resolver (dual-URL, research/11 §3.3): the root URL keeps no UI. The
+ * **active organization from `me/context`** (server-side, the JWT `org` claim)
+ * decides where to land — a PERSONAL org → root `/dashboard`, a TEAM org → its
+ * `/organization/$organizationId/dashboard` space, and no active org →
+ * `/onboarding`. Reading the active org from the session context (not URL or
+ * last-used storage) makes the JWT the single source of truth (FE-08).
  */
 export async function resolveRootRedirect(): Promise<RootRedirect> {
-  const organizations = await listMyOrganizations();
-  if (organizations.length === 0) return { to: '/onboarding' } as const;
-
-  const last = getLastOrganizationFromStorage();
-  const lastIsValid = last && organizations.some((o) => o.id === last.id);
-  if (lastIsValid) return organizationDashboard(last.id);
-
-  // A single organization needs no picker — land straight on its dashboard.
-  if (organizations.length === 1 && organizations[0]) {
-    return organizationDashboard(organizations[0].id);
-  }
-
-  return organizationPicker();
+  const ctx = await fetchMeContext();
+  const active = ctx.activeOrganization;
+  if (!active) return { to: '/onboarding' } as const;
+  if (active.type === 'PERSONAL') return { to: '/dashboard' } as const;
+  return organizationDashboard(active.id);
 }
