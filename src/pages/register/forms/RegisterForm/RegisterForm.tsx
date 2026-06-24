@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link, useNavigate } from '@tanstack/react-router';
+import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { authApi } from '@/shared/api/auth-api.ts';
 import { type RegisterInput, registerSchema } from '@/shared/api/auth-contracts.ts';
+import { safeRedirect } from '@/shared/auth/redirect-safety.ts';
 import { establishSession } from '@/shared/auth/service.ts';
 import { PasswordStrengthMeter } from '@/shared/components/PasswordStrengthMeter/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
@@ -18,6 +19,7 @@ export function RegisterForm() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [isBreached, setIsBreached] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const {
     register,
@@ -41,7 +43,9 @@ export function RegisterForm() {
     try {
       const { accessToken } = await authApi.register(data);
       await establishSession(accessToken);
-      void navigate({ to: '/', replace: true });
+      // Honor a deep-link returnTo if present (FE-59), else the `/` resolver.
+      const target = safeRedirect((location.search as { redirect?: unknown }).redirect);
+      void navigate({ to: target ?? '/', replace: true });
     } catch (err) {
       setApiError(
         err instanceof Error ? err.message : 'Registration failed. Please try again.',

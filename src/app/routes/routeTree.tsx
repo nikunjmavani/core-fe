@@ -181,6 +181,10 @@ const registerRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/register',
   head: manifestHead(registerManifest),
+  // `redirect` = returnTo when a deep link routes a guest here (FE-59).
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
+  }),
   component: RegisterPage,
   errorComponent: RouteErrorBoundary,
 });
