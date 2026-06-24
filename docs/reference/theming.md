@@ -43,6 +43,14 @@ The app's extra semantic tokens — `success` / `warning` / `info` (+ foreground
 
 Named presets are applied via a `data-theme="<id>"` attribute on `<html>`,
 composed with the `.dark` class — so light/dark **mode** and the **preset** are
-independent axes. A runtime switcher (Settings → Appearance) sets both and a
-"shuffle" action randomizes the preset. When `VITE_THEME_LOCK=true`, the switcher
-and shuffle are hidden and the app is pinned to the code-defined theme.
+independent axes. A runtime switcher (Settings → Appearance) sets both.
+
+The **"Shuffle theme"** action (shadcn-create style) does _not_ cycle the named
+presets — it **generates a fresh random accent** each click: a random hue drives
+the same accent tokens a preset overrides (`--color-primary` / `--color-ring` /
+`--color-sidebar-primary` + their foregrounds), set **inline** on `<html>` so it
+works in both light and dark (CSP-safe — no injected `<style>`; mirrors the
+org-brand engine), mutually exclusive with the `data-theme` presets. The store
+records it as `preset: 'custom'` + `customHue`, so it persists across reloads and
+the panel shows a live **Custom** swatch. When `VITE_THEME_LOCK=true`, the
+switcher and shuffle are hidden and the app is pinned to the code-defined theme.

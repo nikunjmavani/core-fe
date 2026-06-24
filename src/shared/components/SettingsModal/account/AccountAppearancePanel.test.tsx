@@ -8,7 +8,7 @@ import { AccountAppearancePanel } from './AccountAppearancePanel.tsx';
 
 describe('AccountAppearancePanel', () => {
   beforeEach(() => {
-    useThemeStore.setState({ theme: 'system', preset: 'default' });
+    useThemeStore.setState({ theme: 'system', preset: 'default', customHue: null });
     delete document.documentElement.dataset.theme;
   });
 
@@ -28,11 +28,12 @@ describe('AccountAppearancePanel', () => {
     expect(document.documentElement.dataset.theme).toBe('violet');
   });
 
-  it('shuffle changes the active preset', async () => {
+  it('shuffle generates a custom theme and shows the custom indicator', async () => {
     const user = userEvent.setup();
     useThemeStore.setState({ theme: 'system', preset: 'violet' });
     render(<AccountAppearancePanel />);
     await user.click(screen.getByTestId('theme-shuffle'));
-    expect(useThemeStore.getState().preset).not.toBe('violet');
+    expect(useThemeStore.getState().preset).toBe('custom');
+    expect(await screen.findByTestId('preset-custom')).toBeInTheDocument();
   });
 });

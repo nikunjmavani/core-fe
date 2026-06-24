@@ -10,7 +10,7 @@ import {
 } from '@/shared/components/ui/card.tsx';
 import { Check, Monitor, Moon, Sparkles, Sun } from '@/shared/icons/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
-import { THEME_PRESETS } from '@/shared/theme/index.ts';
+import { GENERATED_PRESET, THEME_PRESETS } from '@/shared/theme/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
@@ -114,7 +114,7 @@ export function AccountAppearancePanel() {
         <CardHeader>
           <CardTitle className="text-base">Accent</CardTitle>
           <CardDescription>
-            Pick an accent colour, or shuffle for a surprise.
+            Pick a preset, or shuffle to generate a fresh random theme.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -154,6 +154,16 @@ export function AccountAppearancePanel() {
               );
             })}
           </div>
+          {preset === GENERATED_PRESET ? (
+            <div
+              className="border-primary ring-primary/20 bg-background flex items-center gap-3 rounded-lg border p-3 ring-2"
+              data-testid="preset-custom"
+            >
+              <span className="bg-primary size-5 shrink-0 rounded-full" aria-hidden />
+              <span className="text-sm font-medium">Custom — shuffled accent</span>
+              <Check className="text-primary ml-auto size-4" aria-hidden />
+            </div>
+          ) : null}
           <Button
             type="button"
             variant="outline"

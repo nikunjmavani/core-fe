@@ -2,10 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import {
+  applyGeneratedTheme,
   applyThemePreset,
   DEFAULT_PRESET,
+  GENERATED_PRESET,
   isThemePreset,
-  THEME_PRESETS,
+  nextRandomHue,
 } from '@/shared/theme/index.ts';
 
 type Mode = 'light' | 'dark' | 'system';
@@ -13,11 +15,13 @@ type Mode = 'light' | 'dark' | 'system';
 interface ThemeStore {
   /** Light/dark mode (name kept for back-compat with existing consumers). */
   theme: Mode;
-  /** Active named accent preset (see `shared/theme`). */
+  /** Active named accent preset (see `shared/theme`); `custom` when generated. */
   preset: string;
+  /** Hue (0–359) of the last generated theme, when `preset` is `custom`. */
+  customHue: number | null;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
-  /** Pick a random preset different from the current one. */
+  /** Generate + apply a fresh random accent theme (shadcn-create style). */
   shuffleTheme: () => void;
 }
 
@@ -37,6 +41,7 @@ export const useThemeStore = create<ThemeStore>()(
     (set, get) => ({
       theme: 'system',
       preset: DEFAULT_PRESET,
+      customHue: null,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -44,26 +49,31 @@ export const useThemeStore = create<ThemeStore>()(
       setPreset: (preset) => {
         const next = isThemePreset(preset) ? preset : DEFAULT_PRESET;
         applyThemePreset(next);
-        set({ preset: next });
+        set({ preset: next, customHue: null });
       },
       shuffleTheme: () => {
-        const others = THEME_PRESETS.filter((p) => p.id !== get().preset);
-        const pool = others.length > 0 ? others : THEME_PRESETS;
-        // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme shuffle, not security-sensitive
-        const next = pool[Math.floor(Math.random() * pool.length)];
-        if (next) {
-          applyThemePreset(next.id);
-          set({ preset: next.id });
-        }
+        // Generate a fresh random accent each time (shadcn-create style) rather
+        // than cycling a fixed preset list.
+        const hue = nextRandomHue(get().customHue);
+        applyGeneratedTheme(hue);
+        set({ preset: GENERATED_PRESET, customHue: hue });
       },
     }),
     {
       name: 'theme-preference',
-      partialize: (state) => ({ theme: state.theme, preset: state.preset }),
+      partialize: (state) => ({
+        theme: state.theme,
+        preset: state.preset,
+        customHue: state.customHue,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           applyMode(state.theme);
-          applyThemePreset(state.preset);
+          if (state.preset === GENERATED_PRESET && state.customHue != null) {
+            applyGeneratedTheme(state.customHue);
+          } else {
+            applyThemePreset(state.preset);
+          }
         }
       },
     },
