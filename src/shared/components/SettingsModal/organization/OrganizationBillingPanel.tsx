@@ -22,13 +22,8 @@ import { SectionHeader } from '../SettingsPanelShell.tsx';
 
 const PLANS: ReadonlyArray<{ id: Plan; label: string; price: string; blurb: string }> = [
   { id: 'free', label: 'Free', price: '$0', blurb: 'For getting started.' },
+  { id: 'starter', label: 'Starter', price: '$29 / mo', blurb: 'For small teams.' },
   { id: 'pro', label: 'Pro', price: '$99 / mo', blurb: 'For growing teams.' },
-  {
-    id: 'enterprise',
-    label: 'Enterprise',
-    price: '$499 / mo',
-    blurb: 'Advanced controls + priority support.',
-  },
 ];
 
 function formatMoney(cents: number, currency: string): string {

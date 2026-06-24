@@ -116,8 +116,8 @@ describe('orgMockStore', () => {
 
   describe('subscription', () => {
     it('updates the subscription', () => {
-      const updated = orgMockStore.updateSubscription({ plan: 'enterprise', seats: 50 });
-      expect(updated.plan).toBe('enterprise');
+      const updated = orgMockStore.updateSubscription({ plan: 'starter', seats: 50 });
+      expect(updated.plan).toBe('starter');
       expect(orgMockStore.getSubscription().seats).toBe(50);
     });
   });

@@ -262,11 +262,11 @@ describe('organization-api subscription (live)', () => {
   });
 
   it('updateSubscriptionPlan patches the plan', async () => {
-    patchMock.mockResolvedValue({ data: { ...SUB_WIRE, plan: 'enterprise' } });
-    const sub = await updateSubscriptionPlan('enterprise');
+    patchMock.mockResolvedValue({ data: { ...SUB_WIRE, plan: 'starter' } });
+    const sub = await updateSubscriptionPlan('starter');
     expect(patchMock).toHaveBeenCalledWith(expect.stringContaining('/subscription'), {
-      plan: 'enterprise',
+      plan: 'starter',
     });
-    expect(sub.plan).toBe('enterprise');
+    expect(sub.plan).toBe('starter');
   });
 });

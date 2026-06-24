@@ -393,12 +393,12 @@ export async function revokeApiKey(keyId: string): Promise<{ id: string }> {
 
 const PLAN_PRICING: Record<Plan, { amountCents: number; seats: number }> = {
   free: { amountCents: 0, seats: 3 },
+  starter: { amountCents: 2900, seats: 5 },
   pro: { amountCents: 9900, seats: 10 },
-  enterprise: { amountCents: 49900, seats: 50 },
 };
 
 const subscriptionWire = z.object({
-  plan: z.enum(['free', 'pro', 'enterprise']),
+  plan: z.enum(['free', 'starter', 'pro']),
   status: z.enum(['active', 'trialing', 'past_due', 'canceled']),
   seats: z.number().int().nonnegative(),
   seats_used: z.number().int().nonnegative(),

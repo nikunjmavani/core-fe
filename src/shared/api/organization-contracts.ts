@@ -81,7 +81,7 @@ export const createApiKeyInputSchema = z.object({
 });
 export type CreateApiKeyInput = z.infer<typeof createApiKeyInputSchema>;
 
-export const planSchema = z.enum(['free', 'pro', 'enterprise']);
+export const planSchema = z.enum(['free', 'starter', 'pro']);
 export type Plan = z.infer<typeof planSchema>;
 
 export const subscriptionSchema = z.object({
