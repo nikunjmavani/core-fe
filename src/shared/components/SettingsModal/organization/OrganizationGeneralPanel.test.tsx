@@ -2,6 +2,7 @@ import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 
@@ -20,16 +21,14 @@ vi.mock('@/shared/notify/index.ts', () => ({
 import { OrganizationGeneralPanel } from './OrganizationGeneralPanel.tsx';
 
 function setCanManage(value: boolean) {
+  useAuthStore.setState({
+    user: { id: 'u', email: 'a@b.test', role: 'user' },
+    isAuthenticated: true,
+  });
   useOrganizationStore.setState({
     organizationId: 'org_acme',
-    capabilities: {
-      canInviteMembers: value,
-      canManageMembers: value,
-      canManageRoles: value,
-      canTransferOwnership: value,
-      canDelete: value,
-      canManageBilling: value,
-    },
+    organizationType: value ? 'TEAM' : 'PERSONAL',
+    permissions: value ? ['membership:manage'] : [],
   });
 }
 

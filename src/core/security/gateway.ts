@@ -2,10 +2,6 @@ import type { DenyMode } from '@/core/rbac/guards.ts';
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 
 import type { Gate } from './gate.types.ts';
-import {
-  type OrgCapabilityKey,
-  requireCapabilityGate,
-} from './gates/require-capability.ts';
 import { requireModuleGate } from './gates/require-module.ts';
 import { requirePermissionGate } from './gates/require-permission.ts';
 import { requireSession } from './gates/require-session.ts';
@@ -32,7 +28,6 @@ export function gateway<TCtx>(...gates: Array<Gate<TCtx>>) {
 /** A route's declared access policy (from its manifest). */
 export interface RoutePolicy {
   permission?: OrganizationPermission | null;
-  capability?: OrgCapabilityKey;
   module?: string;
   /** How an authorization denial surfaces (FE-52): 403 page vs hide-as-404. */
   onDeny?: DenyMode;
@@ -41,17 +36,14 @@ export interface RoutePolicy {
 /**
  * Compose the gateway for a route from its declared policy. **Default-deny:**
  * every protected route requires a session even with no explicit
- * permission/capability; the L5 (permission) and L6 (capability) gates are added
- * only when the policy names them. This keeps a "forgot to add a guard" route
- * failing closed (still authenticated) rather than open.
+ * permission; the L5 (permission) gate is added only when the policy names it.
+ * This keeps a "forgot to add a guard" route failing closed (still
+ * authenticated) rather than open.
  */
 export function gatewayFromPolicy(policy: RoutePolicy) {
   const gates: Gate[] = [requireSession];
   if (policy.permission) {
     gates.push(requirePermissionGate(policy.permission, policy.onDeny));
-  }
-  if (policy.capability) {
-    gates.push(requireCapabilityGate(policy.capability, policy.onDeny));
   }
   if (policy.module) gates.push(requireModuleGate(policy.module));
   return gateway(...gates);

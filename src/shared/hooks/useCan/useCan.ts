@@ -1,34 +1,29 @@
 import { hasPermission, type OrganizationPermission } from '@/core/rbac/policies.ts';
-import {
-  capabilityValue,
-  type OrgCapabilityKey,
-} from '@/core/security/gates/require-capability.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
-/** A UI access requirement: an org-scoped permission and/or an org-type capability. */
+/** A UI access requirement: an org-scoped permission and/or a team-org guard. */
 export interface AccessCheck {
   /** Org-scoped permission the user must hold in the active org. */
   permission?: OrganizationPermission;
-  /** Org-type capability the active org must have (personal orgs lack all). */
-  capability?: OrgCapabilityKey;
+  /**
+   * Require a TEAM organization — a personal org is blocked. The explicit
+   * personal-vs-team guard that replaced the removed `capabilities` object.
+   */
+  teamOrganizationOnly?: boolean;
 }
 
 function passes(
   check: AccessCheck,
   user: ReturnType<typeof useAuthStore.getState>['user'],
   permissions: ReturnType<typeof useOrganizationStore.getState>['permissions'],
-  capabilities: ReturnType<typeof useOrganizationStore.getState>['capabilities'],
+  organizationType: ReturnType<typeof useOrganizationStore.getState>['organizationType'],
 ): boolean {
-  if (check.permission) {
-    if (!user || !hasPermission({ role: user.role, permissions }, check.permission)) {
-      return false;
-    }
-  }
-  if (check.capability) {
-    if (!capabilities || !capabilityValue(capabilities, check.capability)) return false;
-  }
-  return true;
+  const permissionOk =
+    !check.permission ||
+    (!!user && hasPermission({ role: user.role, permissions }, check.permission));
+  const teamOk = !check.teamOrganizationOnly || organizationType === 'TEAM';
+  return permissionOk && teamOk;
 }
 
 /**
@@ -40,8 +35,8 @@ function passes(
 export function useCan(check: AccessCheck): boolean {
   const user = useAuthStore((s) => s.user);
   const permissions = useOrganizationStore((s) => s.permissions);
-  const capabilities = useOrganizationStore((s) => s.capabilities);
-  return passes(check, user, permissions, capabilities);
+  const organizationType = useOrganizationStore((s) => s.organizationType);
+  return passes(check, user, permissions, organizationType);
 }
 
 /**
@@ -51,6 +46,6 @@ export function useCan(check: AccessCheck): boolean {
 export function useVisibleNav<T extends AccessCheck>(items: readonly T[]): T[] {
   const user = useAuthStore((s) => s.user);
   const permissions = useOrganizationStore((s) => s.permissions);
-  const capabilities = useOrganizationStore((s) => s.capabilities);
-  return items.filter((item) => passes(item, user, permissions, capabilities));
+  const organizationType = useOrganizationStore((s) => s.organizationType);
+  return items.filter((item) => passes(item, user, permissions, organizationType));
 }

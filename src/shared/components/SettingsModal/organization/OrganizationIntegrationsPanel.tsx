@@ -21,13 +21,13 @@ import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
 import { useApiKeys, useRevokeApiKey } from '@/shared/hooks/useApiKeys/index.ts';
+import { useCan } from '@/shared/hooks/useCan/index.ts';
 import {
   useCreateWebhook,
   useDeleteWebhook,
   useWebhooks,
 } from '@/shared/hooks/useWebhooks/index.ts';
 import { Boxes, Plus, Trash2 } from '@/shared/icons/index.ts';
-import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
@@ -36,7 +36,7 @@ function formatDate(iso: string): string {
 }
 
 function useCanManageIntegrations(): boolean {
-  return useOrganizationStore((s) => s.capabilities?.canManageRoles ?? false);
+  return useCan({ permission: 'role:manage', teamOrganizationOnly: true });
 }
 
 /** API keys — list (masked) + cap-gated revoke. */

@@ -151,7 +151,8 @@ function DashboardSkeleton() {
 }
 
 function QuickActions({ ctx }: { ctx: MeContext }) {
-  const caps = ctx.activeOrganization?.capabilities;
+  const isTeam = ctx.activeOrganization?.type === 'TEAM';
+  const can = (permission: string) => isTeam && ctx.myPermissions.includes(permission);
   const orgName = ctx.activeOrganization?.name ?? 'your workspace';
   return (
     <section aria-label="Quick actions" className="space-y-3">
@@ -159,7 +160,7 @@ function QuickActions({ ctx }: { ctx: MeContext }) {
         Quick actions
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {caps?.canInviteMembers && (
+        {can('invitation:manage') && (
           <ActionCard
             href="#settings/organization/members"
             icon={UserPlus}
@@ -168,7 +169,7 @@ function QuickActions({ ctx }: { ctx: MeContext }) {
             testId="dashboard-action-invite"
           />
         )}
-        {caps?.canManageRoles && (
+        {can('role:manage') && (
           <ActionCard
             href="#settings/organization/roles"
             icon={ShieldCheck}
@@ -177,7 +178,7 @@ function QuickActions({ ctx }: { ctx: MeContext }) {
             testId="dashboard-action-roles"
           />
         )}
-        {caps?.canManageBilling && (
+        {isTeam && (
           <ActionCard
             href="#settings/organization/billing"
             icon={Zap}
@@ -294,8 +295,8 @@ export function Dashboard() {
         <StatCard
           icon={Zap}
           label="Billing"
-          value={org?.capabilities.canManageBilling ? 'Managed' : '—'}
-          hint={org?.capabilities.canManageBilling ? 'You can manage' : 'Read-only'}
+          value={isTeam ? 'Managed' : '—'}
+          hint={isTeam ? 'Team plan' : 'Personal — none'}
           testId="dashboard-stat-billing"
         />
       </section>

@@ -1,7 +1,4 @@
-import type {
-  OrganizationPermission,
-  OrgCapabilityKey,
-} from '@/core/types/permissions.ts';
+import type { OrganizationPermission } from '@/core/types/permissions.ts';
 
 /**
  * Shape for `<page>.manifest.ts` in every route island (leaf or layout).
@@ -26,11 +23,6 @@ export type PageManifest = {
   testId: string;
   /** Loader permission; `null` when inherited or public. */
   permission: OrganizationPermission | null;
-  /**
-   * Org-type capability required to enter (L6). Omit for routes with no
-   * capability requirement; a personal org has every capability `false`.
-   */
-  capability?: OrgCapabilityKey;
   /**
    * Feature-module key this route belongs to (L6b). When the deployment disables
    * the module (`VITE_DISABLED_MODULES`), the route resolves to `notFound()`.

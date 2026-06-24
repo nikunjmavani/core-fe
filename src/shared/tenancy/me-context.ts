@@ -7,8 +7,8 @@ import { mockResponse } from '@/core/http/mock.ts';
 import { isoDateString, publicId } from '@/core/types/wire.ts';
 
 // ── Wire schemas (snake_case — mirror the core-be serializers) ──────────────
-// core-be #795 removed the per-org `capabilities` object; the app now DERIVES
-// capabilities from `type` + the caller's `my_permissions` (deriveCapabilities).
+// core-be #795 removed the per-org `capabilities` object. The app gates UI by
+// `my_permissions` (RBAC) + an explicit team-org guard (useCan teamOrganizationOnly).
 export const organizationWire = z.object({
   id: publicId('org'),
   name: z.string(),
@@ -47,14 +47,6 @@ export const meContextWire = z.object({
 export type MeContextWire = z.infer<typeof meContextWire>;
 
 // ── Camel-cased domain types (what the app consumes) ────────────────────────
-export interface OrgCapabilities {
-  canInviteMembers: boolean;
-  canManageMembers: boolean;
-  canManageRoles: boolean;
-  canTransferOwnership: boolean;
-  canDelete: boolean;
-  canManageBilling: boolean;
-}
 export type OrganizationType = 'PERSONAL' | 'TEAM';
 export type OrganizationStatusValue = 'ACTIVE' | 'SUSPENDED' | 'ARCHIVED';
 export type GlobalRole = 'super_admin' | 'admin' | 'user';
@@ -68,7 +60,6 @@ export interface OrganizationSummary {
   logoUrl: string | null;
   /** Optional per-org accent (hex/oklch) → `--color-brand` (FE-57); absent until the backend sends it. */
   brandColor?: string | null;
-  capabilities: OrgCapabilities;
   createdAt: string;
   updatedAt: string;
 }
@@ -92,30 +83,7 @@ export interface MeContext {
   organizations: Array<OrganizationSummary & { isActive: boolean }>;
 }
 
-/**
- * Derive org capabilities from the org `type` + the caller's permissions
- * (core-be #795 dropped the server-sent `capabilities` object). Every
- * team-management capability requires a TEAM org; billing additionally needs
- * `subscription:manage`.
- */
-export function deriveCapabilities(
-  type: OrganizationType,
-  perms: readonly string[],
-): OrgCapabilities {
-  const has = (p: string) => type === 'TEAM' && perms.includes(p);
-  return {
-    canInviteMembers: has('invitation:manage'),
-    canManageMembers: has('membership:manage'),
-    canManageRoles: has('role:manage'),
-    canTransferOwnership: has('organization:delete'),
-    canDelete: has('organization:delete'),
-    canManageBilling: has('subscription:manage'),
-  };
-}
-export function toOrganization(
-  w: z.infer<typeof organizationWire>,
-  perms: readonly string[] = [],
-): OrganizationSummary {
+export function toOrganization(w: z.infer<typeof organizationWire>): OrganizationSummary {
   return {
     id: w.id,
     name: w.name,
@@ -124,7 +92,6 @@ export function toOrganization(
     status: w.status,
     logoUrl: w.logo_url,
     brandColor: w.brand_color ?? null,
-    capabilities: deriveCapabilities(w.type, perms),
     createdAt: w.created_at,
     updatedAt: w.updated_at,
   };
@@ -146,14 +113,12 @@ export function toMeContext(wire: MeContextWire): MeContext {
       updatedAt: wire.user.updated_at,
     },
     activeOrganization: wire.active_organization
-      ? toOrganization(wire.active_organization, wire.my_permissions)
+      ? toOrganization(wire.active_organization)
       : null,
     myPermissions: wire.my_permissions,
     globalRole: wire.global_role,
     organizations: wire.organizations.map((o) => ({
-      // Only the active org's caller-permissions are known; others derive empty
-      // caps (caps gate the active org only — the switcher list doesn't use them).
-      ...toOrganization(o, o.is_active ? wire.my_permissions : []),
+      ...toOrganization(o),
       isActive: o.is_active,
     })),
   };
@@ -179,22 +144,6 @@ const MOCK_PERMISSIONS = [
   'webhook:manage',
   'audit-log:read',
 ];
-const TEAM_CAPS: OrgCapabilities = {
-  canInviteMembers: true,
-  canManageMembers: true,
-  canManageRoles: true,
-  canTransferOwnership: true,
-  canDelete: true,
-  canManageBilling: true,
-};
-const PERSONAL_CAPS: OrgCapabilities = {
-  canInviteMembers: false,
-  canManageMembers: false,
-  canManageRoles: false,
-  canTransferOwnership: false,
-  canDelete: false,
-  canManageBilling: false,
-};
 const MOCK_TEAM_ORG: OrganizationSummary = {
   id: 'org_acme',
   name: 'Acme Inc.',
@@ -202,7 +151,6 @@ const MOCK_TEAM_ORG: OrganizationSummary = {
   type: 'TEAM',
   status: 'ACTIVE',
   logoUrl: null,
-  capabilities: TEAM_CAPS,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
@@ -213,7 +161,6 @@ const MOCK_PERSONAL_ORG: OrganizationSummary = {
   type: 'PERSONAL',
   status: 'ACTIVE',
   logoUrl: null,
-  capabilities: PERSONAL_CAPS,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
@@ -224,7 +171,6 @@ const MOCK_GLOBEX_ORG: OrganizationSummary = {
   type: 'TEAM',
   status: 'ACTIVE',
   logoUrl: null,
-  capabilities: TEAM_CAPS,
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };

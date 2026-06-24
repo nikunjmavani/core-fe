@@ -9,17 +9,8 @@ import { Gate } from './Gate.tsx';
 
 const USER = { id: 'usr_1', email: 'u@e.com', role: 'user' } as AuthUser;
 
-function setCaps(value: boolean) {
-  useOrganizationStore.setState({
-    capabilities: {
-      canInviteMembers: value,
-      canManageMembers: value,
-      canManageRoles: value,
-      canTransferOwnership: value,
-      canDelete: value,
-      canManageBilling: value,
-    },
-  });
+function setTeamOrg(isTeam: boolean) {
+  useOrganizationStore.setState({ organizationType: isTeam ? 'TEAM' : 'PERSONAL' });
 }
 
 beforeEach(() => {
@@ -29,9 +20,9 @@ beforeEach(() => {
 
 describe('Gate', () => {
   it('renders children when the check passes', () => {
-    setCaps(true);
+    setTeamOrg(true);
     render(
-      <Gate capability="canManageMembers">
+      <Gate teamOrganizationOnly>
         <span>allowed</span>
       </Gate>,
     );
@@ -39,9 +30,9 @@ describe('Gate', () => {
   });
 
   it('renders the fallback when the check fails', () => {
-    setCaps(false);
+    setTeamOrg(false);
     render(
-      <Gate capability="canManageMembers" fallback={<span>denied</span>}>
+      <Gate teamOrganizationOnly fallback={<span>denied</span>}>
         <span>allowed</span>
       </Gate>,
     );

@@ -9,17 +9,8 @@ import { useCan, useVisibleNav } from './useCan.ts';
 
 const USER = { id: 'usr_1', email: 'u@e.com', role: 'user' } as AuthUser;
 
-function setCaps(value: boolean) {
-  useOrganizationStore.setState({
-    capabilities: {
-      canInviteMembers: value,
-      canManageMembers: value,
-      canManageRoles: value,
-      canTransferOwnership: value,
-      canDelete: value,
-      canManageBilling: value,
-    },
-  });
+function setTeamOrg(isTeam: boolean) {
+  useOrganizationStore.setState({ organizationType: isTeam ? 'TEAM' : 'PERSONAL' });
 }
 
 beforeEach(() => {
@@ -42,23 +33,23 @@ describe('useCan', () => {
     );
   });
 
-  it('checks an org-type capability', () => {
-    setCaps(true);
-    expect(
-      renderHook(() => useCan({ capability: 'canManageMembers' })).result.current,
-    ).toBe(true);
-    setCaps(false);
-    expect(
-      renderHook(() => useCan({ capability: 'canManageMembers' })).result.current,
-    ).toBe(false);
+  it('checks the team-organization guard', () => {
+    setTeamOrg(true);
+    expect(renderHook(() => useCan({ teamOrganizationOnly: true })).result.current).toBe(
+      true,
+    );
+    setTeamOrg(false);
+    expect(renderHook(() => useCan({ teamOrganizationOnly: true })).result.current).toBe(
+      false,
+    );
   });
 
-  it('requires BOTH permission and capability (AND)', () => {
+  it('requires BOTH permission and team org (AND)', () => {
     useOrganizationStore.getState().setPermissions(['membership:read']);
-    setCaps(false);
+    setTeamOrg(false);
     expect(
       renderHook(() =>
-        useCan({ permission: 'membership:read', capability: 'canManageMembers' }),
+        useCan({ permission: 'membership:read', teamOrganizationOnly: true }),
       ).result.current,
     ).toBe(false);
   });
@@ -66,11 +57,11 @@ describe('useCan', () => {
 
 describe('useVisibleNav', () => {
   it('filters items by their access check', () => {
-    setCaps(true);
+    setTeamOrg(true);
     useOrganizationStore.getState().setPermissions(['membership:read']);
     const items = [
       { id: 'a' },
-      { id: 'b', capability: 'canManageMembers' as const },
+      { id: 'b', teamOrganizationOnly: true as const },
       { id: 'c', permission: 'role:manage' as const },
     ];
     const visible = renderHook(() => useVisibleNav(items)).result.current;

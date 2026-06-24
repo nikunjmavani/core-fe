@@ -7,9 +7,9 @@ import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar.tsx';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
+import { useCan } from '@/shared/hooks/useCan/index.ts';
 import { useMembers, useRemoveMember } from '@/shared/hooks/useMembers/index.ts';
 import { Trash2, Users } from '@/shared/icons/index.ts';
-import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
@@ -40,9 +40,10 @@ function statusVariant(
  */
 export function OrganizationMembersPanel() {
   const { data: members, isLoading, isError } = useMembers();
-  const canManage = useOrganizationStore(
-    (s) => s.capabilities?.canManageMembers ?? false,
-  );
+  const canManage = useCan({
+    permission: 'membership:manage',
+    teamOrganizationOnly: true,
+  });
   const removeMember = useRemoveMember();
   const [toRemove, setToRemove] = useState<Member | null>(null);
 

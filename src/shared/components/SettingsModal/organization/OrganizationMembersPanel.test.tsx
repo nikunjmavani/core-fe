@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 const { useMembersMock, removeMutateAsync } = vi.hoisted(() => ({
@@ -26,15 +27,13 @@ const MEMBER = {
 };
 
 function setCanManage(value: boolean) {
+  useAuthStore.setState({
+    user: { id: 'u', email: 'a@b.test', role: 'user' },
+    isAuthenticated: true,
+  });
   useOrganizationStore.setState({
-    capabilities: {
-      canInviteMembers: value,
-      canManageMembers: value,
-      canManageRoles: value,
-      canTransferOwnership: value,
-      canDelete: value,
-      canManageBilling: value,
-    },
+    organizationType: value ? 'TEAM' : 'PERSONAL',
+    permissions: value ? ['membership:manage'] : [],
   });
 }
 

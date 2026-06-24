@@ -17,19 +17,6 @@ function signIn() {
   });
 }
 
-function setCaps(value: boolean) {
-  useOrganizationStore.setState({
-    capabilities: {
-      canInviteMembers: value,
-      canManageMembers: value,
-      canManageRoles: value,
-      canTransferOwnership: value,
-      canDelete: value,
-      canManageBilling: value,
-    },
-  });
-}
-
 describe('gateway', () => {
   it('runs gates in order and threads the context', async () => {
     const calls: string[] = [];
@@ -96,18 +83,6 @@ describe('gatewayFromPolicy (default-deny)', () => {
     useOrganizationStore.setState({ permissions: ['membership:read'] });
     await expect(
       gatewayFromPolicy({ permission: 'membership:read' })(ctx),
-    ).resolves.toBeUndefined();
-  });
-
-  it('adds the capability gate when the policy names one', async () => {
-    signIn();
-    setCaps(false);
-    await expect(
-      gatewayFromPolicy({ capability: 'canManageMembers' })(ctx),
-    ).rejects.toBeDefined();
-    setCaps(true);
-    await expect(
-      gatewayFromPolicy({ capability: 'canManageMembers' })(ctx),
     ).resolves.toBeUndefined();
   });
 });

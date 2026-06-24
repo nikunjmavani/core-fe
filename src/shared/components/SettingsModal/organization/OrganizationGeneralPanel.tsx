@@ -11,6 +11,7 @@ import {
 } from '@/shared/components/ui/card.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
+import { useCan } from '@/shared/hooks/useCan/index.ts';
 import { useUpdateOrganization } from '@/shared/hooks/useUpdateOrganization/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
@@ -136,9 +137,10 @@ function OrgLogoCard({
 export function OrganizationGeneralPanel() {
   const organizationId = useOrganizationStore((s) => s.organizationId);
   const organizationSlug = useOrganizationStore((s) => s.organizationSlug);
-  const canManage = useOrganizationStore(
-    (s) => s.capabilities?.canManageMembers ?? false,
-  );
+  const canManage = useCan({
+    permission: 'membership:manage',
+    teamOrganizationOnly: true,
+  });
   const update = useUpdateOrganization();
 
   const { data: orgs } = useQuery({

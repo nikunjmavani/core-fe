@@ -32,14 +32,6 @@ const TEAM_CTX: MeContext = {
     type: 'TEAM',
     status: 'ACTIVE',
     logoUrl: null,
-    capabilities: {
-      canInviteMembers: true,
-      canManageMembers: true,
-      canManageRoles: true,
-      canTransferOwnership: true,
-      canDelete: true,
-      canManageBilling: true,
-    },
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
   },
@@ -82,14 +74,13 @@ describe('organization context (URL → derived store)', () => {
 describe('deriveOrgContext (me/context → derived store)', () => {
   beforeEach(() => useOrganizationStore.getState().clearOrganization());
 
-  it('derives id/slug/type/status/capabilities + filters unknown permissions', () => {
+  it('derives id/slug/type/status + filters unknown permissions', () => {
     deriveOrgContext(TEAM_CTX);
     const s = useOrganizationStore.getState();
     expect(s.organizationId).toBe('org_abcdefghij0123456789x');
     expect(s.organizationSlug).toBe('acme');
     expect(s.organizationType).toBe('TEAM');
     expect(s.organizationStatus).toBe('active');
-    expect(s.capabilities?.canManageBilling).toBe(true);
     // Unknown permission codes are dropped (RBAC matches known codes only).
     expect(s.permissions).toEqual(['organization:read']);
   });
@@ -100,7 +91,6 @@ describe('deriveOrgContext (me/context → derived store)', () => {
     const s = useOrganizationStore.getState();
     expect(s.organizationId).toBeNull();
     expect(s.organizationType).toBeNull();
-    expect(s.capabilities).toBeNull();
     expect(s.permissions).toEqual([]);
   });
 });

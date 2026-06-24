@@ -6,9 +6,9 @@ import { EmptyState } from '@/shared/components/EmptyState/index.ts';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
+import { useCan } from '@/shared/hooks/useCan/index.ts';
 import { useDeleteRole, useRoles } from '@/shared/hooks/useRoles/index.ts';
 import { ShieldCheck, Trash2 } from '@/shared/icons/index.ts';
-import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
@@ -20,7 +20,7 @@ import { SectionHeader } from '../SettingsPanelShell.tsx';
  */
 export function OrganizationRolesPanel() {
   const { data: roles, isLoading, isError } = useRoles();
-  const canManage = useOrganizationStore((s) => s.capabilities?.canManageRoles ?? false);
+  const canManage = useCan({ permission: 'role:manage', teamOrganizationOnly: true });
   const deleteRole = useDeleteRole();
   const [toDelete, setToDelete] = useState<RoleSummary | null>(null);
 

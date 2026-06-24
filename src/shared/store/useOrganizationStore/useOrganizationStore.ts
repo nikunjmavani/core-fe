@@ -4,7 +4,6 @@ import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 import type {
   OrganizationSummary,
   OrganizationType,
-  OrgCapabilities,
 } from '@/shared/tenancy/me-context.ts';
 
 /** Map the me/context org status (uppercase) to the store's lowercase enum. */
@@ -52,10 +51,8 @@ interface OrganizationStore {
   organizationSlug: string | null;
   /** Organization status from the membership response. */
   organizationStatus: 'active' | 'suspended' | null;
-  /** Active organization type (PERSONAL vs TEAM) — drives capability gating. */
+  /** Active organization type (PERSONAL vs TEAM) — gates team-only UI. */
   organizationType: OrganizationType | null;
-  /** Active organization capabilities (team-only feature gates). */
-  capabilities: OrgCapabilities | null;
   /** Org-scoped permission codes the user holds in the active organization. */
   permissions: OrganizationPermission[];
 
@@ -83,7 +80,6 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
   organizationSlug: null,
   organizationStatus: null,
   organizationType: null,
-  capabilities: null,
   permissions: [],
 
   setActiveOrganization: (org, permissions) =>
@@ -92,7 +88,6 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       organizationSlug: org?.slug ?? null,
       organizationStatus: toStoreStatus(org),
       organizationType: org?.type ?? null,
-      capabilities: org?.capabilities ?? null,
       permissions,
     }),
 
@@ -109,7 +104,6 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       organizationSlug: null,
       organizationStatus: null,
       organizationType: null,
-      capabilities: null,
       permissions: [],
     }),
 }));

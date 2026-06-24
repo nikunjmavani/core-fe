@@ -34,17 +34,3 @@ export const organizationPermissionSchema = z.enum([
 ]);
 
 export type OrganizationPermission = z.infer<typeof organizationPermissionSchema>;
-
-/**
- * Org-type capability keys (team-only feature gates), mirroring
- * `me/context.active_organization.capabilities`. A personal org has every one
- * `false`. Lives here (not in `core/security`) so the `lib` page manifest can
- * declare a route's required capability without importing the gate (Import Rules).
- */
-export type OrgCapabilityKey =
-  | 'canInviteMembers'
-  | 'canManageMembers'
-  | 'canManageRoles'
-  | 'canTransferOwnership'
-  | 'canDelete'
-  | 'canManageBilling';

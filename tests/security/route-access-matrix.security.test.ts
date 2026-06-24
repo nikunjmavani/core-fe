@@ -1,14 +1,13 @@
 /**
  * Route-access matrix (FE-52). Composes the real security gateway for a few
  * representative route policies and asserts, across a matrix of user states
- * (signed-out / limited / member / team-admin), exactly which routes are
+ * (signed-out / limited / read-only member / admin), exactly which routes are
  * reachable. This is the adversarial backstop for authorization: every "blocked"
  * cell proves an unauthorized caller is turned away by the gateway (L1 session →
- * L5 permission → L6 capability), not merely by a hidden nav item.
+ * L5 permission), not merely by a hidden nav item.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { requireCapabilityGate } from '@/core/security/gates/require-capability.ts';
 import { requirePermissionGate } from '@/core/security/gates/require-permission.ts';
 import { requireSession } from '@/core/security/gates/require-session.ts';
 import { gateway } from '@/core/security/gateway.ts';
@@ -26,38 +25,33 @@ const GUARDS = {
   'members:manage': gateway(
     requireSession,
     requirePermissionGate('membership:read'),
-    requireCapabilityGate('canManageMembers'),
+    requirePermissionGate('membership:manage'),
   ),
 } as const;
 
 type GuardName = keyof typeof GUARDS;
+type Perm = 'membership:read' | 'membership:manage';
 
 interface UserState {
   name: string;
   authed: boolean;
-  perms: ('membership:read' | 'role:manage')[];
-  caps: boolean;
+  perms: Perm[];
 }
 
 const STATES: UserState[] = [
-  { name: 'signed-out', authed: false, perms: [], caps: false },
-  { name: 'limited (no perms)', authed: true, perms: [], caps: false },
-  {
-    name: 'member (personal org)',
-    authed: true,
-    perms: ['membership:read'],
-    caps: false,
-  },
-  { name: 'team-admin', authed: true, perms: ['membership:read'], caps: true },
+  { name: 'signed-out', authed: false, perms: [] },
+  { name: 'limited (no perms)', authed: true, perms: [] },
+  { name: 'member (read-only)', authed: true, perms: ['membership:read'] },
+  { name: 'admin', authed: true, perms: ['membership:read', 'membership:manage'] },
 ];
 
 /** The authoritative expectation, as explicit logic (no dynamic lookup). */
 function expectedReachable(state: UserState, guard: GuardName): boolean {
   if (!state.authed) return false; // L1 blocks everyone signed-out
   if (guard === 'authed-only') return true;
-  const hasPerm = state.perms.includes('membership:read'); // L5
-  if (guard === 'members:read') return hasPerm;
-  return hasPerm && state.caps; // members:manage also needs the L6 capability
+  const canRead = state.perms.includes('membership:read'); // L5
+  if (guard === 'members:read') return canRead;
+  return canRead && state.perms.includes('membership:manage'); // manage also needs L5 manage
 }
 
 function applyState(state: UserState) {
@@ -69,17 +63,7 @@ function applyState(state: UserState) {
   } else {
     useAuthStore.setState({ user: null, isAuthenticated: false });
   }
-  useOrganizationStore.setState({
-    permissions: state.perms,
-    capabilities: {
-      canInviteMembers: state.caps,
-      canManageMembers: state.caps,
-      canManageRoles: state.caps,
-      canTransferOwnership: state.caps,
-      canDelete: state.caps,
-      canManageBilling: state.caps,
-    },
-  });
+  useOrganizationStore.setState({ permissions: state.perms });
 }
 
 beforeEach(() => {

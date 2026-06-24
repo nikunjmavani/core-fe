@@ -12,11 +12,11 @@ import {
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
+import { useCan } from '@/shared/hooks/useCan/index.ts';
 import {
   useSubscription,
   useUpdateSubscriptionPlan,
 } from '@/shared/hooks/useSubscription/index.ts';
-import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
@@ -40,9 +40,10 @@ function formatMoney(cents: number, currency: string): string {
  */
 export function OrganizationBillingPanel() {
   const { data: sub, isLoading, isError } = useSubscription();
-  const canManage = useOrganizationStore(
-    (s) => s.capabilities?.canManageBilling ?? false,
-  );
+  const canManage = useCan({
+    permission: 'subscription:manage',
+    teamOrganizationOnly: true,
+  });
   const changePlan = useUpdateSubscriptionPlan();
 
   return (

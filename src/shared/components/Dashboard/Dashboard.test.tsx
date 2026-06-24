@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { MeContext, OrgCapabilities } from '@/shared/tenancy/me-context.ts';
+import type { MeContext } from '@/shared/tenancy/me-context.ts';
 import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 
 import { Dashboard } from './Dashboard.tsx';
@@ -11,23 +11,6 @@ vi.mock('@/shared/hooks/useMeContext/index.ts', () => ({
   useMeContext: useMeContextMock,
   meContextQueryKey: ['auth', 'me-context'],
 }));
-
-const TEAM_CAPS: OrgCapabilities = {
-  canInviteMembers: true,
-  canManageMembers: true,
-  canManageRoles: true,
-  canTransferOwnership: true,
-  canDelete: true,
-  canManageBilling: true,
-};
-const PERSONAL_CAPS: OrgCapabilities = {
-  canInviteMembers: false,
-  canManageMembers: false,
-  canManageRoles: false,
-  canTransferOwnership: false,
-  canDelete: false,
-  canManageBilling: false,
-};
 
 function ctx(overrides: Partial<MeContext> = {}): MeContext {
   return {
@@ -50,11 +33,15 @@ function ctx(overrides: Partial<MeContext> = {}): MeContext {
       type: 'TEAM',
       status: 'ACTIVE',
       logoUrl: null,
-      capabilities: TEAM_CAPS,
       createdAt: '2026-01-01T00:00:00.000Z',
       updatedAt: '2026-01-01T00:00:00.000Z',
     },
-    myPermissions: ['organization:read', 'membership:manage'],
+    myPermissions: [
+      'organization:read',
+      'membership:manage',
+      'invitation:manage',
+      'role:manage',
+    ],
     globalRole: null,
     organizations: [],
     ...overrides,
@@ -89,7 +76,6 @@ describe('Dashboard', () => {
             type: 'PERSONAL',
             status: 'ACTIVE',
             logoUrl: null,
-            capabilities: PERSONAL_CAPS,
             createdAt: '2026-01-01T00:00:00.000Z',
             updatedAt: '2026-01-01T00:00:00.000Z',
           },

@@ -95,14 +95,7 @@ describe('toMeContext', () => {
     expect(ctx.globalRole).toBeNull();
   });
 
-  it('derives the active org capabilities from type + permissions', () => {
-    const caps = toMeContext(WIRE).activeOrganization?.capabilities;
-    expect(caps?.canManageBilling).toBe(true); // TEAM + subscription:manage
-    expect(caps?.canManageMembers).toBe(true); // membership:manage
-    expect(caps?.canManageRoles).toBe(false); // no role:manage in my_permissions
-  });
-
-  it('flags the active org; non-active / personal orgs get no capabilities', () => {
+  it('flags the active org; personal orgs keep a null slug', () => {
     const ctx = toMeContext(WIRE);
     expect(ctx.organizations).toHaveLength(2);
     const active = ctx.organizations.find((o) => o.isActive);
@@ -110,16 +103,6 @@ describe('toMeContext', () => {
     expect(active?.id).toBe(ORG_ID);
     expect(personal?.isActive).toBe(false);
     expect(personal?.slug).toBeNull();
-    expect(personal?.capabilities.canManageBilling).toBe(false);
-  });
-
-  it('a PERSONAL active org gets no team capabilities even with permissions', () => {
-    const personal = toMeContext({
-      ...WIRE,
-      active_organization: { ...WIRE.active_organization, type: 'PERSONAL' },
-    }).activeOrganization;
-    expect(personal?.capabilities.canManageBilling).toBe(false);
-    expect(personal?.capabilities.canManageMembers).toBe(false);
   });
 
   it('maps a null active organization to null', () => {
