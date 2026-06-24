@@ -52,11 +52,17 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         Skip to main content
       </a>
 
-      {/* ── Left brand panel (hidden on mobile) ── */}
+      {/* ── Left brand panel (hidden on mobile) — atmosphere comes from the
+           active accent (--color-primary), so it re-tints with theme + shuffle ── */}
       <div className="bg-brand text-brand-foreground relative hidden w-1/2 flex-col overflow-hidden lg:flex xl:w-[55%]">
-        {/* Dot grid */}
+        {/* Accent wash over the deep base */}
+        <div
+          className="from-primary/25 via-primary/5 to-primary/15 absolute inset-0 bg-gradient-to-br"
+          aria-hidden="true"
+        />
+        {/* Dot grid (accent-tinted) */}
         <svg
-          className="text-brand-foreground/[0.07] absolute inset-0 h-full w-full"
+          className="text-primary/[0.12] absolute inset-0 h-full w-full"
           aria-hidden="true"
         >
           <defs>
@@ -66,15 +72,20 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </defs>
           <rect width="100%" height="100%" fill="url(#auth-dots)" />
         </svg>
-        {/* Soft monochrome orbs */}
-        <div className="bg-brand-foreground/10 absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl" />
-        <div className="bg-brand-foreground/[0.06] absolute right-[-10%] bottom-[-15%] h-96 w-96 rounded-full blur-3xl" />
+        {/* Soft accent glow orbs */}
+        <div className="bg-primary/30 absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl" />
+        <div className="bg-primary/20 absolute right-[-10%] bottom-[-15%] h-96 w-96 rounded-full blur-3xl" />
+        {/* Accent seam where the panel meets the form */}
+        <div
+          className="via-primary/40 absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent to-transparent"
+          aria-hidden="true"
+        />
 
         <div className="relative z-10 flex flex-1 flex-col justify-between p-10 xl:p-14">
           {/* Logo + status */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="bg-brand-foreground text-brand flex h-9 w-9 items-center justify-center rounded-lg">
+              <div className="bg-primary text-primary-foreground shadow-primary/30 flex h-9 w-9 items-center justify-center rounded-lg shadow-lg">
                 <Boxes className="h-5 w-5" />
               </div>
               <span className="text-lg font-semibold tracking-tight">Core</span>
@@ -91,7 +102,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           {/* Headline + features */}
           <div className="max-w-md space-y-10">
             <div className="space-y-4">
-              <span className="border-brand-foreground/15 text-brand-foreground/70 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
+              <span className="border-primary/30 bg-primary/10 text-primary inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium">
                 <Sparkles className="h-3 w-3" /> Operations, unified
               </span>
               <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight text-balance xl:text-5xl">
@@ -106,7 +117,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             <ul className="space-y-4">
               {FEATURES.map((f) => (
                 <li key={f.title} className="flex items-start gap-3">
-                  <span className="border-brand-foreground/15 bg-brand-foreground/5 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border">
+                  <span className="bg-primary/15 text-primary ring-primary/25 mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ring-1">
                     <f.icon className="h-4 w-4" />
                   </span>
                   <div>
@@ -119,7 +130,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </div>
 
           {/* Stats */}
-          <div className="border-brand-foreground/10 flex items-center gap-8 border-t pt-6">
+          <div className="border-primary/20 flex items-center gap-8 border-t pt-6">
             {STATS.map((s) => (
               <div key={s.label}>
                 <p className="text-xl font-semibold tracking-tight">{s.value}</p>
