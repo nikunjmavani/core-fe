@@ -41,7 +41,7 @@ function StatCard({
   testId: string;
 }) {
   return (
-    <Card data-testid={testId}>
+    <Card data-testid={testId} className="hover:border-primary/30 transition-colors">
       <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
         <CardDescription>{label}</CardDescription>
         <Icon className="text-muted-foreground h-4 w-4" aria-hidden="true" />

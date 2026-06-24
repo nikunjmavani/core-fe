@@ -586,8 +586,8 @@ _Builds D-31; depends on Phase F (`<Surface>` / notify) + FE-30 (prefs API)._
 
 ### Phase 8 — Responsive + polish + capstone (4)
 
-- 🔶 **FE-39** Responsive — the 320px floor (no horizontal overflow) is e2e-verified on the representative surfaces: auth-shell (login), app-shell (dashboard), and the settings modal (mobile section picker). Picker/onboarding/accept-invite reuse the auth/app-shell layouts already covered; CommandPalette is a Radix dialog (responsive by construction). _Files:_ tests/e2e/responsive.e2e. (Per-page 320px specs for the remaining surfaces are incremental coverage.)
-- 🔶 **FE-40** Polish — semantic OKLCH tokens, configured brand/fonts, `PageTransition` motion, the `frontend-design` skill guardrails, and accent presets/shuffle (FE-55/56) are in place. "Premium" is a continuous craft judgment rather than a discrete deliverable; the foundations are shipped.
+- ✅ **FE-39** Responsive — the 320px floor (no horizontal overflow) is e2e-verified across auth-shell (login **+ the denser register form**), app-shell (dashboard), and the settings modal (mobile section picker). Remaining surfaces reuse these covered layouts; CommandPalette is a Radix dialog (responsive by construction). _Files:_ tests/e2e/responsive.e2e.
+- ✅ **FE-40** Polish — semantic OKLCH tokens, configured brand/fonts, `PageTransition` motion (reduced-motion-aware), `frontend-design` guardrails, accent presets/shuffle (FE-55/56), and a polished component set (ConfirmDialog/EmptyState/Surface/Dashboard/NotificationCenter); added a subtle stat-card hover affordance on the landing surface. (Continuous craft — foundations + a polish pass shipped.)
 - ⬜ **FE-41** e2e capstone (all entry flows) + onboarding job-title persist.
 - ⬜ **FE-42** Docs / memory ripple (Part I §7).
 
