@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router';
 
+import { ThemeShowcase } from '@/shared/components/ThemeShowcase/index.ts';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import {
   Card,
@@ -249,6 +250,8 @@ export function Dashboard() {
           )}
         </div>
       </header>
+
+      <ThemeShowcase />
 
       <section aria-label="Overview" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard

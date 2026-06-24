@@ -28,3 +28,4 @@ org-switcher list. Capabilities (`canInviteMembers`, `canManageRoles`,
 - `dashboard-stat-{workspaces,permissions,type,billing}`
 - `dashboard-action-{invite,roles,billing,org-settings,account}` (capability-gated)
 - `dashboard-org-item`, `dashboard-org-open` (org switcher, when >1 org)
+- `dashboard-theme-{showcase,label,palette,shuffle,customize}` (theme bar — shared `ThemeShowcase`; reflects accent + chart palette + active font/radius live)

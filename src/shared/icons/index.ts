@@ -36,6 +36,7 @@ export {
   Monitor,
   Moon,
   MoreHorizontal,
+  Palette,
   Plus,
   Rocket,
   RotateCw,
