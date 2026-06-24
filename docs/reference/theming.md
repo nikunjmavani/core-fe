@@ -47,13 +47,18 @@ independent axes. A runtime switcher (Settings → Appearance) sets both.
 
 The **"Shuffle theme"** action (shadcn-create style) does _not_ cycle the named
 presets — it **generates a fresh full look** each click: a random **accent hue**,
-**font** (`--font-sans`), and **corner radius** (the `--radius-sm/md/lg/xl`
-scale, derived from a base). The accent drives the same tokens a preset overrides
-(`--color-primary` / `--color-ring` / `--color-sidebar-primary` + foregrounds).
-Everything is set **inline** on `<html>` so it works in both light and dark
-(CSP-safe — no injected `<style>`, and fonts are **web-safe stacks** only since
-the CSP is `font-src 'self'`; mirrors the org-brand engine), mutually exclusive
-with the `data-theme` presets. The store records it as `preset: 'custom'` +
+**font** (`--font-sans`), **corner radius** (the `--radius-sm/md/lg/xl` scale,
+derived from a base), and a cohesive **chart palette** (`--color-chart-1..5`,
+spread around the accent hue). The accent drives the same tokens a preset
+overrides (`--color-primary` / `--color-ring` / `--color-sidebar-primary` /
+`--color-sidebar-ring` + foregrounds). Only **mode-shared** tokens are shuffled —
+the neutral surfaces (`background` / `card` / `muted` / `secondary` / `accent` /
+`border`), which the `.dark` block flips per mode, are deliberately left to the
+base palette so a single inline value can't break one mode. Everything is set
+**inline** on `<html>` so it works in both light and dark (CSP-safe — no injected
+`<style>`, and fonts are **web-safe stacks** only since the CSP is
+`font-src 'self'`; mirrors the org-brand engine), mutually exclusive with the
+`data-theme` presets. The store records it as `preset: 'custom'` +
 `customTheme: { hue, fontId, radiusId }`, so it persists across reloads and the
 panel shows a live **Custom — _Font · Radius_** indicator. The font/radius
 catalogs live in `GENERATED_FONTS` / `GENERATED_RADII` (`shared/theme`). When

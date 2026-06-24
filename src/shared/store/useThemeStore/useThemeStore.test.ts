@@ -10,11 +10,17 @@ describe('useThemeStore', () => {
       '--color-sidebar-primary',
       '--color-primary-foreground',
       '--color-sidebar-primary-foreground',
+      '--color-sidebar-ring',
       '--font-sans',
       '--radius-sm',
       '--radius-md',
       '--radius-lg',
       '--radius-xl',
+      '--color-chart-1',
+      '--color-chart-2',
+      '--color-chart-3',
+      '--color-chart-4',
+      '--color-chart-5',
     ]) {
       document.documentElement.style.removeProperty(v);
     }

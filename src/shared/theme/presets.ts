@@ -82,6 +82,7 @@ const ACCENT_VARS = [
   '--color-primary',
   '--color-ring',
   '--color-sidebar-primary',
+  '--color-sidebar-ring',
 ] as const;
 const ACCENT_FG_VARS = [
   '--color-primary-foreground',
@@ -95,11 +96,21 @@ const SHAPE_VARS = [
   '--radius-lg',
   '--radius-xl',
 ] as const;
+/** Chart series tokens — a cohesive palette spread around the accent hue. */
+const CHART_VARS = [
+  '--color-chart-1',
+  '--color-chart-2',
+  '--color-chart-3',
+  '--color-chart-4',
+  '--color-chart-5',
+] as const;
+/** Hue offsets (deg) from the accent for chart-1..5 (mode-shared tokens). */
+const CHART_HUE_OFFSETS = [0, 50, 120, 200, 280] as const;
 
 /** Remove any inline generated vars so a named preset (CSS) takes over. */
 function clearGeneratedTheme(): void {
   const root = document.documentElement;
-  for (const v of [...ACCENT_VARS, ...ACCENT_FG_VARS, ...SHAPE_VARS]) {
+  for (const v of [...ACCENT_VARS, ...ACCENT_FG_VARS, ...SHAPE_VARS, ...CHART_VARS]) {
     root.style.removeProperty(v);
   }
 }
@@ -189,4 +200,13 @@ export function applyGeneratedTheme(theme: GeneratedTheme): void {
   root.style.setProperty('--radius-md', `${base * 0.75}rem`);
   root.style.setProperty('--radius-lg', `${base}rem`);
   root.style.setProperty('--radius-xl', `${base * 1.5}rem`);
+
+  // Chart palette — 5 cohesive series hues spread around the accent. These are
+  // mode-shared tokens, so a single saturated value reads in light and dark.
+  let series = 0;
+  for (const offset of CHART_HUE_OFFSETS) {
+    series += 1;
+    const ch = (h + offset) % 360;
+    root.style.setProperty(`--color-chart-${series}`, `oklch(0.64 0.17 ${ch})`);
+  }
 }

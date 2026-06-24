@@ -17,6 +17,7 @@ const GENERATED_VARS = [
   '--color-primary',
   '--color-ring',
   '--color-sidebar-primary',
+  '--color-sidebar-ring',
   '--color-primary-foreground',
   '--color-sidebar-primary-foreground',
   '--font-sans',
@@ -24,6 +25,11 @@ const GENERATED_VARS = [
   '--radius-md',
   '--radius-lg',
   '--radius-xl',
+  '--color-chart-1',
+  '--color-chart-2',
+  '--color-chart-3',
+  '--color-chart-4',
+  '--color-chart-5',
 ];
 
 afterEach(() => {
@@ -95,18 +101,22 @@ describe('generated themes (shuffle)', () => {
     expect(document.documentElement.dataset.theme).toBeUndefined();
     expect(style.getPropertyValue('--color-primary')).toContain('oklch');
     expect(style.getPropertyValue('--color-primary')).toContain('200');
-    // font + radius are part of the generated "full look"
+    // font + radius + chart palette are part of the generated "full look"
     expect(style.getPropertyValue('--font-sans')).toContain('Georgia');
     expect(style.getPropertyValue('--radius-lg')).toBe('1rem');
+    expect(style.getPropertyValue('--color-chart-1')).toContain('oklch');
+    expect(style.getPropertyValue('--color-chart-5')).toContain('oklch');
+    expect(style.getPropertyValue('--color-sidebar-ring')).toContain('oklch');
   });
 
-  it('applyThemePreset clears any generated accent/font/radius vars', () => {
+  it('applyThemePreset clears any generated accent/font/radius/chart vars', () => {
     applyGeneratedTheme(sample);
     applyThemePreset('violet');
     const style = document.documentElement.style;
     expect(style.getPropertyValue('--color-primary')).toBe('');
     expect(style.getPropertyValue('--font-sans')).toBe('');
     expect(style.getPropertyValue('--radius-lg')).toBe('');
+    expect(style.getPropertyValue('--color-chart-1')).toBe('');
     expect(document.documentElement.dataset.theme).toBe('violet');
   });
 });
