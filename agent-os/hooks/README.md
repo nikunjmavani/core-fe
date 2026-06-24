@@ -2,8 +2,8 @@
 
 core-fe's **own, self-contained** agent hook suite — shell/node scripts that
 fire on Claude Code (and Cursor) events. Exposed at `.claude/hooks/` via symlink.
-Independent of any other repo: nothing here references core-be paths, commands,
-skills, or services.
+Fully independent: nothing here reaches into a sibling repo's paths, commands,
+skills, or services — every gate, command, and skill reference is core-fe's own.
 
 **Every hook FAILS OPEN** — a missing `jq`/`node`, a malformed payload, or any
 error exits 0 and allows the action. A hook bug must never brick a session.
