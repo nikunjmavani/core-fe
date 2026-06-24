@@ -1,61 +1,53 @@
 # `agent-os/hooks/`
 
-Claude Code hooks — shell commands that fire on session events (e.g. before/after tool calls, on prompt submit). Exposed at `.claude/hooks/` via symlink.
+core-fe's **own, self-contained** agent hook suite — shell/node scripts that
+fire on Claude Code (and Cursor) events. Exposed at `.claude/hooks/` via symlink.
+Independent of any other repo: nothing here references core-be paths, commands,
+skills, or services.
 
-## When to put a file here
+**Every hook FAILS OPEN** — a missing `jq`/`node`, a malformed payload, or any
+error exits 0 and allows the action. A hook bug must never brick a session.
 
-- A **hook script** (shell or any executable) that should run on a Claude Code event.
-- Configuration that registers a hook in `settings.json` (typically `.claude/settings.local.json`) and the script it invokes.
+## The suite
 
-## File shape
+`hooks.json` is the single source of truth for wiring; it's mirrored into
+`.claude/settings.json` (committed `hooks` block) and `.cursor/hooks.json`.
 
-```
-agent-os/hooks/<event-name>/<hook-name>.sh
-```
+| Hook                      | Event (Claude)                      | What it does                                                                                   |
+| ------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `session-start.sh`        | SessionStart                        | Verify/switch Node, install deps (web), scaffold `.mcp.json`, inject skill map                 |
+| `prompt-skill-router.sh`  | UserPromptSubmit                    | On a build/change prompt, inject the FE skill chain (conservative)                             |
+| `guard-edits.sh`          | PreToolUse · Edit\|Write\|MultiEdit | **Deny** `../` imports, direct `lucide-react`, raw palette classes, generated files            |
+| `guardrails.mjs`          | PreToolUse · Bash\|Edit\|Write      | **Deny** destructive shell (`rm -rf`, force-push, fork bomb) + secrets; warn on vendored paths |
+| `no-unrequested-pr.sh`    | PreToolUse · create_pull_request    | **Ask** before opening a PR unless explicitly requested                                        |
+| `format-edits.sh`         | PostToolUse · Edit\|Write           | Prettier-format the edited file (Prettier owns formatting here)                                |
+| `skill-reminder.sh`       | PostToolUse · Edit\|Write           | Print the skill(s) relevant to the edited file                                                 |
+| `stop-gate-reminder.sh`   | Stop                                | Surface the gates implied by uncommitted changes (non-blocking)                                |
+| `pre-compact-preserve.sh` | PreCompact                          | Emit a resume card (branch, uncommitted count, definition of done)                             |
+| `session-end.sh`          | SessionEnd                          | Warn about uncommitted work (ephemeral cloud envs)                                             |
+| `gate-failure-hint.sh`    | _(tool-failure; manifest-only)_     | Turn a failed `pnpm` gate into a fix hint — wire only where supported                          |
+| `cursor-shell-guard.mjs`  | Cursor · beforeShellExecution       | Same destructive-shell block for the Cursor agent                                              |
 
-```sh
-#!/usr/bin/env sh
-# Hook: <event-name>
-# Purpose: <one line>
-# Registered in .claude/settings.local.json
-set -e
+The file→skill map these hooks consult lives in
+[`../docs/skill-triggers.md`](../docs/skill-triggers.md); FE gates are
+`pnpm health` (all phases) / `tsc` / `lint` / `validate:tokens` /
+`validate:structure` / `test`.
 
-# Read JSON event payload from stdin (Claude Code sends it as JSON)
-INPUT=$(cat)
-TOOL_NAME=$(echo "$INPUT" | jq -r '.tool_name // empty')
+## Wiring
 
-# Your logic here — exit 0 to allow, non-zero to block
-case "$TOOL_NAME" in
-  Write|Edit) echo "Logging write to $TOOL_NAME" ;;
-esac
-```
+- **Claude Code**: `.claude/settings.json` (committed, shared) registers every
+  hook above against its event. It merges with `.claude/settings.local.json`
+  (machine-local permissions) and any user-level settings.
+- **Cursor**: `.cursor/hooks.json` registers `cursor-shell-guard.mjs` on
+  `beforeShellExecution` (Cursor agent hooks, beta).
 
-Make it executable: `chmod +x agent-os/hooks/<event-name>/<hook-name>.sh`.
-
-## Common event names (Claude Code)
-
-| Event              | Fires when                                     |
-| ------------------ | ---------------------------------------------- |
-| `PreToolUse`       | Before any tool call — exit non-zero to block  |
-| `PostToolUse`      | After any tool call succeeds                   |
-| `UserPromptSubmit` | When the user submits a prompt                 |
-| `Stop`             | When Claude finishes responding                |
-| `Notification`     | On UI notifications (permission prompts, etc.) |
-
-Refer to Claude Code's settings docs for the full schema and how to register a hook in `settings.json`.
+To change wiring, edit `hooks.json` and reflect it into both files (kept in sync
+by hand — there is no generator in core-fe).
 
 ## Authoring tips
 
-- Use the `update-config` skill (Claude Code) to wire a hook into `settings.json` correctly.
-- Use the `hookify:hookify` skill to generate hooks from natural-language descriptions.
-- Hooks are **machine-local** by default (registered in `.claude/settings.local.json`, which is gitignored). To share across the team, register in `.claude/settings.json` (tracked) and commit the scripts here.
-
-## Discovery
-
-- **Claude Code**: reads from `.claude/hooks/` (symlink → `agent-os/hooks/`); registration is via `.claude/settings.json` or `.claude/settings.local.json`.
-- **Cursor**: does not natively read hooks. Cursor-equivalent automations go through agent-os/rules/ instead.
-
-## Related
-
-- Skill: `hookify:hookify` (generates hooks)
-- Skill: `update-config` (writes settings.json safely)
+- Keep hooks fail-open and dependency-light (`jq` optional).
+- New blocking rule? Make it **mechanically unambiguous** (a normal edit must
+  never be denied) and mirror an existing CI/validator rule.
+- `update-config` (skill) writes `settings.json` safely; `hookify:hookify`
+  (skill) generates hooks from natural-language descriptions.
