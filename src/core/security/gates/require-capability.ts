@@ -15,7 +15,7 @@ export type OrgCapabilityKey =
   | 'canManageBilling';
 
 /** Exhaustive read — avoids object-injection and stays type-checked. */
-function capabilityValue(
+export function capabilityValue(
   caps: NonNullable<ReturnType<typeof useOrganizationStore.getState>['capabilities']>,
   key: OrgCapabilityKey,
 ): boolean {

@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
+import { type AccessCheck, useVisibleNav } from '@/shared/hooks/useCan/index.ts';
 import {
   Boxes,
   LayoutDashboard,
@@ -44,19 +45,14 @@ import { useUIStore } from '@/shared/store/useUIStore/index.ts';
  * `/organization/$organizationId/<segment>` with the current param.
  * `id` doubles as the stable `data-testid` slug (`nav-<id>`).
  */
-const NAV_ITEMS: {
+const NAV_ITEMS: ({
   id: string;
   segment: 'dashboard';
   icon: typeof LayoutDashboard;
   label: string;
-}[] = [
+} & AccessCheck)[] = [
   { id: 'dashboard', segment: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
 ];
-
-/** Nav entries the current user is allowed to see. */
-function useVisibleNavItems() {
-  return NAV_ITEMS;
-}
 
 /**
  * Main authenticated layout with collapsible sidebar + header.
@@ -65,7 +61,8 @@ function useVisibleNavItems() {
 export function Component() {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
-  const navItems = useVisibleNavItems();
+  // Capability/permission-gated nav (FE-51); dashboard has no requirement.
+  const navItems = useVisibleNav(NAV_ITEMS);
   // Canonical organization context comes from the URL ($organizationId).
   const { organizationId = '' } = useParams({ strict: false });
 
