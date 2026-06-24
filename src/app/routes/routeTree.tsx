@@ -103,6 +103,11 @@ const DashboardPage = lazyRouteComponent(
   () => import('@/pages/organization/$organizationId/dashboard/dashboard.route.tsx'),
   'Component',
 );
+// Personal-org space reuses the shared AppShell directly (no org param in URL).
+const PersonalShell = lazyRouteComponent(
+  () => import('@/shared/layouts/AppShell/index.ts'),
+  'Component',
+);
 const SuspendedPage = lazyRouteComponent(
   () => import('@/pages/organization/$organizationId/suspended/suspended.route.tsx'),
   'Component',
@@ -334,6 +339,36 @@ const organizationSuspendedRoute = createRoute({
   errorComponent: RouteErrorBoundary,
 });
 
+// ── Personal space (/dashboard) ──
+// Personal organizations land on root URLs — no `$organizationId` in the path.
+// The active org comes from the session context (me/context / JWT), not the URL,
+// so this shell only requires an authenticated session. (Dual-URL, research/11
+// §3.3.) The org-scoped team space remains `/organization/$organizationId/*`.
+const personalShellRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  id: 'personal-app',
+  beforeLoad: ({ location, preload }) => {
+    if (preload) return;
+    requireAuth(location.href);
+  },
+  component: function PersonalShellRoute() {
+    return (
+      <Suspense fallback={<FullPageSpinner />}>
+        <PersonalShell />
+      </Suspense>
+    );
+  },
+  errorComponent: RouteErrorBoundary,
+});
+
+const personalDashboardRoute = createRoute({
+  getParentRoute: () => personalShellRoute,
+  path: '/dashboard',
+  head: () => ({ meta: [{ title: composePageTitle('Dashboard') }] }),
+  component: DashboardPage,
+  errorComponent: RouteErrorBoundary,
+});
+
 // Settings is no longer a route space: the global SettingsModal (mounted on
 // the root route) is driven by the URL hash — #settings/<scope>/<section> —
 // so it overlays any page without unmounting it. See
@@ -368,6 +403,7 @@ const routeTree = rootRoute.addChildren([
     organizationDashboardRoute,
     organizationSuspendedRoute,
   ]),
+  personalShellRoute.addChildren([personalDashboardRoute]),
   notFoundRoute,
 ]);
 

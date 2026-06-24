@@ -15,4 +15,13 @@ test.describe('Navigation', () => {
     await page.goto('/login');
     await expect(page.getByTestId('login-form')).toBeVisible();
   });
+
+  test('personal /dashboard route exists and is auth-guarded (FE-21)', async ({
+    page,
+  }) => {
+    // The personal-org space lives at the root `/dashboard` URL (dual-URL).
+    // Unauthenticated access is bounced to login by the session gate.
+    await page.goto('/dashboard');
+    await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
+  });
 });

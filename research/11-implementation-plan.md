@@ -522,7 +522,7 @@ _Appended IDs (`FE-49`…`FE-52`, `FE-58`, `FE-59`); extends the gateway (Phase 
 
 - ✅ **FE-19** Root resolver — `resolveRootTarget(ctx)` dual-URL decision (none→onboarding, PERSONAL→`/dashboard`, TEAM→`/organization/$slug/dashboard`; slugless team→onboarding). Pure + tested; wired into the `/` route in the Phase-4 route restructure. _Files:_ organization-resolver.
 - ✅ **FE-20** Promote dashboard UI → `shared/components/Dashboard/` — the team island's `DashboardPage` is now a thin wrapper rendering `<Dashboard/>`; both the personal `/dashboard` space (FE-21) and the team space reuse the same surface. Testids unchanged. _Files:_ shared/components/Dashboard, DashboardPage. Verified: unit (4) + dashboard e2e (3/3) green.
-- ⬜ **FE-21** Personal `_app` space (root `/dashboard`) under `ProtectedLayout`.
+- 🔶 **FE-21** Personal `/dashboard` space — pathless `personal-app` shell route (requireAuth → mounts the shared AppShell) + `/dashboard` leaf reusing DashboardPage→`<Dashboard/>`. Additive: the team `/organization/$organizationId/*` space is untouched. _Files:_ routeTree. Verified: route exists + auth-guarded (navigation e2e) + Dashboard renders (unit). (Making it the **default** for personal-active-org users = the resolver wire FE-19/23; AppShell dual-mode nav links follow.)
 - ⬜ **FE-22** Team `$organizationSlug` space + switch-on-nav (uses **FE-12**); rename `$organizationId`→`$organizationSlug` (OD-3).
 - ⬜ **FE-23** routeTree wiring + update e2e specs / mock fixtures / routes-and-ui for the new URLs.
 
