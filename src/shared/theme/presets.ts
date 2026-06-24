@@ -306,6 +306,28 @@ export function nextToastVariant(current: number): number {
 }
 
 /**
+ * TEMP (toast preview): where toasts appear (a subset of sonner's positions, so
+ * people can pick a spot they'll notice). The store holds the active value.
+ */
+export const TOAST_POSITIONS = [
+  'top-right',
+  'top-center',
+  'bottom-right',
+  'bottom-center',
+] as const;
+export type ToastPosition = (typeof TOAST_POSITIONS)[number];
+export const DEFAULT_TOAST_POSITION: ToastPosition = 'top-right';
+
+/** TEMP (toast preview): a different toast position than the current one. */
+export function nextToastPosition(current: string): ToastPosition {
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic toast preview, not security
+  const i = Math.floor(Math.random() * TOAST_POSITIONS.length);
+  const pick = TOAST_POSITIONS[i] ?? DEFAULT_TOAST_POSITION;
+  if (pick !== current) return pick;
+  return TOAST_POSITIONS[(i + 1) % TOAST_POSITIONS.length] ?? DEFAULT_TOAST_POSITION;
+}
+
+/**
  * Apply a generated full look (shadcn-create-style): accent colour, chart
  * palette, body + heading fonts, and corner radius — all inline on `<html>` so
  * it overrides the base `@theme` tokens in both light and dark (CSP-safe; no

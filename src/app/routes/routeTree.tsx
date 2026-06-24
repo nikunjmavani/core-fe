@@ -9,7 +9,6 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import { Suspense } from 'react';
-import { Toaster } from 'sonner';
 
 import { requireOrgStatus, resolveActiveOrg } from '@/app/guards/org-gates.ts';
 import { redirectIfAuthenticated, requireAuth } from '@/core/rbac/guards.ts';
@@ -34,6 +33,7 @@ import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts'
 import { RouteAnnouncer } from '@/shared/components/RouteAnnouncer/index.ts';
 import { RouteErrorBoundary } from '@/shared/components/RouteErrorBoundary/index.ts';
 import { SettingsModalLazy } from '@/shared/components/SettingsModal/index.ts';
+import { AppToaster } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { resolveRootRedirect } from '@/shared/tenancy/organization-resolver.ts';
 
@@ -135,7 +135,7 @@ const rootRoute = createRootRoute({
       <RouteAnnouncer />
       {/* Cookie-consent gate for analytics (PostHog). */}
       <ConsentBanner />
-      <Toaster richColors closeButton position="top-right" />
+      <AppToaster />
     </>
   ),
   notFoundComponent: () => <NotFoundPage />,

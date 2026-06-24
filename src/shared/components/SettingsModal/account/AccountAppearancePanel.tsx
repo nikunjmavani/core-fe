@@ -29,7 +29,9 @@ import {
   ICON_LIBRARIES,
   ICON_WEIGHTS,
   MENU_STYLES,
+  TOAST_POSITIONS,
   TOAST_VARIANTS,
+  type ToastPosition,
   type ToastVariant,
 } from '@/shared/theme/index.ts';
 
@@ -53,6 +55,18 @@ const RADIUS_OPTIONS = Object.entries(GENERATED_RADII).map(([id, r]) => ({
 const TOAST_VARIANT_OPTIONS = TOAST_VARIANTS.map((id) => ({
   id,
   label: id.charAt(0).toUpperCase() + id.slice(1),
+}));
+
+/** TEMP: toast-position choices for the preview picker. */
+const POSITION_LABELS: Record<ToastPosition, string> = {
+  'top-right': 'Top right',
+  'top-center': 'Top center',
+  'bottom-right': 'Bottom right',
+  'bottom-center': 'Bottom center',
+};
+const TOAST_POSITION_OPTIONS = TOAST_POSITIONS.map((id) => ({
+  id,
+  label: POSITION_LABELS[id],
 }));
 
 /** Accent / chart colour swatches (fixed catalog; colours come from .theme-dot-* CSS). */
@@ -230,6 +244,8 @@ export function AccountAppearancePanel() {
   const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
   const toastVariant = useThemeStore((s) => s.toastVariant);
   const setToastVariant = useThemeStore((s) => s.setToastVariant);
+  const toastPosition = useThemeStore((s) => s.toastPosition);
+  const setToastPosition = useThemeStore((s) => s.setToastPosition);
 
   // Shuffle rolls the toast design too — fire a toast so the new look is visible.
   const handleShuffle = () => {
@@ -419,6 +435,16 @@ export function AccountAppearancePanel() {
               options={TOAST_VARIANT_OPTIONS}
               onPick={(id) => setToastVariant(TOAST_VARIANTS.indexOf(id as ToastVariant))}
               testPrefix="toast"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Position</FieldLabel>
+            <Choices
+              ariaLabel="Toast position"
+              value={toastPosition as ToastPosition}
+              options={TOAST_POSITION_OPTIONS}
+              onPick={setToastPosition}
+              testPrefix="toastpos"
             />
           </div>
           <div className="flex flex-wrap gap-2">

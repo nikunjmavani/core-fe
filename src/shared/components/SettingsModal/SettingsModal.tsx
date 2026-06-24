@@ -133,6 +133,12 @@ export function SettingsModal() {
       <DialogContent
         className="h-dvh max-h-dvh w-full max-w-full gap-0 overflow-hidden rounded-none p-0 sm:h-[640px] sm:max-h-[85vh] sm:max-w-[960px] sm:rounded-xl"
         data-testid="settings-modal"
+        onInteractOutside={(e) => {
+          // Toasts render outside the dialog (sonner) — clicking one (e.g. its
+          // close button) must dismiss the toast, not close Settings.
+          const node = e.detail.originalEvent.target as Element | null;
+          if (node?.closest('[data-sonner-toaster]')) e.preventDefault();
+        }}
       >
         <DialogTitle className="sr-only">Settings</DialogTitle>
         <div className="grid h-full min-h-0 grid-cols-1 sm:grid-cols-[240px_1fr]">
