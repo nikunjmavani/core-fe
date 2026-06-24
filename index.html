@@ -43,6 +43,35 @@
     <script src="/config.js" defer></script>
     <!-- Prevent theme FOUC: apply dark class before React hydrates -->
     <script src="/theme-init.js"></script>
+    <!-- Boot splash: a spinner identical to the React FullPageSpinner so the
+         HTML→React handoff is seamless. theme-init.js sets `.dark` first, so the
+         bg + spinner colour are already theme-correct (no white flash, no
+         text→circle jump). The whole #root subtree is replaced when React mounts. -->
+    <style>
+      html {
+        background: oklch(1 0 0);
+      }
+      html.dark {
+        background: oklch(0.145 0 0);
+      }
+      .app-splash-spinner {
+        color: oklch(0.205 0 0);
+        animation: app-splash-spin 1s linear infinite;
+      }
+      html.dark .app-splash-spinner {
+        color: oklch(0.922 0 0);
+      }
+      @keyframes app-splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .app-splash-spinner {
+          animation: none;
+        }
+      }
+    </style>
   </head>
   <body>
     <noscript>
@@ -62,7 +91,21 @@
           justify-content: center;
         "
       >
-        <p style="color: #71717a; font-size: 0.875rem">Loading…</p>
+        <svg
+          class="app-splash-spinner"
+          width="32"
+          height="32"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          role="status"
+          aria-label="Loading"
+        >
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>
