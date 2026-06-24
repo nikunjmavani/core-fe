@@ -40,7 +40,9 @@ describe('passkeys-api (live branch)', () => {
   it('lists and maps wire → domain', async () => {
     getMock.mockResolvedValue({ data: [WIRE] });
     const res = await listPasskeys();
-    expect(getMock).toHaveBeenCalledWith(expect.stringContaining('/auth/me/passkeys'));
+    expect(getMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/me/webauthn/credentials'),
+    );
     expect(res).toEqual([
       {
         id: 'pk_x',
@@ -56,20 +58,51 @@ describe('passkeys-api (live branch)', () => {
     expect(await listPasskeys()).toEqual([]);
   });
 
-  it('registers via POST and maps the result', async () => {
-    postMock.mockResolvedValue({ data: WIRE });
-    const pk = await registerPasskey('YubiKey 5C');
-    expect(postMock).toHaveBeenCalledWith(expect.stringContaining('/auth/me/passkeys'), {
-      name: 'YubiKey 5C',
+  it('registers via the WebAuthn ceremony (options → create → verify)', async () => {
+    postMock
+      .mockResolvedValueOnce({
+        data: {
+          challenge: 'Y2hhbGxlbmdl',
+          rp: { name: 'Core' },
+          user: { id: 'dXNlcg', name: 'u', displayName: 'U' },
+          pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        },
+      })
+      .mockResolvedValueOnce({ data: WIRE });
+    const create = vi.fn().mockResolvedValue({
+      id: 'cred_x',
+      rawId: new Uint8Array([1, 2, 3]).buffer,
+      type: 'public-key',
+      response: {
+        clientDataJSON: new Uint8Array([4, 5]).buffer,
+        attestationObject: new Uint8Array([6, 7]).buffer,
+      },
     });
-    expect(pk.name).toBe('YubiKey 5C');
+    vi.stubGlobal('navigator', { credentials: { create } });
+    try {
+      const pk = await registerPasskey('YubiKey 5C');
+      expect(postMock).toHaveBeenNthCalledWith(
+        1,
+        expect.stringContaining('/auth/me/webauthn/register/options'),
+        { name: 'YubiKey 5C' },
+      );
+      expect(create).toHaveBeenCalledOnce();
+      expect(postMock).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining('/auth/me/webauthn/register/verify'),
+        expect.objectContaining({ name: 'YubiKey 5C' }),
+      );
+      expect(pk.name).toBe('YubiKey 5C');
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('revokes via DELETE (id encoded into the path)', async () => {
     deleteMock.mockResolvedValue({ data: null });
     await removePasskey('pk_x');
     expect(deleteMock).toHaveBeenCalledWith(
-      expect.stringContaining('/auth/me/passkeys/pk_x'),
+      expect.stringContaining('/auth/me/webauthn/credentials/pk_x'),
     );
   });
 });

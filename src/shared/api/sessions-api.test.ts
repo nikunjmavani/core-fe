@@ -24,7 +24,8 @@ const WIRE = {
   id: 'ses_x',
   device: 'Mac',
   browser: 'Chrome',
-  location: 'SF',
+  ip_address: '203.0.113.7',
+  user_agent: 'Mozilla/5.0',
   last_active_at: '2026-06-24T00:00:00.000Z',
   is_current: true,
 };
@@ -46,7 +47,7 @@ describe('sessions-api (live branch)', () => {
         id: 'ses_x',
         device: 'Mac',
         browser: 'Chrome',
-        location: 'SF',
+        ipAddress: '203.0.113.7',
         lastActiveAt: '2026-06-24T00:00:00.000Z',
         current: true,
       },

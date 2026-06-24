@@ -61,7 +61,8 @@ export function AccountSessionsPanel() {
                   ) : null}
                 </div>
                 <p className="text-muted-foreground truncate text-xs">
-                  {session.browser} · {session.location} · active{' '}
+                  {session.browser}
+                  {session.ipAddress ? ` · ${session.ipAddress}` : ''} · active{' '}
                   {lastActive(session.lastActiveAt)}
                 </p>
               </div>

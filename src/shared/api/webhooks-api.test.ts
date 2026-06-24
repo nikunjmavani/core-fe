@@ -25,7 +25,7 @@ const WIRE = {
   id: `whk_${'0'.repeat(20)}1`,
   url: 'https://x.test/hook',
   events: ['member.created'],
-  active: true,
+  is_enabled: true,
   created_at: '2026-06-01T00:00:00.000Z',
 };
 
@@ -41,9 +41,7 @@ describe('webhooks-api (live branch)', () => {
   it('lists and maps wire → domain', async () => {
     getMock.mockResolvedValue({ data: [WIRE] });
     const res = await listWebhooks();
-    expect(getMock).toHaveBeenCalledWith(
-      expect.stringContaining('/tenancy/organization/webhooks'),
-    );
+    expect(getMock).toHaveBeenCalledWith(expect.stringContaining('/notify/webhooks'));
     expect(res).toEqual([
       {
         id: WIRE.id,
@@ -58,10 +56,10 @@ describe('webhooks-api (live branch)', () => {
   it('creates via POST', async () => {
     postMock.mockResolvedValue({ data: WIRE });
     await createWebhook({ url: 'https://x.test/hook', events: ['member.created'] });
-    expect(postMock).toHaveBeenCalledWith(
-      expect.stringContaining('/tenancy/organization/webhooks'),
-      { url: 'https://x.test/hook', events: ['member.created'] },
-    );
+    expect(postMock).toHaveBeenCalledWith(expect.stringContaining('/notify/webhooks'), {
+      url: 'https://x.test/hook',
+      events: ['member.created'],
+    });
   });
 
   it('deletes via DELETE', async () => {

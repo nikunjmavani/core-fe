@@ -3,9 +3,10 @@ import { z } from 'zod';
 import { isoDateString, publicId } from '@/core/types/wire.ts';
 
 /**
- * Outbound webhook contracts (core-be `/tenancy/organization/webhooks`) for the
- * Integrations panel. Mock-first; mirrors the established wire→domain mapper
- * pattern. REPLACE_WITH_API.
+ * Outbound webhook contracts (core-be `/notify/webhooks`) for the Integrations
+ * panel. Create body is `{ url, events[], secret?, is_enabled? }` (no
+ * description); the secret is write-only (never returned). Mirrors the
+ * established wire→domain mapper pattern.
  */
 export const WEBHOOK_EVENTS = [
   'member.created',
@@ -27,7 +28,9 @@ export const webhookWireSchema = z.object({
   id: publicId('whk'),
   url: z.string(),
   events: z.array(z.string()),
-  active: z.boolean(),
+  // core-be uses `is_enabled`; tolerate `active` from older shapes.
+  is_enabled: z.boolean().optional(),
+  active: z.boolean().optional(),
   created_at: isoDateString,
 });
 export type WebhookWire = z.infer<typeof webhookWireSchema>;
@@ -37,7 +40,7 @@ export function toWebhook(wire: WebhookWire): Webhook {
     id: wire.id,
     url: wire.url,
     events: wire.events,
-    active: wire.active,
+    active: wire.is_enabled ?? wire.active ?? true,
     createdAt: wire.created_at,
   };
 }

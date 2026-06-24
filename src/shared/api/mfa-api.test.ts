@@ -36,7 +36,7 @@ beforeEach(() => {
 
 describe('mfa-api (live branch)', () => {
   it('reads status', async () => {
-    getMock.mockResolvedValue({ data: { enabled: true } });
+    getMock.mockResolvedValue({ data: [{ method_type: 'MFA_TOTP' }] });
     await expect(getMfaStatus()).resolves.toBe(true);
   });
 
@@ -45,7 +45,7 @@ describe('mfa-api (live branch)', () => {
     const result = await beginMfaEnrollment();
     expect(postMock).toHaveBeenCalledWith(
       expect.stringContaining('/auth/me/mfa/enroll'),
-      {},
+      { method_type: 'MFA_TOTP' },
     );
     expect(result).toEqual({ secret: 'S', otpauthUri: 'otpauth://x' });
   });
@@ -54,7 +54,7 @@ describe('mfa-api (live branch)', () => {
     postMock.mockResolvedValue({ data: { recovery_codes: ['a', 'b'] } });
     const result = await confirmMfaEnrollment('123456');
     expect(postMock).toHaveBeenCalledWith(
-      expect.stringContaining('/auth/me/mfa/confirm'),
+      expect.stringContaining('/auth/me/mfa/enroll/confirm'),
       {
         totp_code: '123456',
       },

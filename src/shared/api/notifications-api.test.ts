@@ -53,7 +53,9 @@ describe('notifications-api (live branch)', () => {
   it('lists and maps wire → domain', async () => {
     getMock.mockResolvedValue({ data: [WIRE] });
     const result = await listNotifications();
-    expect(getMock).toHaveBeenCalledWith(expect.stringContaining('/me/notifications'));
+    expect(getMock).toHaveBeenCalledWith(
+      expect.stringContaining('/notify/notifications'),
+    );
     expect(result).toEqual([
       {
         id: NTF,
@@ -68,7 +70,7 @@ describe('notifications-api (live branch)', () => {
   });
 
   it('reads the unread-count envelope', async () => {
-    getMock.mockResolvedValue({ data: { unread_count: 5 } });
+    getMock.mockResolvedValue({ data: { count: 5 } });
     await expect(getUnreadCount()).resolves.toBe(5);
   });
 
@@ -76,7 +78,7 @@ describe('notifications-api (live branch)', () => {
     patchMock.mockResolvedValue({ data: null });
     await markNotificationRead(NTF);
     expect(patchMock).toHaveBeenCalledWith(
-      expect.stringContaining(`/me/notifications/${NTF}/read`),
+      expect.stringContaining(`/notify/notifications/${NTF}/read`),
       {},
     );
   });
@@ -85,7 +87,7 @@ describe('notifications-api (live branch)', () => {
     postMock.mockResolvedValue({ data: null });
     await markAllNotificationsRead();
     expect(postMock).toHaveBeenCalledWith(
-      expect.stringContaining('/me/notifications/read-all'),
+      expect.stringContaining('/notify/notifications/mark-all-read'),
       {},
     );
   });
@@ -155,7 +157,7 @@ describe('notification preferences (live branch)', () => {
       { category: 'billing', channel: 'inApp', enabled: false },
     ]);
     expect(putMock).toHaveBeenCalledWith(
-      expect.stringContaining('/me/notification-preferences'),
+      expect.stringContaining('/users/me/notification-preferences'),
       { preferences: [{ category: 'billing', channel: 'in_app', enabled: false }] },
     );
     expect(result).toEqual([{ category: 'billing', channel: 'inApp', enabled: false }]);

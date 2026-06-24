@@ -169,6 +169,12 @@ export const authApi = {
       throwOnNotOk(response, json, `Forgot password failed (${response.status})`);
   },
 
+  /**
+   * Reset the password with a token. core-be #795 auto-logs-in on success
+   * (returns `{ access_token }`, or `{ mfa_required }` for MFA users), but the
+   * FE keeps an explicit sign-in step afterwards — simpler, and it avoids
+   * handling a second factor mid-reset. Any 2xx means the reset succeeded.
+   */
   resetPassword: async (data: ResetPasswordInput): Promise<void> => {
     const response = await authFetch(
       `${authBase()}${API_ENDPOINTS.AUTH.RESET_PASSWORD}`,
@@ -238,9 +244,11 @@ export const authApi = {
       role: (u.role as string | undefined) ?? 'user',
       name: (u.name as string | undefined) ?? (joined.length > 0 ? joined : undefined),
       avatarUrl: (u.avatarUrl ?? u.avatar_url ?? undefined) as string | undefined,
-      organizationId: (u.organizationId ?? u.personal_organization_id ?? undefined) as
-        | string
-        | undefined,
+      // core-be #795: /users/me carries `personal_organization` (singular object,
+      // nullable) + `team_organizations` (plural). Use the personal org's id.
+      organizationId: (u.organizationId ??
+        (u.personal_organization as { id?: string } | null | undefined)?.id ??
+        undefined) as string | undefined,
     });
   },
 

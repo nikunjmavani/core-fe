@@ -4,15 +4,16 @@ import { isoDateString } from '@/core/types/wire.ts';
 
 /**
  * Active-session contracts (core-be `/auth/me/sessions`) for the Security →
- * Sessions panel. Net-new / mock-first: the wire `id` is kept lenient (the
- * prefix isn't pinned yet); everything else mirrors the established mapper
- * pattern. REPLACE_WITH_API.
+ * Sessions panel. core-be #795 enriched the row with `device` / `browser` /
+ * `is_current` alongside `ip_address` / `user_agent`; there is no `location`
+ * (geo-locate `ip_address` client-side if a region is ever needed). Revoking the
+ * current session returns 409 — log out instead (handled in the panel).
  */
 export const sessionSchema = z.object({
   id: z.string(),
   device: z.string(),
   browser: z.string(),
-  location: z.string(),
+  ipAddress: z.string().nullable(),
   lastActiveAt: z.string(),
   current: z.boolean(),
 });
@@ -22,7 +23,8 @@ export const sessionWireSchema = z.object({
   id: z.string().min(1),
   device: z.string(),
   browser: z.string(),
-  location: z.string(),
+  ip_address: z.string().nullable().optional(),
+  user_agent: z.string().nullable().optional(),
   last_active_at: isoDateString,
   is_current: z.boolean(),
 });
@@ -33,7 +35,7 @@ export function toSession(wire: SessionWire): Session {
     id: wire.id,
     device: wire.device,
     browser: wire.browser,
-    location: wire.location,
+    ipAddress: wire.ip_address ?? null,
     lastActiveAt: wire.last_active_at,
     current: wire.is_current,
   };

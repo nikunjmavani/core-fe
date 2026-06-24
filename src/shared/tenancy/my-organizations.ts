@@ -127,9 +127,13 @@ export async function updateOrganization(
     if (payload.logoUrl !== undefined) org.logoUrl = payload.logoUrl;
     return mockResponse({ ...org });
   }
+  // core-be #795: PATCH /tenancy/organization accepts `name` only. The logo is
+  // set via an upload flow → PUT /tenancy/organization/logo { key }; sending
+  // `logo_url` here 400s, so it is intentionally omitted from the live request.
+  // Follow-up: wire the logo upload once its endpoint shape lands (mock keeps
+  // the data-URL path working meanwhile). See frontend-endpoint-mapping.md.
   const res = await apiClient.patch<unknown>(`${BASE}/tenancy/organization`, {
     ...(payload.name !== undefined ? { name: payload.name } : {}),
-    ...(payload.logoUrl !== undefined ? { logo_url: payload.logoUrl } : {}),
   });
   const o = res.data as {
     id: string;

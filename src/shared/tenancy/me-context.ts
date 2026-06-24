@@ -7,17 +7,8 @@ import { mockResponse } from '@/core/http/mock.ts';
 import { isoDateString, publicId } from '@/core/types/wire.ts';
 
 // ── Wire schemas (snake_case — mirror the core-be serializers) ──────────────
-const orgCapabilitiesWire = z.object({
-  can_invite_members: z.boolean(),
-  can_manage_members: z.boolean(),
-  can_manage_roles: z.boolean(),
-  can_transfer_ownership: z.boolean(),
-  can_delete: z.boolean(),
-  // Added in core-be #788; tolerate older servers that omit it (default false
-  // → billing is hidden, matching a backend that can't gate billing yet).
-  can_manage_billing: z.boolean().optional().default(false),
-});
-
+// core-be #795 removed the per-org `capabilities` object; the app now DERIVES
+// capabilities from `type` + the caller's `my_permissions` (deriveCapabilities).
 export const organizationWire = z.object({
   id: publicId('org'),
   name: z.string(),
@@ -26,7 +17,6 @@ export const organizationWire = z.object({
   status: z.enum(['ACTIVE', 'SUSPENDED', 'ARCHIVED']),
   logo_url: z.string().nullable(),
   brand_color: z.string().nullable().optional(),
-  capabilities: orgCapabilitiesWire,
   created_at: isoDateString,
   updated_at: isoDateString,
 });
@@ -102,17 +92,30 @@ export interface MeContext {
   organizations: Array<OrganizationSummary & { isActive: boolean }>;
 }
 
-function toCapabilities(w: z.infer<typeof orgCapabilitiesWire>): OrgCapabilities {
+/**
+ * Derive org capabilities from the org `type` + the caller's permissions
+ * (core-be #795 dropped the server-sent `capabilities` object). Every
+ * team-management capability requires a TEAM org; billing additionally needs
+ * `subscription:manage`.
+ */
+export function deriveCapabilities(
+  type: OrganizationType,
+  perms: readonly string[],
+): OrgCapabilities {
+  const has = (p: string) => type === 'TEAM' && perms.includes(p);
   return {
-    canInviteMembers: w.can_invite_members,
-    canManageMembers: w.can_manage_members,
-    canManageRoles: w.can_manage_roles,
-    canTransferOwnership: w.can_transfer_ownership,
-    canDelete: w.can_delete,
-    canManageBilling: w.can_manage_billing,
+    canInviteMembers: has('invitation:manage'),
+    canManageMembers: has('membership:manage'),
+    canManageRoles: has('role:manage'),
+    canTransferOwnership: has('organization:delete'),
+    canDelete: has('organization:delete'),
+    canManageBilling: has('subscription:manage'),
   };
 }
-export function toOrganization(w: z.infer<typeof organizationWire>): OrganizationSummary {
+export function toOrganization(
+  w: z.infer<typeof organizationWire>,
+  perms: readonly string[] = [],
+): OrganizationSummary {
   return {
     id: w.id,
     name: w.name,
@@ -121,7 +124,7 @@ export function toOrganization(w: z.infer<typeof organizationWire>): Organizatio
     status: w.status,
     logoUrl: w.logo_url,
     brandColor: w.brand_color ?? null,
-    capabilities: toCapabilities(w.capabilities),
+    capabilities: deriveCapabilities(w.type, perms),
     createdAt: w.created_at,
     updatedAt: w.updated_at,
   };
@@ -143,12 +146,14 @@ export function toMeContext(wire: MeContextWire): MeContext {
       updatedAt: wire.user.updated_at,
     },
     activeOrganization: wire.active_organization
-      ? toOrganization(wire.active_organization)
+      ? toOrganization(wire.active_organization, wire.my_permissions)
       : null,
     myPermissions: wire.my_permissions,
     globalRole: wire.global_role,
     organizations: wire.organizations.map((o) => ({
-      ...toOrganization(o),
+      // Only the active org's caller-permissions are known; others derive empty
+      // caps (caps gate the active org only — the switcher list doesn't use them).
+      ...toOrganization(o, o.is_active ? wire.my_permissions : []),
       isActive: o.is_active,
     })),
   };

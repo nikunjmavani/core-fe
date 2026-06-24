@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { isoDateString, publicId } from '@/core/types/wire.ts';
 
 /**
- * Notification domain contracts (core-be `/me/notifications`).
+ * Notification domain contracts (core-be `/notify/notifications`).
  *
  * Categories drive the bell glyph and the preferences grid. The wire shape is
  * snake_case per core-be; the UI consumes the camelCase domain shape via
@@ -55,9 +55,9 @@ export function toNotification(wire: NotificationWire): Notification {
   };
 }
 
-/** Unread-count envelope (`GET /me/notifications/unread-count`). */
+/** Unread-count envelope (`GET /notify/notifications/unread-count` → `{ count }`). */
 export const unreadCountWireSchema = z.object({
-  unread_count: z.number().int().nonnegative(),
+  count: z.number().int().nonnegative(),
 });
 
 /** Delivery channels for a notification category. */

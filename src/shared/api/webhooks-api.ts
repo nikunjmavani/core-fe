@@ -13,7 +13,9 @@ import {
 } from './webhook-contracts.ts';
 import { webhookMockStore } from './webhook-mock-store.ts';
 
-const WEBHOOKS_API = `${API_BASE_PATH}/tenancy/organization/webhooks`;
+// core-be #795: webhooks moved to /notify/webhooks (gated by webhook:*). The
+// fetch client already adds the X-Idempotency-Key the create route requires.
+const WEBHOOKS_API = `${API_BASE_PATH}/notify/webhooks`;
 
 /** List the active org's webhooks (`GET …/webhooks`). */
 export async function listWebhooks(): Promise<Webhook[]> {

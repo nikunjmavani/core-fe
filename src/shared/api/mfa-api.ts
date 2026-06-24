@@ -22,28 +22,33 @@ export interface MfaConfirmation {
   recoveryCodes: string[];
 }
 
-const statusWireSchema = z.object({ enabled: z.boolean() });
 const enrollWireSchema = z.object({ secret: z.string(), otpauth_uri: z.string() });
 const confirmWireSchema = z.object({ recovery_codes: z.array(z.string()) });
 
-/** Whether MFA is currently enabled for the account (`GET /auth/me/mfa`). */
+/**
+ * Whether MFA is enabled (`GET /auth/me/mfa`). core-be #795 returns the enrolled
+ * factor list (not `{ enabled }`); enabled = at least one factor.
+ */
 export async function getMfaStatus(): Promise<boolean> {
   if (config.useMockApi) return mockResponse(mfaMockStore.isEnabled());
   const res = await apiClient.get<unknown>(MFA_API);
-  return statusWireSchema.parse(res.data).enabled;
+  return z.array(z.unknown()).parse(res.data).length > 0;
 }
 
 /** Begin enrollment — returns the shared secret + otpauth URI (`POST …/enroll`). */
 export async function beginMfaEnrollment(): Promise<MfaEnrollment> {
   if (config.useMockApi) return mockResponse(mfaMockStore.begin());
-  const res = await apiClient.post<unknown>(`${MFA_API}/enroll`, {});
+  // core-be requires exactly this body (strict schema → 400 otherwise).
+  const res = await apiClient.post<unknown>(`${MFA_API}/enroll`, {
+    method_type: 'MFA_TOTP',
+  });
   const wire = enrollWireSchema.parse(res.data);
   return { secret: wire.secret, otpauthUri: wire.otpauth_uri };
 }
 
 /**
  * Confirm enrollment with a 6-digit TOTP code; on success MFA is enabled and
- * one-time recovery codes are returned (`POST …/confirm`).
+ * one-time recovery codes are returned (`POST …/enroll/confirm`).
  */
 export async function confirmMfaEnrollment(code: string): Promise<MfaConfirmation> {
   if (config.useMockApi) {
@@ -55,7 +60,9 @@ export async function confirmMfaEnrollment(code: string): Promise<MfaConfirmatio
     }
     return mockResponse(mfaMockStore.confirm());
   }
-  const res = await apiClient.post<unknown>(`${MFA_API}/confirm`, { totp_code: code });
+  const res = await apiClient.post<unknown>(`${MFA_API}/enroll/confirm`, {
+    totp_code: code,
+  });
   return { recoveryCodes: confirmWireSchema.parse(res.data).recovery_codes };
 }
 
