@@ -2,7 +2,7 @@ import { SectionHeader } from '../SettingsPanelShell.tsx';
 
 /**
  * Branches — placeholder panel (REPLACE_WITH_API).
- * Escape hatch: promote to a real page under pages/organization/\$organizationId/
+ * Escape hatch: promote to a real page under pages/organization/\$organizationSlug/
  * when it becomes a heavy admin surface; keep a hash → path redirect shim.
  */
 export function OrganizationBranchesPanel() {

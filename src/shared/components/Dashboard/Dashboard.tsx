@@ -21,7 +21,11 @@ import {
   Users,
   Zap,
 } from '@/shared/icons/index.ts';
-import type { MeContext, OrganizationStatusValue } from '@/shared/tenancy/me-context.ts';
+import type {
+  MeContext,
+  OrganizationStatusValue,
+  OrganizationSummary,
+} from '@/shared/tenancy/me-context.ts';
 
 function statusDotClass(status: OrganizationStatusValue): string {
   if (status === 'SUSPENDED') return 'bg-destructive';
@@ -86,6 +90,30 @@ function ActionCard({
         aria-hidden="true"
       />
     </a>
+  );
+}
+
+/** Open-workspace action for an org in the "Your organizations" list (FE-22). */
+function OrgOpenAction({ org }: { org: OrganizationSummary & { isActive: boolean } }) {
+  if (org.isActive) return <Badge variant="outline">Current</Badge>;
+  const className = 'text-primary text-sm font-medium hover:underline';
+  // Team orgs open at their slug URL; a personal org (no slug) returns to root.
+  if (org.slug) {
+    return (
+      <Link
+        to="/organization/$organizationSlug/dashboard"
+        params={{ organizationSlug: org.slug }}
+        className={className}
+        data-testid="dashboard-org-open"
+      >
+        Open workspace →
+      </Link>
+    );
+  }
+  return (
+    <Link to="/dashboard" className={className} data-testid="dashboard-org-open">
+      Open workspace →
+    </Link>
   );
 }
 
@@ -266,18 +294,7 @@ export function Dashboard() {
                   </Badge>
                 </CardHeader>
                 <CardContent>
-                  {o.isActive ? (
-                    <Badge variant="outline">Current</Badge>
-                  ) : (
-                    <Link
-                      to="/organization/$organizationId/dashboard"
-                      params={{ organizationId: o.id }}
-                      className="text-primary text-sm font-medium hover:underline"
-                      data-testid="dashboard-org-open"
-                    >
-                      Open workspace →
-                    </Link>
-                  )}
+                  <OrgOpenAction org={o} />
                 </CardContent>
               </Card>
             ))}

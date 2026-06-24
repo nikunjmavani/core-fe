@@ -27,28 +27,27 @@ describe('requireOrganizationContext', () => {
     localStorage.clear();
   });
 
-  it('throws notFound for a malformed param — no fetch, no existence leak', async () => {
-    await expect(requireOrganizationContext('not-an-id')).rejects.toSatisfy(isNotFound);
+  it('throws notFound for a malformed slug — no fetch, no existence leak', async () => {
+    await expect(requireOrganizationContext('NOT-A-SLUG')).rejects.toSatisfy(isNotFound);
   });
 
   it('throws notFound when the user is not a member of the organization', async () => {
-    await expect(requireOrganizationContext('org_stranger')).rejects.toSatisfy(
-      isNotFound,
-    );
+    await expect(requireOrganizationContext('stranger')).rejects.toSatisfy(isNotFound);
   });
 
   it('syncs the derived store from the URL and loads permissions for members', async () => {
-    const organization = await requireOrganizationContext('org_acme');
+    const organization = await requireOrganizationContext('acme');
 
     expect(organization.slug).toBe('acme');
     expect(useOrganizationStore.getState().organizationId).toBe('org_acme');
+    expect(useOrganizationStore.getState().organizationSlug).toBe('acme');
     expect(useOrganizationStore.getState().permissions).toEqual(['organization:read']);
   });
 });
 
 describe('requireActiveOrganization', () => {
   it('passes for active organizations (mock mode: always active)', () => {
-    expect(() => requireActiveOrganization('org_acme')).not.toThrow();
+    expect(() => requireActiveOrganization('acme')).not.toThrow();
   });
 });
 

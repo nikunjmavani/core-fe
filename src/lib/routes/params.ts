@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-import type { OrganizationPublicId } from '@/core/types/branded.ts';
-import { OrganizationPublicId as brandOrganizationId } from '@/core/types/branded.ts';
-
 /**
  * Route-param validation (docs/reference/routing-and-tenancy.md §8).
  *
@@ -11,15 +8,24 @@ import { OrganizationPublicId as brandOrganizationId } from '@/core/types/brande
  * on invalid input; the guard layer owns throwing `notFound()`.
  */
 
-/** Public organization ID as it appears in URLs: `org_` + random suffix. */
-export const organizationIdParamSchema = z
+/**
+ * Organization slug as it appears in team URLs: human-readable, lowercase
+ * alphanumeric with internal hyphens (1–64 chars). Team orgs carry a slug;
+ * personal orgs have none and live on root `/dashboard` instead (FE-22).
+ */
+export const organizationSlugParamSchema = z
   .string()
-  .regex(/^org_[A-Za-z0-9]{1,32}$/, 'invalid organization id');
+  .min(1)
+  .max(64)
+  // Single char-class (ReDoS-safe — no nested quantifiers) plus an edge check
+  // rejecting leading/trailing hyphens; the membership lookup is the real gate.
+  .regex(/^[a-z0-9-]+$/, 'invalid organization slug')
+  .refine((s) => !s.startsWith('-') && !s.endsWith('-'), 'invalid organization slug');
 
-/** Parse a raw `$organizationId` param; `null` when malformed. */
-export function parseOrganizationIdParam(raw: string): OrganizationPublicId | null {
-  const result = organizationIdParamSchema.safeParse(raw);
-  return result.success ? brandOrganizationId(result.data) : null;
+/** Parse a raw `$organizationSlug` param; `null` when malformed. */
+export function parseOrganizationSlugParam(raw: string): string | null {
+  const result = organizationSlugParamSchema.safeParse(raw);
+  return result.success ? result.data : null;
 }
 
 /* ── Invitation ID param ─────────────────────────────────────────── */

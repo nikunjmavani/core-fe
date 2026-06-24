@@ -3,4 +3,4 @@ export {
   organizationPicker,
   organizationSuspended,
 } from './builders.ts';
-export { organizationIdParamSchema, parseOrganizationIdParam } from './params.ts';
+export { organizationSlugParamSchema, parseOrganizationSlugParam } from './params.ts';

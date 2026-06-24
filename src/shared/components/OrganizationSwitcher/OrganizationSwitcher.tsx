@@ -29,7 +29,7 @@ interface OrganizationSwitcherProps {
  * Active-organization switcher (dual-URL aware, FE-24). Lists the user's
  * organizations from `me/context` (the authoritative set, including the personal
  * org). Switching to a **team** org navigates to its
- * `/organization/$organizationId/dashboard` — the org guard performs the
+ * `/organization/$organizationSlug/dashboard` — the org guard performs the
  * switch-on-navigation. Switching to the **personal** org has no URL to drive
  * the switch, so it calls `switchToPersonal()` (re-mints the token) then lands
  * on the root `/dashboard`.
@@ -53,7 +53,8 @@ export function OrganizationSwitcher({
       void navigate({ to: '/dashboard' });
       return;
     }
-    void navigate(organizationDashboard(org.id));
+    // Team orgs carry a slug; the guard resolves it to the canonical org.
+    if (org.slug) void navigate(organizationDashboard(org.slug));
   }
 
   function selectOrg(org: OrganizationSummary) {

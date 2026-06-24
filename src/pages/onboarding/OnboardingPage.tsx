@@ -120,7 +120,7 @@ function renderStep(step: (typeof ONBOARDING_STEPS)[number]) {
  * Multi-step, resumable onboarding wizard. Progress is persisted in
  * {@link useOnboardingStore}; the final step creates the organization, sends any
  * invitations, and navigates to the new organization's dashboard (the
- * `$organizationId` guard syncs context, persists, and loads permissions).
+ * `$organizationSlug` guard syncs context, persists, and loads permissions).
  * Step UIs live in `components/` (folder-per-unit).
  */
 export function OnboardingPage() {
@@ -133,6 +133,8 @@ export function OnboardingPage() {
     complete,
     createdOrganizationId,
     setCreatedOrganizationId,
+    createdOrganizationSlug,
+    setCreatedOrganizationSlug,
   } = useOnboardingStore();
   const [submitting, setSubmitting] = useState(false);
   // eslint-disable-next-line security/detect-object-injection -- stepIndex is clamped store state
@@ -149,14 +151,15 @@ export function OnboardingPage() {
     try {
       // Idempotent: if a prior attempt already created the org (and then an
       // invite failed), reuse it instead of creating a DUPLICATE on retry.
-      let organizationId = createdOrganizationId;
-      if (!organizationId) {
+      let organizationSlug = createdOrganizationSlug;
+      if (!createdOrganizationId) {
         const org = await createOrganization({
           name: data.organizationName.trim() || 'My organization',
           slug: data.organizationSlug.trim() || undefined,
         });
-        organizationId = org.id;
+        organizationSlug = org.slug;
         setCreatedOrganizationId(org.id);
+        setCreatedOrganizationSlug(org.slug);
       }
 
       // Profile + segmentation are fire-and-forget: never block dashboard entry.
@@ -184,8 +187,12 @@ export function OnboardingPage() {
       } else {
         notify.success('Welcome! Your workspace is ready.');
       }
-      // The $organizationId guard syncs context, persists, and loads permissions.
-      void navigate({ ...organizationDashboard(organizationId), replace: true });
+      // The $organizationSlug guard syncs context, persists, and loads permissions.
+      if (organizationSlug) {
+        void navigate({ ...organizationDashboard(organizationSlug), replace: true });
+      } else {
+        void navigate({ to: '/', replace: true });
+      }
     } catch {
       notify.error('Something went wrong finishing setup. Please try again.');
     } finally {

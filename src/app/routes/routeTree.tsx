@@ -21,9 +21,9 @@ import { manifest as forgotPasswordManifest } from '@/pages/forgot-password/forg
 import { manifest as loginManifest } from '@/pages/login/login.manifest.ts';
 import { manifest as mfaManifest } from '@/pages/mfa/mfa.manifest.ts';
 import { manifest as onboardingManifest } from '@/pages/onboarding/onboarding.manifest.ts';
-import { manifest as dashboardManifest } from '@/pages/organization/$organizationId/dashboard/dashboard.manifest.ts';
-import { manifest as organizationShellManifest } from '@/pages/organization/$organizationId/organization-id.manifest.ts';
-import { manifest as suspendedManifest } from '@/pages/organization/$organizationId/suspended/suspended.manifest.ts';
+import { manifest as dashboardManifest } from '@/pages/organization/$organizationSlug/dashboard/dashboard.manifest.ts';
+import { manifest as organizationShellManifest } from '@/pages/organization/$organizationSlug/organization-slug.manifest.ts';
+import { manifest as suspendedManifest } from '@/pages/organization/$organizationSlug/suspended/suspended.manifest.ts';
 import { manifest as organizationPickerManifest } from '@/pages/organization/organization.manifest.ts';
 import { manifest as registerManifest } from '@/pages/register/register.manifest.ts';
 import { manifest as resetPasswordManifest } from '@/pages/reset-password/reset-password.manifest.ts';
@@ -93,11 +93,11 @@ const OrganizationPickerPage = lazyRouteComponent(
   'Component',
 );
 const OrganizationShell = lazyRouteComponent(
-  () => import('@/pages/organization/$organizationId/organization-id.route.tsx'),
+  () => import('@/pages/organization/$organizationSlug/organization-slug.route.tsx'),
   'Component',
 );
 const DashboardPage = lazyRouteComponent(
-  () => import('@/pages/organization/$organizationId/dashboard/dashboard.route.tsx'),
+  () => import('@/pages/organization/$organizationSlug/dashboard/dashboard.route.tsx'),
   'Component',
 );
 // Personal-org space reuses the shared AppShell directly (no org param in URL).
@@ -106,7 +106,7 @@ const PersonalShell = lazyRouteComponent(
   'Component',
 );
 const SuspendedPage = lazyRouteComponent(
-  () => import('@/pages/organization/$organizationId/suspended/suspended.route.tsx'),
+  () => import('@/pages/organization/$organizationSlug/suspended/suspended.route.tsx'),
   'Component',
 );
 const NotFoundPage = lazyRouteComponent(
@@ -286,13 +286,13 @@ const organizationPickerRoute = createRoute({
   errorComponent: RouteErrorBoundary,
 });
 
-// ── Organization shell (/organization/$organizationId) ──
+// ── Organization shell (/organization/$organizationSlug) ──
 // The URL is the single source of truth for organization context: the guard
 // chain validates the param, confirms membership (404 otherwise), syncs the
 // derived store, and refetches per-organization permissions on change.
 const organizationShellRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/organization/$organizationId',
+  path: '/organization/$organizationSlug',
   head: manifestHead(organizationShellManifest),
   beforeLoad: async ({ location, params, preload }) => {
     requireAuth(location.href);
@@ -337,10 +337,10 @@ const organizationSuspendedRoute = createRoute({
 });
 
 // ── Personal space (/dashboard) ──
-// Personal organizations land on root URLs — no `$organizationId` in the path.
+// Personal organizations land on root URLs — no `$organizationSlug` in the path.
 // The active org comes from the session context (me/context / JWT), not the URL,
 // so this shell only requires an authenticated session. (Dual-URL, research/11
-// §3.3.) The org-scoped team space remains `/organization/$organizationId/*`.
+// §3.3.) The org-scoped team space remains `/organization/$organizationSlug/*`.
 const personalShellRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'personal-app',

@@ -11,16 +11,16 @@ export function organizationPicker() {
   return { to: '/organization' } as const;
 }
 
-export function organizationDashboard(organizationId: string) {
+export function organizationDashboard(organizationSlug: string) {
   return {
-    to: '/organization/$organizationId/dashboard',
-    params: { organizationId },
+    to: '/organization/$organizationSlug/dashboard',
+    params: { organizationSlug },
   } as const;
 }
 
-export function organizationSuspended(organizationId: string) {
+export function organizationSuspended(organizationSlug: string) {
   return {
-    to: '/organization/$organizationId/suspended',
-    params: { organizationId },
+    to: '/organization/$organizationSlug/suspended',
+    params: { organizationSlug },
   } as const;
 }

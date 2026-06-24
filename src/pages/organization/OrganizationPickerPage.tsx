@@ -86,7 +86,7 @@ export function OrganizationPickerPage() {
               <Card
                 key={organization.id}
                 className="hover:bg-muted/50 cursor-pointer py-0 transition-colors"
-                onClick={() => void navigate(organizationDashboard(organization.id))}
+                onClick={() => void navigate(organizationDashboard(organization.slug))}
                 data-testid={`organization-picker-option-${organization.slug}`}
               >
                 <CardContent className="flex items-center gap-3 p-4">

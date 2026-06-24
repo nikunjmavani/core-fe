@@ -13,7 +13,7 @@ import { requireOrgStatus, resolveActiveOrg } from './org-gates.ts';
 
 const ctx = {
   location: { pathname: '/x', search: '', hash: '', href: '/x' },
-  params: { organizationId: 'org_x' },
+  params: { organizationSlug: 'acme' },
 };
 
 beforeEach(() => {
@@ -24,11 +24,11 @@ beforeEach(() => {
 describe('org gates', () => {
   it('resolveActiveOrg delegates to requireOrganizationContext with the param', async () => {
     await resolveActiveOrg(ctx);
-    expect(contextMock).toHaveBeenCalledWith('org_x');
+    expect(contextMock).toHaveBeenCalledWith('acme');
   });
 
   it('requireOrgStatus delegates to requireActiveOrganization with the param', () => {
     requireOrgStatus(ctx);
-    expect(statusMock).toHaveBeenCalledWith('org_x');
+    expect(statusMock).toHaveBeenCalledWith('acme');
   });
 });

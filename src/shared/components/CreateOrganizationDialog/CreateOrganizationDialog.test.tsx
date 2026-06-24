@@ -37,8 +37,8 @@ describe('CreateOrganizationDialog', () => {
     await vi.waitFor(() => {
       expect(navigateMock).toHaveBeenCalledWith(
         expect.objectContaining({
-          to: '/organization/$organizationId/dashboard',
-          params: { organizationId: 'org_new' },
+          to: '/organization/$organizationSlug/dashboard',
+          params: { organizationSlug: 'new-org' },
         }),
       );
     });

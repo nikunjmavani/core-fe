@@ -10,7 +10,7 @@ const E2E_REGISTER_PASSWORD = 'Password1!';
  *
  * Flow under dual-URL routing: register → `/` resolver reads `me/context`'s
  * active organization (the mock's `acme` team org) and lands straight on
- * `/organization/org_acme/dashboard` — no picker step (the active org is known
+ * `/organization/acme/dashboard` — no picker step (the active org is known
  * from the session, FE-19).
  */
 export async function registerNewUserAndGoToDashboard(page: Page): Promise<void> {
@@ -19,7 +19,7 @@ export async function registerNewUserAndGoToDashboard(page: Page): Promise<void>
   await page.getByTestId('register-email').fill(uniqueEmail);
   await page.getByTestId('register-password').fill(E2E_REGISTER_PASSWORD);
   await page.getByTestId('register-submit').click();
-  await expect(page).toHaveURL(/\/organization\/org_acme\/dashboard/, {
+  await expect(page).toHaveURL(/\/organization\/acme\/dashboard/, {
     timeout: 10000,
   });
 }

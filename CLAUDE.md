@@ -92,9 +92,9 @@ Every directory under `src/pages/` that corresponds to a frontend URL path **mus
 
 **The rule in five lines (read this first):**
 
-1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/org_8fK2x/dashboard` → `pages/organization/$organizationId/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. One exception: `/` is a pure resolver route (redirect only, no island).
-2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationId/` → `organization-id.route.tsx`, `ORGANIZATION_ID.OVERVIEW.md`).
-3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppShell via the `pages/organization/$organizationId/` layout island (the org guard boundary). No grouping directories under `pages/`.
+1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/acme/dashboard` → `pages/organization/$organizationSlug/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. One exception: `/` is a pure resolver route (redirect only, no island).
+2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationSlug/` → `organization-slug.route.tsx`, `ORGANIZATION_SLUG.OVERVIEW.md`).
+3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppShell via the `pages/organization/$organizationSlug/` layout island (the org guard boundary). No grouping directories under `pages/`.
 4. **Code used by 2+ page islands lives in `shared/`** (e.g. `shared/api/auth-api.ts`, `shared/tenancy/`).
 5. **Settings is a global hash modal, not a route space** — `#settings/<scope>/<section>` opens `shared/components/SettingsModal/` over any page (see `agent-os/rules/file-structure.mdc` → Settings hash modal). Full spec: `docs/reference/routing-and-tenancy.md`.
 
@@ -116,11 +116,11 @@ src/pages/
     ├── organization.route.tsx       ← /organization (picker)
     ├── organization.manifest.ts
     ├── OrganizationPickerPage.tsx
-    └── $organizationId/             ← /organization/org_8fK2x — org guard boundary
-        ├── organization-id.route.tsx     ($param folder → strip-$ kebab prefix)
-        ├── organization-id.manifest.ts       kind: 'layout', children: [dashboard, suspended]
+    └── $organizationSlug/             ← /organization/acme — org guard boundary
+        ├── organization-slug.route.tsx     ($param folder → strip-$ kebab prefix)
+        ├── organization-slug.manifest.ts       kind: 'layout', children: [dashboard, suspended]
         ├── OrganizationLayout.tsx        mounts shared AppShell
-        ├── ORGANIZATION_ID.OVERVIEW.md
+        ├── ORGANIZATION_SLUG.OVERVIEW.md
         ├── dashboard/               ← …/dashboard — full island (api, contracts, hooks/, components/)
         ├── suspended/               ← …/suspended — status-guard target
         └── patients/                ← (example) future islands nest directly: patients/$patientId/…
@@ -340,7 +340,7 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 
 - All routes are lazy loaded via `route.tsx` files.
 - Route config lives in `src/app/routes/routeTree.tsx`.
-- Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationId` chain (auth → membership/context sync from the URL → status) plus `requirePermission`; see `src/app/guards/GUARDS.OVERVIEW.md`.
+- Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationSlug` chain (auth → membership/context sync from the URL → status) plus `requirePermission`; see `src/app/guards/GUARDS.OVERVIEW.md`.
 - RBAC enforcement in route loaders: `requirePermission('domain.action')`.
 - Every route sets `head: manifestHead(manifest)` (`lib/routes/page-head.ts`) — the document
   title comes from `manifest.title` as `"<title> · Core Admin"`; the root-mounted

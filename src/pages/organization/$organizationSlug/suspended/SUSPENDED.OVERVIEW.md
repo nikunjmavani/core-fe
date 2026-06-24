@@ -1,6 +1,6 @@
-# `pages/organization/$organizationId/suspended` — Suspended organization
+# `pages/organization/$organizationSlug/suspended` — Suspended organization
 
-Route: `/organization/$organizationId/suspended`. Blocked state rendered when
+Route: `/organization/$organizationSlug/suspended`. Blocked state rendered when
 `requireActiveOrganization` finds the organization suspended / subscription lapsed
 (mock mode: always active — `REPLACE_WITH_API`). Offers switching organization via
 the picker.

@@ -178,12 +178,12 @@ Vitest globs cover both `src/**/*.test.{ts,tsx}` and `src/**/__tests__/**/*.test
 
 ## Examples
 
-| Island                   | Path                                                | Notes                                      |
-| ------------------------ | --------------------------------------------------- | ------------------------------------------ |
-| Dashboard                | `src/pages/dashboard/`                              | Leaf — top-level UI is `DashboardPage.tsx` |
-| Organization hub         | `src/pages/organization/`                           | Layout — picker + `$organizationId/` child |
-| Dashboard child          | `src/pages/organization/$organizationId/dashboard/` | Leaf under the org layout                  |
-| Organizations (resource) | `src/pages/organizations/`                          | Resource — list + URL-driven dialogs       |
+| Island                   | Path                                                  | Notes                                        |
+| ------------------------ | ----------------------------------------------------- | -------------------------------------------- |
+| Dashboard                | `src/pages/dashboard/`                                | Leaf — top-level UI is `DashboardPage.tsx`   |
+| Organization hub         | `src/pages/organization/`                             | Layout — picker + `$organizationSlug/` child |
+| Dashboard child          | `src/pages/organization/$organizationSlug/dashboard/` | Leaf under the org layout                    |
+| Organizations (resource) | `src/pages/organizations/`                            | Resource — list + URL-driven dialogs         |
 
 ---
 

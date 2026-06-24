@@ -11,7 +11,7 @@ test.describe('Organization switching (dual-URL)', () => {
   });
 
   test('starts on the team org dashboard URL', async ({ page }) => {
-    await expect(page).toHaveURL(/\/organization\/org_acme\/dashboard/);
+    await expect(page).toHaveURL(/\/organization\/acme\/dashboard/);
   });
 
   test('switching to the personal org lands on the root /dashboard', async ({ page }) => {

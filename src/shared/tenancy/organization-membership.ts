@@ -27,6 +27,17 @@ export async function findMembership(
   return organizations.find((o) => o.id === organizationId) ?? null;
 }
 
+/**
+ * The organization whose **slug** matches, if the user is a member; else `null`.
+ * Team URLs carry the human-readable slug (FE-22); the guard resolves it to the
+ * canonical org (and its immutable id) here. Existence is never leaked: a
+ * non-member slug resolves to `null` → 404, identical to an unknown slug.
+ */
+export async function findMembershipBySlug(slug: string): Promise<Organization | null> {
+  const organizations = await listMyOrganizations();
+  return organizations.find((o) => o.slug === slug) ?? null;
+}
+
 let permissionsLoadedFor: string | null = null;
 
 /** Load org-scoped permissions into the store, refetching when the organization changed. */

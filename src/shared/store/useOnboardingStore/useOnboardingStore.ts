@@ -35,12 +35,20 @@ interface OnboardingStore {
    * re-creates a DUPLICATE org when the user retries — the retry reuses this.
    */
   createdOrganizationId: string | null;
+  /**
+   * Slug of the created org (mirrors {@link createdOrganizationId}) — drives the
+   * post-onboarding navigation to the team's `/organization/$organizationSlug/*`
+   * space (FE-22). Kept alongside the id so a retry after a partial failure
+   * still knows where to land.
+   */
+  createdOrganizationSlug: string | null;
 
   setStepIndex: (index: number) => void;
   next: () => void;
   back: () => void;
   patch: (data: Partial<OnboardingData>) => void;
   setCreatedOrganizationId: (id: string) => void;
+  setCreatedOrganizationSlug: (slug: string) => void;
   complete: () => void;
   reset: () => void;
 }
@@ -68,6 +76,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
       data: INITIAL_DATA,
       completed: false,
       createdOrganizationId: null,
+      createdOrganizationSlug: null,
 
       setStepIndex: (stepIndex) => set({ stepIndex }),
       next: () =>
@@ -77,6 +86,8 @@ export const useOnboardingStore = create<OnboardingStore>()(
       back: () => set((s) => ({ stepIndex: Math.max(s.stepIndex - 1, 0) })),
       patch: (data) => set((s) => ({ data: { ...s.data, ...data } })),
       setCreatedOrganizationId: (createdOrganizationId) => set({ createdOrganizationId }),
+      setCreatedOrganizationSlug: (createdOrganizationSlug) =>
+        set({ createdOrganizationSlug }),
       complete: () => set({ completed: true }),
       reset: () =>
         set({
@@ -84,6 +95,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
           data: INITIAL_DATA,
           completed: false,
           createdOrganizationId: null,
+          createdOrganizationSlug: null,
         }),
     }),
     { name: 'core-onboarding' },

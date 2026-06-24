@@ -42,7 +42,7 @@ test.describe('Responsive @ 320px', () => {
     page,
   }) => {
     await registerNewUserAndGoToDashboard(page);
-    await page.goto('/organization/org_acme/dashboard#settings/account/profile');
+    await page.goto('/organization/acme/dashboard#settings/account/profile');
 
     await expect(page.getByTestId('settings-modal')).toBeVisible();
     // Mobile: the section <Select> drives nav; the desktop sidebar is hidden.

@@ -51,7 +51,7 @@ export function AcceptInvitePage() {
         scheduleTokenRefresh();
 
         // Persist the joined organization as last-used; the `/` resolver
-        // validates it against memberships and the $organizationId guard
+        // validates it against memberships and the $organizationSlug guard
         // syncs context + permissions from the URL.
         persistOrganizationToStorage(accepted.organizationId, accepted.organizationSlug);
 

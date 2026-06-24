@@ -44,7 +44,7 @@ import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
 /**
  * Org-scoped nav entries; rendered as Links to
- * `/organization/$organizationId/<segment>` with the current param.
+ * `/organization/$organizationSlug/<segment>` with the current param.
  * `id` doubles as the stable `data-testid` slug (`nav-<id>`).
  */
 const NAV_ITEMS: ({
@@ -58,18 +58,18 @@ const NAV_ITEMS: ({
 
 /**
  * Dual-URL dashboard nav link: a team org (org id in the URL) links to its
- * `/organization/$organizationId/dashboard`; a personal org (no org param)
+ * `/organization/$organizationSlug/dashboard`; a personal org (no org param)
  * links to the root `/dashboard`. Styling is passed in so the sidebar + mobile
  * bars stay visually distinct.
  */
 function DashboardNavLink({
-  organizationId,
+  organizationSlug,
   testId,
   activeClassName,
   inactiveClassName,
   children,
 }: {
-  organizationId: string;
+  organizationSlug: string;
   testId: string;
   activeClassName: string;
   inactiveClassName: string;
@@ -81,10 +81,10 @@ function DashboardNavLink({
     inactiveProps: { className: inactiveClassName },
     'data-testid': testId,
   };
-  return organizationId ? (
+  return organizationSlug ? (
     <Link
-      to="/organization/$organizationId/dashboard"
-      params={{ organizationId }}
+      to="/organization/$organizationSlug/dashboard"
+      params={{ organizationSlug }}
       {...shared}
     >
       {children}
@@ -107,8 +107,8 @@ export function Component() {
   const navItems = useVisibleNav(NAV_ITEMS);
   // Apply the active org's brand accent → --color-brand (FE-57; no-op without one).
   useOrgBrand();
-  // Canonical organization context comes from the URL ($organizationId).
-  const { organizationId = '' } = useParams({ strict: false });
+  // Canonical organization context comes from the URL ($organizationSlug).
+  const { organizationSlug = '' } = useParams({ strict: false });
 
   return (
     <div className="bg-background flex h-screen overflow-hidden" data-testid="app-shell">
@@ -128,7 +128,7 @@ export function Component() {
       )}
 
       {/* Sidebar */}
-      <Sidebar navItems={navItems} organizationId={organizationId} />
+      <Sidebar navItems={navItems} organizationSlug={organizationSlug} />
 
       {/* Main area */}
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -161,7 +161,7 @@ export function Component() {
         {navItems.map((item) => (
           <DashboardNavLink
             key={item.id}
-            organizationId={organizationId}
+            organizationSlug={organizationSlug}
             testId={`nav-${item.id}`}
             activeClassName="flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium text-foreground bg-muted/50"
             inactiveClassName="flex min-h-[44px] min-w-[44px] flex-1 flex-col items-center justify-center gap-0.5 text-xs text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -182,10 +182,10 @@ export function Component() {
 // ── Sidebar ──
 function Sidebar({
   navItems,
-  organizationId,
+  organizationSlug,
 }: {
   navItems: typeof NAV_ITEMS;
-  organizationId: string;
+  organizationSlug: string;
 }) {
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
 
@@ -211,7 +211,7 @@ function Sidebar({
         {navItems.map((item) => (
           <DashboardNavLink
             key={item.id}
-            organizationId={organizationId}
+            organizationSlug={organizationSlug}
             testId={`nav-${item.id}`}
             activeClassName={cn(
               'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',

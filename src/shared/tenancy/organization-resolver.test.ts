@@ -66,12 +66,17 @@ describe('resolveRootRedirect (`/` → active org from me/context)', () => {
     await expect(resolveRootRedirect()).resolves.toEqual({ to: '/dashboard' });
   });
 
-  it('routes a team active org to its $organizationId dashboard', async () => {
+  it('routes a team active org to its $organizationSlug dashboard', async () => {
     vi.mocked(fetchMeContext).mockResolvedValue(meCtx(activeOrg('TEAM', 'acme')));
     await expect(resolveRootRedirect()).resolves.toEqual({
-      to: '/organization/$organizationId/dashboard',
-      params: { organizationId: 'org_x' },
+      to: '/organization/$organizationSlug/dashboard',
+      params: { organizationSlug: 'acme' },
     });
+  });
+
+  it('routes a team active org WITHOUT a slug to onboarding (invariant violation)', async () => {
+    vi.mocked(fetchMeContext).mockResolvedValue(meCtx(activeOrg('TEAM', null)));
+    await expect(resolveRootRedirect()).resolves.toEqual({ to: '/onboarding' });
   });
 });
 

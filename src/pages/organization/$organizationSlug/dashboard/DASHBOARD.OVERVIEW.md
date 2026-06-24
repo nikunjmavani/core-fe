@@ -1,6 +1,6 @@
-# `pages/organization/$organizationId/dashboard` — Dashboard
+# `pages/organization/$organizationSlug/dashboard` — Dashboard
 
-Route: `/organization/$organizationId/dashboard`. The landing surface after
+Route: `/organization/$organizationSlug/dashboard`. The landing surface after
 sign-in. Reads the session context (`useMeContext` → `GET /auth/me/context`) and
 renders an overview + capability-gated quick actions. **Personal** organizations
 show a lighter set (no member/role/billing management); **team** organizations

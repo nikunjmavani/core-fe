@@ -12,7 +12,7 @@ when requirements land. `agent-os/rules/file-structure.mdc` and CLAUDE.md reflec
 | Context                                    | Term                                                                                                                                                                      |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | URLs, folders, components, prose           | `organization` (never `org`, `tenant`, `workspace`, `clinic`)                                                                                                             |
-| Route param                                | `$organizationId` / `params.organizationId` (never `orgId`)                                                                                                               |
+| Route param                                | `$organizationSlug` / `params.organizationId` (never `orgId`)                                                                                                             |
 | Public ID prefix (wire data, Stripe-style) | `org_` — compact prefixes are data format, not names (`org_8fK2x`, `pat_x9Q2m`, `apt_…`, `inv_…`, `usr_…`)                                                                |
 | Infra layer term                           | `tenancy` is allowed **only** as the infrastructure module name (`shared/tenancy/`) — it is the industry term for the mechanism; everything user-facing says organization |
 
@@ -24,14 +24,14 @@ volume — a real concern for a clinic app). Internal DB ids never appear in URL
 
 ```text
 /organization                                                    organization picker
-/organization/$organizationId/dashboard
-/organization/$organizationId/patients
-/organization/$organizationId/patients/$patientId
-/organization/$organizationId/patients/$patientId/appointments/$appointmentId
-/organization/$organizationId/appointments                      org-wide calendar (list only)
-/organization/$organizationId/billing/invoices/$invoiceId
-/organization/$organizationId/reports
-/organization/$organizationId/suspended                         blocked-state page (status guard target)
+/organization/$organizationSlug/dashboard
+/organization/$organizationSlug/patients
+/organization/$organizationSlug/patients/$patientId
+/organization/$organizationSlug/patients/$patientId/appointments/$appointmentId
+/organization/$organizationSlug/appointments                      org-wide calendar (list only)
+/organization/$organizationSlug/billing/invoices/$invoiceId
+/organization/$organizationSlug/reports
+/organization/$organizationSlug/suspended                         blocked-state page (status guard target)
 ```
 
 - **Do not use:** `/o/…`, `/org/…`, `/app/…`, session-based organization, query-param organization.
@@ -39,9 +39,9 @@ volume — a real concern for a clinic app). Internal DB ids never appear in URL
   **only** under `patients/$patientId/appointments/$appointmentId`; the org-wide appointments list
   links into it. Never add a second detail URL for the same resource.
 - **`/` (root):** a resolver route — reads the active org from `me/context` and redirects:
-  PERSONAL → root `/dashboard`, TEAM → `/organization/$organizationId/dashboard`, else
+  PERSONAL → root `/dashboard`, TEAM → `/organization/$organizationSlug/dashboard`, else
   `/onboarding`. Dual-URL: the personal org lives on root URLs (no org param), the team org on
-  its `$organizationId/` space. The shared `<Dashboard/>` renders in both; `/` keeps no UI.
+  its `$organizationSlug/` space. The shared `<Dashboard/>` renders in both; `/` keeps no UI.
 - Auth islands (`/login`, `/register`, `/callback`, …), `/onboarding`, `/accept-invite/$invitationId`
   stay top-level, unchanged.
 
@@ -60,10 +60,10 @@ src/pages/
     ├── organization.route.tsx                   ← /organization (picker)
     ├── organization.manifest.ts
     ├── OrganizationPickerPage.tsx
-    └── $organizationId/
-        ├── ORGANIZATION_ID.OVERVIEW.md
-        ├── organization-id.route.tsx            ← layout boundary; org guards in beforeLoad/loader
-        ├── organization-id.manifest.ts              kind: 'layout', children: [...]
+    └── $organizationSlug/
+        ├── ORGANIZATION_SLUG.OVERVIEW.md
+        ├── organization-slug.route.tsx            ← layout boundary; org guards in beforeLoad/loader
+        ├── organization-slug.manifest.ts              kind: 'layout', children: [...]
         ├── OrganizationLayout.tsx               shell UI + <Outlet />
         ├── dashboard/                           4-file island
         ├── patients/
@@ -96,8 +96,8 @@ src/pages/
 ### Naming rules (validator-enforced)
 
 1. **Prefix = directory name.** `patients/` → `patients.route.tsx`, `PATIENTS.OVERVIEW.md`.
-2. **`$param` folders strip the `$` and kebab-case the param**: `$organizationId/` →
-   `organization-id.route.tsx`, `organization-id.manifest.ts`, `ORGANIZATION_ID.OVERVIEW.md`.
+2. **`$param` folders strip the `$` and kebab-case the param**: `$organizationSlug/` →
+   `organization-slug.route.tsx`, `organization-slug.manifest.ts`, `ORGANIZATION_SLUG.OVERVIEW.md`.
    The filename is mechanically derivable from the URL; param names are full words, so derived
    names are too. The UI file alone stays human-named (`PatientDetailPage.tsx`,
    `OrganizationLayout.tsx`) — the validator only requires `*Page.tsx | *Layout.tsx`.
@@ -124,12 +124,12 @@ src/pages/
 
 ## 4. Organization context — URL is the single source of truth
 
-- Inside `/organization/$organizationId/*`, **`params.organizationId` is canonical**.
+- Inside `/organization/$organizationSlug/*`, **`params.organizationId` is canonical**.
 - `useOrganizationStore` (today `useTenantStore`) is a **derived cache synced from the route** —
   never the other way around. localStorage / subdomain resolution are used only by the `/`
   resolver to pick a redirect target.
 - Multi-tab correctness follows automatically: each tab's URL carries its own organization.
-- **Permissions are per-organization**: the `$organizationId` boundary refetches
+- **Permissions are per-organization**: the `$organizationSlug` boundary refetches
   memberships/permissions whenever the param changes (today's once-if-empty bootstrap is not
   enough — switching organizations must invalidate).
 
@@ -139,7 +139,7 @@ src/pages/
 render-then-redirect flicker). Thin components like the existing `RBACGuard` remain only for
 in-page gating.
 
-Order for `/organization/org_8fK2x/patients/pat_x9Q2m/appointments/apt_…`:
+Order for `/organization/acme/patients/pat_x9Q2m/appointments/apt_…`:
 
 1. `authGuard` — logged in? → else redirect `/login` (carry `returnTo`)
 2. `organizationGuard` — param is well-formed; user is a member → else **404** (don't leak existence)
@@ -162,7 +162,7 @@ store, organization APIs, and storage — so it lives in `shared/`, exactly like
 src/shared/tenancy/
 ├── TENANCY.OVERVIEW.md
 ├── organization-context.ts        read canonical organization from route → sync store
-├── organization-id.ts             OrganizationPublicId brand + parser
+├── organization-slug.ts             OrganizationPublicId brand + parser
 ├── organization-resolver.ts       "/" resolver logic (storage → my-organizations → onboarding)
 ├── organization-membership.ts     membership + per-organization permission loading
 ├── tenancy-service.ts             (moved from shared/api/)
@@ -236,7 +236,7 @@ Executed as phase 0 of the epic:
 
 0. **Rename sweep** (table above) — mechanical, independently verifiable.
 1. **Tenancy + URL**: `shared/tenancy/`, `/` resolver, guard functions, `/organization` picker,
-   `$organizationId` layout island, move dashboard under it, update e2e + every `navigate({ to: '/' })`.
+   `$organizationSlug` layout island, move dashboard under it, update e2e + every `navigate({ to: '/' })`.
 2. **Settings**: hash modal replaces `/settings/*` chrome routes.
 3. **Domain islands**: patients / appointments / billing / reports (product work, scaffolded by
    the page-scaffolding skill under the rules above).
@@ -245,10 +245,10 @@ Executed as phase 0 of the epic:
 
 | Decision             | Choice                                                                                    |
 | -------------------- | ----------------------------------------------------------------------------------------- |
-| Organization URL     | `/organization/$organizationId/…`, public IDs only                                        |
-| Param naming         | full words: `$organizationId`, `$patientId`, `$appointmentId`, `$invoiceId`               |
+| Organization URL     | `/organization/$organizationSlug/…`, public IDs only                                      |
+| Param naming         | full words: `$organizationSlug`, `$patientId`, `$appointmentId`, `$invoiceId`             |
 | Pages layout         | mirrors URLs; `$param` folders; direct nesting (no `sub-pages/`)                          |
-| `$param` file naming | strip `$`, kebab-case: `organization-id.route.tsx`, `ORGANIZATION_ID.OVERVIEW.md`         |
+| `$param` file naming | strip `$`, kebab-case: `organization-slug.route.tsx`, `ORGANIZATION_SLUG.OVERVIEW.md`     |
 | Per-island contract  | 4 files + optional prefixed role files; no `*.layout.tsx`                                 |
 | Settings             | one global modal, `#settings/<scope>/<section>`, in `shared/components/SettingsModal/`    |
 | Tenancy              | `src/shared/tenancy/` (kernel stays pure); URL is the source of truth                     |

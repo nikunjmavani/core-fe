@@ -44,7 +44,7 @@ type RootRedirect =
  * `/` resolver (dual-URL, research/11 §3.3): the root URL keeps no UI. The
  * **active organization from `me/context`** (server-side, the JWT `org` claim)
  * decides where to land — a PERSONAL org → root `/dashboard`, a TEAM org → its
- * `/organization/$organizationId/dashboard` space, and no active org →
+ * `/organization/$organizationSlug/dashboard` space, and no active org →
  * `/onboarding`. Reading the active org from the session context (not URL or
  * last-used storage) makes the JWT the single source of truth (FE-08).
  */
@@ -53,5 +53,8 @@ export async function resolveRootRedirect(): Promise<RootRedirect> {
   const active = ctx.activeOrganization;
   if (!active) return { to: '/onboarding' } as const;
   if (active.type === 'PERSONAL') return { to: '/dashboard' } as const;
-  return organizationDashboard(active.id);
+  // TEAM → human-readable slug space. A team without a slug is a backend
+  // invariant violation; route to onboarding rather than build a broken URL.
+  if (active.slug) return organizationDashboard(active.slug);
+  return { to: '/onboarding' } as const;
 }

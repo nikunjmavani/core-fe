@@ -313,7 +313,7 @@ core-fe/
 │   │   │   ├── OnboardingPage.tsx
 │   │   │   └── [1 test file]
 │   │   ├── organization/
-│   │   │   ├── $organizationId/
+│   │   │   ├── $organizationSlug/
 │   │   │   │   ├── dashboard/
 │   │   │   │   │   ├── dashboard.manifest.ts
 │   │   │   │   │   ├── DASHBOARD.OVERVIEW.md
@@ -326,9 +326,9 @@ core-fe/
 │   │   │   │   │   ├── suspended.route.tsx
 │   │   │   │   │   ├── SuspendedPage.tsx
 │   │   │   │   │   └── [1 test file]
-│   │   │   │   ├── organization-id.manifest.ts
-│   │   │   │   ├── organization-id.route.tsx
-│   │   │   │   ├── ORGANIZATION_ID.OVERVIEW.md
+│   │   │   │   ├── organization-slug.manifest.ts
+│   │   │   │   ├── organization-slug.route.tsx
+│   │   │   │   ├── ORGANIZATION_SLUG.OVERVIEW.md
 │   │   │   │   ├── OrganizationLayout.tsx
 │   │   │   │   └── [1 test file]
 │   │   │   ├── organization.manifest.ts

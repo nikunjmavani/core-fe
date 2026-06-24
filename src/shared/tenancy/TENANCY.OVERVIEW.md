@@ -6,7 +6,7 @@ storage; the core kernel stays app-state-free (same reasoning as `shared/auth/`)
 "Tenancy" is the sanctioned infra-layer term; everything user-facing says **organization**.
 
 **The URL is the single source of truth for organization context.** Inside
-`/organization/$organizationId/*` the route param is canonical; `useOrganizationStore` is a
+`/organization/$organizationSlug/*` the route param is canonical; `useOrganizationStore` is a
 derived cache synced FROM the route. localStorage / subdomain resolution only feed the `/`
 resolver's redirect choice.
 
@@ -22,8 +22,8 @@ resolver's redirect choice.
 
 ## Consumers
 
-- `app/guards/route-guards.ts` — the `$organizationId` guard chain
+- `app/guards/route-guards.ts` — the `$organizationSlug` guard chain
 - `app/routes/routeTree.tsx` — `/` resolver
 - `core/rbac/guards.ts` — reads the derived store's permission set for `requirePermission`
 - `OrganizationSwitcher`, `CreateOrganizationDialog`, onboarding — navigate to
-  `/organization/$organizationId/dashboard` and let the guard sync everything
+  `/organization/$organizationSlug/dashboard` and let the guard sync everything

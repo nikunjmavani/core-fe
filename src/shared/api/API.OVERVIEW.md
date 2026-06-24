@@ -22,7 +22,7 @@ organization context/membership/resolver) lives in **`src/shared/tenancy/`** —
 Per the dependency rule:
 
 - `shared/components/MembersTable` imports `Member` from `organization-contracts.ts`
-- a future `pages/organization/$organizationId/members/` island also imports `Member`
+- a future `pages/organization/$organizationSlug/members/` island also imports `Member`
 
 If the schemas lived in `pages/`, shared components would import from pages (forbidden). If they lived in `shared/components/`, they'd be coupled to a specific component. **`shared/api/` is the cross-layer home for files reached by both `shared/*` and `pages/*`.**
 

@@ -22,7 +22,7 @@ test.describe('Settings modal (hash-driven)', () => {
   });
 
   test('deep link opens the requested section over the page', async ({ page }) => {
-    await page.goto('/organization/org_acme/dashboard#settings/account/security');
+    await page.goto('/organization/acme/dashboard#settings/account/security');
 
     await expect(page.getByTestId('settings-modal')).toBeVisible();
     await expect(page.getByTestId('settings-section-security')).toBeVisible();
@@ -31,7 +31,7 @@ test.describe('Settings modal (hash-driven)', () => {
   });
 
   test('switches sections via the nav and closes with Escape', async ({ page }) => {
-    await page.goto('/organization/org_acme/dashboard#settings/account/profile');
+    await page.goto('/organization/acme/dashboard#settings/account/profile');
     await expect(page.getByTestId('settings-modal')).toBeVisible();
 
     await page.getByTestId('settings-nav-organization-general').click();

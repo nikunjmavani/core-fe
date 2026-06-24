@@ -10,7 +10,7 @@ import type { MeContext } from './me-context.ts';
 /**
  * Organization context — **the URL is the single source of truth.**
  *
- * Inside `/organization/$organizationId/*` the route param is canonical; the
+ * Inside `/organization/$organizationSlug/*` the route param is canonical; the
  * Zustand store is a derived cache synced FROM the route (never the other way
  * around), kept only so non-React code — the HTTP client's organization
  * header, RBAC helpers — can read the active organization synchronously.

@@ -37,7 +37,7 @@ interface CreateOrganizationDialogProps {
 /**
  * Dialog to create a new organization from anywhere in the app shell. On
  * success it refreshes the organization list and navigates to the new
- * organization's dashboard — the `$organizationId` guard syncs context,
+ * organization's dashboard — the `$organizationSlug` guard syncs context,
  * persists the choice, and loads permissions. Works uncontrolled (with a
  * trigger) or controlled (via `open` / `onOpenChange`).
  */
@@ -76,7 +76,7 @@ export function CreateOrganizationDialog({
     notify.success(`Created ${org.name}`);
     reset();
     setOpen(false);
-    void navigate({ ...organizationDashboard(org.id), replace: true });
+    void navigate({ ...organizationDashboard(org.slug), replace: true });
   };
 
   return (

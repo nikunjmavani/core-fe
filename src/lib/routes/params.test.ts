@@ -1,22 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseOrganizationIdParam } from './params.ts';
+import { parseOrganizationSlugParam } from './params.ts';
 
-describe('parseOrganizationIdParam', () => {
-  it('accepts well-formed public organization ids', () => {
-    expect(parseOrganizationIdParam('org_8fK2x')).toBe('org_8fK2x');
-    expect(parseOrganizationIdParam('org_acme')).toBe('org_acme');
+describe('parseOrganizationSlugParam', () => {
+  it('accepts well-formed team slugs', () => {
+    expect(parseOrganizationSlugParam('acme')).toBe('acme');
+    expect(parseOrganizationSlugParam('globex-corp')).toBe('globex-corp');
+    expect(parseOrganizationSlugParam('a1')).toBe('a1');
+    expect(parseOrganizationSlugParam('x')).toBe('x');
   });
 
   it.each([
-    '',
-    'org_',
-    '8fK2x',
-    'pat_8fK2x',
-    'org_with-hyphen',
-    'org_…',
-    `org_${'a'.repeat(33)}`,
+    '', // empty
+    '-acme', // leading hyphen
+    'acme-', // trailing hyphen
+    'Acme', // uppercase
+    'acme_inc', // underscore
+    'acme corp', // space
+    'org_acme', // an id is not a slug
+    'acme/../etc', // path traversal
+    `${'a'.repeat(65)}`, // too long
   ])('rejects %j with null (guard turns this into a 404)', (raw) => {
-    expect(parseOrganizationIdParam(raw)).toBeNull();
+    expect(parseOrganizationSlugParam(raw)).toBeNull();
   });
 });

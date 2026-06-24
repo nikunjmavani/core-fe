@@ -6,6 +6,7 @@ import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.
 import {
   ensurePermissionsFor,
   findMembership,
+  findMembershipBySlug,
   resetPermissionCacheForTests,
 } from './organization-membership.ts';
 
@@ -30,6 +31,20 @@ describe('findMembership', () => {
 
   it('returns null for organizations the user does not belong to', async () => {
     await expect(findMembership('org_unknown')).resolves.toBeNull();
+  });
+});
+
+describe('findMembershipBySlug (team URL resolution, FE-22)', () => {
+  it('resolves a slug to the canonical org when the user is a member', async () => {
+    await expect(findMembershipBySlug('acme')).resolves.toEqual({
+      id: 'org_acme',
+      name: 'Acme Inc.',
+      slug: 'acme',
+    });
+  });
+
+  it('returns null for an unknown slug (existence never leaked → 404)', async () => {
+    await expect(findMembershipBySlug('ghost')).resolves.toBeNull();
   });
 });
 

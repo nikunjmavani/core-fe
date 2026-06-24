@@ -119,13 +119,13 @@ See grep in `src/` or sections above for: `onboarding-*`, `accept-invite-*`, `or
 
 ## Organization routing (added 2026-06-11)
 
-| Test ID                             | Element                                                       | Source                                                           |
-| ----------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `organization-page`                 | Organization picker page                                      | `pages/organization/OrganizationPickerPage.tsx`                  |
-| `organization-picker-option-<slug>` | Picker card per organization                                  | `pages/organization/OrganizationPickerPage.tsx`                  |
-| `organization-picker-create`        | Picker create-organization button                             | `pages/organization/OrganizationPickerPage.tsx`                  |
-| `suspended-page`                    | Suspended-organization blocked state                          | `pages/organization/$organizationId/suspended/SuspendedPage.tsx` |
-| `suspended-switch-organization`     | Switch-organization button                                    | `pages/organization/$organizationId/suspended/SuspendedPage.tsx` |
-| `settings-modal`                    | Global settings modal (hash-driven)                           | `shared/components/SettingsModal/SettingsModal.tsx`              |
-| `settings-nav-<scope>-<section>`    | Settings nav items (e.g. `settings-nav-organization-members`) | `shared/components/SettingsModal/SettingsNav.tsx`                |
-| `settings-select-organization`      | "Select organization first" fallback                          | `shared/components/SettingsModal/SettingsModal.tsx`              |
+| Test ID                             | Element                                                       | Source                                                             |
+| ----------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `organization-page`                 | Organization picker page                                      | `pages/organization/OrganizationPickerPage.tsx`                    |
+| `organization-picker-option-<slug>` | Picker card per organization                                  | `pages/organization/OrganizationPickerPage.tsx`                    |
+| `organization-picker-create`        | Picker create-organization button                             | `pages/organization/OrganizationPickerPage.tsx`                    |
+| `suspended-page`                    | Suspended-organization blocked state                          | `pages/organization/$organizationSlug/suspended/SuspendedPage.tsx` |
+| `suspended-switch-organization`     | Switch-organization button                                    | `pages/organization/$organizationSlug/suspended/SuspendedPage.tsx` |
+| `settings-modal`                    | Global settings modal (hash-driven)                           | `shared/components/SettingsModal/SettingsModal.tsx`                |
+| `settings-nav-<scope>-<section>`    | Settings nav items (e.g. `settings-nav-organization-members`) | `shared/components/SettingsModal/SettingsNav.tsx`                  |
+| `settings-select-organization`      | "Select organization first" fallback                          | `shared/components/SettingsModal/SettingsModal.tsx`                |

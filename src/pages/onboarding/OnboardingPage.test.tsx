@@ -64,15 +64,16 @@ describe('OnboardingPage', () => {
     expect(createOrganization).toHaveBeenCalledTimes(1);
     expect(useOnboardingStore.getState().createdOrganizationId).toBe('org_new');
     expect(navigate).toHaveBeenCalledWith(
-      expect.objectContaining({ params: { organizationId: 'org_new' }, replace: true }),
+      expect.objectContaining({ params: { organizationSlug: 'acme' }, replace: true }),
     );
   });
 
   it('does NOT re-create the org on a retry after a partial failure', async () => {
     const user = userEvent.setup();
     seedDoneStep(['a@acme.com']);
-    // Simulate a prior attempt that already created the org.
+    // Simulate a prior attempt that already created the org (id + slug stored).
     useOnboardingStore.getState().setCreatedOrganizationId('org_existing');
+    useOnboardingStore.getState().setCreatedOrganizationSlug('existing-slug');
     renderWithProviders(<OnboardingPage />);
 
     await user.click(await screen.findByTestId('onboarding-finish'));
@@ -80,7 +81,7 @@ describe('OnboardingPage', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalled());
     expect(createOrganization).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith(
-      expect.objectContaining({ params: { organizationId: 'org_existing' } }),
+      expect.objectContaining({ params: { organizationSlug: 'existing-slug' } }),
     );
   });
 

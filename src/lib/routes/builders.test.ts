@@ -9,13 +9,13 @@ import {
 describe('route builders', () => {
   it('return {to, params} objects consumable by typed Link/navigate', () => {
     expect(organizationPicker()).toEqual({ to: '/organization' });
-    expect(organizationDashboard('org_8fK2x')).toEqual({
-      to: '/organization/$organizationId/dashboard',
-      params: { organizationId: 'org_8fK2x' },
+    expect(organizationDashboard('acme')).toEqual({
+      to: '/organization/$organizationSlug/dashboard',
+      params: { organizationSlug: 'acme' },
     });
-    expect(organizationSuspended('org_8fK2x')).toEqual({
-      to: '/organization/$organizationId/suspended',
-      params: { organizationId: 'org_8fK2x' },
+    expect(organizationSuspended('acme')).toEqual({
+      to: '/organization/$organizationSlug/suspended',
+      params: { organizationSlug: 'acme' },
     });
   });
 });
