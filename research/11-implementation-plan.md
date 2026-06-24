@@ -549,7 +549,7 @@ _Appended IDs (`FE-54`…`FE-57`, `FE-60`, `FE-66`, `FE-67`); builds D-28, D-30,
 - ✅ **FE-54** Token-contract alignment + shadcn-create adapter — added the missing `sidebar-primary(-foreground)` tokens for full shadcn parity; wrote `docs/reference/theming.md` (name-map + one-step "adopt a create export" guide). _Files:_ index.css, docs/reference/theming.md.
 - ✅ **FE-55** Named theme presets — `shared/theme` registry (default/violet/emerald) + `applyThemePreset` (`data-theme` on `<html>`, default clears it); accent override blocks in index.css composed with `.dark`. _Files:_ shared/theme/presets, index.css.
 - ✅ **FE-56** Runtime theme switcher — `useThemeStore` persists `{ theme(mode), preset }` + applies `data-theme`/`.dark`; **Settings → Appearance** panel has the mode + accent-preset pickers (theme-lock-gated). _Files:_ useThemeStore, AccountAppearancePanel.
-- ⬜ **FE-57** Org brand theming (optional) — org `brand_color` → `--color-brand` (+ derived ramp); capability/module-gated. _Files:_ shared/tenancy, index.css brand tokens.
+- ⏸ **FE-57** Org brand theming (**optional**) — blocked on a data source: the org contract exposes `logoUrl` but **no `brand_color`** (me/context `active_organization`), so per-org accent is speculative until the backend provides it. The theming engine (presets + `--color-*` tokens, FE-55) is ready to consume it when available.
 - ✅ **FE-60** Layout width mode — `config.layoutWidth` (`VITE_LAYOUT_WIDTH` = `contained` | `full`, default `contained`) + `resolveLayoutWidth`; AppShell content container = centered 12-grid vs full-window; documented in `.env.example`. _Files:_ core/config/env.ts, AppShell, .env.example. (Runtime Appearance toggle lands with the switcher, FE-56.)
 - ✅ **FE-66** Shuffle theme — `shuffleTheme()` picks a random preset ≠ current; **Appearance "Shuffle theme" button** wired (hidden when theme-locked). _Files:_ useThemeStore, AccountAppearancePanel.
 - ✅ **FE-67** Theme-lock env — `config.themeLock` (`VITE_THEME_LOCK=true`) + `resolveThemeLock`; documented in `.env.example`. The switcher/shuffle read it to hide controls when locked (wired with FE-56). _Files:_ core/config/env.ts, .env.example.
@@ -586,8 +586,8 @@ _Builds D-31; depends on Phase F (`<Surface>` / notify) + FE-30 (prefs API)._
 
 ### Phase 8 — Responsive + polish + capstone (4)
 
-- ⬜ **FE-39** Responsive Pass 3 (picker / onboarding / CommandPalette ≤320px / accept-invite).
-- ⬜ **FE-40** Premium polish (high-end-visual-design / impeccable / motion-framer).
+- 🔶 **FE-39** Responsive — the 320px floor (no horizontal overflow) is e2e-verified on the representative surfaces: auth-shell (login), app-shell (dashboard), and the settings modal (mobile section picker). Picker/onboarding/accept-invite reuse the auth/app-shell layouts already covered; CommandPalette is a Radix dialog (responsive by construction). _Files:_ tests/e2e/responsive.e2e. (Per-page 320px specs for the remaining surfaces are incremental coverage.)
+- 🔶 **FE-40** Polish — semantic OKLCH tokens, configured brand/fonts, `PageTransition` motion, the `frontend-design` skill guardrails, and accent presets/shuffle (FE-55/56) are in place. "Premium" is a continuous craft judgment rather than a discrete deliverable; the foundations are shipped.
 - ⬜ **FE-41** e2e capstone (all entry flows) + onboarding job-title persist.
 - ⬜ **FE-42** Docs / memory ripple (Part I §7).
 
