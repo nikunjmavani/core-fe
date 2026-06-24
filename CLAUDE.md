@@ -349,7 +349,7 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 ## New-deployment detection
 
 - **Plugin** `plugins/version-json.ts`: at build time sets `VITE_APP_BUILD_ID` and writes/serves `version.json` (dev: middleware; prod: `dist/version.json`). `builtAt` is UTC (ISO 8601).
-- **Runtime** `src/core/version/check.ts`: polls `/version.json`; if `buildId` differs from the app’s build, calls `location.reload()` so users get the latest deployment — at most **once per advertised buildId** (sessionStorage marker), so a stale-served `index.html` can never reload-loop.
+- **Runtime** `src/core/version/check.ts`: polls `/version.json` (+ on tab refocus); if `buildId` differs from the app’s build, it **defers** `location.reload()` until it won’t lose work — never while a field is focused, immediately when the tab is hidden, otherwise once the user is idle (~60s) — so users get the latest deployment without a mid-task reload, at most **once per advertised buildId** (sessionStorage marker) so a stale-served `index.html` can never reload-loop.
 
 ## Testing
 

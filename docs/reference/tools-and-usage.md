@@ -198,10 +198,10 @@ All files in **`public/`** are served from the root of the built site. See **[pu
 
 ## New-deployment detection
 
-The app detects when a new build has been deployed and reloads the page so users don’t run stale cached code.
+The app detects when a new build has been deployed and reloads the page so users don’t run stale cached code — at a moment that won’t interrupt their work (idle / hidden tab / refocus, never mid-edit).
 
 - **Plugin:** `plugins/version-json.ts` — At build time generates a unique `buildId` and sets `import.meta.env.VITE_APP_BUILD_ID`. In dev it serves `/version.json` via middleware; in prod it writes `dist/version.json` with `buildId` and `builtAt` (UTC, ISO 8601).
-- **Runtime:** `src/core/version/check.ts` — Periodically fetches `/version.json` (with cache-busting). If the response `buildId` differs from the app’s built-in `VITE_APP_BUILD_ID`, it calls `location.reload()` so the user gets the new deployment.
+- **Runtime:** `src/core/version/check.ts` — Periodically fetches `/version.json` (with cache-busting) and on tab refocus. If the response `buildId` differs from the app’s built-in `VITE_APP_BUILD_ID`, it **defers** the `location.reload()` until it’s safe — never while an input/textarea/select is focused, immediately when the tab is hidden (the reload is invisible), otherwise once the user has been idle ~60s. A per-tab sessionStorage marker reloads at most once per advertised `buildId` (no reload-loop on a stale-served `index.html`).
 
 ---
 
