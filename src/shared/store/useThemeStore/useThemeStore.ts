@@ -16,6 +16,7 @@ import {
   type GeneratedTheme,
   generateTheme,
   isThemePreset,
+  nextAppVariant,
   nextAuthVariant,
   normalizeLook,
   shuffleIcons,
@@ -40,6 +41,8 @@ interface ThemeStore {
   iconLibrary: string;
   /** TEMP: AuthLayout preview design index (0..2); rolled by shuffle. */
   authVariant: number;
+  /** TEMP: AppLayout preview shell index (0..2); rolled by shuffle. */
+  appVariant: number;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
   /** Set one axis of the custom look (accent/chart/font/radius); switches to custom. */
@@ -74,6 +77,7 @@ export const useThemeStore = create<ThemeStore>()(
       iconWeight: DEFAULT_ICON_WEIGHT,
       iconLibrary: DEFAULT_ICON_LIBRARY,
       authVariant: 0,
+      appVariant: 0,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -122,8 +126,9 @@ export const useThemeStore = create<ThemeStore>()(
           customTheme: next,
           iconWeight: icons.weight,
           iconLibrary: icons.library,
-          // TEMP: cycle the AuthLayout preview design on shuffle.
+          // TEMP: cycle the Auth + App layout preview designs on shuffle.
           authVariant: nextAuthVariant(get().authVariant),
+          appVariant: nextAppVariant(get().appVariant),
         });
       },
     }),
@@ -138,6 +143,7 @@ export const useThemeStore = create<ThemeStore>()(
         iconWeight: state.iconWeight,
         iconLibrary: state.iconLibrary,
         authVariant: state.authVariant,
+        appVariant: state.appVariant,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

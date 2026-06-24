@@ -11,6 +11,7 @@ describe('useThemeStore', () => {
       iconWeight: 'regular',
       iconLibrary: 'lucide',
       authVariant: 0,
+      appVariant: 0,
     });
     const root = document.documentElement;
     delete root.dataset.theme;
@@ -83,8 +84,9 @@ describe('useThemeStore', () => {
     // icons ride along the shuffle — values stay valid
     expect(['thin', 'regular', 'bold']).toContain(state.iconWeight);
     expect(['lucide', 'tabler', 'phosphor']).toContain(state.iconLibrary);
-    // TEMP: shuffle cycles the auth-layout preview design (≠ the previous one)
+    // TEMP: shuffle cycles the auth + app layout preview designs (≠ previous)
     expect(state.authVariant).not.toBe(0);
+    expect(state.appVariant).not.toBe(0);
   });
 
   it('updateLook sets one axis and switches to the custom look', () => {

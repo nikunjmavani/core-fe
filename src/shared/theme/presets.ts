@@ -276,6 +276,19 @@ export function nextAuthVariant(current: number): number {
   return v === current ? (v + 1) % AUTH_VARIANT_COUNT : v;
 }
 
+/** How many AppLayout preview shells exist (TEMP — see AppLayout variants). */
+export const APP_VARIANT_COUNT = 3;
+
+/**
+ * TEMP (app-layout preview): a different shell index in 0..N-1. Remove together
+ * with the `appVariant` store field + the AppLayout variants.
+ */
+export function nextAppVariant(current: number): number {
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic layout preview, not security
+  const v = Math.floor(Math.random() * APP_VARIANT_COUNT);
+  return v === current ? (v + 1) % APP_VARIANT_COUNT : v;
+}
+
 /**
  * Apply a generated full look (shadcn-create-style): accent colour, chart
  * palette, body + heading fonts, and corner radius — all inline on `<html>` so

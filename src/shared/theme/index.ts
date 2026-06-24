@@ -20,6 +20,7 @@ export {
   ICON_WEIGHTS,
   isThemePreset,
   MENU_STYLES,
+  nextAppVariant,
   nextAuthVariant,
   nextRandomHue,
   normalizeLook,
