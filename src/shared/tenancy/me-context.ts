@@ -217,6 +217,21 @@ const MOCK_PERSONAL_ORG: OrganizationSummary = {
   createdAt: '2026-01-01T00:00:00.000Z',
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
+const MOCK_GLOBEX_ORG: OrganizationSummary = {
+  id: 'org_globex',
+  name: 'Globex',
+  slug: 'globex',
+  type: 'TEAM',
+  status: 'ACTIVE',
+  logoUrl: null,
+  capabilities: TEAM_CAPS,
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+/** Every org the demo user belongs to — mirrors MY_ORGANIZATIONS_FIXTURE + personal. */
+const MOCK_ORGANIZATIONS = [MOCK_TEAM_ORG, MOCK_GLOBEX_ORG, MOCK_PERSONAL_ORG];
+
 const MOCK_ME_CONTEXT: MeContext = {
   user: {
     id: 'usr_demo',
@@ -233,11 +248,32 @@ const MOCK_ME_CONTEXT: MeContext = {
   activeOrganization: MOCK_TEAM_ORG,
   myPermissions: MOCK_PERMISSIONS,
   globalRole: null,
-  organizations: [
-    { ...MOCK_TEAM_ORG, isActive: true },
-    { ...MOCK_PERSONAL_ORG, isActive: false },
-  ],
+  organizations: MOCK_ORGANIZATIONS.map((o) => ({
+    ...o,
+    isActive: o.id === MOCK_TEAM_ORG.id,
+  })),
 };
+
+/**
+ * Mock me/context with the active org DERIVED FROM THE URL — the single source of
+ * truth (docs/reference/routing-and-tenancy.md §4). `/organization/<slug>/…`
+ * selects that org; anything else (personal `/dashboard`) is the personal org. So
+ * the switcher, dashboard, and URL always agree, even after a me/context refetch.
+ */
+function mockMeContext(): MeContext {
+  const path = typeof window === 'undefined' ? '' : window.location.pathname;
+  const slug = /\/organization\/([^/]+)/.exec(path)?.[1];
+  const active =
+    (slug && MOCK_ORGANIZATIONS.find((o) => o.slug === slug)) || MOCK_PERSONAL_ORG;
+  return {
+    ...MOCK_ME_CONTEXT,
+    activeOrganization: active,
+    organizations: MOCK_ORGANIZATIONS.map((o) => ({
+      ...o,
+      isActive: o.id === active.id,
+    })),
+  };
+}
 
 /** React Query key for the caller's session context (`GET /auth/me/context`). */
 export const meContextQueryKey = ['auth', 'me-context'] as const;
@@ -251,7 +287,7 @@ export const meContextQueryKey = ['auth', 'me-context'] as const;
  */
 export async function fetchMeContext(): Promise<MeContext> {
   // REPLACE_WITH_API: GET /api/v1/auth/me/context
-  if (config.useMockApi) return mockResponse(MOCK_ME_CONTEXT);
+  if (config.useMockApi) return mockResponse(mockMeContext());
   const res = await apiClient.get<unknown>(`${API_BASE_PATH}/auth/me/context`);
   return toMeContext(meContextWire.parse(res.data));
 }
