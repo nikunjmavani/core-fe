@@ -32,6 +32,11 @@ export type PageManifest = {
    */
   capability?: OrgCapabilityKey;
   /**
+   * Feature-module key this route belongs to (L6b). When the deployment disables
+   * the module (`VITE_DISABLED_MODULES`), the route resolves to `notFound()`.
+   */
+  module?: string;
+  /**
    * What a denied access resolves to: `'unauthorized'` (403 page — "you can't
    * do this") or `'notFound'` (404 — hide the surface's existence). Default
    * `'unauthorized'`.

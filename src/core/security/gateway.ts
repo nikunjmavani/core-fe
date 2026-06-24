@@ -5,6 +5,7 @@ import {
   type OrgCapabilityKey,
   requireCapabilityGate,
 } from './gates/require-capability.ts';
+import { requireModuleGate } from './gates/require-module.ts';
 import { requirePermissionGate } from './gates/require-permission.ts';
 import { requireSession } from './gates/require-session.ts';
 
@@ -31,6 +32,7 @@ export function gateway<TCtx>(...gates: Array<Gate<TCtx>>) {
 export interface RoutePolicy {
   permission?: OrganizationPermission | null;
   capability?: OrgCapabilityKey;
+  module?: string;
 }
 
 /**
@@ -44,5 +46,6 @@ export function gatewayFromPolicy(policy: RoutePolicy) {
   const gates: Gate[] = [requireSession];
   if (policy.permission) gates.push(requirePermissionGate(policy.permission));
   if (policy.capability) gates.push(requireCapabilityGate(policy.capability));
+  if (policy.module) gates.push(requireModuleGate(policy.module));
   return gateway(...gates);
 }

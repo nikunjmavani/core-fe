@@ -104,6 +104,21 @@ export function resolveThemeLock(flag: string | undefined): boolean {
   return flag === 'true';
 }
 
+/**
+ * Feature modules disabled for this deployment (`VITE_DISABLED_MODULES`, a
+ * comma-separated list of module keys). A disabled module's routes 404 and its
+ * nav/settings entries are hidden (FE-50). Empty by default — all enabled.
+ * @internal Exported for unit tests.
+ */
+export function resolveDisabledModules(flag: string | undefined): ReadonlySet<string> {
+  return new Set(
+    (flag ?? '')
+      .split(',')
+      .map((module) => module.trim())
+      .filter(Boolean),
+  );
+}
+
 export const config = {
   /** Base URL for API calls. Empty in dev (Vite proxy). Set in production. */
   apiBaseUrl:
@@ -137,6 +152,13 @@ export const config = {
    * — the runtime theme switcher + shuffle are hidden. Default: customizable.
    */
   themeLock: resolveThemeLock(get('THEME_LOCK')),
+
+  /**
+   * Feature modules disabled for this deployment (comma-separated
+   * `VITE_DISABLED_MODULES`). Empty by default — everything enabled. A disabled
+   * module's routes 404 (L6b gate) and its nav/settings entries hide.
+   */
+  disabledModules: resolveDisabledModules(get('DISABLED_MODULES')),
 
   environment: env.MODE,
   isDevelopment: env.DEV,
