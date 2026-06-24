@@ -8,7 +8,7 @@ import { AccountAppearancePanel } from './AccountAppearancePanel.tsx';
 
 describe('AccountAppearancePanel', () => {
   beforeEach(() => {
-    useThemeStore.setState({ theme: 'system', preset: 'default', customHue: null });
+    useThemeStore.setState({ theme: 'system', preset: 'default', customTheme: null });
     delete document.documentElement.dataset.theme;
   });
 

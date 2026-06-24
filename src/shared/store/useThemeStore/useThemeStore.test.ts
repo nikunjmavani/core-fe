@@ -2,7 +2,7 @@ import { useThemeStore } from './useThemeStore.ts';
 
 describe('useThemeStore', () => {
   beforeEach(() => {
-    useThemeStore.setState({ theme: 'system', preset: 'default', customHue: null });
+    useThemeStore.setState({ theme: 'system', preset: 'default', customTheme: null });
     delete document.documentElement.dataset.theme;
     for (const v of [
       '--color-primary',
@@ -10,6 +10,11 @@ describe('useThemeStore', () => {
       '--color-sidebar-primary',
       '--color-primary-foreground',
       '--color-sidebar-primary-foreground',
+      '--font-sans',
+      '--radius-sm',
+      '--radius-md',
+      '--radius-lg',
+      '--radius-xl',
     ]) {
       document.documentElement.style.removeProperty(v);
     }
@@ -42,24 +47,29 @@ describe('useThemeStore', () => {
     expect(document.documentElement.dataset.theme).toBeUndefined();
   });
 
-  it('shuffleTheme generates a custom theme with an inline accent', () => {
+  it('shuffleTheme generates a full custom look (colour + font + radius)', () => {
     useThemeStore.getState().setPreset('violet');
     useThemeStore.getState().shuffleTheme();
     const state = useThemeStore.getState();
     expect(state.preset).toBe('custom');
-    expect(typeof state.customHue).toBe('number');
-    // a generated theme drops data-theme in favour of inline accent vars
+    expect(state.customTheme).toMatchObject({
+      hue: expect.any(Number),
+      fontId: expect.any(String),
+      radiusId: expect.any(String),
+    });
+    // a generated look drops data-theme in favour of inline vars
     expect(document.documentElement.dataset.theme).toBeUndefined();
-    expect(document.documentElement.style.getPropertyValue('--color-primary')).toContain(
-      'oklch',
-    );
+    const style = document.documentElement.style;
+    expect(style.getPropertyValue('--color-primary')).toContain('oklch');
+    expect(style.getPropertyValue('--font-sans')).not.toBe('');
+    expect(style.getPropertyValue('--radius-lg')).not.toBe('');
   });
 
-  it('setPreset clears a generated custom hue', () => {
+  it('setPreset clears a generated custom look', () => {
     useThemeStore.getState().shuffleTheme();
-    expect(useThemeStore.getState().customHue).not.toBeNull();
+    expect(useThemeStore.getState().customTheme).not.toBeNull();
     useThemeStore.getState().setPreset('violet');
-    expect(useThemeStore.getState().customHue).toBeNull();
+    expect(useThemeStore.getState().customTheme).toBeNull();
     expect(useThemeStore.getState().preset).toBe('violet');
   });
 });

@@ -6,8 +6,9 @@ import {
   applyThemePreset,
   DEFAULT_PRESET,
   GENERATED_PRESET,
+  type GeneratedTheme,
+  generateTheme,
   isThemePreset,
-  nextRandomHue,
 } from '@/shared/theme/index.ts';
 
 type Mode = 'light' | 'dark' | 'system';
@@ -17,11 +18,11 @@ interface ThemeStore {
   theme: Mode;
   /** Active named accent preset (see `shared/theme`); `custom` when generated. */
   preset: string;
-  /** Hue (0–359) of the last generated theme, when `preset` is `custom`. */
-  customHue: number | null;
+  /** The last generated look (accent + font + radius), when `preset` is `custom`. */
+  customTheme: GeneratedTheme | null;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
-  /** Generate + apply a fresh random accent theme (shadcn-create style). */
+  /** Generate + apply a fresh full look — colour, font, radius (shadcn-create style). */
   shuffleTheme: () => void;
 }
 
@@ -41,7 +42,7 @@ export const useThemeStore = create<ThemeStore>()(
     (set, get) => ({
       theme: 'system',
       preset: DEFAULT_PRESET,
-      customHue: null,
+      customTheme: null,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -49,14 +50,14 @@ export const useThemeStore = create<ThemeStore>()(
       setPreset: (preset) => {
         const next = isThemePreset(preset) ? preset : DEFAULT_PRESET;
         applyThemePreset(next);
-        set({ preset: next, customHue: null });
+        set({ preset: next, customTheme: null });
       },
       shuffleTheme: () => {
-        // Generate a fresh random accent each time (shadcn-create style) rather
-        // than cycling a fixed preset list.
-        const hue = nextRandomHue(get().customHue);
-        applyGeneratedTheme(hue);
-        set({ preset: GENERATED_PRESET, customHue: hue });
+        // Generate a fresh full look each time (colour + font + radius,
+        // shadcn-create style) rather than cycling a fixed preset list.
+        const next = generateTheme(get().customTheme);
+        applyGeneratedTheme(next);
+        set({ preset: GENERATED_PRESET, customTheme: next });
       },
     }),
     {
@@ -64,13 +65,13 @@ export const useThemeStore = create<ThemeStore>()(
       partialize: (state) => ({
         theme: state.theme,
         preset: state.preset,
-        customHue: state.customHue,
+        customTheme: state.customTheme,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           applyMode(state.theme);
-          if (state.preset === GENERATED_PRESET && state.customHue != null) {
-            applyGeneratedTheme(state.customHue);
+          if (state.preset === GENERATED_PRESET && state.customTheme != null) {
+            applyGeneratedTheme(state.customTheme);
           } else {
             applyThemePreset(state.preset);
           }

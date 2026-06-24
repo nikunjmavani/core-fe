@@ -3,24 +3,32 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   applyGeneratedTheme,
   applyThemePreset,
+  GENERATED_FONTS,
   GENERATED_PRESET,
+  GENERATED_RADII,
+  generateTheme,
   isThemePreset,
   nextRandomHue,
   randomThemeHue,
   THEME_PRESETS,
 } from './presets.ts';
 
-const ACCENT_VARS = [
+const GENERATED_VARS = [
   '--color-primary',
   '--color-ring',
   '--color-sidebar-primary',
   '--color-primary-foreground',
   '--color-sidebar-primary-foreground',
+  '--font-sans',
+  '--radius-sm',
+  '--radius-md',
+  '--radius-lg',
+  '--radius-xl',
 ];
 
 afterEach(() => {
   delete document.documentElement.dataset.theme;
-  for (const v of ACCENT_VARS) document.documentElement.style.removeProperty(v);
+  for (const v of GENERATED_VARS) document.documentElement.style.removeProperty(v);
 });
 
 describe('theme presets', () => {
@@ -52,6 +60,8 @@ describe('theme presets', () => {
 });
 
 describe('generated themes (shuffle)', () => {
+  const sample = { hue: 200, fontId: 'serif', radiusId: 'round' };
+
   it('GENERATED_PRESET is not a named preset', () => {
     expect(isThemePreset(GENERATED_PRESET)).toBe(false);
   });
@@ -70,19 +80,33 @@ describe('generated themes (shuffle)', () => {
     expect(nextRandomHue(null)).toBeLessThan(360);
   });
 
-  it('applyGeneratedTheme sets inline accent vars and clears data-theme', () => {
-    applyThemePreset('violet'); // start from a named preset
-    applyGeneratedTheme(200);
-    expect(document.documentElement.dataset.theme).toBeUndefined();
-    const primary = document.documentElement.style.getPropertyValue('--color-primary');
-    expect(primary).toContain('oklch');
-    expect(primary).toContain('200');
+  it('generateTheme yields a valid full look (hue + known font + known radius)', () => {
+    const t = generateTheme(null);
+    expect(t.hue).toBeGreaterThanOrEqual(0);
+    expect(t.hue).toBeLessThan(360);
+    expect(GENERATED_FONTS[t.fontId]).toBeDefined();
+    expect(GENERATED_RADII[t.radiusId]).toBeDefined();
   });
 
-  it('applyThemePreset clears any generated accent vars', () => {
-    applyGeneratedTheme(200);
+  it('applyGeneratedTheme sets accent + font + radius and clears data-theme', () => {
+    applyThemePreset('violet'); // start from a named preset
+    applyGeneratedTheme(sample);
+    const style = document.documentElement.style;
+    expect(document.documentElement.dataset.theme).toBeUndefined();
+    expect(style.getPropertyValue('--color-primary')).toContain('oklch');
+    expect(style.getPropertyValue('--color-primary')).toContain('200');
+    // font + radius are part of the generated "full look"
+    expect(style.getPropertyValue('--font-sans')).toContain('Georgia');
+    expect(style.getPropertyValue('--radius-lg')).toBe('1rem');
+  });
+
+  it('applyThemePreset clears any generated accent/font/radius vars', () => {
+    applyGeneratedTheme(sample);
     applyThemePreset('violet');
-    expect(document.documentElement.style.getPropertyValue('--color-primary')).toBe('');
+    const style = document.documentElement.style;
+    expect(style.getPropertyValue('--color-primary')).toBe('');
+    expect(style.getPropertyValue('--font-sans')).toBe('');
+    expect(style.getPropertyValue('--radius-lg')).toBe('');
     expect(document.documentElement.dataset.theme).toBe('violet');
   });
 });

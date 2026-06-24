@@ -9,7 +9,7 @@ import { ThemeModeToggle } from './ThemeModeToggle.tsx';
 // Real theme store (a Zustand store works in jsdom). Plain render — the toggle
 // is routing-free, so no providers are needed.
 beforeEach(() => {
-  useThemeStore.setState({ theme: 'system', preset: 'default', customHue: null });
+  useThemeStore.setState({ theme: 'system', preset: 'default', customTheme: null });
 });
 
 describe('ThemeModeToggle', () => {
