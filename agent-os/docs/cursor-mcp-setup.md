@@ -35,30 +35,31 @@ any other repo. The committed template is `agent-os/mcp/mcp.example.json`; the
 real, gitignored config is `agent-os/mcp/mcp.json` (the `.mcp.json` and
 `.cursor/mcp.json` symlinks point into it).
 
-| MCP             | Why it's here (frontend)                                          | Auth / env                        |
-| --------------- | ----------------------------------------------------------------- | --------------------------------- |
-| **context7**    | Up-to-date library docs (React, Vite, TanStack Query, Zod, …).    | Context7 API key (inline)         |
-| **shadcn**      | Browse + add shadcn/ui components via CLI.                        | none                              |
-| **tailwindcss** | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.     | none                              |
-| **github**      | Repos, PRs, issues, Actions, code search for this repo.           | OAuth (prompted on first use)     |
-| **core-be-api** | Discover the backend API this UI consumes (`call_api`) — the only | backend on `:3000` w/ MCP enabled |
-|                 | cross-service link, and only when you opt to run the backend.     |                                   |
-| **sentry**      | Frontend error monitoring + release/sourcemap triage.             | OAuth                             |
-| **semgrep**     | Static security scanning (mirrors the CI semgrep lane).           | `uvx` (ephemeral, no install)     |
-| **sonarqube**   | Local code-quality gate (mirrors the pre-push SonarQube scan).    | `docker` + `SONARQUBE_TOKEN/URL`  |
-| **codegraph**   | Code-graph navigation across this repo.                           | `codegraph` CLI (pre-existing)    |
-| **headroom**    | Context compression for long sessions.                            | `uvx` (ephemeral, no install)     |
+| MCP             | Why it's here (frontend)                                          | How it runs                      |
+| --------------- | ----------------------------------------------------------------- | -------------------------------- |
+| **context7**    | Up-to-date library docs (React, Vite, TanStack Query, Zod, …).    | devDep · `pnpm exec` · API key   |
+| **shadcn**      | Browse + add shadcn/ui components via CLI.                        | devDep · `pnpm exec`             |
+| **tailwindcss** | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.     | devDep · `pnpm exec`             |
+| **github**      | Repos, PRs, issues, Actions, code search for this repo.           | hosted URL · OAuth               |
+| **core-be-api** | Discover the backend API this UI consumes (`call_api`) — the only | hosted URL · backend on `:3000`  |
+|                 | cross-service link, and only when you opt to run the backend.     |                                  |
+| **sentry**      | Frontend error monitoring + release/sourcemap triage.             | hosted URL · OAuth               |
+| **semgrep**     | Static security scanning (mirrors the CI semgrep lane).           | `uvx` (ephemeral, needs `uv`)    |
+| **sonarqube**   | Local code-quality gate (mirrors the pre-push SonarQube scan).    | `docker` · `SONARQUBE_TOKEN/URL` |
+| **codegraph**   | Code-graph navigation across this repo.                           | devDep · `pnpm exec`             |
+| **headroom**    | Context compression for long sessions.                            | `uvx` (ephemeral, needs `uv`)    |
 
 > This list is intentionally frontend-shaped — no database / cache / email /
 > deploy-platform servers (those belong to the backend). Add or remove servers in
 > `agent-os/mcp/mcp.json` freely; it is yours.
 >
-> **No global installs:** every server runs ephemerally — `npx`
-> (context7/shadcn/tailwindcss), `uvx` (semgrep/headroom — package fetched into the
-> shared cache on first use, nothing on your PATH), `docker` (sonarqube), or a
-> hosted URL (`github`/`sentry`/`core-be-api`). The one exception is **`codegraph`**,
-> a pre-existing global CLI; swap it for an ephemeral runner if you prefer zero
-> global tools. `sonarqube` reads its env vars from your shell; `github`/`sentry`
+> **Project-local, container-safe, zero global installs.** The four CLI servers
+> (`context7`, `shadcn`, `tailwindcss`, `codegraph`) are **`devDependencies`**,
+> invoked via `pnpm exec` — `pnpm install` provides them in any fresh container,
+> pinned, with nothing on the global PATH. `semgrep`/`headroom` run via `uvx` and
+> `sonarqube` via `docker` (ephemeral, not global — the container's base image
+> needs `uv` / `docker` for those three). `github`/`sentry`/`core-be-api` are
+> hosted URLs. `sonarqube` reads its env vars from your shell; `github`/`sentry`
 > use OAuth; `core-be-api` only resolves when you run the backend locally.
 
 ---
@@ -67,13 +68,14 @@ real, gitignored config is `agent-os/mcp/mcp.json` (the `.mcp.json` and
 
 ### 1. Create `agent-os/mcp/mcp.json` (project root)
 
-The file `agent-os/mcp/mcp.json` is **gitignored** so secrets (e.g. Context7 API key) are not committed. Create it from the example:
+The file `agent-os/mcp/mcp.json` is **gitignored** so secrets (e.g. Context7 API key) are not committed. Create it from the example, then install deps so the CLI servers exist locally:
 
 ```bash
 cp agent-os/mcp/mcp.example.json agent-os/mcp/mcp.json
+pnpm install   # provides context7/shadcn/tailwindcss/codegraph as devDeps — run by `pnpm exec`
 ```
 
-If `agent-os/mcp/mcp.example.json` does not exist, create `agent-os/mcp/mcp.json` with the structure below.
+The four CLI servers are project `devDependencies`, so a fresh checkout/container is ready after `pnpm install` — no global tools. `semgrep`/`headroom` additionally need `uv` (for `uvx`) and `sonarqube` needs `docker` on the machine.
 
 ### 2. Add your Context7 API key (required for context7 MCP)
 
@@ -87,8 +89,8 @@ commit the real key — `agent-os/mcp/mcp.json` is gitignored):
 
 ```json
 "context7": {
-  "command": "npx",
-  "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_CONTEXT7_API_KEY"]
+  "command": "pnpm",
+  "args": ["exec", "context7-mcp", "--api-key", "YOUR_CONTEXT7_API_KEY"]
 }
 ```
 

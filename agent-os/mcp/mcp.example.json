@@ -1,16 +1,16 @@
 {
   "mcpServers": {
     "context7": {
-      "command": "npx",
-      "args": ["-y", "@upstash/context7-mcp", "--api-key", "YOUR_CONTEXT7_API_KEY"]
+      "command": "pnpm",
+      "args": ["exec", "context7-mcp", "--api-key", "YOUR_CONTEXT7_API_KEY"]
     },
     "shadcn": {
-      "command": "npx",
-      "args": ["shadcn@latest", "mcp"]
+      "command": "pnpm",
+      "args": ["exec", "shadcn", "mcp"]
     },
     "tailwindcss": {
-      "command": "npx",
-      "args": ["-y", "tailwindcss-mcp-server"]
+      "command": "pnpm",
+      "args": ["exec", "tailwindcss-server"]
     },
     "github": {
       "url": "https://api.githubcopilot.com/mcp/",
@@ -43,9 +43,8 @@
       ]
     },
     "codegraph": {
-      "type": "stdio",
-      "command": "codegraph",
-      "args": ["serve", "--mcp"]
+      "command": "pnpm",
+      "args": ["exec", "codegraph", "serve", "--mcp"]
     },
     "headroom": {
       "command": "uvx",
