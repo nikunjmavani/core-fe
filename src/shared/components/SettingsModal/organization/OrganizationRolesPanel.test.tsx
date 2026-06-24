@@ -57,7 +57,7 @@ describe('OrganizationRolesPanel', () => {
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
-  it('lists roles; only custom roles are deletable, and only with the capability', () => {
+  it('lists roles; only custom roles are deletable, and only with the permission', () => {
     useRolesMock.mockReturnValue({
       data: [CUSTOM_ROLE, SYSTEM_ROLE],
       isLoading: false,
@@ -73,7 +73,7 @@ describe('OrganizationRolesPanel', () => {
     expect(screen.queryByTestId('role-delete-rol_owner')).not.toBeInTheDocument();
   });
 
-  it('hides delete controls without the manage-roles capability', () => {
+  it('hides delete controls without the manage-roles permission', () => {
     useRolesMock.mockReturnValue({
       data: [CUSTOM_ROLE],
       isLoading: false,

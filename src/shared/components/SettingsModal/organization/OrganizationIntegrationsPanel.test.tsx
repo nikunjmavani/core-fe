@@ -71,14 +71,14 @@ describe('OrganizationIntegrationsPanel — API keys', () => {
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
-  it('lists keys with a revoke control when the org has the capability', () => {
+  it('lists keys with a revoke control when the user has the permission', () => {
     setCanManage(true);
     render(<OrganizationIntegrationsPanel />);
     expect(screen.getByText('CI deploy key')).toBeInTheDocument();
     expect(screen.getByTestId('apikey-revoke-key_1')).toBeInTheDocument();
   });
 
-  it('hides the revoke control without the capability', () => {
+  it('hides the revoke control without the permission', () => {
     setCanManage(false);
     render(<OrganizationIntegrationsPanel />);
     expect(screen.queryByTestId('apikey-revoke-key_1')).not.toBeInTheDocument();
@@ -103,7 +103,7 @@ describe('OrganizationIntegrationsPanel — webhooks', () => {
     expect(screen.getByTestId('webhook-delete-whk_1')).toBeInTheDocument();
   });
 
-  it('hides webhook controls without the capability', () => {
+  it('hides webhook controls without the permission', () => {
     setCanManage(false);
     render(<OrganizationIntegrationsPanel />);
     expect(screen.queryByTestId('webhook-add')).not.toBeInTheDocument();

@@ -226,7 +226,7 @@ export const meContextQueryKey = ['auth', 'me-context'] as const;
 
 /**
  * The single authoritative read of the caller's session context: user, active
- * organization (+ status + capabilities), resolved permissions, global role, and
+ * organization (+ status), resolved permissions, global role, and
  * the org-switcher list. Powers boot hydration, the post-auth resolver, RBAC,
  * and nav visibility. Re-fetch on cold boot; after an org switch the switch
  * endpoint already returns the active-org delta (no extra call needed).

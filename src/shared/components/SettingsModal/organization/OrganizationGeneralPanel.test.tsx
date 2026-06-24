@@ -67,7 +67,7 @@ describe('OrganizationGeneralPanel', () => {
     );
   });
 
-  it('disables editing without the manage capability', async () => {
+  it('disables editing without the manage permission', async () => {
     setCanManage(false);
     renderWithProviders(<OrganizationGeneralPanel />);
     await waitFor(() => expect(screen.getByTestId('org-name')).toBeDisabled());

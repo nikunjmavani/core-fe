@@ -73,7 +73,7 @@ describe('OrganizationBillingPanel', () => {
     expect(planMutate).toHaveBeenCalledWith('pro');
   });
 
-  it('hides plan-switch controls without the billing capability', () => {
+  it('hides plan-switch controls without the billing permission', () => {
     useSubscriptionMock.mockReturnValue({ data: SUB, isLoading: false, isError: false });
     setCanManage(false);
     render(<OrganizationBillingPanel />);
