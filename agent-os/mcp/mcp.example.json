@@ -48,9 +48,8 @@
       "args": ["serve", "--mcp"]
     },
     "headroom": {
-      "type": "stdio",
-      "command": "headroom",
-      "args": ["mcp", "serve"]
+      "command": "uvx",
+      "args": ["--from", "headroom-ai[mcp]", "headroom", "mcp", "serve"]
     }
   }
 }

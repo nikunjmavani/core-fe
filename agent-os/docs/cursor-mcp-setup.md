@@ -35,25 +35,31 @@ any other repo. The committed template is `agent-os/mcp/mcp.example.json`; the
 real, gitignored config is `agent-os/mcp/mcp.json` (the `.mcp.json` and
 `.cursor/mcp.json` symlinks point into it).
 
-| MCP             | Why it's here (frontend)                                          | Auth / env                         |
-| --------------- | ----------------------------------------------------------------- | ---------------------------------- |
-| **context7**    | Up-to-date library docs (React, Vite, TanStack Query, Zod, …).    | Context7 API key (inline)          |
-| **shadcn**      | Browse + add shadcn/ui components via CLI.                        | none                               |
-| **tailwindcss** | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.     | none                               |
-| **github**      | Repos, PRs, issues, Actions, code search for this repo.           | OAuth (prompted on first use)      |
-| **core-be-api** | Discover the backend API this UI consumes (`call_api`) — the only | backend on `:3000` w/ MCP enabled  |
-|                 | cross-service link, and only when you opt to run the backend.     |                                    |
-| **sentry**      | Frontend error monitoring + release/sourcemap triage.             | OAuth                              |
-| **semgrep**     | Static security scanning (mirrors the CI semgrep lane).           | none (`uvx`)                       |
-| **sonarqube**   | Local code-quality gate (mirrors the pre-push SonarQube scan).    | `SONARQUBE_TOKEN`, `SONARQUBE_URL` |
-| **codegraph**   | Code-graph navigation across this repo.                           | `codegraph` binary                 |
-| **headroom**    | Context compression for long sessions.                            | `headroom` binary                  |
+| MCP             | Why it's here (frontend)                                          | Auth / env                        |
+| --------------- | ----------------------------------------------------------------- | --------------------------------- |
+| **context7**    | Up-to-date library docs (React, Vite, TanStack Query, Zod, …).    | Context7 API key (inline)         |
+| **shadcn**      | Browse + add shadcn/ui components via CLI.                        | none                              |
+| **tailwindcss** | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.     | none                              |
+| **github**      | Repos, PRs, issues, Actions, code search for this repo.           | OAuth (prompted on first use)     |
+| **core-be-api** | Discover the backend API this UI consumes (`call_api`) — the only | backend on `:3000` w/ MCP enabled |
+|                 | cross-service link, and only when you opt to run the backend.     |                                   |
+| **sentry**      | Frontend error monitoring + release/sourcemap triage.             | OAuth                             |
+| **semgrep**     | Static security scanning (mirrors the CI semgrep lane).           | `uvx` (ephemeral, no install)     |
+| **sonarqube**   | Local code-quality gate (mirrors the pre-push SonarQube scan).    | `docker` + `SONARQUBE_TOKEN/URL`  |
+| **codegraph**   | Code-graph navigation across this repo.                           | `codegraph` CLI (pre-existing)    |
+| **headroom**    | Context compression for long sessions.                            | `uvx` (ephemeral, no install)     |
 
 > This list is intentionally frontend-shaped — no database / cache / email /
 > deploy-platform servers (those belong to the backend). Add or remove servers in
-> `agent-os/mcp/mcp.json` freely; it is yours. `sonarqube` reads its env vars from
-> your shell; `github`/`sentry` use OAuth; `core-be-api` only resolves when you
-> run the backend locally.
+> `agent-os/mcp/mcp.json` freely; it is yours.
+>
+> **No global installs:** every server runs ephemerally — `npx`
+> (context7/shadcn/tailwindcss), `uvx` (semgrep/headroom — package fetched into the
+> shared cache on first use, nothing on your PATH), `docker` (sonarqube), or a
+> hosted URL (`github`/`sentry`/`core-be-api`). The one exception is **`codegraph`**,
+> a pre-existing global CLI; swap it for an ephemeral runner if you prefer zero
+> global tools. `sonarqube` reads its env vars from your shell; `github`/`sentry`
+> use OAuth; `core-be-api` only resolves when you run the backend locally.
 
 ---
 
