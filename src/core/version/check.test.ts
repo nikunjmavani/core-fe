@@ -52,9 +52,16 @@ describe('startVersionCheck', () => {
     cleanup?.();
   });
 
-  describe('reload-loop guard', () => {
+  describe('idle-gated reload', () => {
     const realLocation = window.location;
     let reload: ReturnType<typeof vi.fn>;
+
+    function setVisibility(state: 'visible' | 'hidden') {
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => state,
+      });
+    }
 
     beforeEach(() => {
       sessionStorage.clear();
@@ -63,6 +70,7 @@ describe('startVersionCheck', () => {
         configurable: true,
         value: { ...realLocation, reload },
       });
+      setVisibility('visible');
       vi.stubEnv('DEV', false);
       vi.stubEnv('MODE', 'production');
       vi.stubEnv('VITE_APP_BUILD_ID', 'build-OLD');
@@ -73,6 +81,7 @@ describe('startVersionCheck', () => {
         configurable: true,
         value: realLocation,
       });
+      setVisibility('visible');
       sessionStorage.clear();
     });
 
@@ -86,15 +95,55 @@ describe('startVersionCheck', () => {
       );
     }
 
-    it('reloads ONCE for a new buildId and marks it in sessionStorage', async () => {
+    it('reloads ONCE once the user is idle and marks the buildId', async () => {
       mockVersionResponse('build-NEW');
       const { startVersionCheck } = await import('./check.ts');
       const cleanup = startVersionCheck();
 
-      await vi.advanceTimersByTimeAsync(5_000); // initial delayed check
+      await vi.advanceTimersByTimeAsync(5_000); // initial check → reload pending
+      expect(reload).not.toHaveBeenCalled(); // still "active" — deferred
+
+      await vi.advanceTimersByTimeAsync(60_000); // cross the idle threshold
 
       expect(reload).toHaveBeenCalledTimes(1);
       expect(sessionStorage.getItem('core:version-check:reloaded-for')).toBe('build-NEW');
+      cleanup?.();
+    });
+
+    it('reloads immediately when the tab is hidden (invisible reload)', async () => {
+      mockVersionResponse('build-NEW');
+      const { startVersionCheck } = await import('./check.ts');
+      const cleanup = startVersionCheck();
+
+      await vi.advanceTimersByTimeAsync(5_000); // detect → pending (visible + active)
+      expect(reload).not.toHaveBeenCalled();
+
+      setVisibility('hidden');
+      document.dispatchEvent(new Event('visibilitychange'));
+      await vi.advanceTimersByTimeAsync(0);
+
+      expect(reload).toHaveBeenCalledTimes(1); // applied at once, no idle wait
+      cleanup?.();
+    });
+
+    it('defers while a field is focused, then reloads once it is idle', async () => {
+      mockVersionResponse('build-NEW');
+      const input = document.createElement('input');
+      document.body.appendChild(input);
+      input.focus();
+
+      const { startVersionCheck } = await import('./check.ts');
+      const cleanup = startVersionCheck();
+
+      await vi.advanceTimersByTimeAsync(5_000); // detect
+      await vi.advanceTimersByTimeAsync(60_000); // idle elapsed, but field is focused
+      expect(reload).not.toHaveBeenCalled();
+
+      input.blur(); // user leaves the field
+      await vi.advanceTimersByTimeAsync(10_000); // next safety re-check
+
+      expect(reload).toHaveBeenCalledTimes(1);
+      input.remove();
       cleanup?.();
     });
 
@@ -121,6 +170,7 @@ describe('startVersionCheck', () => {
       const cleanup = startVersionCheck();
 
       await vi.advanceTimersByTimeAsync(5_000);
+      await vi.advanceTimersByTimeAsync(60_000); // idle → apply the deferred reload
 
       expect(reload).toHaveBeenCalledTimes(1);
       expect(sessionStorage.getItem('core:version-check:reloaded-for')).toBe(
