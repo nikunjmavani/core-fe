@@ -25,6 +25,12 @@ test.describe('Responsive @ 320px', () => {
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
   });
 
+  test('register page (denser form) fits with no horizontal scroll', async ({ page }) => {
+    await page.goto('/register');
+    await expect(page.getByTestId('register-email')).toBeVisible();
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
+  });
+
   test('dashboard (app shell) fits with no horizontal scroll', async ({ page }) => {
     await registerNewUserAndGoToDashboard(page);
     await expect(page.getByTestId('dashboard-page')).toBeVisible();
