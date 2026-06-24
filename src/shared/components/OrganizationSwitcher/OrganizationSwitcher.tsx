@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/components/ui/dropdown-menu.tsx';
 import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
-import { Building2, Check, ChevronsUpDown, Plus } from '@/shared/icons/index.ts';
+import { Check, ChevronsUpDown, Plus } from '@/shared/icons/index.ts';
 import type { OrganizationSummary } from '@/shared/tenancy/me-context.ts';
 import { switchToPersonal } from '@/shared/tenancy/switch.ts';
 
@@ -25,14 +25,17 @@ interface OrganizationSwitcherProps {
   align?: 'start' | 'end';
 }
 
+function initialOf(name: string): string {
+  return (name.trim().charAt(0) || '?').toUpperCase();
+}
+
 /**
  * Active-organization switcher (dual-URL aware, FE-24). Lists the user's
- * organizations from `me/context` (the authoritative set, including the personal
- * org). Switching to a **team** org navigates to its
- * `/organization/$organizationSlug/dashboard` — the org guard performs the
- * switch-on-navigation. Switching to the **personal** org has no URL to drive
- * the switch, so it calls `switchToPersonal()` (re-mints the token) then lands
- * on the root `/dashboard`.
+ * organizations from `me/context`, split into **Personal** and **Organizations**
+ * sections. Switching to a **team** org navigates to its
+ * `/organization/$organizationSlug/dashboard` (the org guard performs the
+ * switch-on-navigation); switching to the **personal** org has no URL to drive
+ * it, so it calls `switchToPersonal()` and lands on the root `/dashboard`.
  */
 export function OrganizationSwitcher({
   className,
@@ -43,6 +46,8 @@ export function OrganizationSwitcher({
   const { data: ctx, isLoading } = useMeContext();
 
   const orgs = ctx?.organizations ?? [];
+  const personalOrgs = orgs.filter((o) => o.type === 'PERSONAL');
+  const teamOrgs = orgs.filter((o) => o.type === 'TEAM');
   const activeId = ctx?.activeOrganization?.id;
   const activeName = ctx?.activeOrganization?.name ?? 'Select organization';
 
@@ -61,6 +66,28 @@ export function OrganizationSwitcher({
     applySelect(org).catch(() => undefined);
   }
 
+  const renderOrg = (org: OrganizationSummary) => (
+    <DropdownMenuItem
+      key={org.id}
+      onClick={() => selectOrg(org)}
+      data-testid={`organization-switcher-option-${org.slug ?? 'personal'}`}
+      className="gap-2"
+    >
+      <span className="bg-primary/10 text-primary flex size-7 shrink-0 items-center justify-center rounded-md text-xs font-semibold">
+        {initialOf(org.name)}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium">{org.name}</span>
+        {org.slug ? (
+          <span className="text-muted-foreground block truncate text-xs">{org.slug}</span>
+        ) : null}
+      </span>
+      {org.id === activeId ? (
+        <Check className="text-primary ml-auto size-4 shrink-0" aria-hidden />
+      ) : null}
+    </DropdownMenuItem>
+  );
+
   return (
     <>
       <DropdownMenu>
@@ -72,27 +99,30 @@ export function OrganizationSwitcher({
             disabled={isLoading}
             data-testid="organization-switcher-trigger"
           >
-            <Building2 className="text-primary h-4 w-4 shrink-0" />
+            <span className="bg-primary/10 text-primary flex size-6 shrink-0 items-center justify-center rounded text-xs font-semibold">
+              {initialOf(activeName)}
+            </span>
             <span className="min-w-0 flex-1 truncate text-left text-sm font-medium">
               {activeName}
             </span>
             <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={align} className="w-60">
-          <DropdownMenuLabel>Organizations</DropdownMenuLabel>
-          {orgs.map((org) => (
-            <DropdownMenuItem
-              key={org.id}
-              onClick={() => selectOrg(org)}
-              data-testid={`organization-switcher-option-${org.slug ?? 'personal'}`}
-            >
-              <Building2 className="mr-2 h-4 w-4 opacity-70" />
-              <span className="truncate">{org.name}</span>
-              {org.id === activeId && <Check className="ml-auto h-4 w-4" />}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
+        <DropdownMenuContent align={align} className="w-64">
+          {personalOrgs.length > 0 ? (
+            <>
+              <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
+                Personal
+              </DropdownMenuLabel>
+              {personalOrgs.map(renderOrg)}
+              <DropdownMenuSeparator />
+            </>
+          ) : null}
+
+          <DropdownMenuLabel className="text-muted-foreground text-xs font-medium">
+            Organizations
+          </DropdownMenuLabel>
+          {teamOrgs.map(renderOrg)}
           <DropdownMenuItem
             onSelect={(e) => {
               e.preventDefault();
@@ -101,7 +131,7 @@ export function OrganizationSwitcher({
             data-testid="organization-switcher-create"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Create organization
+            Add organization
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
