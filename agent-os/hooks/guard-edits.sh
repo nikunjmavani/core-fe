@@ -51,6 +51,11 @@ esac
 is_vendored_ui="no"
 case "$FILE" in */components/ui/* | src/components/ui/*) is_vendored_ui="yes" ;; esac
 
+# The @/shared/icons surface is the one place allowed to import icon libraries
+# directly (mirrors eslint's src/shared/icons/** exemption + CLAUDE.md).
+is_icon_surface="no"
+case "$FILE" in */shared/icons/* | src/shared/icons/*) is_icon_surface="yes" ;; esac
+
 # R2 — no `../` parent-relative imports under src/ (use the '@/' alias).
 if printf '%s' "$CONTENT" | grep -Eq "(from|require|import)[[:space:]]*\(?[[:space:]]*['\"]\.\./"; then
   deny "Relative parent import ('../') is banned under src/ — use the '@/' alias with an explicit .ts/.tsx extension (CLAUDE.md → Import Conventions; enforced by ESLint)."
@@ -58,7 +63,7 @@ fi
 
 if [[ "$is_vendored_ui" == "no" ]]; then
   # R3 — icons come from the @/shared/icons barrel, never lucide-react directly.
-  if printf '%s' "$CONTENT" | grep -Eq "(from|import|require)[[:space:]]*\(?[[:space:]]*['\"]lucide-react['\"]"; then
+  if [[ "$is_icon_surface" == "no" ]] && printf '%s' "$CONTENT" | grep -Eq "(from|import|require)[[:space:]]*\(?[[:space:]]*['\"]lucide-react['\"]"; then
     deny "Import icons from '@/shared/icons/index.ts', not 'lucide-react' directly (CLAUDE.md → Import Conventions; eslint-enforced; vendored components/ui/ is exempt)."
   fi
   # R4 — semantic tokens only in app code; no raw Tailwind palette utilities.

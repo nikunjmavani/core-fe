@@ -9,6 +9,7 @@ describe('useThemeStore', () => {
       baseId: 'neutral',
       menu: 'default',
       iconWeight: 'regular',
+      iconLibrary: 'lucide',
     });
     const root = document.documentElement;
     delete root.dataset.theme;
@@ -102,6 +103,9 @@ describe('useThemeStore', () => {
     useThemeStore.getState().setIconWeight('bold');
     expect(useThemeStore.getState().iconWeight).toBe('bold');
     expect(document.documentElement.style.getPropertyValue('--icon-stroke')).toBe('2.5');
+
+    useThemeStore.getState().setIconLibrary('tabler');
+    expect(useThemeStore.getState().iconLibrary).toBe('tabler');
   });
 
   it('setPreset clears a generated custom look (keeps base/menu)', () => {

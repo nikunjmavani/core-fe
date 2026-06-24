@@ -8,6 +8,7 @@ import {
   applyMenuStyle,
   applyThemePreset,
   DEFAULT_BASE,
+  DEFAULT_ICON_LIBRARY,
   DEFAULT_ICON_WEIGHT,
   DEFAULT_MENU,
   DEFAULT_PRESET,
@@ -33,6 +34,8 @@ interface ThemeStore {
   menu: string;
   /** Icon weight — Lucide stroke-width (orthogonal). */
   iconWeight: string;
+  /** Icon library — lucide (default) | tabler | phosphor (orthogonal). */
+  iconLibrary: string;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
   /** Set one axis of the custom look (accent/chart/font/radius); switches to custom. */
@@ -40,6 +43,7 @@ interface ThemeStore {
   setBaseColor: (id: string) => void;
   setMenu: (id: string) => void;
   setIconWeight: (id: string) => void;
+  setIconLibrary: (id: string) => void;
   /** Generate + apply a fresh full look (shadcn-create style). */
   shuffleTheme: () => void;
 }
@@ -64,6 +68,7 @@ export const useThemeStore = create<ThemeStore>()(
       baseId: DEFAULT_BASE,
       menu: DEFAULT_MENU,
       iconWeight: DEFAULT_ICON_WEIGHT,
+      iconLibrary: DEFAULT_ICON_LIBRARY,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -92,6 +97,10 @@ export const useThemeStore = create<ThemeStore>()(
         applyIconWeight(id);
         set({ iconWeight: id });
       },
+      setIconLibrary: (id) => {
+        // The @/shared/icons barrel subscribes to this and lazy-loads the set.
+        set({ iconLibrary: id });
+      },
       shuffleTheme: () => {
         // Generate a fresh full look each time (colour + chart + fonts + radius,
         // shadcn-create style) rather than cycling a fixed preset list.
@@ -109,6 +118,7 @@ export const useThemeStore = create<ThemeStore>()(
         baseId: state.baseId,
         menu: state.menu,
         iconWeight: state.iconWeight,
+        iconLibrary: state.iconLibrary,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

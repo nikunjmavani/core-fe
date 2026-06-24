@@ -25,6 +25,7 @@ import {
   GENERATED_PRESET,
   GENERATED_RADII,
   type GeneratedTheme,
+  ICON_LIBRARIES,
   ICON_WEIGHTS,
   MENU_STYLES,
 } from '@/shared/theme/index.ts';
@@ -211,10 +212,12 @@ export function AccountAppearancePanel() {
   const baseId = useThemeStore((s) => s.baseId);
   const menu = useThemeStore((s) => s.menu);
   const iconWeight = useThemeStore((s) => s.iconWeight);
+  const iconLibrary = useThemeStore((s) => s.iconLibrary);
   const updateLook = useThemeStore((s) => s.updateLook);
   const setBaseColor = useThemeStore((s) => s.setBaseColor);
   const setMenu = useThemeStore((s) => s.setMenu);
   const setIconWeight = useThemeStore((s) => s.setIconWeight);
+  const setIconLibrary = useThemeStore((s) => s.setIconLibrary);
   const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
 
   if (config.themeLock) {
@@ -366,6 +369,16 @@ export function AccountAppearancePanel() {
               options={ICON_WEIGHTS}
               onPick={setIconWeight}
               testPrefix="icon"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Icon library</FieldLabel>
+            <Choices
+              ariaLabel="Icon library"
+              value={iconLibrary}
+              options={ICON_LIBRARIES}
+              onPick={setIconLibrary}
+              testPrefix="iconlib"
             />
           </div>
         </CardContent>

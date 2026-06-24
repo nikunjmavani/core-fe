@@ -90,13 +90,21 @@ export const MENU_STYLES = [
 ] as const;
 export const DEFAULT_MENU = 'default';
 
-/** Icon weight — drives Lucide `stroke-width` via the `--icon-stroke` var. */
+/** Icon weight — drives Lucide/Tabler `stroke-width` via the `--icon-stroke` var. */
 export const ICON_WEIGHTS = [
   { id: 'thin', label: 'Thin', width: 1.5 },
   { id: 'regular', label: 'Regular', width: 2 },
   { id: 'bold', label: 'Bold', width: 2.5 },
 ] as const;
 export const DEFAULT_ICON_WEIGHT = 'regular';
+
+/** Icon library — Lucide is the default (bundled); the rest lazy-load on select. */
+export const ICON_LIBRARIES = [
+  { id: 'lucide', label: 'Lucide' },
+  { id: 'tabler', label: 'Tabler' },
+  { id: 'phosphor', label: 'Phosphor' },
+] as const;
+export const DEFAULT_ICON_LIBRARY = 'lucide';
 
 const FONT_IDS = Object.keys(GENERATED_FONTS);
 const RADIUS_IDS = Object.keys(GENERATED_RADII);

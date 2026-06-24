@@ -14,6 +14,8 @@ describe('AccountAppearancePanel', () => {
       customTheme: null,
       baseId: 'neutral',
       menu: 'default',
+      iconWeight: 'regular',
+      iconLibrary: 'lucide',
     });
     const root = document.documentElement;
     delete root.dataset.theme;
@@ -32,6 +34,7 @@ describe('AccountAppearancePanel', () => {
     expect(screen.getByTestId('radius-round')).toBeInTheDocument();
     expect(screen.getByTestId('menu-translucent')).toBeInTheDocument();
     expect(screen.getByTestId('icon-bold')).toBeInTheDocument();
+    expect(screen.getByTestId('iconlib-tabler')).toBeInTheDocument();
     expect(screen.getByTestId('theme-shuffle')).toBeInTheDocument();
   });
 
@@ -57,6 +60,13 @@ describe('AccountAppearancePanel', () => {
     render(<AccountAppearancePanel />);
     await user.click(screen.getByTestId('icon-bold'));
     expect(useThemeStore.getState().iconWeight).toBe('bold');
+  });
+
+  it('picking an icon library applies it (orthogonal)', async () => {
+    const user = userEvent.setup();
+    render(<AccountAppearancePanel />);
+    await user.click(screen.getByTestId('iconlib-tabler'));
+    expect(useThemeStore.getState().iconLibrary).toBe('tabler');
   });
 
   it('shuffle generates a custom look', async () => {

@@ -48,7 +48,7 @@ independent axes. A runtime switcher (Settings → Appearance) sets both.
 Settings → Appearance is a shadcn-create-style studio with a per-axis picker for
 each part of the look: **accent colour** and **chart colour** (named hues from
 `ACCENT_COLORS`), **base colour**, **body + heading font**, **radius**, **menu
-style**, and **icon weight** — plus **Shuffle**.
+style**, **icon weight**, and **icon library** — plus **Shuffle**.
 
 The **"Shuffle theme"** action does _not_ cycle the named presets — it
 **generates a fresh full look** each click: a random **accent hue**, **chart
@@ -65,13 +65,35 @@ injected `<style>`, and fonts are **web-safe stacks** only since the CSP is
 persists across reloads. Catalogs live in `GENERATED_FONTS` / `GENERATED_RADII` /
 `ACCENT_COLORS` (`shared/theme`).
 
-**Three orthogonal axes** apply on top of any preset/look and persist
+**Four orthogonal axes** apply on top of any preset/look and persist
 independently: **base colour** (`data-base='stone'|'slate'|'olive'`; `neutral` =
 no attribute) tints the neutral surfaces via mode-correct CSS blocks — the one
 exception to "neutrals stay neutral", done as predefined sets rather than a free
 picker so light/dark both read right; **menu style** (`data-menu='translucent'`)
-makes dropdowns/popovers/selects glassy; and **icon weight** drives every Lucide
-icon's `stroke-width` through the `--icon-stroke` var (`svg.lucide` rule). A true
-multi-library icon swap was scoped out — icons are statically bundled, so that
-is a build-time choice, not a runtime token. When `VITE_THEME_LOCK=true`, the switcher
-and shuffle are hidden and the app is pinned to the code-defined theme.
+makes dropdowns/popovers/selects glassy; **icon weight** drives Lucide/Tabler
+`stroke-width` through the `--icon-stroke` var (`svg.lucide, svg.tabler-icon`;
+Phosphor uses fixed path weights, so it ignores it); and **icon library** swaps
+the whole icon set (see below). When `VITE_THEME_LOCK=true`, the switcher and
+shuffle are hidden and the app is pinned to the code-defined theme.
+
+## Icon library (swappable at runtime, lazy-loaded)
+
+Every app icon flows through the `@/shared/icons` barrel (eslint-enforced — see
+`eslint.config.mjs`; Lucide/Tabler/Phosphor are banned outside it). Each export
+is a thin wrapper that renders the **active** library's version, read from
+`useThemeStore().iconLibrary`:
+
+- **Lucide** is the default, statically imported in the barrel → tree-shaken into
+  the main bundle (only the ~50 icons we use). So the initial bundle is unchanged
+  whether or not the feature exists.
+- **Tabler** and **Phosphor** live in `iconset-tabler.ts` / `iconset-phosphor.ts`
+  — curated `Record<IconName, AppIcon>` maps that are **dynamically imported**
+  (`icon-registry.ts`) only when selected, as their own lazy chunks (~4 KB /
+  ~32 KB gz). Until a chunk arrives the barrel falls back to Lucide, so there's
+  no flash of missing icons. `ICON_NAMES` is the canonical key list; the
+  `Record<IconName, …>` typing guarantees every set covers exactly the same icons.
+- Vendored shadcn primitives (`components/ui`) import Lucide directly and **always
+  stay Lucide** — only app-code icons swap.
+
+Adding a library: install it, add `iconset-<lib>.ts` (map all `ICON_NAMES`), add
+a `loadModule` branch in `icon-registry.ts` and an entry in `ICON_LIBRARIES`.
