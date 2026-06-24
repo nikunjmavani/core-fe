@@ -319,6 +319,31 @@
   }
 }
 
+/* Indeterminate top progress bar for in-app navigations (RouteProgressBar). */
+@keyframes route-progress {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(350%);
+  }
+}
+
+/* Gentle "breathing" pulse for the branded boot loader (FullPageSpinner). A
+   scale/opacity pulse (not a rotation) so it doesn't visibly "restart" when the
+   loader swaps between React loading boundaries during boot. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+}
+
 /* ── Utility classes (avoid inline styles) ── */
 .chart-tooltip {
   background: var(--color-card);

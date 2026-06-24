@@ -32,6 +32,7 @@ import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts';
 import { RouteAnnouncer } from '@/shared/components/RouteAnnouncer/index.ts';
 import { RouteErrorBoundary } from '@/shared/components/RouteErrorBoundary/index.ts';
+import { RouteProgressBar } from '@/shared/components/RouteProgressBar/index.ts';
 import { SettingsModalLazy } from '@/shared/components/SettingsModal/index.ts';
 import { AppToaster } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
@@ -125,6 +126,9 @@ const rootRoute = createRootRoute({
   component: () => (
     <>
       <HeadContent />
+      {/* Top progress bar for in-app navigations (e.g. org switch) — feedback
+          without blanking the page to a full-screen spinner. */}
+      <RouteProgressBar />
       <div className="bg-background text-foreground min-h-screen">
         <Outlet />
       </div>
@@ -412,6 +416,11 @@ export const router = createRouter({
   // real navigation, so the side-effectful guard chain (org context sync,
   // permission refetch) is never satisfied by a hover.
   defaultPreloadStaleTime: 0,
+  // Keep the current screen rendered during in-app navigations (e.g. switching
+  // org) instead of blanking to a full-page spinner — the RouteProgressBar gives
+  // feedback. The full-page spinner only appears if a navigation is genuinely
+  // stuck (> 3s); the initial boot still shows it via the shell's isLoading gate.
+  defaultPendingMs: 3000,
   defaultPendingComponent: () => <FullPageSpinner />,
 });
 
