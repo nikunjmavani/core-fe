@@ -35,7 +35,7 @@ function formatMoney(cents: number, currency: string): string {
 
 /**
  * Billing panel — the active org's plan + usage, with plan switching gated on
- * `canManageBilling`. Covers loading / error states. (Invoices + payment method
+ * the subscription:manage permission. Covers loading / error states. (Invoices + payment method
  * are follow-ups behind a confirmed billing contract.)
  */
 export function OrganizationBillingPanel() {

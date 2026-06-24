@@ -27,7 +27,7 @@ type UpdateMutation = ReturnType<typeof useUpdateOrganization>;
 /**
  * Organization logo (FE-33) — preview + upload/remove. Mock mode stores a data
  * URL on the org; the live API takes a CDN URL (`logo_url`). Gated on the manage
- * capability; rejects non-images and oversized files before reading.
+ * permission; rejects non-images and oversized files before reading.
  */
 function OrgLogoCard({
   logoUrl,
@@ -129,8 +129,8 @@ function OrgLogoCard({
 
 /**
  * Organization general settings — rename the active org (name-only; the slug
- * drives URLs and is read-only here) and manage its logo (FE-33). Gated on an
- * admin capability (`canManageMembers` — a personal org has it `false`). The
+ * drives URLs and is read-only here) and manage its logo (FE-33). Gated on the
+ * membership:manage permission (team orgs only). The
  * editable name is derived as a local draft over the server value (no
  * prop→state effect); saving updates via {@link useUpdateOrganization}.
  */

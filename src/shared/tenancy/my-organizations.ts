@@ -50,7 +50,7 @@ export async function listMyOrganizations(): Promise<Organization[]> {
   const data = res.data;
   if (!Array.isArray(data)) return [];
   // core-be returns UPPERCASE status + a nullable slug (null for personal orgs)
-  // + type/capabilities. Map to the FE Organization shape.
+  // + type. Map to the FE Organization shape.
   return data.map((raw) => {
     const o = raw as {
       id: string;

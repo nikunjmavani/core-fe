@@ -29,7 +29,7 @@ const WIRE: MeContextWire = {
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
   },
-  // core-be #795: capabilities are DERIVED from these permissions, not sent.
+  // core-be #795: no capabilities object — gating uses these permissions + org type.
   my_permissions: ['organization:read', 'membership:manage', 'subscription:manage'],
   global_role: null,
   organizations: [

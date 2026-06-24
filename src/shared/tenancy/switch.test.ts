@@ -29,23 +29,6 @@ const TEAM_ID = 'org_abcdefghij0123456789x';
 const PERSONAL_ID = 'org_personalij0123456789x';
 const TS = '2026-01-01T00:00:00.000Z';
 
-const TEAM_CAPS = {
-  canInviteMembers: true,
-  canManageMembers: true,
-  canManageRoles: true,
-  canTransferOwnership: true,
-  canDelete: true,
-  canManageBilling: true,
-};
-const PERSONAL_CAPS = {
-  canInviteMembers: false,
-  canManageMembers: false,
-  canManageRoles: false,
-  canTransferOwnership: false,
-  canDelete: false,
-  canManageBilling: false,
-};
-
 const BASE_CTX: MeContext = {
   user: {
     id: 'usr_abcdefghij0123456789x',
@@ -66,7 +49,6 @@ const BASE_CTX: MeContext = {
     type: 'TEAM',
     status: 'ACTIVE',
     logoUrl: null,
-    capabilities: TEAM_CAPS,
     createdAt: TS,
     updatedAt: TS,
   },
@@ -80,7 +62,6 @@ const BASE_CTX: MeContext = {
       type: 'TEAM',
       status: 'ACTIVE',
       logoUrl: null,
-      capabilities: TEAM_CAPS,
       createdAt: TS,
       updatedAt: TS,
       isActive: true,
@@ -92,7 +73,6 @@ const BASE_CTX: MeContext = {
       type: 'PERSONAL',
       status: 'ACTIVE',
       logoUrl: null,
-      capabilities: PERSONAL_CAPS,
       createdAt: TS,
       updatedAt: TS,
       isActive: false,
@@ -107,14 +87,6 @@ const PERSONAL_WIRE = {
   type: 'PERSONAL',
   status: 'ACTIVE',
   logo_url: null,
-  capabilities: {
-    can_invite_members: false,
-    can_manage_members: false,
-    can_manage_roles: false,
-    can_transfer_ownership: false,
-    can_delete: false,
-    can_manage_billing: false,
-  },
   created_at: TS,
   updated_at: TS,
 };

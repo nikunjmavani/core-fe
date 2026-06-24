@@ -5,7 +5,7 @@ import { z } from 'zod';
  *
  * - `super_admin` / `admin`: platform staff (admin console — out of scope for the
  *   non-admin organization app, but modelled for completeness).
- * - `user`: a normal end user; organization-level capabilities are governed by
+ * - `user`: a normal end user; organization-level permissions are governed by
  *   org-scoped permission codes (see {@link OrganizationPermission} in `@/core/rbac/policies.ts`),
  *   not by this global role.
  */

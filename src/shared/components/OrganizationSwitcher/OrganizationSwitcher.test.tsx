@@ -28,14 +28,6 @@ function org(id: string, name: string, slug: string | null, type: OrganizationTy
     type,
     status: 'ACTIVE' as const,
     logoUrl: null,
-    capabilities: {
-      canInviteMembers: false,
-      canManageMembers: false,
-      canManageRoles: false,
-      canTransferOwnership: false,
-      canDelete: false,
-      canManageBilling: false,
-    },
     createdAt: 't',
     updatedAt: 't',
   };

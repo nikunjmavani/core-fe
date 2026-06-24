@@ -16,7 +16,7 @@ export interface GateContext {
 /**
  * A single access gate in the security pipeline. Resolves/returns to **pass**;
  * **throws** (a redirect / notFound / unauthorized) to halt the pipeline. Gates
- * are layered (L1 session → L2 context → … → L6 capability); see
+ * are layered (L1 session → L2 context → … → L5 permission); see
  * `research/11` §3.7 and `core/security/gates/`.
  */
 export type Gate<TCtx = GateContext> = (ctx: TCtx) => void | Promise<void>;

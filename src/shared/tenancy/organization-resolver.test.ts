@@ -38,14 +38,6 @@ function activeOrg(type: OrganizationType, slug: string | null) {
     type,
     status: 'ACTIVE' as const,
     logoUrl: null,
-    capabilities: {
-      canInviteMembers: false,
-      canManageMembers: false,
-      canManageRoles: false,
-      canTransferOwnership: false,
-      canDelete: false,
-      canManageBilling: false,
-    },
     createdAt: 't',
     updatedAt: 't',
   };

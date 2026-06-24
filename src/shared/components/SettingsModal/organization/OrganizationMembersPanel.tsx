@@ -34,8 +34,8 @@ function statusVariant(
 
 /**
  * Members panel — the active organization's people. Lists members with their
- * role + status; removal is gated on the org capability (`canManageMembers` —
- * a personal org has it `false`, so the control is hidden) and confirmed via
+ * role + status; removal is gated on the membership:manage permission (team
+ * orgs only, so the control is hidden in a personal org) and confirmed via
  * the shared destructive-action dialog. Covers loading / empty / error states.
  */
 export function OrganizationMembersPanel() {

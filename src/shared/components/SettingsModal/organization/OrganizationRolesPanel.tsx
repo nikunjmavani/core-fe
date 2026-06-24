@@ -14,8 +14,8 @@ import { SectionHeader } from '../SettingsPanelShell.tsx';
 
 /**
  * Roles panel — the permission sets assignable to members. System roles are
- * read-only; custom roles can be deleted when the org allows it
- * (`canManageRoles`), confirmed via the shared destructive-action dialog.
+ * read-only; custom roles can be deleted with the role:manage permission
+ * (team orgs only), confirmed via the shared destructive-action dialog.
  * Covers loading / empty / error states. (Create/edit-role form is a follow-up.)
  */
 export function OrganizationRolesPanel() {

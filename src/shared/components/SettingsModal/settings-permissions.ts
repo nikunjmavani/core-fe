@@ -20,7 +20,7 @@ const ORGANIZATION_SECTION_PERMISSION: Record<
   roles: 'role:read',
   branches: 'organization:read',
   // Any member can SEE billing (personal orgs included — see sectionsForOrgType);
-  // managing a subscription is capability-gated inside the panel.
+  // managing a subscription is permission-gated inside the panel.
   billing: 'organization:read',
   integrations: 'webhook:read',
 };

@@ -42,7 +42,7 @@ const VALID_PERMISSIONS = new Set<string>(organizationPermissionSchema.options);
 
 /**
  * Derive the org store from the authoritative me/context — the active org's
- * id / slug / type / status / capabilities plus the resolved org-scoped
+ * id / slug / type / status plus the resolved org-scoped
  * permissions. This is the context-driven source of org context (the URL no
  * longer sources it); call it wherever me/context loads or changes.
  */

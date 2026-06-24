@@ -281,8 +281,8 @@ function WebhooksSection() {
 
 /**
  * Integrations panel — API keys (revoke) + outbound webhooks (create/delete),
- * both gated on an admin capability (`canManageRoles` — false in a personal
- * org). API-key creation with one-time-secret reveal remains a follow-up.
+ * both gated on the role:manage permission (team orgs only). API-key creation
+ * with one-time-secret reveal remains a follow-up.
  */
 export function OrganizationIntegrationsPanel() {
   return (

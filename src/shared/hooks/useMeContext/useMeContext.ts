@@ -6,8 +6,8 @@ import { fetchMeContext, meContextQueryKey } from '@/shared/tenancy/me-context.t
 export { meContextQueryKey };
 
 /**
- * The caller's session context — user, active organization (+ status +
- * capabilities), resolved permissions, global role, and the org-switcher list
+ * The caller's session context — user, active organization (+ status),
+ * resolved permissions, global role, and the org-switcher list
  * (`GET /auth/me/context`). Server state via TanStack Query; never mirrored
  * into Zustand. Powers the dashboard today; nav/RBAC/settings later.
  */
