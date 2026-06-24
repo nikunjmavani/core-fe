@@ -1,6 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import { isSafeRedirectPath, safeRedirect } from './redirect-safety.ts';
+import {
+  isSafeRedirectPath,
+  popReturnTo,
+  safeRedirect,
+  stashReturnTo,
+} from './redirect-safety.ts';
 
 // Exhaustive open-redirect attack vectors live in
 // tests/security/redirect-safety.security.test.ts; this covers the shared
@@ -26,5 +31,22 @@ describe('safeRedirect', () => {
     expect(safeRedirect('//evil.example.com')).toBeUndefined();
     expect(safeRedirect(undefined)).toBeUndefined();
     expect(safeRedirect(123)).toBeUndefined();
+  });
+});
+
+describe('stashReturnTo / popReturnTo', () => {
+  beforeEach(() => {
+    sessionStorage.clear();
+  });
+
+  it('round-trips a safe path and clears it after pop', () => {
+    stashReturnTo('/organization/org_x/members');
+    expect(popReturnTo()).toBe('/organization/org_x/members');
+    expect(popReturnTo()).toBeUndefined();
+  });
+
+  it('never stashes an unsafe value', () => {
+    stashReturnTo('//evil.example.com');
+    expect(popReturnTo()).toBeUndefined();
   });
 });

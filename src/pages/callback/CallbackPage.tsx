@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 
 import { config } from '@/core/config/env.ts';
 import { performMockLogin } from '@/shared/auth/mock-auth.ts';
+import { popReturnTo } from '@/shared/auth/redirect-safety.ts';
 import { silentRefresh } from '@/shared/auth/service.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 
@@ -27,7 +28,9 @@ export function CallbackPage() {
     void (async () => {
       if (config.useMockApi) {
         await performMockLogin();
-        void navigate({ to: '/', replace: true });
+        // Honor a returnTo stashed before the OAuth round-trip (FE-59), else the
+        // `/` resolver picks the active-org dashboard.
+        void navigate({ to: popReturnTo() ?? '/', replace: true });
         return;
       }
       try {
@@ -37,7 +40,7 @@ export function CallbackPage() {
         void navigate({ to: '/login', replace: true });
         return;
       }
-      void navigate({ to: '/', replace: true });
+      void navigate({ to: popReturnTo() ?? '/', replace: true });
     })();
   }, [navigate]);
 

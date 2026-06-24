@@ -33,3 +33,31 @@ export function isSafeRedirectPath(path: string): boolean {
 export function safeRedirect(value: unknown): string | undefined {
   return typeof value === 'string' && isSafeRedirectPath(value) ? value : undefined;
 }
+
+const RETURN_TO_KEY = 'core-auth:return-to';
+
+/**
+ * Persist a `returnTo` across an OAuth provider round-trip (full-page redirect
+ * loses router state). This is a same-origin **path**, never a token, so
+ * sessionStorage is appropriate. Stores only if safe; clears otherwise.
+ */
+export function stashReturnTo(value: unknown): void {
+  const safe = safeRedirect(value);
+  try {
+    if (safe) sessionStorage.setItem(RETURN_TO_KEY, safe);
+    else sessionStorage.removeItem(RETURN_TO_KEY);
+  } catch {
+    // sessionStorage unavailable (private mode / SSR) — returnTo is best-effort.
+  }
+}
+
+/** Read **and clear** the stashed `returnTo`; returns a safe path or `undefined`. */
+export function popReturnTo(): string | undefined {
+  try {
+    const value = sessionStorage.getItem(RETURN_TO_KEY);
+    sessionStorage.removeItem(RETURN_TO_KEY);
+    return safeRedirect(value);
+  } catch {
+    return undefined;
+  }
+}

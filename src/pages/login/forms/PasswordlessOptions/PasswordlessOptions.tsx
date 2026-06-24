@@ -1,9 +1,10 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useLocation, useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 import { config } from '@/core/config/env.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { performMockLogin } from '@/shared/auth/mock-auth.ts';
+import { stashReturnTo } from '@/shared/auth/redirect-safety.ts';
 import { establishSession } from '@/shared/auth/service.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
@@ -54,6 +55,7 @@ function ProviderIcon({ provider }: { provider: string }) {
  */
 export function PasswordlessOptions() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [providers, setProviders] = useState<string[]>([]);
   const [magicMode, setMagicMode] = useState(false);
   const [magicStep, setMagicStep] = useState<'email' | 'code'>('email');
@@ -78,6 +80,9 @@ export function PasswordlessOptions() {
   }, []);
 
   const startOAuth = async (provider: string) => {
+    // Preserve a deep-link returnTo across the provider round-trip (FE-59);
+    // /callback pops it after the token exchange.
+    stashReturnTo((location.search as { redirect?: unknown }).redirect);
     if (config.useMockApi) {
       void navigate({ to: '/callback' });
       return;
