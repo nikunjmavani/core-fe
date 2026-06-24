@@ -11,10 +11,7 @@ import {
 import { Suspense } from 'react';
 import { Toaster } from 'sonner';
 
-import {
-  requireActiveOrganization,
-  requireOrganizationContext,
-} from '@/app/guards/route-guards.ts';
+import { requireOrgStatus, resolveActiveOrg } from '@/app/guards/org-gates.ts';
 import { redirectIfAuthenticated, requireAuth } from '@/core/rbac/guards.ts';
 import { APP_TITLE, composePageTitle, manifestHead } from '@/lib/routes/page-head.ts';
 import { parseInvitationIdParam } from '@/lib/routes/params.ts';
@@ -303,7 +300,7 @@ const organizationShellRoute = createRoute({
     // never run it for a hover preload (the chunk still preloads). With
     // defaultPreloadStaleTime: 0 the guard re-runs on real navigation.
     if (preload) return;
-    await requireOrganizationContext(params.organizationId);
+    await resolveActiveOrg({ params });
   },
   component: function OrganizationShellRoute() {
     const isLoading = useAuthStore((s) => s.isLoading);
@@ -323,7 +320,7 @@ const organizationDashboardRoute = createRoute({
   head: manifestHead(dashboardManifest),
   beforeLoad: ({ params, preload }) => {
     if (preload) return;
-    requireActiveOrganization(params.organizationId);
+    requireOrgStatus({ params });
   },
   component: DashboardPage,
   errorComponent: RouteErrorBoundary,
