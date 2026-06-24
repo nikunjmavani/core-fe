@@ -228,6 +228,25 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
   }
+
+  /* ── Pointer cursor on interactive elements ──
+     Tailwind v4 Preflight no longer forces `cursor: pointer` on <button>, so
+     buttons + headless Radix primitives (which set ARIA roles, not cursors)
+     would otherwise show the default arrow. Restore pointer affordance for the
+     whole app in one place; disabled controls keep the default cursor. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']):not([data-disabled]),
+  [role='tab']:not([data-disabled]),
+  [role='menuitem']:not([data-disabled]),
+  [role='menuitemcheckbox']:not([data-disabled]),
+  [role='menuitemradio']:not([data-disabled]),
+  [role='option']:not([data-disabled]),
+  [role='switch']:not(:disabled):not([data-disabled]),
+  [role='radio']:not([data-disabled]),
+  [role='checkbox']:not(:disabled):not([data-disabled]),
+  summary {
+    cursor: pointer;
+  }
 }
 
 /* ── Accessibility: honour reduced-motion globally ──

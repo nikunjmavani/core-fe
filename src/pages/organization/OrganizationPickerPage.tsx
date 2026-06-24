@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from '@tanstack/react-router';
+import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 
 import { organizationDashboard } from '@/lib/routes/index.ts';
@@ -16,7 +16,6 @@ import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
  * URL and persists the choice for the `/` resolver.
  */
 export function OrganizationPickerPage() {
-  const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const {
     data: organizations = [],
@@ -83,25 +82,27 @@ export function OrganizationPickerPage() {
           {!isLoading &&
             !isError &&
             organizations.map((organization) => (
-              <Card
+              <Link
                 key={organization.id}
-                className="hover:bg-muted/50 cursor-pointer py-0 transition-colors"
-                onClick={() => void navigate(organizationDashboard(organization.slug))}
+                {...organizationDashboard(organization.slug)}
+                className="block rounded-xl"
                 data-testid={`organization-picker-option-${organization.slug}`}
               >
-                <CardContent className="flex items-center gap-3 p-4">
-                  <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
-                    <Building2 className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1 text-left">
-                    <p className="truncate text-sm font-medium">{organization.name}</p>
-                    <p className="text-muted-foreground truncate text-xs">
-                      {organization.slug}
-                    </p>
-                  </div>
-                  <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
-                </CardContent>
-              </Card>
+                <Card className="hover:bg-muted/50 hover:border-primary/30 cursor-pointer py-0 transition-colors">
+                  <CardContent className="flex items-center gap-3 p-4">
+                    <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                      <Building2 className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1 text-left">
+                      <p className="truncate text-sm font-medium">{organization.name}</p>
+                      <p className="text-muted-foreground truncate text-xs">
+                        {organization.slug}
+                      </p>
+                    </div>
+                    <ChevronRight className="text-muted-foreground h-4 w-4 shrink-0" />
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
         </div>
 
