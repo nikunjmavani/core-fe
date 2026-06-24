@@ -521,7 +521,7 @@ _Appended IDs (`FE-49`…`FE-52`, `FE-58`, `FE-59`); extends the gateway (Phase 
 ### Phase 4 — Dual-URL routing (5)
 
 - ✅ **FE-19** Root resolver — `resolveRootTarget(ctx)` dual-URL decision (none→onboarding, PERSONAL→`/dashboard`, TEAM→`/organization/$slug/dashboard`; slugless team→onboarding). Pure + tested; wired into the `/` route in the Phase-4 route restructure. _Files:_ organization-resolver.
-- ⬜ **FE-20** Promote `DashboardPage` → shared (OD-1) — 1 tab · 1 page.
+- ✅ **FE-20** Promote dashboard UI → `shared/components/Dashboard/` — the team island's `DashboardPage` is now a thin wrapper rendering `<Dashboard/>`; both the personal `/dashboard` space (FE-21) and the team space reuse the same surface. Testids unchanged. _Files:_ shared/components/Dashboard, DashboardPage. Verified: unit (4) + dashboard e2e (3/3) green.
 - ⬜ **FE-21** Personal `_app` space (root `/dashboard`) under `ProtectedLayout`.
 - ⬜ **FE-22** Team `$organizationSlug` space + switch-on-nav (uses **FE-12**); rename `$organizationId`→`$organizationSlug` (OD-3).
 - ⬜ **FE-23** routeTree wiring + update e2e specs / mock fixtures / routes-and-ui for the new URLs.
