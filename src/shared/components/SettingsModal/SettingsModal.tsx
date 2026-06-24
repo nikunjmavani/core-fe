@@ -1,8 +1,9 @@
 import { useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ORGANIZATION } from '@/core/config/constants.ts';
 import { organizationPicker } from '@/lib/routes/index.ts';
+import { cn } from '@/lib/utils.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog.tsx';
 import {
@@ -61,6 +62,9 @@ export function SettingsModal() {
   const orgType = useMeContext().data?.activeOrganization?.type;
   const navigate = useNavigate();
   const router = useRouter();
+  // Drives the top scroll-shadow on the content panel (elevates the header bar
+  // once the user scrolls down past the top).
+  const [scrolled, setScrolled] = useState(false);
 
   const active = isAuthenticated ? parseSettingsHash(hash) : null;
   const scope = active?.scope;
@@ -163,9 +167,19 @@ export function SettingsModal() {
                 </SelectContent>
               </Select>
             </div>
+            {/* Desktop: empty header strip — gives the dialog's close button room
+                and elevates with a shadow once the content scrolls beneath it. */}
             <div
-              className="flex-1 overflow-y-auto px-4 py-5 sm:px-8 sm:py-6"
+              aria-hidden
+              className={cn(
+                'pointer-events-none z-10 hidden h-12 shrink-0 transition-shadow duration-200 sm:block',
+                scrolled && 'scroll-shadow-top',
+              )}
+            />
+            <div
+              className="scrollbar-custom min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-6 sm:px-8 sm:pt-2 sm:pb-8"
               data-testid="settings-content"
+              onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}
             >
               <ActivePanel
                 active={active}

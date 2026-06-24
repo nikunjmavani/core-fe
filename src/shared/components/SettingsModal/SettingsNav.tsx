@@ -46,7 +46,10 @@ export function SettingsNav({ groups, active, onSelect }: SettingsNavProps) {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-3" aria-label="Settings">
+      <nav
+        className="scrollbar-custom flex-1 space-y-4 overflow-y-auto px-3 pb-3"
+        aria-label="Settings"
+      >
         {visible.length === 0 && (
           <p
             className="text-muted-foreground px-2 py-4 text-center text-xs"

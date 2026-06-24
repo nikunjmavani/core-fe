@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 import { registerNewUserAndGoToDashboard } from '@/tests/utils/e2e-auth.ts';
 
 // Full-stack (mock-backend) flow for the notification center (FE-61–65): the
-// header bell, the unread badge, the drawer list, and mark-all-read.
+// header bell, the unread badge, the popover list, and mark-all-read.
 test.describe('Notifications', () => {
   test.beforeEach(async ({ page }) => {
     await registerNewUserAndGoToDashboard(page);

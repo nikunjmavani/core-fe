@@ -339,6 +339,35 @@
   background-size: 200% 100%;
 }
 
+/* ── Custom scrollbar (opt-in via .scrollbar-custom) — token-driven, slim,
+   works in Firefox (scrollbar-*) and WebKit (::-webkit-scrollbar). ── */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+.scrollbar-custom::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border: 3px solid transparent;
+  border-radius: 9999px;
+  background-clip: padding-box;
+}
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-muted-foreground);
+}
+
+/* Elevation shown under a sticky header once content scrolls beneath it.
+   Uses the always-dark `overlay` token so the shadow reads in light + dark. */
+.scroll-shadow-top {
+  box-shadow: 0 8px 10px -10px color-mix(in oklch, var(--color-overlay) 35%, transparent);
+}
+
 /* ── Base layer resets ── */
 @layer base {
   * {
