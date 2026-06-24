@@ -50,8 +50,10 @@ function ProviderIcon({ provider }: { provider: string }) {
 /**
  * Passwordless / social sign-in options. The OAuth providers are discovered from
  * the backend (`GET /auth/oauth/providers`) so the buttons reflect what's actually
- * configured; magic-link sends a sign-in code by email. In mock mode the provider
- * list and passkey complete a mock login via `/callback`.
+ * configured. The "Email OTP" option emails a 6-digit one-time code — not a
+ * clickable link; the backend verifies `{ email, code }`. (The internal
+ * `magic-link-*` ids are kept to match the auth-api/contract names.) In mock mode
+ * the provider list and passkey complete a mock login via `/callback`.
  */
 export function PasswordlessOptions() {
   const navigate = useNavigate();
@@ -182,7 +184,7 @@ export function PasswordlessOptions() {
           data-testid="login-magic-link"
         >
           <Mail className="mr-2 h-4 w-4" />
-          Magic link
+          Email OTP
         </Button>
       </div>
 
