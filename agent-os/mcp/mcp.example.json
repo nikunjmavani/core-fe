@@ -19,29 +19,8 @@
     "core-be-api": {
       "url": "http://localhost:3000/api/v1/mcp"
     },
-    "neon": {
-      "url": "https://mcp.neon.tech/mcp",
-      "headers": {}
-    },
     "sentry": {
       "url": "https://mcp.sentry.dev/mcp",
-      "headers": {}
-    },
-    "railway": {
-      "command": "npx",
-      "args": ["-y", "@railway/mcp-server"]
-    },
-    "aws": {
-      "command": "uvx",
-      "args": [
-        "mcp-proxy-for-aws@latest",
-        "https://aws-mcp.us-east-1.api.aws/mcp",
-        "--metadata",
-        "AWS_REGION=ap-south-1"
-      ]
-    },
-    "stripe": {
-      "url": "https://mcp.stripe.com",
       "headers": {}
     },
     "semgrep": {
@@ -62,24 +41,6 @@
         "SONARQUBE_URL",
         "mcp/sonarqube"
       ]
-    },
-    "redis": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "redis-mcp-server@latest",
-        "redis-mcp-server",
-        "--url",
-        "${REDIS_URL}"
-      ]
-    },
-    "postman": {
-      "url": "https://mcp.postman.com/mcp",
-      "headers": {}
-    },
-    "resend": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "-e", "RESEND_API_KEY", "mcp/resend"]
     },
     "codegraph": {
       "type": "stdio",
