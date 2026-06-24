@@ -1,6 +1,7 @@
 import { config } from '@/core/config/env.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Palette, Sparkles } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import {
   GENERATED_FONTS,
@@ -30,6 +31,14 @@ export function ThemeShowcase() {
   const preset = useThemeStore((s) => s.preset);
   const customTheme = useThemeStore((s) => s.customTheme);
   const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
+
+  // Shuffle rolls the toast design too — surface a toast so it's visible.
+  const handleShuffle = () => {
+    shuffleTheme();
+    notify.info('Theme shuffled', {
+      description: 'New accent, fonts, radius — and toast style.',
+    });
+  };
 
   const label =
     preset === GENERATED_PRESET
@@ -80,7 +89,7 @@ export function ThemeShowcase() {
           <Button
             type="button"
             size="sm"
-            onClick={shuffleTheme}
+            onClick={handleShuffle}
             data-testid="dashboard-theme-shuffle"
           >
             <Sparkles className="mr-2 size-4" aria-hidden="true" /> Shuffle

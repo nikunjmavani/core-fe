@@ -17,44 +17,43 @@ export type ToastType = 'success' | 'error' | 'warning' | 'info';
 interface ToastTone {
   icon: LucideIcon;
   iconColor: string;
-  soft: string;
   solid: string;
-  outline: string;
+  outlineBorder: string;
   bar: string;
 }
 
-/** Per-type token sets (semantic tokens only — themeable, light/dark correct). */
+/**
+ * Per-type token sets (semantic tokens only — themeable, light/dark correct).
+ * Backgrounds stay OPAQUE so the toast reads clearly over any surface, including
+ * a modal's dim overlay.
+ */
 const TONES: Record<ToastType, ToastTone> = {
   success: {
     icon: CheckCircle2,
     iconColor: 'text-success',
-    soft: 'bg-success/10 border-success/25',
-    solid: 'bg-success border-transparent text-success-foreground',
-    outline: 'bg-card border-success/40',
+    solid: 'bg-success text-success-foreground',
+    outlineBorder: 'border-success/50',
     bar: 'bg-success',
   },
   error: {
     icon: XCircle,
     iconColor: 'text-destructive',
-    soft: 'bg-destructive/10 border-destructive/25',
-    solid: 'bg-destructive border-transparent text-destructive-foreground',
-    outline: 'bg-card border-destructive/40',
+    solid: 'bg-destructive text-destructive-foreground',
+    outlineBorder: 'border-destructive/50',
     bar: 'bg-destructive',
   },
   warning: {
     icon: AlertTriangle,
     iconColor: 'text-warning',
-    soft: 'bg-warning/10 border-warning/25',
-    solid: 'bg-warning border-transparent text-warning-foreground',
-    outline: 'bg-card border-warning/40',
+    solid: 'bg-warning text-warning-foreground',
+    outlineBorder: 'border-warning/50',
     bar: 'bg-warning',
   },
   info: {
     icon: AlertCircle,
     iconColor: 'text-info',
-    soft: 'bg-info/10 border-info/25',
-    solid: 'bg-info border-transparent text-info-foreground',
-    outline: 'bg-card border-info/40',
+    solid: 'bg-info text-info-foreground',
+    outlineBorder: 'border-info/50',
     bar: 'bg-info',
   },
 };
@@ -68,10 +67,10 @@ export interface CustomToastProps {
 
 /**
  * The app's custom toast surface (TEMP: multiple designs). The active design is
- * the `toastVariant` index in the theme store — **soft** (tinted), **solid**
- * (filled), **outline** (bordered), or **accent** (left colour bar). Shuffle rolls
- * it; the Appearance panel previews it. Rendered via `toast.custom` from `notify`,
- * so this is the single place the toast look is defined.
+ * the `toastVariant` index in the theme store — **soft** (muted surface, tone
+ * icon), **solid** (filled), **outline** (tone border), or **accent** (left tone
+ * bar). Shuffle rolls it; the Appearance panel previews it. Rendered via
+ * `toast.custom` from `notify`, so this is the single place the toast look lives.
  */
 export function CustomToast({ id, type, title, description }: CustomToastProps) {
   const index = useThemeStore((s) => s.toastVariant);
@@ -86,10 +85,11 @@ export function CustomToast({ id, type, title, description }: CustomToastProps) 
       data-toast-variant={variant}
       className={cn(
         'pointer-events-auto relative flex w-full items-start gap-3 overflow-hidden rounded-xl border p-4 shadow-lg',
-        variant === 'soft' && cn(tone.soft, 'text-foreground'),
-        solid && tone.solid,
-        variant === 'outline' && cn(tone.outline, 'text-foreground'),
-        variant === 'accent' && 'bg-card text-foreground border-border pl-5',
+        variant === 'soft' && 'bg-muted text-foreground border-transparent',
+        solid && cn(tone.solid, 'border-transparent'),
+        variant === 'outline' &&
+          cn('bg-popover text-popover-foreground', tone.outlineBorder),
+        variant === 'accent' && 'bg-popover text-popover-foreground border-border pl-5',
       )}
     >
       {variant === 'accent' ? (
@@ -120,8 +120,8 @@ export function CustomToast({ id, type, title, description }: CustomToastProps) 
         onClick={() => toast.dismiss(id)}
         aria-label="Dismiss notification"
         className={cn(
-          'shrink-0 rounded-md p-0.5 opacity-70 transition hover:opacity-100',
-          !solid && 'text-muted-foreground hover:text-foreground',
+          'shrink-0 rounded-md p-1 opacity-70 transition hover:opacity-100',
+          solid ? 'hover:bg-background/25' : 'hover:bg-foreground/10',
         )}
       >
         <X className="size-4" />

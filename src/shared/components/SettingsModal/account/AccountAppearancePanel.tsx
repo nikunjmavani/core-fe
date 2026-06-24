@@ -231,6 +231,14 @@ export function AccountAppearancePanel() {
   const toastVariant = useThemeStore((s) => s.toastVariant);
   const setToastVariant = useThemeStore((s) => s.setToastVariant);
 
+  // Shuffle rolls the toast design too — fire a toast so the new look is visible.
+  const handleShuffle = () => {
+    shuffleTheme();
+    notify.info('Theme shuffled', {
+      description: 'New accent, fonts, radius — and toast style.',
+    });
+  };
+
   if (config.themeLock) {
     return (
       <div className="space-y-6" data-testid="settings-section-appearance">
@@ -467,7 +475,7 @@ export function AccountAppearancePanel() {
       </Card>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" onClick={shuffleTheme} data-testid="theme-shuffle">
+        <Button type="button" onClick={handleShuffle} data-testid="theme-shuffle">
           <Sparkles className="mr-2 size-4" aria-hidden />
           Shuffle
         </Button>
