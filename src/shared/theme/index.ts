@@ -23,6 +23,7 @@ export {
   nextRandomHue,
   normalizeLook,
   randomThemeHue,
+  shuffleIcons,
   THEME_PRESETS,
   type ThemePreset,
 } from './presets.ts';

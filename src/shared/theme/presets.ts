@@ -108,6 +108,8 @@ export const DEFAULT_ICON_LIBRARY = 'lucide';
 
 const FONT_IDS = Object.keys(GENERATED_FONTS);
 const RADIUS_IDS = Object.keys(GENERATED_RADII);
+const ICON_WEIGHT_IDS = ICON_WEIGHTS.map((w) => w.id);
+const ICON_LIBRARY_IDS = ICON_LIBRARIES.map((l) => l.id);
 
 // ── Generated look ───────────────────────────────────────────────────────────
 
@@ -238,6 +240,26 @@ export function generateTheme(current: GeneratedTheme | null): GeneratedTheme {
     bodyFontId: pickId(FONT_IDS, current?.bodyFontId ?? null),
     headingFontId: pickId(FONT_IDS, current?.headingFontId ?? null),
     radiusId: pickId(RADIUS_IDS, current?.radiusId ?? null),
+  };
+}
+
+function chance(probability: number): boolean {
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme shuffle, not security
+  return Math.random() < probability;
+}
+
+/**
+ * Roll the orthogonal icon axes during a shuffle: ~50% of the time a fresh
+ * weight, ~35% a different library — so a shuffle sometimes restyles the icon
+ * weight, sometimes swaps the whole set, sometimes both, sometimes neither.
+ */
+export function shuffleIcons(current: { weight: string; library: string }): {
+  weight: string;
+  library: string;
+} {
+  return {
+    weight: chance(0.5) ? pickId(ICON_WEIGHT_IDS, current.weight) : current.weight,
+    library: chance(0.35) ? pickId(ICON_LIBRARY_IDS, current.library) : current.library,
   };
 }
 

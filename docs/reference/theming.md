@@ -63,7 +63,10 @@ injected `<style>`, and fonts are **web-safe stacks** only since the CSP is
 `data-theme` presets. The store records it as `preset: 'custom'` +
 `customTheme: { hue, chartHue, bodyFontId, headingFontId, radiusId }`, so it
 persists across reloads. Catalogs live in `GENERATED_FONTS` / `GENERATED_RADII` /
-`ACCENT_COLORS` (`shared/theme`).
+`ACCENT_COLORS` (`shared/theme`). Shuffle also rolls the orthogonal **icon
+axes** (`shuffleIcons`): ~50% of clicks pick a new icon weight and ~35% swap the
+icon library — so sometimes the icons just change weight, sometimes the whole set
+swaps, sometimes both, sometimes neither.
 
 **Four orthogonal axes** apply on top of any preset/look and persist
 independently: **base colour** (`data-base='stone'|'slate'|'olive'`; `neutral` =

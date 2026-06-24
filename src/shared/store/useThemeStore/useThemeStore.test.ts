@@ -79,6 +79,9 @@ describe('useThemeStore', () => {
     expect(style.getPropertyValue('--font-sans')).not.toBe('');
     expect(style.getPropertyValue('--font-heading')).not.toBe('');
     expect(style.getPropertyValue('--radius-lg')).not.toBe('');
+    // icons ride along the shuffle — values stay valid
+    expect(['thin', 'regular', 'bold']).toContain(state.iconWeight);
+    expect(['lucide', 'tabler', 'phosphor']).toContain(state.iconLibrary);
   });
 
   it('updateLook sets one axis and switches to the custom look', () => {

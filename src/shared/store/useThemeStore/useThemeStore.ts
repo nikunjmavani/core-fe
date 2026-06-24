@@ -17,6 +17,7 @@ import {
   generateTheme,
   isThemePreset,
   normalizeLook,
+  shuffleIcons,
 } from '@/shared/theme/index.ts';
 
 type Mode = 'light' | 'dark' | 'system';
@@ -103,10 +104,21 @@ export const useThemeStore = create<ThemeStore>()(
       },
       shuffleTheme: () => {
         // Generate a fresh full look each time (colour + chart + fonts + radius,
-        // shadcn-create style) rather than cycling a fixed preset list.
+        // shadcn-create style) rather than cycling a fixed preset list. Icons
+        // ride along: sometimes a new weight, sometimes a different library.
         const next = generateTheme(get().customTheme);
         applyGeneratedTheme(next);
-        set({ preset: GENERATED_PRESET, customTheme: next });
+        const icons = shuffleIcons({
+          weight: get().iconWeight,
+          library: get().iconLibrary,
+        });
+        applyIconWeight(icons.weight);
+        set({
+          preset: GENERATED_PRESET,
+          customTheme: next,
+          iconWeight: icons.weight,
+          iconLibrary: icons.library,
+        });
       },
     }),
     {

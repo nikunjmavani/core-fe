@@ -13,6 +13,7 @@ import {
   isThemePreset,
   nextRandomHue,
   randomThemeHue,
+  shuffleIcons,
   THEME_PRESETS,
 } from './presets.ts';
 
@@ -151,6 +152,22 @@ describe('orthogonal base colour + menu', () => {
     expect(document.documentElement.dataset.menu).toBe('translucent');
     applyMenuStyle('default');
     expect(document.documentElement.dataset.menu).toBeUndefined();
+  });
+
+  it('shuffleIcons keeps valid ids and varies weight + library over many rolls', () => {
+    const current = { weight: 'regular', library: 'lucide' };
+    let weightChanged = false;
+    let libraryChanged = false;
+    for (let i = 0; i < 60; i += 1) {
+      const next = shuffleIcons(current);
+      expect(['thin', 'regular', 'bold']).toContain(next.weight);
+      expect(['lucide', 'tabler', 'phosphor']).toContain(next.library);
+      if (next.weight !== current.weight) weightChanged = true;
+      if (next.library !== current.library) libraryChanged = true;
+    }
+    // ~50% / ~35% per roll → effectively certain to flip at least once in 60.
+    expect(weightChanged).toBe(true);
+    expect(libraryChanged).toBe(true);
   });
 
   it('applyIconWeight sets/clears --icon-stroke', () => {
