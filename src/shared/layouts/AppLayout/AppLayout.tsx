@@ -182,30 +182,11 @@ function UserMenu({ align = 'end' }: { align?: 'end' | 'start' }) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="group/avatar relative size-9 rounded-full p-0"
+          className="relative size-9 rounded-full p-0"
           aria-label="User menu"
           data-testid="user-menu-trigger"
         >
-          {/* Decorative accent ring — fades in and slowly rotates on hover.
-              The global reduced-motion rule neutralises the spin. */}
-          <svg
-            viewBox="0 0 40 40"
-            aria-hidden="true"
-            focusable="false"
-            className="text-primary pointer-events-none absolute inset-0 size-full opacity-0 transition-opacity duration-300 group-hover/avatar:[animation:avatar-ring-spin_8s_linear_infinite] group-hover/avatar:opacity-100"
-          >
-            <circle
-              cx="20"
-              cy="20"
-              r="18.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeDasharray="2 5"
-              strokeLinecap="round"
-            />
-          </svg>
-          <Avatar className="ring-border size-8 ring-1 transition-transform duration-200 group-hover/avatar:scale-105">
+          <Avatar className="ring-border size-8 ring-1">
             <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
               {initials}
             </AvatarFallback>

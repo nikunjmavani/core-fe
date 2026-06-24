@@ -319,13 +319,6 @@
   }
 }
 
-/* Decorative ring rotation for the user avatar (hover flourish). */
-@keyframes avatar-ring-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* ── Utility classes (avoid inline styles) ── */
 .chart-tooltip {
   background: var(--color-card);

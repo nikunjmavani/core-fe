@@ -131,7 +131,7 @@ export function SettingsModal() {
   return (
     <Dialog open onOpenChange={(o) => !o && close()}>
       <DialogContent
-        className="h-dvh max-h-dvh w-full max-w-full gap-0 overflow-hidden rounded-none p-0 sm:h-[640px] sm:max-h-[85vh] sm:max-w-[1100px] sm:rounded-xl"
+        className="h-dvh max-h-dvh w-full max-w-full gap-0 overflow-hidden rounded-none p-0 sm:h-[640px] sm:max-h-[85vh] sm:max-w-[960px] sm:rounded-xl"
         data-testid="settings-modal"
       >
         <DialogTitle className="sr-only">Settings</DialogTitle>

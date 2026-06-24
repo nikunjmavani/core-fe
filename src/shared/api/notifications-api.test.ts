@@ -19,6 +19,7 @@ vi.mock('@/core/http/fetch-client.ts', () => ({
   apiClient: { get: getMock, post: postMock, patch: patchMock, put: putMock },
 }));
 
+import { NOTIFICATIONS_FIXTURE } from './notification-fixtures.ts';
 import { notificationMockStore } from './notification-mock-store.ts';
 import {
   getNotificationPreferences,
@@ -98,20 +99,22 @@ describe('notifications-api (mock branch)', () => {
     useMockApiRef.value = true;
   });
 
+  const UNREAD_COUNT = NOTIFICATIONS_FIXTURE.filter((n) => !n.isRead).length;
+
   it('lists fixtures newest-first', async () => {
     const list = await listNotifications();
-    expect(list).toHaveLength(4);
+    expect(list).toHaveLength(NOTIFICATIONS_FIXTURE.length);
     const [first, second] = list;
     expect(first && second && first.createdAt >= second.createdAt).toBe(true);
   });
 
   it('counts unread, then marks one and all read', async () => {
-    expect(await getUnreadCount()).toBe(2);
+    expect(await getUnreadCount()).toBe(UNREAD_COUNT);
     const list = await listNotifications();
     const firstUnread = list.find((n) => !n.isRead);
     expect(firstUnread).toBeDefined();
     if (firstUnread) await markNotificationRead(firstUnread.id);
-    expect(await getUnreadCount()).toBe(1);
+    expect(await getUnreadCount()).toBe(UNREAD_COUNT - 1);
     await markAllNotificationsRead();
     expect(await getUnreadCount()).toBe(0);
   });

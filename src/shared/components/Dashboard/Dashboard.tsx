@@ -5,7 +5,6 @@ import { Badge } from '@/shared/components/ui/badge.tsx';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
@@ -38,21 +37,38 @@ function StatCard({
   icon: Icon,
   label,
   value,
+  hint,
   testId,
 }: {
   icon: LucideIcon;
   label: string;
   value: string | number;
+  hint?: string;
   testId: string;
 }) {
   return (
-    <Card data-testid={testId} className="hover:border-primary/30 transition-colors">
-      <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-        <CardDescription>{label}</CardDescription>
-        <Icon className="text-muted-foreground h-4 w-4" aria-hidden="true" />
-      </CardHeader>
-      <CardContent>
-        <p className="text-2xl font-semibold tracking-tight">{value}</p>
+    <Card
+      data-testid={testId}
+      className="hover:border-primary/30 transition-colors hover:shadow-sm"
+    >
+      <CardContent className="flex items-center gap-3">
+        <span
+          className="bg-primary/10 text-primary flex size-11 shrink-0 items-center justify-center rounded-xl"
+          aria-hidden="true"
+        >
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+            {label}
+          </p>
+          <p className="text-2xl leading-tight font-semibold tracking-tight tabular-nums">
+            {value}
+          </p>
+          {hint ? (
+            <p className="text-muted-foreground/80 truncate text-xs">{hint}</p>
+          ) : null}
+        </div>
       </CardContent>
     </Card>
   );
@@ -258,24 +274,28 @@ export function Dashboard() {
           icon={Boxes}
           label="Workspaces"
           value={ctx.organizations.length}
+          hint={ctx.organizations.length === 1 ? 'Just this one' : "You're a member"}
           testId="dashboard-stat-workspaces"
         />
         <StatCard
           icon={ShieldCheck}
           label="Your permissions"
           value={ctx.myPermissions.length}
+          hint="In this workspace"
           testId="dashboard-stat-permissions"
         />
         <StatCard
           icon={Building2}
           label="Workspace type"
           value={isTeam ? 'Team' : 'Personal'}
+          hint={isTeam ? 'Shared with your team' : 'Private to you'}
           testId="dashboard-stat-type"
         />
         <StatCard
           icon={Zap}
           label="Billing"
           value={org?.capabilities.canManageBilling ? 'Managed' : '—'}
+          hint={org?.capabilities.canManageBilling ? 'You can manage' : 'Read-only'}
           testId="dashboard-stat-billing"
         />
       </section>
