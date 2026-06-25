@@ -10,8 +10,17 @@ error exits 0 and allows the action. A hook bug must never brick a session.
 
 ## The suite
 
-`hooks.json` is the single source of truth for wiring; it's mirrored into
-`.claude/settings.json` (committed `hooks` block) and `.cursor/hooks.json`.
+`hooks.json` is the single source of truth for wiring. **`pnpm agent-os:generate`**
+derives the committed artifacts under `agent-os/platforms/`:
+
+| Generated artifact                                                    | Tool symlink            |
+| --------------------------------------------------------------------- | ----------------------- |
+| `platforms/claude/settings.json` (`hooks` block + shared permissions) | `.claude/settings.json` |
+| `platforms/cursor/hooks.json`                                         | `.cursor/hooks.json`    |
+| `platforms/codex/hooks.json`                                          | `.codex/hooks.json`     |
+| `platforms/codex/config.toml` (from `mcp/mcp.default.json`)           | `.codex/config.toml`    |
+
+Drift gate: `pnpm agent-os:generate:check`.
 
 | Hook                      | Event (Claude)                      | What it does                                                                                   |
 | ------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -35,14 +44,13 @@ The file→skill map these hooks consult lives in
 
 ## Wiring
 
-- **Claude Code**: `.claude/settings.json` (committed, shared) registers every
-  hook above against its event. It merges with `.claude/settings.local.json`
-  (machine-local permissions) and any user-level settings.
-- **Cursor**: `.cursor/hooks.json` registers `cursor-shell-guard.mjs` on
-  `beforeShellExecution` (Cursor agent hooks, beta).
+- **Claude Code**: `.claude/settings.json` → `agent-os/platforms/claude/settings.json`
+  (generated `hooks` block + shared permissions). Merges with `.claude/settings.local.json`
+  (machine-local permission overrides — gitignored).
+- **Cursor**: `.cursor/hooks.json` → `agent-os/platforms/cursor/hooks.json` (generated).
+- **Codex**: `.codex/hooks.json` and `.codex/config.toml` → `agent-os/platforms/codex/` (generated).
 
-To change wiring, edit `hooks.json` and reflect it into both files (kept in sync
-by hand — there is no generator in core-fe).
+To change wiring, edit `hooks.json` then run `pnpm agent-os:generate`.
 
 ## Authoring tips
 

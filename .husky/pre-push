@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Fast gate before push — full suite runs in CI (.github/workflows/ci.yml).
+# Fast gate before push — full suite runs in CI (.github/workflows/pr-ci.yml).
 
 pnpm biome:check
 pnpm type-check

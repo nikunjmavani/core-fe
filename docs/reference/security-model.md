@@ -44,7 +44,9 @@ capture settings are part of the threat model — verified:
   DOM/network capture off in code; only explicitly-coded events are sent;
   `before_send` scrubs `token` params from `$current_url`-style properties; and
   `posthog.reset()` runs when the session ends so successive users on a shared
-  device never chain into one anonymous profile.
+  device never chain into one anonymous profile. Accepting the banner emits a
+  single `analytics_consent_decision` event (`shared/analytics/capture-consent-decision.ts`);
+  decline is stored locally only.
   ([`app/analytics/posthog.ts`](../../src/app/analytics/posthog.ts)) Error
   monitoring (Sentry) is **not** gated — no tracking cookies, masked replay,
   legitimate interest.

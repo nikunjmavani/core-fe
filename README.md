@@ -140,9 +140,9 @@ pages/<name>/
 
 We use the same branch strategy as the backend (core-be):
 
-- **Long-lived branches:** `main` (production), `dev` (integration), `qa` (testing).
+- **Long-lived branches:** `main` (production / GitHub env `production`), `dev` (integration / GitHub env `development`). Default branch: `dev`.
 - **Short-lived branches:** `feature/...`, `fix/...`, `refactor/...`, `docs/...`, `test/...`, `chore/...`, `hotfix/...` (created from `dev`; hotfix from `main`).
-- **PR flow:** feature/fix → `dev` → `qa` → `main`. CI runs on push/PR to `main`, `dev`, and `qa`.
+- **PR flow:** feature/fix → `dev` → `main`. CI runs on PRs to `main` and `dev`.
 
 See **[docs/process/git-workflow.md](docs/process/git-workflow.md)** for the full workflow: branch naming, step-by-step PR flow, conventional commits, and hotfix process.
 

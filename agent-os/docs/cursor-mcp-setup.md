@@ -16,7 +16,6 @@ flowchart LR
     T[tailwindcss]
     GH[github]
     BE[core-be-api]
-    SE[sentry]
     SG[semgrep]
     SQ[sonarqube]
     CG[codegraph]
@@ -43,7 +42,6 @@ real, gitignored config is `agent-os/mcp/mcp.json` (the `.mcp.json` and
 | **github**      | Repos, PRs, issues, Actions, code search for this repo.           | hosted URL · OAuth               |
 | **core-be-api** | Discover the backend API this UI consumes (`call_api`) — the only | hosted URL · backend on `:3000`  |
 |                 | cross-service link, and only when you opt to run the backend.     |                                  |
-| **sentry**      | Frontend error monitoring + release/sourcemap triage.             | hosted URL · OAuth               |
 | **semgrep**     | Static security scanning (mirrors the CI semgrep lane).           | `uvx` (ephemeral, needs `uv`)    |
 | **sonarqube**   | Local code-quality gate (mirrors the pre-push SonarQube scan).    | `docker` · `SONARQUBE_TOKEN/URL` |
 | **codegraph**   | Code-graph navigation across this repo.                           | devDep · `pnpm exec`             |
@@ -58,9 +56,9 @@ real, gitignored config is `agent-os/mcp/mcp.json` (the `.mcp.json` and
 > invoked via `pnpm exec` — `pnpm install` provides them in any fresh container,
 > pinned, with nothing on the global PATH. `semgrep`/`headroom` run via `uvx` and
 > `sonarqube` via `docker` (ephemeral, not global — the container's base image
-> needs `uv` / `docker` for those three). `github`/`sentry`/`core-be-api` are
-> hosted URLs. `sonarqube` reads its env vars from your shell; `github`/`sentry`
-> use OAuth; `core-be-api` only resolves when you run the backend locally.
+> needs `uv` / `docker` for those three). `github`/`core-be-api` are
+> hosted URLs. `sonarqube` reads its env vars from your shell; `github`
+> uses OAuth; `core-be-api` only resolves when you run the backend locally.
 
 ---
 
@@ -76,6 +74,11 @@ pnpm install   # provides context7/shadcn/tailwindcss/codegraph as devDeps — r
 ```
 
 The four CLI servers are project `devDependencies`, so a fresh checkout/container is ready after `pnpm install` — no global tools. `semgrep`/`headroom` additionally need `uv` (for `uvx`) and `sonarqube` needs `docker` on the machine.
+
+> **codegraph** needs a one-time local index before its MCP can answer queries:
+> run `pnpm exec codegraph init` in the project root (builds `.codegraph/`,
+> which is gitignored / machine-local). It syncs incrementally afterward —
+> rebuild with `pnpm exec codegraph index` if it ever drifts.
 
 ### 2. Add your Context7 API key (required for context7 MCP)
 

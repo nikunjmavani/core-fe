@@ -25,6 +25,7 @@ const envSchema = z.object({
   VITE_USE_MOCK_API: z.string().optional(),
   VITE_LAYOUT_WIDTH: z.enum(['contained', 'full']).optional(),
   VITE_THEME_LOCK: z.string().optional(),
+  VITE_PRIVACY_POLICY_URL: z.string().optional(),
   MODE: z.enum(['development', 'production', 'staging', 'test']).default('development'),
   DEV: z.boolean().default(false),
   PROD: z.boolean().default(false),
@@ -129,6 +130,9 @@ export const config = {
   sentryDsn: get('SENTRY_DSN'),
   posthogKey: get('POSTHOG_KEY'),
   posthogHost: get('POSTHOG_HOST'),
+
+  /** Optional privacy-policy URL linked from the cookie-consent banner. */
+  privacyPolicyUrl: get('PRIVACY_POLICY_URL'),
 
   /**
    * When true, the app serves data from the tagged mock layer instead of a live

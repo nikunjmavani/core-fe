@@ -26,7 +26,7 @@ the **TSDoc budget** (`pnpm tsdoc:check`, `scripts/tsdoc/budget.json`) and to **
 coverage** (`pnpm coverage:patch` — changed lines ≥ 80% in PR CI). Vitest is split into
 `unit` (colocated src suites) and `security` (tests/security — token storage, redirect
 safety, mock-mode rejection, header tripwires) projects. Markdown is linted
-(`pnpm docs:lint`; emphasis style follows Prettier). CI (`.github/workflows/ci.yml`) runs
+(`pnpm docs:lint`; emphasis style follows Prettier). CI (`.github/workflows/pr-ci.yml`) runs
 path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest+patch-coverage/docs-lint/
 structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint/e2e —
 behind a single aggregate `quality-gate` required check (branch protection as code:
@@ -65,8 +65,8 @@ src/shared/    shadcn UI (flat), components/forms/hooks/layouts          ~100
 src/lib/       Pure utilities (cn, animations, route-island helpers)      ~15
 tests/         E2E (Playwright), load (k6), shared test utils             ~15
 
-agent-os/      Agents, skills, rules, hooks, MCP, docs                    ~50+
-               (.cursor/ and .claude/ symlink into this)
+agent-os/      Agents, skills, rules, hooks, MCP, platforms, docs           ~50+
+               (.cursor/, .claude/, .codex/ symlink into this)
 ```
 
 ```text

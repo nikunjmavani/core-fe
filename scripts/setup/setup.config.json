@@ -1,0 +1,61 @@
+{
+  "project": {
+    "name": "core-fe",
+    "displayName": "core-fe",
+    "organization": "albetrios"
+  },
+  "git": {
+    "protectedBranches": ["dev", "main"],
+    "defaultBranch": "dev"
+  },
+  "environments": [
+    {
+      "name": "development",
+      "label": "Development",
+      "viteMode": "development",
+      "branch": "dev",
+      "protected": true,
+      "isDefault": true,
+      "cookieBanner": {
+        "captureConsentEvents": true,
+        "posthogEventName": "analytics_consent_decision"
+      },
+      "deploySecrets": [
+        "VITE_API_BASE_URL",
+        "VITE_POSTHOG_KEY",
+        "VITE_POSTHOG_HOST",
+        "VITE_PRIVACY_POLICY_URL",
+        "NETLIFY_AUTH_TOKEN",
+        "NETLIFY_SITE_ID"
+      ]
+    },
+    {
+      "name": "production",
+      "label": "Production",
+      "viteMode": "production",
+      "branch": "main",
+      "protected": true,
+      "cookieBanner": {
+        "captureConsentEvents": true,
+        "posthogEventName": "analytics_consent_decision"
+      },
+      "deploySecrets": [
+        "VITE_API_BASE_URL",
+        "VITE_POSTHOG_KEY",
+        "VITE_POSTHOG_HOST",
+        "VITE_PRIVACY_POLICY_URL",
+        "NETLIFY_AUTH_TOKEN",
+        "NETLIFY_SITE_ID"
+      ]
+    }
+  ],
+  "providers": {
+    "netlify": {
+      "enabled": true
+    },
+    "github": {
+      "enabled": true,
+      "repository": "nikunjmavani/core-fe"
+    }
+  }
+}

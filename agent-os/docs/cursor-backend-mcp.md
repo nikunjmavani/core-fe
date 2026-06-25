@@ -70,4 +70,4 @@ If the backend does not implement `/auth/google` yet, "Sign in with Google" will
 
 - Set in backend `.env`: `ENABLE_MCP_SERVER=true`
 - Backend MCP endpoint: **`POST {API_BASE}/api/v1/mcp`** (e.g. `http://localhost:3000/api/v1/mcp`)
-- Backend docs: see core-be repo `docs/MCP-FRONTEND.md` for full details and optional in-app MCP client SDK usage.
+- Backend docs: see core-be repo `agent-os/docs/cursor-backend-mcp.md` (this repo) and core-be MCP docs for full details.

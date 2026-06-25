@@ -1,14 +1,25 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useConsentStore } from '@/shared/store/useConsentStore/index.ts';
 
 import { ConsentBanner } from './ConsentBanner.tsx';
 
+vi.mock('@/core/config/env.ts', () => ({
+  config: { privacyPolicyUrl: undefined },
+}));
+
+const captureAnalyticsConsentDecision = vi.fn(async () => undefined);
+vi.mock('@/shared/analytics/capture-consent-decision.ts', () => ({
+  captureAnalyticsConsentDecision: (...args: unknown[]) =>
+    captureAnalyticsConsentDecision(...args),
+}));
+
 describe('ConsentBanner', () => {
   beforeEach(() => {
     useConsentStore.getState().resetAnalyticsConsent();
+    captureAnalyticsConsentDecision.mockClear();
   });
 
   it('shows while the decision is undecided', () => {
@@ -24,6 +35,9 @@ describe('ConsentBanner', () => {
     await user.click(screen.getByTestId('consent-accept'));
 
     expect(useConsentStore.getState().analyticsConsent).toBe('granted');
+    await waitFor(() => {
+      expect(captureAnalyticsConsentDecision).toHaveBeenCalledWith('granted');
+    });
     rerender(<ConsentBanner />);
     expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
   });
@@ -35,6 +49,9 @@ describe('ConsentBanner', () => {
     await user.click(screen.getByTestId('consent-decline'));
 
     expect(useConsentStore.getState().analyticsConsent).toBe('denied');
+    await waitFor(() => {
+      expect(captureAnalyticsConsentDecision).toHaveBeenCalledWith('denied');
+    });
     rerender(<ConsentBanner />);
     expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument();
   });

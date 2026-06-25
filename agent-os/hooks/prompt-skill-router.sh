@@ -32,10 +32,10 @@ printf '%s' "$lower" | grep -Eq '\b(page|route|screen)\b' && \
   HINTS+=("page/route → page-scaffolding → route-island (path, manifest, RBAC permission, routeTree + docs/reference/routes-and-ui.md)")
 
 printf '%s' "$lower" | grep -Eq '\b(component|widget|card|button|modal|dialog|drawer|sheet|table|menu|dropdown)\b' && \
-  HINTS+=("component/UI → shadcn (pick + add) → frontend-design → component-patterns → test-generation")
+  HINTS+=("component/UI → shadcn (pick + add) → frontend-design → composition-patterns → test-generation")
 
 printf '%s' "$lower" | grep -Eq '\b(form|input|field|validation)\b' && \
-  HINTS+=("form → component-patterns (react-hook-form + Zod) → test-generation")
+  HINTS+=("form → composition-patterns (react-hook-form + Zod) → test-generation")
 
 printf '%s' "$lower" | grep -Eq '\b(hook|query|mutation|fetch|api|endpoint)\b' && \
   HINTS+=("data/hook → react-best-practices (TanStack Query owns server state; contracts.ts Zod schemas)")

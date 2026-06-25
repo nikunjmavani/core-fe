@@ -8,7 +8,7 @@ import { createInterface } from 'node:readline';
 /**
  * Ask user to choose an environment.
  * @param {string} question
- * @param {string[]} options - e.g. ['dev', 'qa', 'main', 'all']
+ * @param {string[]} options - e.g. ['dev', 'main', 'all']
  * @returns {Promise<string>} The chosen option
  */
 export function chooseEnv(question, options) {

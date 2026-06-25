@@ -1,0 +1,21 @@
+{
+  "description": "Default stdio MCP servers for Codex (generated to agent-os/platforms/codex/config.toml). Live Cursor/Claude config stays in agent-os/mcp/mcp.json (machine-local). URL-based servers (github, core-be-api) are omitted — Codex TOML supports command/args only.",
+  "mcpServers": {
+    "context7": {
+      "command": "pnpm",
+      "args": ["exec", "context7-mcp"]
+    },
+    "shadcn": {
+      "command": "pnpm",
+      "args": ["exec", "shadcn", "mcp"]
+    },
+    "tailwindcss": {
+      "command": "pnpm",
+      "args": ["exec", "tailwindcss-server"]
+    },
+    "codegraph": {
+      "command": "pnpm",
+      "args": ["exec", "codegraph", "serve", "--mcp"]
+    }
+  }
+}

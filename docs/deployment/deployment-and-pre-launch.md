@@ -43,31 +43,23 @@ flowchart LR
 
 ## Branch & environment flow
 
-This section explains how `dev`, `qa`, and `main` work together with CI, previews, and releases.
+This section explains how `dev` and `main` map to GitHub environments and Netlify deploys (same model as core-be: `dev` → `development`, `main` → `production`).
 
-### Normal dev → qa → main flow
+### Normal dev → main flow
 
 - **Feature branches**
-  - Branch from `dev` (or `qa`/`main` if you prefer a different policy).
+  - Branch from `dev`.
   - Open a PR back into `dev`.
-  - The **CI workflow** (`.github/workflows/ci.yml`) runs on PRs to `dev` (lint, type-check, tests, smoke build, security, E2E).
-  - The **Preview workflow** (`.github/workflows/preview.yml`) runs on PRs to `dev` and uploads a `dist/` artifact for manual testing.
-
-- **Promoting to `qa` (optional)**
-  - When `dev` is stable enough for QA, open a PR from `dev` → `qa`.
-  - CI + Preview run again on the `qa` PR.
-  - Use this branch to point at a staging backend and/or staging Netlify site if you have one.
+  - The **PR CI workflow** (`.github/workflows/pr-ci.yml`) runs on PRs to `main` and `dev` (lint, type-check, tests, build, security, E2E).
+  - The **Preview workflow** (`.github/workflows/preview.yml`) uploads a `dist/` artifact for manual testing.
 
 - **Promoting to `main`**
-  - When `dev`/`qa` is ready for production, open a PR from `dev` (or `qa`) → `main`.
+  - When `dev` is ready for production, open a PR **dev → main**.
   - CI + Preview run on the `main` PR.
-  - After merging into `main`:
-    - **CI** runs on `main`.
-    - **Deploy workflow** (`.github/workflows/deploy.yml`) runs on push to `main` and:
-      - Builds with GitHub secrets (VITE_API_BASE_URL, etc.).
-      - Deploys `dist/` to Netlify via CLI when `VITE_API_BASE_URL`, `NETLIFY_AUTH_TOKEN`, and `NETLIFY_SITE_ID` are set.
-    - **Release workflow** (`.github/workflows/release.yml`) runs on push to `main`:
-      - `release-please` updates or opens a release PR with version bump and `CHANGELOG.md` changes.
+  - After merge, **Post-merge CI** (`.github/workflows/post-merge-ci.yml`) runs on push to `dev` or `main`:
+    - `dev` → GitHub environment **`development`** → Netlify dev site
+    - `main` → GitHub environment **`production`** → Netlify production site
+    - release-please runs on both branches (stable on `main`, `-dev.N` prereleases on `dev`)
 
 ### Hotfix flow (production fixes)
 
@@ -77,7 +69,7 @@ Use this when production is broken and you need a fast patch:
    - Branch from `main`, e.g. `hotfix/fix-login-redirect`.
    - Implement the fix using **conventional commits** (e.g. `fix: handle null user on login`) so `release-please` can infer a patch bump.
 2. **Open a PR into `main`**
-   - CI (`ci.yml`) and Preview (`preview.yml`) run on the PR to `main`.
+   - PR CI (`pr-ci.yml`) and Preview (`preview.yml`) run on the PR to `main`.
 3. **Merge into `main`**
    - Triggers:
    - **Deploy workflow** → build with GitHub secrets → deploy `dist/` to Netlify.
@@ -86,7 +78,7 @@ Use this when production is broken and you need a fast patch:
    - Merge the `release-please` **release PR**.
    - This creates a **tagged GitHub Release**, bumps the version, updates `CHANGELOG.md`, and runs the **Deploy Release** job (see below) to build and deploy with the new version.
 5. **Sync branches**
-   - Bring the hotfix back into `dev`/`qa` (merge `main` into those branches or cherry-pick) so future releases include the fix.
+   - Bring the hotfix back into `dev` (post-merge CI opens a back-merge PR, or merge `main` into `dev` manually).
 
 ## Production build
 
@@ -254,27 +246,23 @@ Select your team and the site. After that, `deploy:netlify` / `deploy:netlify:pr
 
 ## Release workflow (CI)
 
-On **push to `main`**, the **Release** workflow (`.github/workflows/release.yml`):
+On **push to `dev` or `main`**, **Post-merge CI** (`.github/workflows/post-merge-ci.yml`):
 
-1. Runs **release-please** (`release-please` job):
-   - Reads `release-please-config.json` / `.release-please-manifest.json`.
-   - Calculates the next version from conventional commits on `main`.
-   - Updates `CHANGELOG.md`, bumps the version, and creates or updates a **release PR**.
-   - When that release PR is merged, it creates a **Git tag** and **GitHub Release**.
-2. If a release was created, runs **Deploy Release** job:
-   - Checks out the code at the release tag.
-   - Installs dependencies with `pnpm install --frozen-lockfile`.
-   - Runs `pnpm build` with `VITE_APP_VERSION` set from the release (env from GitHub secrets):
-     - Produces a production `dist/` build.
-   - Uploads `dist/` as an artifact named `release-${TAG}` (retention 90 days).
-   - **Deploys to Netlify** using the Netlify CLI when deploy secrets are present:
-     - Requires `VITE_API_BASE_URL`, `NETLIFY_AUTH_TOKEN`, and `NETLIFY_SITE_ID` in GitHub Actions secrets.
-     - Runs `pnpm exec netlify deploy --prod --dir=dist`.
+1. Runs **release-please** (`release-please` job) on the matching channel:
+   - **`main`:** `.github/release-please/config.json` + `manifest.json` → stable releases (`CHANGELOG.md`)
+   - **`dev`:** `.github/release-please/config.dev.json` + `manifest.dev.json` → `-dev.N` prereleases (`CHANGELOG-dev.md`)
+   - Calculates the next version from conventional commits, opens/updates a release PR, and creates a tag + GitHub Release when merged.
+2. Runs **Deploy** (reusable Netlify workflow) after tests pass:
+   - **`dev`** → GitHub environment **`development`**
+   - **`main`** → GitHub environment **`production`**
+   - Builds with `pnpm build`, deploys when `VITE_API_BASE_URL`, `NETLIFY_AUTH_TOKEN`, and `NETLIFY_SITE_ID` are set on that environment.
+   - Post-deploy smoke checks `version.json` and `/login`.
+3. On stable **`main`** releases only: attaches SBOM to the GitHub Release and dispatches **post-release back-merge** (`main → dev`).
 
 In other words:
 
-- **Push to `main`** → CI + Deploy workflow handle continuous deploys.
-- **Merge the release-please PR** → Release workflow cuts a tagged release and runs a release-driven build + Netlify deploy tied to that version.
+- **Push to `dev`** → tests, dev-channel release-please, Netlify deploy to the development site.
+- **Push to `main`** → tests, stable release-please, Netlify deploy to production, SBOM attach, back-merge PR into `dev`.
 
 ---
 

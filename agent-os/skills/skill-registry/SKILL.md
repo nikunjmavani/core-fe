@@ -352,9 +352,9 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - `.husky/commit-msg` -- Commit message validation (Layer 2)
 - `.commitlintrc.json` -- Conventional commit config (Layer 2)
 - `.gitleaks.toml` -- Secret scan allowlist (Layer 2)
-- `.github/workflows/ci.yml` -- CI workflow (Layer 3)
+- `.github/workflows/pr-ci.yml` -- PR CI workflow (Layer 3)
 - `.github/workflows/preview.yml` -- PR preview builds (Layer 3)
-- `.github/workflows/release.yml` -- release-please (Layer 3)
+- `.github/workflows/post-merge-ci.yml` -- post-merge tests, release-please, Netlify deploy (Layer 3)
 - `.github/workflows/load-test.yml` -- k6 load tests (Layer 3)
 - `.github/workflows/mutation-test.yml` -- Stryker mutation tests (Layer 3)
 - `.lighthouserc.cjs` -- Lighthouse CI assertions (Layer 3)
@@ -452,7 +452,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 ### 9. shadcn (single canonical skill)
 
 **Path:** `agent-os/skills/shadcn/SKILL.md` (installed via `pnpm dlx skills add shadcn/ui`)
-**Purpose:** The one skill for **all** shadcn/ui work — _how_ to add/fix/debug/style/compose components (CLI + Critical Rules) **and** _where_ a block comes from (its "Project rules — core-fe" section folds in the 20 allowed sources + selection workflow). The former `shadcn-component-selection` is merged into it and is now just a pointer (`agent-os/skills/shadcn-component-selection/SKILL.md`).
+**Purpose:** The one skill for **all** shadcn/ui work — _how_ to add/fix/debug/style/compose components (CLI + Critical Rules) **and** _where_ a block comes from (its "Project rules — core-fe" section folds in the 20 allowed sources + selection workflow). The former `shadcn-component-selection` skill is merged into `agent-os/skills/shadcn/SKILL.md`.
 
 **Trigger keywords:** "add/fix/style a shadcn component", "shadcn CLI", "components.json", "preset", "which component for", "pick a component", "use shadcn components only", "best component for [X]", "login form", "sidebar", "data table", "block"
 
@@ -606,12 +606,12 @@ These Cursor rules are always loaded and do not need to be invoked:
 
 ## Enterprise Platform Integration
 
-| Tool           | Config File                                        | Purpose                                   |
-| -------------- | -------------------------------------------------- | ----------------------------------------- |
-| Backstage      | `catalog-info.yaml`                                | Service catalog registration              |
-| Nginx          | `nginx/default.conf`                               | SPA serving, caching, security headers    |
-| PWA            | `public/manifest.webmanifest`, `vite.config.ts`    | Offline support, installability           |
-| release-please | `.releaserc.json`, `.release-please-manifest.json` | Human-gated releases                      |
-| Sentry         | `src/core/observability/sentry.ts`                 | Error tracking + PII scrubbing            |
-| PostHog        | `src/core/analytics/posthog.ts`                    | Analytics + feature flags                 |
-| Web Vitals     | `src/core/observability/performance.ts`            | Performance monitoring → PostHog + Sentry |
+| Tool           | Config File                                                                  | Purpose                                   |
+| -------------- | ---------------------------------------------------------------------------- | ----------------------------------------- |
+| Backstage      | `catalog-info.yaml`                                                          | Service catalog registration              |
+| Nginx          | `nginx/default.conf`                                                         | SPA serving, caching, security headers    |
+| PWA            | `public/manifest.webmanifest`, `vite.config.ts`                              | Offline support, installability           |
+| release-please | `.github/release-please/config.json`, `.github/release-please/manifest.json` | Human-gated releases                      |
+| Sentry         | `src/app/observability/sentry.ts`                                            | Error tracking + PII scrubbing            |
+| PostHog        | `src/app/analytics/posthog.ts`                                               | Analytics + feature flags                 |
+| Web Vitals     | `src/app/observability/performance.ts`                                       | Performance monitoring → PostHog + Sentry |

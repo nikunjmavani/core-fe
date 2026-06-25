@@ -1,17 +1,26 @@
 {
-  "description": "Single source of truth for core-fe agent hook wiring (self-contained; no other repo). Mirrored into .claude/settings.json (hooks block) and .cursor/hooks.json. Each entry may target Claude and/or Cursor; an agent only gets a hook for events it supports. All hooks FAIL OPEN — a hook error never bricks the session.",
+  "description": "Single source of truth for core-fe agent hook wiring. scripts/agent-os/generate.mjs derives agent-os/platforms/claude/settings.json (hooks block), agent-os/platforms/cursor/hooks.json, and agent-os/platforms/codex/hooks.json from this manifest + agent-os/platforms/targets.json. Tool dirs (.claude/, .cursor/, .codex/) symlink into agent-os/platforms/ — edit here only. All hooks FAIL OPEN.",
   "hooks": [
     {
       "id": "session-start",
       "runtime": "bash",
       "script": "session-start.sh",
-      "claude": { "event": "SessionStart" }
+      "claude": { "event": "SessionStart" },
+      "codex": {
+        "event": "SessionStart",
+        "matcher": "startup|resume",
+        "statusMessage": "Loading core-fe session context"
+      }
     },
     {
       "id": "prompt-skill-router",
       "runtime": "bash",
       "script": "prompt-skill-router.sh",
-      "claude": { "event": "UserPromptSubmit" }
+      "claude": { "event": "UserPromptSubmit" },
+      "codex": {
+        "event": "UserPromptSubmit",
+        "statusMessage": "Checking core-fe skill routing"
+      }
     },
     {
       "id": "guard-edits",
@@ -23,7 +32,12 @@
       "id": "guardrails",
       "runtime": "node",
       "script": "guardrails.mjs",
-      "claude": { "event": "PreToolUse", "matcher": "Bash|Edit|Write" }
+      "claude": { "event": "PreToolUse", "matcher": "Bash|Edit|Write" },
+      "codex": {
+        "event": "PreToolUse",
+        "matcher": "^Bash$",
+        "statusMessage": "Checking core-fe shell guardrails"
+      }
     },
     {
       "id": "no-unrequested-pr",
@@ -47,13 +61,17 @@
       "id": "gate-failure-hint",
       "runtime": "bash",
       "script": "gate-failure-hint.sh",
-      "note": "PostToolUseFailure — wire only on agents that support a tool-failure event; omitted from .claude/settings.json to avoid nagging on successful gate runs."
+      "claude": { "event": "PostToolUseFailure", "matcher": "Bash" }
     },
     {
       "id": "stop-gate-reminder",
       "runtime": "bash",
       "script": "stop-gate-reminder.sh",
-      "claude": { "event": "Stop" }
+      "claude": { "event": "Stop" },
+      "codex": {
+        "event": "Stop",
+        "statusMessage": "Checking core-fe completion gates"
+      }
     },
     {
       "id": "pre-compact-preserve",

@@ -29,13 +29,24 @@ Stats: ~261 src files · ~130 tests in src/ · 9 E2E specs · 21 shadcn UI primi
 
 core-fe/
 ├── .github/
+│   ├── environments/
+│   │   ├── development.json
+│   │   └── production.json
+│   ├── release-please/
+│   │   ├── config.json
+│   │   ├── config.dev.json
+│   │   ├── manifest.json
+│   │   └── manifest.dev.json
+│   ├── rulesets/
+│   │   ├── dev.json
+│   │   └── main.json
 │   ├── workflows/
-│   │   ├── ci.yml
-│   │   ├── deploy.yml
+│   │   ├── post-merge-ci.yml
+│   │   ├── post-release-backmerge.yml
+│   │   ├── pr-ci.yml
 │   │   ├── load-test.yml
 │   │   ├── mutation-test.yml
-│   │   ├── preview.yml
-│   │   └── release.yml
+│   │   └── preview.yml
 │   └── dependabot.yml
 ├── .husky/
 │   ├── commit-msg
@@ -636,8 +647,6 @@ core-fe/
 ├── .nvmrc
 ├── .prettierignore
 ├── .prettierrc
-├── .release-please-manifest.json
-├── .releaserc.json
 ├── .semgrepignore
 ├── .size-limit.json
 ├── AGENTS.md

@@ -20,7 +20,7 @@ Use this skill when the user's request is **vague**, **feature-sized**, or **mul
 - **Format spec + template:** `docs/getting-started/requirement-format.md` (in repo: `core-fe/docs/getting-started/requirement-format.md`)
 - **Filled example:** `docs/getting-started/requirements/sample-requirement.md`
 
-When asking the user for requirements, point them to these files or paste the template from REQUIREMENT_FORMAT.md.
+When asking the user for requirements, point them to `docs/getting-started/requirement-format.md` and `docs/getting-started/requirements/sample-requirement.md`.
 
 ---
 
@@ -31,7 +31,7 @@ If the request is vague or feature-sized and the user has **not** given a requir
 1. **Respond with the format** — do not guess and build the wrong thing.
 2. **Say something like:**  
    "To implement this in one go and match what you want, please provide the details using our requirement format. You can copy the template from **docs/getting-started/requirement-format.md** or use this structure:"
-3. **Paste the template** (the copy-paste block from REQUIREMENT_FORMAT.md: What, Where, Acceptance criteria, Data/API, UI/Behavior, Constraints, Out of scope).
+3. **Paste the template** from `docs/getting-started/requirement-format.md` (What, Where, Acceptance criteria, Data/API, UI/Behavior, Constraints, Out of scope).
 4. **Add:** "You can see a filled example in **docs/getting-started/requirements/sample-requirement.md**. Once you fill this in and paste it here, I'll implement it fully (including tests, route registration, and RBAC) without asking for confirmation."
 
 Do **not** start implementing a large feature from a one-line vague request; ask for the formatted requirement first.

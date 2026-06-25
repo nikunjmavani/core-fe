@@ -23,7 +23,7 @@ REMINDERS=()
 
 case "$FILE" in
   */components/ui/*) REMINDERS+=("vendored shadcn primitive → shadcn (add/compose via CLI; don't hand-edit)") ;;
-  */components/*.tsx | */forms/*.tsx) REMINDERS+=("component/form → component-patterns + frontend-design + test-generation (colocate a *.test.tsx)") ;;
+  */components/*.tsx | */forms/*.tsx) REMINDERS+=("component/form → composition-patterns + frontend-design + test-generation (colocate a *.test.tsx)") ;;
 esac
 
 [[ "$FILE" == *"index.css" || "$FILE" == *.css ]] && \

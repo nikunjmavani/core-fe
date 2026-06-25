@@ -44,7 +44,7 @@ export async function loadConfig() {
   const env = parseEnv(raw);
   const projectName = env.SETUP_PROJECT_NAME || 'core-fe';
   const orgName = env.SETUP_ORG_NAME || '';
-  const envsRaw = env.SETUP_ENVS || 'dev,qa,main';
+  const envsRaw = env.SETUP_ENVS || 'dev,main';
   const envs = envsRaw.split(',').map((e) => e.trim()).filter(Boolean);
   const nodeVersion = env.NODE_VERSION?.trim();
   if (!nodeVersion) {

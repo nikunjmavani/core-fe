@@ -27,7 +27,7 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 | New test, add test, test coverage, missing tests | test-generation | `agent-os/skills/test-generation/SKILL.md` |
 | E2E selectors, data-testid, test ids for Playwright, audit test hooks | e2e-testids | `agent-os/skills/e2e-testids/SKILL.md` |
 | **Any shadcn/ui work** — adding, fixing, debugging, styling, composing, CLI, `components.json`, presets, **and choosing which component/block** to use | shadcn (single skill) | `agent-os/skills/shadcn/SKILL.md` |
-| (merged) "which component for X", use shadcn only — now folded into the single skill above | shadcn-component-selection (pointer) | `agent-os/skills/shadcn-component-selection/SKILL.md` |
+| (merged) "which component for X", use shadcn only — now folded into the single skill above | shadcn (pointer) | `agent-os/skills/shadcn/SKILL.md` |
 | Which skill to use, list skills, help me find | skill-registry | `agent-os/skills/skill-registry/SKILL.md` |
 | "Is there a skill for X", discover/install a new skill from the ecosystem | find-skills | `agent-os/skills/find-skills/SKILL.md` |
 | Add/change docs, where to document, keep README/CLAUDE in sync | documentation-maintenance | `agent-os/skills/documentation-maintenance/SKILL.md` |
@@ -51,7 +51,7 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 
 5. **Component Promotion**: When importing a page-specific component into a second page, invoke the `component-promotion` skill to move it to `shared/`.
 
-6. **Code Quality**: When modifying `eslint.config.mjs`, `.husky/*`, or `.github/workflows/ci.yml`, invoke the `code-quality-security` skill for consistency checks.
+6. **Code Quality**: When modifying `eslint.config.mjs`, `.husky/*`, or `.github/workflows/pr-ci.yml`, invoke the `code-quality-security` skill for consistency checks.
 
 7. **Lint Guard**: After every implementation that adds or changes source files, invoke the `lint-guard` skill to fix all ESLint and TypeScript errors before responding. Do not announce this step — just ensure zero errors.
 

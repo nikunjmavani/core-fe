@@ -1,3 +1,8 @@
+---
+name: test-generation
+description: Generate colocated Vitest and Testing Library tests for new source files under src/. Auto-invoked when components, hooks, stores, or services are created — never ask the user first.
+---
+
 # Test Generation Skill
 
 Automatically generate colocated test files for new source files in the project.
@@ -41,7 +46,7 @@ Use this skill when:
 - **Colocated beside source everywhere** — `src/pages/**` islands, `shared/`, `core/`, `lib/`, `stores/` all put `<Name>.test.{ts,tsx}` in the same folder as `<Name>`. (A page's cross-component _integration_ flows may additionally live in `pages/<page>/__tests__/integration/`.)
 - **E2E / integration** (`tests/e2e/`, Playwright): full-stack mock UI flow → `<name>.e2e.test.ts`; contract against the running core-be → `<name>.integration.test.ts`. Never `.spec.ts`.
 
-See `agent-os/skills/route-island/SKILL.md` and `src/lib/routes/__tests__/README.md`.
+See `agent-os/skills/route-island/SKILL.md` and `docs/reference/route-island-structure.md`.
 
 ### 3. Templates
 

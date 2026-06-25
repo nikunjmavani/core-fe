@@ -29,22 +29,26 @@
     "tests/utils/**/*.{ts,tsx}",
   ],
   "project": ["src/**/*.{ts,tsx}", "plugins/**/*.ts", "scripts/**/*.mjs"],
-  "ignore": [
-    // Vendored shadcn primitives: sub-exports ship with the upstream component
-    // and are replaced wholesale on `shadcn add` — pruning them churns updates.
-    "src/shared/components/ui/**",
-    // STAGED SURFACE — deliberately built ahead of its consumer; remove when
-    // the organization module is wired. (Staged unit folders — CRUD hooks,
-    // data-provider, animations — need no ignore: their validator-mandated
-    // index.ts barrels are entries, so barrel exports count as the surface.)
-    "src/shared/api/organization-contracts.ts",
-  ],
-  // Dependencies knip cannot see (no CSS parsing; ignored vendored files;
-  // shell-script invocation):
+  // Nothing suppressed — every prior ignore (vendored ui/**, staged
+  // organization-contracts, recharts-via-chart) is now genuinely used or
+  // reachable, so knip stays clean without them. Keep it that way.
+  "ignore": [],
+  // Dependencies knip cannot see (no CSS parsing; shell-script / MCP invocation):
   //  - tailwindcss + tw-animate-css: imported in src/index.css (Tailwind v4 CSS-first)
-  //  - recharts: imported only by vendored src/shared/components/ui/chart.tsx (ignored above)
   //  - lint-staged: invoked by scripts/validate/before-commit-guard.sh (pre-commit)
-  "ignoreDependencies": ["tailwindcss", "tw-animate-css", "recharts", "lint-staged"],
+  //  - MCP server binaries: launched via `pnpm exec` in agent-os/mcp/mcp.json
+  //    (symlinked as .mcp.json), never imported — @upstash/context7-mcp →
+  //    context7, shadcn → shadcn, tailwindcss-mcp-server → tailwindcss,
+  //    @colbymchenry/codegraph → codegraph.
+  "ignoreDependencies": [
+    "tailwindcss",
+    "tw-animate-css",
+    "lint-staged",
+    "@upstash/context7-mcp",
+    "shadcn",
+    "tailwindcss-mcp-server",
+    "@colbymchenry/codegraph",
+  ],
   // External CLIs invoked from scripts/workflows but not npm dependencies:
   // gh (GitHub CLI), gitleaks/semgrep (security scanners), k6 (load testing),
   // stryker (installed ad-hoc by mutation-test.yml).

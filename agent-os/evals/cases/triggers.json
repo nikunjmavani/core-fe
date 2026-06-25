@@ -1,0 +1,40 @@
+{
+  "_comment": "Tier-2 trigger evals for core-fe: changed file → skill(s) skill-triggers.md must surface. Add a case when wiring a new file-pattern route.",
+  "cases": [
+    {
+      "file": "src/pages/login/login.route.tsx",
+      "expectSkills": ["route-island"],
+      "why": "Route marker files must run the route-island skill."
+    },
+    {
+      "file": "src/pages/dashboard/components/ActivityFeed/ActivityFeed.tsx",
+      "expectSkills": ["composition-patterns", "test-generation"],
+      "why": "Page components need composition + colocated tests."
+    },
+    {
+      "file": "src/shared/components/ui/button.tsx",
+      "expectSkills": ["shadcn"],
+      "why": "Vendored shadcn primitives route through the shadcn skill."
+    },
+    {
+      "file": "src/pages/organization/hooks/useOrganizations/useOrganizations.ts",
+      "expectSkills": ["react-best-practices"],
+      "why": "TanStack Query hooks must follow react-best-practices."
+    },
+    {
+      "file": "tests/e2e/login.e2e.test.ts",
+      "expectSkills": ["e2e-testids"],
+      "why": "E2E specs require stable data-testid conventions."
+    },
+    {
+      "file": "src/index.css",
+      "expectSkills": ["frontend-design"],
+      "why": "Design tokens and Tailwind entry must stay semantic."
+    },
+    {
+      "file": ".env.example",
+      "expectSkills": ["documentation-maintenance"],
+      "why": "Env template changes must stay documented and secret-free."
+    }
+  ]
+}

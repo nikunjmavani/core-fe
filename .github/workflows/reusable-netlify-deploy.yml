@@ -1,0 +1,129 @@
+name: Reusable — Netlify deploy
+
+# Builds dist/ on GitHub Actions and publishes to Netlify.
+# Reads deploy secrets from the selected GitHub Environment:
+#   dev  → development (VITE_API_BASE_URL, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID)
+#   main → production
+
+on:
+  workflow_call:
+    inputs:
+      target_branch:
+        description: Protected branch that received the merge (dev or main)
+        required: true
+        type: string
+      github_environment:
+        description: GitHub Environment name (development or production)
+        required: true
+        type: string
+      upload-release-artifact:
+        description: Upload dist/ as a release artifact when a release was created
+        required: false
+        type: boolean
+        default: false
+      artifact-name:
+        description: Artifact name when upload-release-artifact is true
+        required: false
+        type: string
+        default: release-dist
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: ${{ vars.FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 || 'true' }}
+
+jobs:
+  run:
+    name: Netlify deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: ${{ inputs.github_environment }}
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+
+      - name: Check deploy secrets
+        id: gate
+        env:
+          API_URL: ${{ secrets.VITE_API_BASE_URL }}
+          NETLIFY_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          if [ -n "$API_URL" ] && [ -n "$NETLIFY_TOKEN" ] && [ -n "$NETLIFY_SITE" ]; then
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Netlify deploy for environment '${{ inputs.github_environment }}' — one or more required secrets are unset."
+          fi
+
+      - uses: ./.github/actions/setup-node-pnpm
+        if: steps.gate.outputs.should_deploy == 'true'
+
+      - name: Resolve app version from release-please manifest
+        if: steps.gate.outputs.should_deploy == 'true'
+        id: version
+        env:
+          TARGET_BRANCH: ${{ inputs.target_branch }}
+        run: |
+          set -euo pipefail
+          suffix=""
+          if [ "${TARGET_BRANCH}" = "dev" ]; then
+            suffix=".dev"
+          fi
+          version="$(jq -r '."."' ".github/release-please/manifest${suffix}.json")"
+          echo "vite_app_version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        if: steps.gate.outputs.should_deploy == 'true'
+        run: pnpm build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          VITE_APP_VERSION: ${{ steps.version.outputs.vite_app_version }}
+
+      - name: Upload release artifact
+        if: steps.gate.outputs.should_deploy == 'true' && inputs.upload-release-artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: dist/
+          retention-days: 90
+
+      - name: Deploy to Netlify
+        id: deploy
+        if: steps.gate.outputs.should_deploy == 'true'
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: |
+          pnpm exec netlify deploy --prod --dir=dist --json > deploy-result.json
+          DEPLOY_URL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('deploy-result.json','utf8')).url ?? '')")
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "Could not read the deploy URL from netlify output:" >&2
+            cat deploy-result.json >&2
+            exit 1
+          fi
+          echo "Deployed to $DEPLOY_URL (${{ inputs.github_environment }})"
+          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+
+      - name: Post-deploy smoke
+        if: steps.gate.outputs.should_deploy == 'true' && steps.deploy.outputs.url != ''
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          echo "Smoking $DEPLOY_URL"
+          VERSION_JSON=$(curl -fsS --retry 3 --retry-delay 5 "$DEPLOY_URL/version.json")
+          echo "version.json: $VERSION_JSON"
+          BUILD_ID=$(node -e "console.log(JSON.parse(process.argv[1]).buildId ?? '')" "$VERSION_JSON")
+          if [ -z "$BUILD_ID" ]; then
+            echo "version.json has no buildId — deploy looks broken." >&2
+            exit 1
+          fi
+          LOGIN_HTML=$(curl -fsS --retry 3 --retry-delay 5 "$DEPLOY_URL/login")
+          echo "$LOGIN_HTML" | grep -q 'id="root"' || {
+            echo "/login did not serve the app shell (SPA redirect broken?)." >&2
+            exit 1
+          }
+          echo "Smoke OK — buildId $BUILD_ID live."

@@ -1,15 +1,15 @@
 name: CodeQL
 
 # Semantic (taint-tracking) security analysis for JS/TS. Complements the Semgrep
-# SAST lane in ci.yml: CodeQL traces dataflow from input sources to dangerous
+# SAST lane in pr-ci.yml: CodeQL traces dataflow from input sources to dangerous
 # sinks (DOM XSS, open redirects, postMessage) that pattern-based SAST can miss.
 # Results land in the repository Security tab.
 
 on:
   push:
-    branches: [main, dev, qa]
+    branches: [main, dev]
   pull_request:
-    branches: [main, dev, qa]
+    branches: [main, dev]
   schedule:
     # Weekly full scan (Monday 04:27 UTC) so advisories that land between pushes
     # are still surfaced.

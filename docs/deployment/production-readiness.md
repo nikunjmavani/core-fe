@@ -70,6 +70,8 @@ The frontend **shell** is solid and does not block launch:
 
 - [x] **Cookie consent** — PostHog no longer sets cookies / captures until the
       user accepts (`ConsentBanner` + `useConsentStore`; `main.tsx` gates it).
+      Accept emits a single PostHog `analytics_consent_decision` event for audit;
+      decline is persisted locally only (no third-party capture).
 - [x] **robots.txt** — now `Disallow: /` (auth-gated admin app; no public index).
 - [x] This document.
 

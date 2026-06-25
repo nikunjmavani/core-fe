@@ -124,9 +124,9 @@ Runs on every PR to `main`/`develop`. Multiple parallel jobs across several work
 
 | Workflow      | File                                  | Purpose                         |
 | ------------- | ------------------------------------- | ------------------------------- |
-| CI            | `.github/workflows/ci.yml`            | Core quality + security checks  |
+| CI            | `.github/workflows/pr-ci.yml`         | Core quality + security checks  |
 | Preview       | `.github/workflows/preview.yml`       | PR preview builds               |
-| Release       | `.github/workflows/release.yml`       | release-please + deploy         |
+| Post-merge CI | `.github/workflows/post-merge-ci.yml` | release-please + Netlify deploy |
 | Load Test     | `.github/workflows/load-test.yml`     | k6 browser load tests (weekly)  |
 | Mutation Test | `.github/workflows/mutation-test.yml` | Stryker mutation tests (weekly) |
 
@@ -147,7 +147,7 @@ Runs on every PR to `main`/`develop`. Multiple parallel jobs across several work
 
 ### How to Add a CI Job
 
-1. Edit `.github/workflows/ci.yml`
+1. Edit `.github/workflows/pr-ci.yml`
 2. Add a new job under the `jobs:` key
 3. Use the same `setup` pattern (checkout, pnpm, node, install)
 4. Security jobs don't need `pnpm install`
@@ -163,9 +163,9 @@ Runs on every PR to `main`/`develop`. Multiple parallel jobs across several work
 | `.commitlintrc.json`                  | 2     | Conventional commit config               |
 | `.gitleaks.toml`                      | 2     | Gitleaks secret scan allowlist           |
 | `package.json` (lint-staged)          | 2     | Staged file patterns for ESLint/Prettier |
-| `.github/workflows/ci.yml`            | 3     | CI workflow with quality + security jobs |
+| `.github/workflows/pr-ci.yml`         | 3     | CI workflow with quality + security jobs |
 | `.github/workflows/preview.yml`       | 3     | PR preview builds                        |
-| `.github/workflows/release.yml`       | 3     | release-please + deploy                  |
+| `.github/workflows/post-merge-ci.yml` | 3     | release-please + Netlify deploy          |
 | `.github/workflows/load-test.yml`     | 3     | k6 browser load tests                    |
 | `.github/workflows/mutation-test.yml` | 3     | Stryker mutation tests                   |
 | `.semgrepignore`                      | 3     | Semgrep ignore patterns for CI           |

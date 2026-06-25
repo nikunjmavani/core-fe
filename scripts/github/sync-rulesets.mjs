@@ -11,9 +11,12 @@
  *   - --check      : compare local files vs remote, report drift, exit non-zero on drift.
  *   - --dry-run    : show what would be created or updated without calling write APIs.
  *
- * The only required status checks on `main` are the CI aggregate ("Quality gate")
- * and PR Governance ("Checks") — every lane reports through the aggregate, so
- * adding a lane never requires touching branch protection.
+ * Required status checks on protected branches:
+ *   - "Quality gate" (PR CI aggregate)
+ *   - "unit / Unit + global" (reusable unit gate — docs-only PRs pass via skip)
+ *   - "Checks" (PR Governance)
+ * Other lanes roll up into Quality gate; add ruleset entries only when a check
+ * must be individually required (e.g. unit gate for docs-only PRs).
  *
  * Plan requirement (private repos): repository rulesets require GitHub Pro / Team /
  * Enterprise on private repos. On the free personal plan the API returns 403 with

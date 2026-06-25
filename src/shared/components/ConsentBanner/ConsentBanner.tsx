@@ -1,8 +1,6 @@
+import { config } from '@/core/config/env.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { useConsentStore } from '@/shared/store/useConsentStore/index.ts';
-
-/** Optional link to the deployment's privacy policy (omitted when unset). */
-const PRIVACY_URL = import.meta.env.VITE_PRIVACY_POLICY_URL as string | undefined;
 
 /**
  * Analytics cookie-consent banner. Shown only while the decision is undecided;
@@ -14,6 +12,20 @@ const PRIVACY_URL = import.meta.env.VITE_PRIVACY_POLICY_URL as string | undefine
 export function ConsentBanner() {
   const decision = useConsentStore((s) => s.analyticsConsent);
   const setConsent = useConsentStore((s) => s.setAnalyticsConsent);
+
+  const handleAccept = () => {
+    setConsent('granted');
+    import('@/shared/analytics/capture-consent-decision.ts')
+      .then((m) => m.captureAnalyticsConsentDecision('granted'))
+      .catch(() => undefined);
+  };
+
+  const handleDecline = () => {
+    setConsent('denied');
+    import('@/shared/analytics/capture-consent-decision.ts')
+      .then((m) => m.captureAnalyticsConsentDecision('denied'))
+      .catch(() => undefined);
+  };
 
   if (decision !== null) return null;
 
@@ -27,11 +39,11 @@ export function ConsentBanner() {
         <p className="text-muted-foreground text-sm">
           We use cookies for product analytics to improve Core. Essential functionality
           and error monitoring work without them.
-          {PRIVACY_URL ? (
+          {config.privacyPolicyUrl ? (
             <>
               {' '}
               <a
-                href={PRIVACY_URL}
+                href={config.privacyPolicyUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-foreground font-medium underline"
@@ -45,16 +57,12 @@ export function ConsentBanner() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setConsent('denied')}
+            onClick={handleDecline}
             data-testid="consent-decline"
           >
             Decline
           </Button>
-          <Button
-            size="sm"
-            onClick={() => setConsent('granted')}
-            data-testid="consent-accept"
-          >
+          <Button size="sm" onClick={handleAccept} data-testid="consent-accept">
             Accept
           </Button>
         </div>

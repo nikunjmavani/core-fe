@@ -143,7 +143,7 @@ Component tests must include **vitest-axe** accessibility checks. See **agent-os
 
 - **Branches:** `feat/`, `fix/`, `chore/`, `docs/`, `ci/` prefixes.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) with **lower-case subjects** (commitlint-enforced).
-- **Releases:** Release Please ([release.yml](.github/workflows/release.yml)) versions `main` from commit history; config in `release-please-config.json`. PR titles must also be conventional — the PR Governance workflow validates them and auto-applies size/path labels.
+- **Releases:** Release Please ([post-merge-ci.yml](.github/workflows/post-merge-ci.yml) on `dev` and `main`) — config in `.github/release-please/` (`config.json` + `config.dev.json`). PR titles must also be conventional — the PR Governance workflow validates them and auto-applies size/path labels.
 
 ---
 

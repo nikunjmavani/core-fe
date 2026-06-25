@@ -248,22 +248,25 @@ Both run `pnpm build` then `netlify deploy` (with or without `--prod`).
 
 ## CI (GitHub Actions)
 
-| Workflow                                      | Trigger                           | What it does                                                                                                                                                        |
-| --------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **CI** (`.github/workflows/ci.yml`)           | Push/PR to `main`, `dev`, or `qa` | Lint, format check, type-check, unit tests, .env.example check, **build** (smoke; no production env required), gitleaks, Semgrep, E2E.                              |
-| **Deploy** (`.github/workflows/deploy.yml`)   | Push to `main`                    | **Build** with GitHub secrets, then deploy `dist/` to Netlify via CLI. Runs only when `VITE_API_BASE_URL`, `NETLIFY_AUTH_TOKEN`, and `NETLIFY_SITE_ID` are set.     |
-| **Preview** (`.github/workflows/preview.yml`) | PR to `main`, `dev`, or `qa`      | Build and upload `dist/` artifact (retention 7 days).                                                                                                               |
-| **Release** (`.github/workflows/release.yml`) | Push to `main`                    | release-please (version/changelog/tag); if release created, build with GitHub secrets, upload artifact (90 days), and deploy to Netlify (when Netlify secrets set). |
+| Workflow                                                  | Trigger                 | What it does                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **PR CI** (`.github/workflows/pr-ci.yml`)                 | PR to `main` or `dev`   | Path-filtered parallel lanes: lint, biome, knip, format, type-check, structure/token validators, agent-os evals, unit + security Vitest, build + bundle size, gitleaks, Semgrep, Trivy IaC, dependency review, actionlint, Playwright E2E; aggregate **Quality gate**. |
+| **Post-merge CI** (`.github/workflows/post-merge-ci.yml`) | Push to `main` or `dev` | SBOM attestation, post-merge unit/security/E2E, release-please (stable on `main`, prerelease on `dev`), release SBOM attach, Netlify deploy + smoke (`development` / `production` GitHub environments).                                                                |
+| **Preview** (`.github/workflows/preview.yml`)             | PR to `main` or `dev`   | Build and upload `dist/` artifact (retention 7 days).                                                                                                                                                                                                                  |
 
-**Build runs only on GitHub.** Netlify never runs a build; it only serves the `dist/` uploaded by the Deploy or Release workflow.
+**Build runs only on GitHub.** Netlify never runs a build; it only serves the `dist/` uploaded by post-merge CI (`dev` → development, `main` → production).
 
 ### Branches and environments
 
-- **dev / qa / main**
-  - `dev` and `qa` are integration branches: feature PRs target `dev`, and you can promote from `dev` → `qa` → `main` using normal PRs.
-  - CI (`ci.yml`) runs on push/PR to all three branches; Preview (`preview.yml`) builds artifacts for PRs into them.
-  - `main` is production: pushes to `main` trigger both **Deploy** (continuous deploy via GitHub secrets + Netlify) and **Release** (release-please + versioned release + Netlify deploy).
-- For a full walkthrough of the **normal dev → qa → main** path and the **hotfix** path, see [deployment-and-pre-launch.md](deployment-and-pre-launch.md#branch--environment-flow).
+| Branch | GitHub Environment | Release channel                           | Netlify deploy                              |
+| ------ | ------------------ | ----------------------------------------- | ------------------------------------------- |
+| `dev`  | `development`      | `-dev.N` prereleases (`CHANGELOG-dev.md`) | Dev site secrets in `development` env       |
+| `main` | `production`       | Stable releases (`CHANGELOG.md`)          | Production site secrets in `production` env |
+
+- Feature PRs target **`dev`**. Promote with **`dev → main`** when ready for production.
+- PR CI (`pr-ci.yml`) and Preview (`preview.yml`) run on pull requests to both branches.
+- Branch protection and required checks: [branch-protection.md](branch-protection.md).
+- Full workflow: [git-workflow.md](../process/git-workflow.md) and [deployment-and-pre-launch.md](deployment-and-pre-launch.md#branch--environment-flow).
 
 ---
 

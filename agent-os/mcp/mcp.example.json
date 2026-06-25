@@ -19,10 +19,6 @@
     "core-be-api": {
       "url": "http://localhost:3000/api/v1/mcp"
     },
-    "sentry": {
-      "url": "https://mcp.sentry.dev/mcp",
-      "headers": {}
-    },
     "semgrep": {
       "command": "uvx",
       "args": ["semgrep-mcp"]

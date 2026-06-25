@@ -1,0 +1,479 @@
+name: PR CI
+
+# Fast merge gate (~3–5 min target). Mirrors core-be pr-ci.yml shape: path-filtered
+# parallel lanes, reusable Vitest/E2E workflows, security scans, and a single
+# aggregate `quality-gate` required check (branch protection: .github/rulesets/).
+#
+# Frontend-specific lanes replace core-be's domain/OpenAPI/Postgres/RLS/Docker gates.
+# Post-merge deploy/release/SBOM: post-merge-ci.yml (Netlify, not Railway).
+
+on:
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: ${{ vars.FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 || 'true' }}
+
+jobs:
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      src-code: ${{ steps.filter.outputs.src-code }}
+      e2e: ${{ steps.filter.outputs.e2e }}
+      ci-config: ${{ steps.filter.outputs.ci-config }}
+      agent-os: ${{ steps.filter.outputs.agent-os }}
+      docs-only-md: ${{ steps.filter.outputs.docs-only-md == 'true' && steps.filter.outputs.src-code == 'false' && steps.filter.outputs.e2e == 'false' && steps.filter.outputs.ci-config == 'false' && steps.filter.outputs.agent-os == 'false' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+
+      - name: Path filter
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
+        id: filter
+        with:
+          filters: |
+            src-code:
+              - 'src/**'
+              - 'plugins/**'
+              - 'public/**'
+              - 'tests/**'
+              - 'scripts/**'
+              - 'index.html'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'vite.config.ts'
+              - 'vitest.config.ts'
+              - 'tsconfig*.json'
+              - 'biome.json'
+              - 'eslint.config.mjs'
+              - '.prettierrc'
+              - '.env'
+              - '.env.development'
+              - '.env.production'
+              - '.env.example'
+            e2e:
+              - 'src/**'
+              - 'tests/e2e/**'
+              - 'tests/utils/**'
+              - 'playwright.config.ts'
+              - 'index.html'
+              - 'vite.config.ts'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            ci-config:
+              - '.github/**'
+            agent-os:
+              - 'agent-os/**'
+              - '.claude/**'
+              - '.cursor/**'
+              - '.codex/**'
+            docs-only-md:
+              - '**/*.md'
+              - 'docs/**'
+
+  agent-os-gate:
+    name: agent-os wiring
+    needs: [changes]
+    if: needs.changes.outputs.agent-os == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Agent-os integrity (Tier 1)
+        run: pnpm agent-os:check
+      - name: Agent-os trigger routing (Tier 2)
+        run: pnpm agent-os:triggers:strict
+      - name: Platform wiring drift gate
+        run: pnpm agent-os:generate:check
+
+  biome:
+    name: Biome
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm biome:check
+
+  lint:
+    name: ESLint
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm lint
+
+  knip:
+    name: Knip (dead code)
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm knip
+
+  format:
+    name: Prettier
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm format:check
+
+  typecheck:
+    name: TypeScript
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm type-check
+
+  static-sync:
+    name: Static sync
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+
+      - name: Route-island structure
+        run: ./scripts/validate/route-islands.sh
+
+      - name: .env.example required vars
+        run: ./scripts/validate/env-example.sh
+
+      - name: Public assets
+        run: ./scripts/validate/public-assets.sh
+
+      - name: Design tokens (no raw palette in app code)
+        run: ./scripts/validate/design-tokens.sh
+
+      - name: TSDoc coverage budget
+        run: node scripts/tsdoc/check-coverage.mjs
+
+      - uses: ./.github/actions/setup-node-pnpm
+
+      - name: Agent-os platform wiring
+        run: pnpm agent-os:generate:check
+
+  unit-tests:
+    needs: [changes]
+    if: |
+      needs.changes.outputs.docs-only-md != 'true' &&
+      (needs.changes.outputs.src-code == 'true' || needs.changes.outputs.ci-config == 'true')
+    uses: ./.github/workflows/reusable-vitest-unit-only.yml
+
+  unit:
+    needs: [changes, unit-tests]
+    if: always()
+    uses: ./.github/workflows/reusable-unit-gate.yml
+    with:
+      unit-tests-result: ${{ needs.unit-tests.result }}
+
+  security-tests:
+    name: Security tests
+    needs: [changes]
+    if: |
+      needs.changes.outputs.docs-only-md != 'true' &&
+      (needs.changes.outputs.src-code == 'true' || needs.changes.outputs.ci-config == 'true')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Run security Vitest project
+        run: pnpm test:security
+
+  build-verify:
+    name: Build verify
+    needs: [changes]
+    if: |
+      needs.changes.outputs.docs-only-md != 'true' &&
+      (
+        needs.changes.outputs.src-code == 'true' ||
+        needs.changes.outputs.ci-config == 'true'
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - run: pnpm build
+      - name: Preload graph tripwire
+        run: pnpm build:check
+      - name: Bundle size budget
+        run: pnpm size
+      - name: Generate SBOM
+        run: pnpm sbom:generate
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sbom
+          path: sbom.cyclonedx.json
+          retention-days: 30
+
+  security-audit:
+    name: Security audit
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: ./.github/actions/setup-node-pnpm
+      - name: Dependency audit (all deps)
+        run: pnpm deps:audit
+      - name: Production dependency audit
+        run: pnpm deps:audit:prod
+
+  security-secrets:
+    name: Security secrets
+    needs: [changes]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Cache gitleaks binary
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: /usr/local/bin/gitleaks
+          key: gitleaks-8.30.1-${{ runner.os }}
+
+      - name: Install gitleaks
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          set -euo pipefail
+          if [ ! -x /usr/local/bin/gitleaks ]; then
+            curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" \
+              | sudo tar -xz -C /usr/local/bin gitleaks
+            sudo chmod +x /usr/local/bin/gitleaks
+          fi
+          gitleaks version
+
+      - name: Gitleaks (secret detection)
+        run: gitleaks detect --redact --verbose --no-banner --config .gitleaks.toml
+
+  security-sast:
+    name: Security SAST
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        with:
+          python-version: '3.11'
+      - name: Install Semgrep
+        run: pip install semgrep
+      - name: Semgrep SAST
+        run: semgrep scan --config p/default --metrics off
+
+  security-iac:
+    # Trivy config scan — Netlify, Sonar Docker compose, Backstage catalog, GitHub
+    # Actions workflows. Complements Semgrep/pnpm audit (no IaC coverage).
+    name: Security IaC (Trivy config)
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+
+      - name: Scan IaC for misconfigurations (table — blocking)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          version: v0.69.2
+
+      - name: Scan IaC for misconfigurations (SARIF — non-blocking, for Security tab)
+        if: always()
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: sarif
+          output: trivy-config.sarif
+          severity: CRITICAL,HIGH
+          exit-code: 0
+          version: v0.69.2
+
+      - name: Upload IaC Trivy SARIF
+        if: always() && hashFiles('trivy-config.sarif') != ''
+        uses: github/codeql-action/upload-sarif@03e4368ac7daa2bd82b3e85262f3bf87ee112f57 # v3
+        with:
+          sarif_file: trivy-config.sarif
+          category: trivy-config
+
+  dependency-review:
+    name: Dependency review
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
+
+  actionlint:
+    name: Actionlint
+    needs: [changes]
+    if: needs.changes.outputs.docs-only-md != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 1
+      - name: Run actionlint
+        uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
+
+  e2e:
+    needs: [changes]
+    if: |
+      needs.changes.outputs.docs-only-md != 'true' &&
+      needs.changes.outputs.e2e == 'true'
+    uses: ./.github/workflows/reusable-vitest-e2e.yml
+
+  quality-gate:
+    name: Quality gate
+    needs:
+      [
+        changes,
+        agent-os-gate,
+        biome,
+        lint,
+        knip,
+        format,
+        typecheck,
+        static-sync,
+        unit,
+        security-tests,
+        build-verify,
+        security-audit,
+        security-secrets,
+        security-sast,
+        security-iac,
+        dependency-review,
+        actionlint,
+        e2e,
+      ]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Evaluate lane results
+        env:
+          RESULTS: |
+            agent-os-gate=${{ needs.agent-os-gate.result }}
+            biome=${{ needs.biome.result }}
+            lint=${{ needs.lint.result }}
+            knip=${{ needs.knip.result }}
+            format=${{ needs.format.result }}
+            typecheck=${{ needs.typecheck.result }}
+            static-sync=${{ needs.static-sync.result }}
+            unit=${{ needs.unit.result }}
+            security-tests=${{ needs.security-tests.result }}
+            build-verify=${{ needs.build-verify.result }}
+            security-audit=${{ needs.security-audit.result }}
+            security-secrets=${{ needs.security-secrets.result }}
+            security-sast=${{ needs.security-sast.result }}
+            security-iac=${{ needs.security-iac.result }}
+            dependency-review=${{ needs.dependency-review.result }}
+            actionlint=${{ needs.actionlint.result }}
+            e2e=${{ needs.e2e.result }}
+        run: |
+          FAILED=0
+          {
+            echo "## Quality gate"
+            echo ""
+            echo "| Lane | Result |"
+            echo "| --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          while IFS='=' read -r lane result; do
+            [ -n "$lane" ] || continue
+            case "$result" in
+              success|skipped) icon="✅" ;;
+              *) icon="❌"; FAILED=1 ;;
+            esac
+            echo "| $lane | $icon $result |" >> "$GITHUB_STEP_SUMMARY"
+            echo "$lane: $result"
+          done <<EOF
+          $RESULTS
+          EOF
+          if [ "$FAILED" -ne 0 ]; then
+            echo "Quality gate: at least one lane failed or was cancelled."
+            exit 1
+          fi
+          echo "Quality gate: all lanes passed (or were legitimately skipped)."

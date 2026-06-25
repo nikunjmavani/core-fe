@@ -1,3 +1,8 @@
+---
+name: component-promotion
+description: Move page-local components to shared or family-shared layers when a second consumer appears. Use when promoting code up the promotion ladder or when a component is imported from two page islands.
+---
+
 # Component Promotion Skill
 
 Move a component from a page-specific location to the shared layer when it's needed by multiple page groups.

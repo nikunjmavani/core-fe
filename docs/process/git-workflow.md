@@ -6,11 +6,14 @@ Professional branch strategy and pull-request flow for core-fe. For setup see [s
 
 ## Primary long-lived branches
 
-| Branch   | Purpose                           | Contains                     |
-| -------- | --------------------------------- | ---------------------------- |
-| **main** | Production-ready code             | Stable, fully tested code    |
-| **dev**  | Integration branch for developers | Latest development changes   |
-| **qa**   | Testing branch for QA team        | Code ready for QA validation |
+These branches represent environments and use simple, standard names.
+
+| Branch   | GitHub Environment | Purpose                           | Contains                   |
+| -------- | ------------------ | --------------------------------- | -------------------------- |
+| **main** | `production`       | Production-ready code             | Stable, fully tested code  |
+| **dev**  | `development`      | Integration branch for developers | Latest development changes |
+
+Canonical mapping lives in [`scripts/setup/setup.config.json`](../../scripts/setup/setup.config.json).
 
 ---
 
@@ -46,6 +49,10 @@ Use the format: **type/short-description**
 - fix/API-205-login-error
 - refactor/SYS-88-clean-architecture
 
+### Accepted type prefixes
+
+`feature` · `feat` · `fix` · `hotfix` · `refactor` · `docs` · `test` · `chore` · `ci` · `perf` · `build` · `style` · `revert`
+
 ---
 
 ## Full workflow: merge flow
@@ -54,10 +61,6 @@ Use the format: **type/short-description**
 flowchart TB
   subgraph prod [Production]
     main[main]
-  end
-
-  subgraph qa_env [QA]
-    qa[qa]
   end
 
   subgraph dev_env [Development]
@@ -72,12 +75,11 @@ flowchart TB
 
   feature --> dev
   fix --> dev
-  dev --> qa
-  qa --> main
+  dev --> main
   hotfix --> main
 ```
 
-**Merge order:** feature/... → dev → qa → main
+**Merge order:** feature/... → dev → main
 
 ---
 
@@ -110,24 +112,19 @@ git push origin feature/ai-stream-response
 
 - **Target branch:** `dev` (for feature/fix/refactor branches).
 - PR title must follow conventional commits (e.g. `feat: add AI streaming response`).
-- CI runs automatically (lint, format, type-check, tests, .env.example check, build, security, E2E). All must pass.
-- After review and approval, merge into `dev`.
+- CI runs automatically (lint, format, type-check, tests, build, security, E2E). All must pass.
+- **Protected branches:** Required checks and merge rules for `main` and `dev` are documented in [branch-protection.md](../deployment/branch-protection.md).
 
-### 5. Promote to QA
+### 5. Promote to production
 
-- Open a PR **dev → qa** when a set of changes is ready for QA.
-- After merge, QA environment deploys (Netlify). Run smoke and QA tests.
-
-### 6. Promote to production
-
-- Open a PR **qa → main** when QA has signed off.
-- After merge, production deploys (Netlify). Ensure runbook steps are done if needed.
+- Open a PR **dev → main** when changes are ready for production.
+- After merge, post-merge CI deploys to Netlify (`development` on push to `dev`, `production` on push to `main`).
 
 ### Hotfix (production fix)
 
 - Branch from **main**: `git checkout main && git pull && git checkout -b hotfix/payment-crash`.
 - Fix, commit, push. Open PR **hotfix/... → main**.
-- After merge, deploy to production. Then merge **main → dev** (and optionally **main → qa**) to keep long-lived branches in sync.
+- After merge, deploy to production. Post-merge CI dispatches a back-merge PR to sync **main → dev**.
 
 ---
 
@@ -150,8 +147,10 @@ git push origin feature/ai-stream-response
 
 ## Summary
 
-**Long-lived branches:** main, dev, qa
+**Long-lived branches:** main, dev
+
+**GitHub environments:** `production` (main), `development` (dev)
 
 **Short-lived branches:** feature/short-description, fix/short-description, refactor/short-description, docs/..., test/..., chore/..., hotfix/...
 
-**PR flow:** feature → dev → qa → main. CI runs on every PR to main, dev, or qa; deployments to Netlify trigger per your Netlify branch configuration (e.g. dev, qa, main).
+**PR flow:** feature → dev → main. CI runs on every PR to `main` or `dev`; Netlify deploys run from post-merge CI on push to `dev` (development) and `main` (production).
