@@ -40,4 +40,12 @@ describe('useUIStore', () => {
     useUIStore.getState().setCommandPaletteOpen(false);
     expect(useUIStore.getState().commandPaletteOpen).toBe(false);
   });
+
+  it('appearance dialog: defaults closed, toggles + sets', () => {
+    expect(useUIStore.getState().appearanceOpen).toBe(false);
+    useUIStore.getState().toggleAppearance();
+    expect(useUIStore.getState().appearanceOpen).toBe(true);
+    useUIStore.getState().setAppearanceOpen(false);
+    expect(useUIStore.getState().appearanceOpen).toBe(false);
+  });
 });

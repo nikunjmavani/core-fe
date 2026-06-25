@@ -27,6 +27,7 @@ import { manifest as organizationPickerManifest } from '@/pages/organization/org
 import { manifest as registerManifest } from '@/pages/register/register.manifest.ts';
 import { manifest as resetPasswordManifest } from '@/pages/reset-password/reset-password.manifest.ts';
 import { manifest as verifyEmailManifest } from '@/pages/verify-email/verify-email.manifest.ts';
+import { AppearanceDialogLazy } from '@/shared/components/AppearanceDialog/index.ts';
 import { ConsentBanner } from '@/shared/components/ConsentBanner/index.ts';
 import { FloatingSettingsButton } from '@/shared/components/FloatingSettingsButton/index.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
@@ -137,6 +138,8 @@ const rootRoute = createRootRoute({
       <SettingsModalLazy />
       {/* Right-edge handle: open Appearance from anywhere (signed-in, unlocked). */}
       <FloatingSettingsButton />
+      {/* Dedicated Appearance dialog — its own surface, opened via useUIStore. */}
+      <AppearanceDialogLazy />
       <OfflineIndicator />
       {/* aria-live announcer: reads the new document.title on navigation. */}
       <RouteAnnouncer />

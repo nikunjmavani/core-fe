@@ -1,9 +1,7 @@
-import { useNavigate } from '@tanstack/react-router';
-
 import { config } from '@/core/config/env.ts';
-import { settingsHash } from '@/shared/components/SettingsModal/settings-hash.ts';
 import { Palette } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
 /**
  * A handle pinned to the right edge that opens the Appearance settings from
@@ -13,17 +11,15 @@ import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
  * overlay (z-40), so opening Settings covers it.
  */
 export function FloatingSettingsButton() {
-  const navigate = useNavigate();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const setAppearanceOpen = useUIStore((s) => s.setAppearanceOpen);
 
   if (!isAuthenticated || config.themeLock) return null;
 
   return (
     <button
       type="button"
-      onClick={() =>
-        void navigate({ to: '.', hash: settingsHash('account', 'appearance') })
-      }
+      onClick={() => setAppearanceOpen(true)}
       aria-label="Open appearance settings"
       title="Appearance"
       data-testid="floating-settings"

@@ -2,7 +2,6 @@ import { useState } from 'react';
 
 import { config } from '@/core/config/env.ts';
 import { cn } from '@/lib/utils.ts';
-import { SectionHeader } from '@/shared/components/SettingsModal/SettingsPanelShell.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
   Card,
@@ -264,13 +263,12 @@ function lookFields(look: GeneratedTheme | null) {
 }
 
 /**
- * Appearance section — a shadcn-create-style theme studio: light/dark/system
- * mode plus per-axis pickers (accent colour, chart colour, base colour, body +
- * heading font, radius, menu style) and a Shuffle. Persists via
- * {@link useThemeStore}. When `config.themeLock` is set the theme is pinned in
- * code and the controls are hidden (FE-67).
+ * Appearance controls — a shadcn-create-style theme studio: light/dark/system
+ * mode plus per-axis pickers (colour, fonts, radius, density, motion, …) and a
+ * Shuffle. Rendered inside the dedicated AppearanceDialog, persisted via
+ * {@link useThemeStore}. When `config.themeLock` is set the controls are hidden.
  */
-export function AccountAppearancePanel() {
+export function AppearancePanel() {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const preset = useThemeStore((s) => s.preset);
@@ -323,8 +321,7 @@ export function AccountAppearancePanel() {
 
   if (config.themeLock) {
     return (
-      <div className="space-y-6" data-testid="settings-section-appearance">
-        <SectionHeader title="Appearance" description="How the app looks for you." />
+      <div className="space-y-6" data-testid="appearance-panel">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Theme</CardTitle>
@@ -347,9 +344,7 @@ export function AccountAppearancePanel() {
   const chartHex = oklchToHex(0.64, 0.17, look.chartHue);
 
   return (
-    <div className="space-y-6" data-testid="settings-section-appearance">
-      <SectionHeader title="Appearance" description="Make the workspace yours." />
-
+    <div className="space-y-6" data-testid="appearance-panel">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Mode</CardTitle>

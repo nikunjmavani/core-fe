@@ -1,37 +1,37 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { navigateMock, useAuthStoreMock, configMock } = vi.hoisted(() => ({
-  navigateMock: vi.fn(),
+const { setAppearanceOpenMock, useAuthStoreMock, configMock } = vi.hoisted(() => ({
+  setAppearanceOpenMock: vi.fn(),
   useAuthStoreMock: vi.fn(),
   configMock: { themeLock: false },
 }));
 
-vi.mock('@tanstack/react-router', () => ({ useNavigate: () => navigateMock }));
 vi.mock('@/core/config/env.ts', () => ({ config: configMock }));
 vi.mock('@/shared/store/useAuthStore/index.ts', () => ({
   useAuthStore: (selector: (s: { isAuthenticated: boolean }) => unknown) =>
     useAuthStoreMock(selector),
+}));
+vi.mock('@/shared/store/useUIStore/index.ts', () => ({
+  useUIStore: (selector: (s: { setAppearanceOpen: () => void }) => unknown) =>
+    selector({ setAppearanceOpen: setAppearanceOpenMock }),
 }));
 
 import { FloatingSettingsButton } from './FloatingSettingsButton.tsx';
 
 describe('FloatingSettingsButton', () => {
   beforeEach(() => {
-    navigateMock.mockClear();
+    setAppearanceOpenMock.mockClear();
     configMock.themeLock = false;
     useAuthStoreMock.mockImplementation((selector) =>
       selector({ isAuthenticated: true }),
     );
   });
 
-  it('opens the appearance settings hash on click', () => {
+  it('opens the appearance dialog on click', () => {
     render(<FloatingSettingsButton />);
     screen.getByTestId('floating-settings').click();
-    expect(navigateMock).toHaveBeenCalledWith({
-      to: '.',
-      hash: 'settings/account/appearance',
-    });
+    expect(setAppearanceOpenMock).toHaveBeenCalledWith(true);
   });
 
   it('renders nothing when signed out', () => {

@@ -4,9 +4,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 
-import { AccountAppearancePanel } from './AccountAppearancePanel.tsx';
+import { AppearancePanel } from './AppearancePanel.tsx';
 
-describe('AccountAppearancePanel', () => {
+describe('AppearancePanel', () => {
   beforeEach(() => {
     useThemeStore.setState({
       theme: 'system',
@@ -24,8 +24,8 @@ describe('AccountAppearancePanel', () => {
   });
 
   it('renders the mode + colour + type pickers', () => {
-    render(<AccountAppearancePanel />);
-    expect(screen.getByTestId('settings-section-appearance')).toBeInTheDocument();
+    render(<AppearancePanel />);
+    expect(screen.getByTestId('appearance-panel')).toBeInTheDocument();
     expect(screen.getByTestId('theme-dark')).toBeInTheDocument();
     expect(screen.getByTestId('accent-violet')).toBeInTheDocument();
     expect(screen.getByTestId('chart-blue')).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe('AccountAppearancePanel', () => {
 
   it('picking an accent colour switches to the custom look', async () => {
     const user = userEvent.setup();
-    render(<AccountAppearancePanel />);
+    render(<AppearancePanel />);
     await user.click(screen.getByTestId('accent-violet'));
     expect(useThemeStore.getState().preset).toBe('custom');
     expect(useThemeStore.getState().customTheme?.hue).toBe(290);
@@ -49,7 +49,7 @@ describe('AccountAppearancePanel', () => {
 
   it('picking a base colour applies it via data-base (orthogonal)', async () => {
     const user = userEvent.setup();
-    render(<AccountAppearancePanel />);
+    render(<AppearancePanel />);
     await user.click(screen.getByTestId('base-stone'));
     expect(useThemeStore.getState().baseId).toBe('stone');
     expect(document.documentElement.dataset.base).toBe('stone');
@@ -57,21 +57,21 @@ describe('AccountAppearancePanel', () => {
 
   it('picking an icon weight applies it (orthogonal)', async () => {
     const user = userEvent.setup();
-    render(<AccountAppearancePanel />);
+    render(<AppearancePanel />);
     await user.click(screen.getByTestId('icon-bold'));
     expect(useThemeStore.getState().iconWeight).toBe('bold');
   });
 
   it('picking an icon library applies it (orthogonal)', async () => {
     const user = userEvent.setup();
-    render(<AccountAppearancePanel />);
+    render(<AppearancePanel />);
     await user.click(screen.getByTestId('iconlib-tabler'));
     expect(useThemeStore.getState().iconLibrary).toBe('tabler');
   });
 
   it('shuffle generates a custom look', async () => {
     const user = userEvent.setup();
-    render(<AccountAppearancePanel />);
+    render(<AppearancePanel />);
     await user.click(screen.getByTestId('theme-shuffle'));
     expect(useThemeStore.getState().preset).toBe('custom');
   });

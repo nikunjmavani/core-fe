@@ -3,6 +3,7 @@ import { Button } from '@/shared/components/ui/button.tsx';
 import { Palette, Sparkles } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
+import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 import {
   GENERATED_FONTS,
   GENERATED_PRESET,
@@ -24,13 +25,14 @@ const CHART_SWATCHES = [
  * every shuffled axis at a glance: the accent gradient + glow, the chart-palette
  * swatches, and the active font/radius label. So a theme change (Shuffle or a
  * preset) is immediately visible from the landing surface. Shuffle is inline;
- * named presets + the full picker live in Settings → Appearance. Controls hide
+ * named presets + the full picker live in the Appearance dialog. Controls hide
  * when the theme is locked.
  */
 export function ThemeShowcase() {
   const preset = useThemeStore((s) => s.preset);
   const customTheme = useThemeStore((s) => s.customTheme);
   const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
+  const setAppearanceOpen = useUIStore((s) => s.setAppearanceOpen);
 
   // Shuffle rolls the toast design too — surface a toast so it's visible.
   const handleShuffle = () => {
@@ -95,13 +97,14 @@ export function ThemeShowcase() {
             <Sparkles className="mr-2 size-4" aria-hidden="true" /> Shuffle
           </Button>
         )}
-        <a
-          href="#settings/account/appearance"
+        <button
+          type="button"
+          onClick={() => setAppearanceOpen(true)}
           className="text-primary text-sm font-medium hover:underline"
           data-testid="dashboard-theme-customize"
         >
           Customize →
-        </a>
+        </button>
       </div>
     </section>
   );

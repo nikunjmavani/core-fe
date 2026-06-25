@@ -4,7 +4,6 @@ import {
   CreditCard,
   GitBranch,
   MonitorSmartphone,
-  Palette,
   Plug,
   Shield,
   User,
@@ -27,7 +26,6 @@ type AccountSettingsSection =
   | 'account'
   | 'security'
   | 'notifications'
-  | 'appearance'
   | 'sessions';
 
 export type OrganizationSettingsSection =
@@ -47,7 +45,7 @@ export interface SettingsSectionRef {
 }
 
 export const SECTIONS_BY_SCOPE: Record<SettingsScope, readonly SettingsSection[]> = {
-  account: ['profile', 'account', 'security', 'notifications', 'appearance', 'sessions'],
+  account: ['profile', 'account', 'security', 'notifications', 'sessions'],
   organization: ['general', 'members', 'roles', 'branches', 'billing', 'integrations'],
 };
 
@@ -118,13 +116,6 @@ export const SETTINGS_NAV: readonly SettingsNavGroup[] = [
         label: 'Notifications',
         icon: Bell,
         keywords: ['notifications', 'email', 'alerts', 'push'],
-      },
-      {
-        scope: 'account',
-        section: 'appearance',
-        label: 'Appearance',
-        icon: Palette,
-        keywords: ['appearance', 'theme', 'dark', 'light', 'system', 'color'],
       },
       {
         scope: 'account',

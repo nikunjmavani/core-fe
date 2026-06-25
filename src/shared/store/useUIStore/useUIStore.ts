@@ -3,11 +3,15 @@ import { create } from 'zustand';
 interface UIStore {
   sidebarOpen: boolean;
   commandPaletteOpen: boolean;
+  /** The dedicated Appearance dialog (opened by the floating handle / Customize). */
+  appearanceOpen: boolean;
 
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
   toggleCommandPalette: () => void;
   setCommandPaletteOpen: (open: boolean) => void;
+  setAppearanceOpen: (open: boolean) => void;
+  toggleAppearance: () => void;
 }
 
 /**
@@ -24,9 +28,12 @@ function initialSidebarOpen(): boolean {
 export const useUIStore = create<UIStore>((set) => ({
   sidebarOpen: initialSidebarOpen(),
   commandPaletteOpen: false,
+  appearanceOpen: false,
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
   setSidebarOpen: (sidebarOpen) => set({ sidebarOpen }),
   toggleCommandPalette: () => set((s) => ({ commandPaletteOpen: !s.commandPaletteOpen })),
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
+  setAppearanceOpen: (appearanceOpen) => set({ appearanceOpen }),
+  toggleAppearance: () => set((s) => ({ appearanceOpen: !s.appearanceOpen })),
 }));

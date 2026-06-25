@@ -19,7 +19,6 @@ import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import type { OrganizationType } from '@/shared/tenancy/me-context.ts';
 
-import { AccountAppearancePanel } from './account/AccountAppearancePanel.tsx';
 import { AccountNotificationsPanel } from './account/AccountNotificationsPanel.tsx';
 import { AccountPanel } from './account/AccountPanel.tsx';
 import { AccountProfilePanel } from './account/AccountProfilePanel.tsx';
@@ -210,8 +209,6 @@ function panelForSection(section: SettingsSection) {
       return <AccountSecurityPanel />;
     case 'notifications':
       return <AccountNotificationsPanel />;
-    case 'appearance':
-      return <AccountAppearancePanel />;
     case 'sessions':
       return <AccountSessionsPanel />;
     case 'general':
