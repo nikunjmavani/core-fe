@@ -42,6 +42,14 @@ const GENERATED_VARS = [
   '--spacing',
   '--default-transition-duration',
   '--default-transition-timing-function',
+  '--text-xs',
+  '--text-sm',
+  '--text-base',
+  '--text-lg',
+  '--text-xl',
+  '--text-2xl',
+  '--text-3xl',
+  '--text-4xl',
 ];
 
 afterEach(() => {
@@ -51,6 +59,9 @@ afterEach(() => {
   delete root.dataset.menu;
   delete root.dataset.contrast;
   delete root.dataset.elevation;
+  delete root.dataset.separation;
+  delete root.dataset.shape;
+  delete root.dataset.focus;
   root.style.removeProperty('--icon-stroke');
   for (const v of GENERATED_VARS) root.style.removeProperty(v);
 });
@@ -137,6 +148,22 @@ describe('generated themes (shuffle)', () => {
     for (let i = 1; i <= 5; i += 1) {
       expect(style.getPropertyValue(`--color-chart-${i}`)).toContain('200');
     }
+  });
+
+  it('applyGeneratedTheme applies the feel axes (shape/separation/focus + type scale)', () => {
+    applyGeneratedTheme({
+      ...sample,
+      shapeId: 'pill',
+      separationId: 'tint',
+      focusId: 'glow',
+      typeScaleId: 'grand',
+    });
+    const root = document.documentElement;
+    expect(root.dataset.shape).toBe('pill');
+    expect(root.dataset.separation).toBe('tint');
+    expect(root.dataset.focus).toBe('glow');
+    // a non-default type scale overrides --text-* (default leaves them stock)
+    expect(root.style.getPropertyValue('--text-lg')).not.toBe('');
   });
 
   it('applyGeneratedTheme sets accent + fonts + radius + chart, clears data-theme', () => {

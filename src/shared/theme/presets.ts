@@ -182,6 +182,53 @@ export const ACCENT_INTENSITIES: Record<string, { label: string; chroma: number 
 };
 export const DEFAULT_INTENSITY = 'balanced';
 
+/** Surface separation — how cards divide from the page: border, shadow (the border
+ *  fades, composing with elevation), or tint (a tonal step instead of a line). */
+export const SEPARATION_STRATEGIES = [
+  { id: 'border', label: 'Border' },
+  { id: 'shadow', label: 'Shadow' },
+  { id: 'tint', label: 'Tint' },
+] as const;
+export const DEFAULT_SEPARATION = 'border';
+
+/** Shape language — per-component radius beyond the global radius: uniform, pill
+ *  (round buttons/inputs), or sharp (square cards/inputs). */
+export const SHAPE_LANGUAGES = [
+  { id: 'uniform', label: 'Uniform' },
+  { id: 'pill', label: 'Pill' },
+  { id: 'sharp', label: 'Sharp' },
+] as const;
+export const DEFAULT_SHAPE = 'uniform';
+
+/** Modular type scale — ratio between adjacent --text-* sizes (default keeps
+ *  Tailwind's stock scale untouched). */
+export const TYPE_SCALES: Record<string, { label: string; ratio: number }> = {
+  compact: { label: 'Compact', ratio: 1.15 },
+  default: { label: 'Default', ratio: 1.2 },
+  grand: { label: 'Grand', ratio: 1.333 },
+};
+export const DEFAULT_TYPE_SCALE = 'default';
+
+/** Focus-ring personality — ring (stock), glow (soft accent halo), or underline. */
+export const FOCUS_RINGS = [
+  { id: 'ring', label: 'Ring' },
+  { id: 'glow', label: 'Glow' },
+  { id: 'underline', label: 'Underline' },
+] as const;
+export const DEFAULT_FOCUS = 'ring';
+
+/** --text-* steps for the modular type scale (anchor = --text-base = 1rem). */
+const TEXT_SCALE_STEPS: ReadonlyArray<readonly [string, number]> = [
+  ['--text-xs', -2],
+  ['--text-sm', -1],
+  ['--text-base', 0],
+  ['--text-lg', 1],
+  ['--text-xl', 2],
+  ['--text-2xl', 3],
+  ['--text-3xl', 4],
+  ['--text-4xl', 5],
+];
+
 /** Curated heading↔body font pairings — generation picks one so headings get a
  *  distinct-but-harmonious voice instead of a random clash. */
 export const FONT_PAIRINGS: ReadonlyArray<{ body: string; heading: string }> = [
@@ -201,6 +248,10 @@ const ELEVATION_IDS = ELEVATION_LEVELS.map((e) => e.id);
 const CONTRAST_IDS = CONTRAST_MODES.map((c) => c.id);
 const HARMONY_IDS = Object.keys(HARMONY_RULES);
 const INTENSITY_IDS = Object.keys(ACCENT_INTENSITIES);
+const SEPARATION_IDS = SEPARATION_STRATEGIES.map((s) => s.id);
+const SHAPE_IDS = SHAPE_LANGUAGES.map((s) => s.id);
+const TYPE_SCALE_IDS = Object.keys(TYPE_SCALES);
+const FOCUS_IDS = FOCUS_RINGS.map((f) => f.id);
 
 // ── Seeded generation ────────────────────────────────────────────────────────
 // The whole look derives from a single 32-bit seed, so it's reproducible and
@@ -246,6 +297,10 @@ export interface GeneratedTheme {
   contrastId: string;
   harmonyId: string;
   intensityId: string;
+  separationId: string;
+  shapeId: string;
+  typeScaleId: string;
+  focusId: string;
 }
 
 const DEFAULT_LOOK: GeneratedTheme = {
@@ -260,10 +315,15 @@ const DEFAULT_LOOK: GeneratedTheme = {
   contrastId: DEFAULT_CONTRAST,
   harmonyId: DEFAULT_HARMONY,
   intensityId: DEFAULT_INTENSITY,
+  separationId: DEFAULT_SEPARATION,
+  shapeId: DEFAULT_SHAPE,
+  typeScaleId: DEFAULT_TYPE_SCALE,
+  focusId: DEFAULT_FOCUS,
 };
 
 /** Fill a partial/legacy look with defaults (older state stored only fontId, and
  *  pre-experience-axes looks omit density/motion/elevation/contrast). */
+// eslint-disable-next-line complexity -- flat per-field defaulting; cognitively trivial
 export function normalizeLook(
   look: (Partial<GeneratedTheme> & { fontId?: string }) | null,
 ): GeneratedTheme {
@@ -281,6 +341,10 @@ export function normalizeLook(
     contrastId: l.contrastId ?? DEFAULT_LOOK.contrastId,
     harmonyId: l.harmonyId ?? DEFAULT_LOOK.harmonyId,
     intensityId: l.intensityId ?? DEFAULT_LOOK.intensityId,
+    separationId: l.separationId ?? DEFAULT_LOOK.separationId,
+    shapeId: l.shapeId ?? DEFAULT_LOOK.shapeId,
+    typeScaleId: l.typeScaleId ?? DEFAULT_LOOK.typeScaleId,
+    focusId: l.focusId ?? DEFAULT_LOOK.focusId,
   };
 }
 
@@ -315,7 +379,8 @@ const EXPERIENCE_VARS = [
   '--spacing',
   '--default-transition-duration',
   '--default-transition-timing-function',
-] as const;
+  ...TEXT_SCALE_STEPS.map(([v]) => v),
+];
 
 /** Remove any inline generated vars (accent/font/radius/chart/experience) and the
  *  generated data-axes. Leaves the orthogonal `data-base` / `data-menu` untouched. */
@@ -332,6 +397,9 @@ function clearGeneratedTheme(): void {
   }
   delete root.dataset.elevation;
   delete root.dataset.contrast;
+  delete root.dataset.separation;
+  delete root.dataset.shape;
+  delete root.dataset.focus;
 }
 
 /**
@@ -416,6 +484,7 @@ function pickPairing(current: GeneratedTheme | null): { body: string; heading: s
       ? FONT_PAIRINGS.filter((p) => `${p.body}/${p.heading}` !== key)
       : FONT_PAIRINGS;
   const idx = Math.floor(rng() * pool.length);
+  // eslint-disable-next-line security/detect-object-injection -- idx is a bounded random index into a local array
   return pool[idx] ?? FONT_PAIRINGS[0] ?? { body: 'inter', heading: 'inter' };
 }
 
@@ -434,6 +503,10 @@ function buildLook(): GeneratedTheme {
     contrastId: pickId(CONTRAST_IDS, null),
     harmonyId: pickId(HARMONY_IDS, null),
     intensityId: pickId(INTENSITY_IDS, null),
+    separationId: pickId(SEPARATION_IDS, null),
+    shapeId: pickId(SHAPE_IDS, null),
+    typeScaleId: pickId(TYPE_SCALE_IDS, null),
+    focusId: pickId(FOCUS_IDS, null),
   };
 }
 
@@ -562,18 +635,67 @@ export const SHUFFLE_TEMP = {
  * it overrides the base `@theme` tokens in both light and dark (CSP-safe; no
  * injected `<style>`, no remote fonts). Orthogonal to base colour + menu.
  */
-export function applyGeneratedTheme(input: GeneratedTheme): void {
-  const theme = normalizeLook(input);
-  const root = document.documentElement;
+/** Set/remove `data-<name>` for an axis (removed at its default value). */
+function applyDataAxis(
+  root: HTMLElement,
+  name: string,
+  value: string,
+  fallback: string,
+): void {
+  if (value && value !== fallback) {
+    root.setAttribute(`data-${name}`, value);
+  } else {
+    root.removeAttribute(`data-${name}`);
+  }
+}
 
+/** Accent colour + contrast-safe foreground (intensity → OKLCH chroma). */
+function applyAccent(root: HTMLElement, theme: GeneratedTheme): void {
   const hue = norm(theme.hue);
   const chroma = ACCENT_INTENSITIES[theme.intensityId]?.chroma ?? 0.16;
   const accent = `oklch(0.58 ${chroma} ${hue})`;
   // Contrast-safe: pick the readable foreground for THIS accent (a11y guardrail).
   const onAccent = accentForeground(0.58, chroma, hue);
-  delete root.dataset.theme;
   for (const v of ACCENT_VARS) root.style.setProperty(v, accent);
   for (const v of ACCENT_FG_VARS) root.style.setProperty(v, onAccent);
+}
+
+/** 5-series chart palette derived from the chart anchor via the harmony rule. */
+function applyChartPalette(root: HTMLElement, theme: GeneratedTheme): void {
+  const chartBase = norm(theme.chartHue);
+  const offsets = HARMONY_RULES[theme.harmonyId]?.offsets ?? [0, 120, 240, 60, 180];
+  const monochrome = theme.harmonyId === 'monochromatic';
+  offsets.forEach((offset, i) => {
+    const lightness = monochrome ? 0.45 + i * 0.1 : 0.64;
+    root.style.setProperty(
+      `--color-chart-${i + 1}`,
+      `oklch(${lightness} 0.17 ${norm(chartBase + offset)})`,
+    );
+  });
+}
+
+/** Modular type scale → recompute --text-* (default keeps Tailwind's stock scale). */
+function applyTypeScale(root: HTMLElement, theme: GeneratedTheme): void {
+  const ratio = TYPE_SCALES[theme.typeScaleId]?.ratio;
+  if (ratio && theme.typeScaleId !== DEFAULT_TYPE_SCALE) {
+    for (const [v, step] of TEXT_SCALE_STEPS) {
+      root.style.setProperty(v, `${(ratio ** step).toFixed(4)}rem`);
+    }
+  } else {
+    for (const [v] of TEXT_SCALE_STEPS) root.style.removeProperty(v);
+  }
+}
+
+/**
+ * Apply a full generated look as inline CSS vars + data-axes on <html>. Pairs
+ * with clearGeneratedTheme (run by applyThemePreset). Orthogonal to base/menu.
+ */
+export function applyGeneratedTheme(input: GeneratedTheme): void {
+  const theme = normalizeLook(input);
+  const root = document.documentElement;
+  delete root.dataset.theme;
+
+  applyAccent(root, theme);
 
   root.style.setProperty(
     '--font-sans',
@@ -590,20 +712,7 @@ export function applyGeneratedTheme(input: GeneratedTheme): void {
   root.style.setProperty('--radius-lg', `${base}rem`);
   root.style.setProperty('--radius-xl', `${base * 1.5}rem`);
 
-  // Chart palette → derived from the chart anchor via the harmony rule
-  // (monochromatic keeps one hue and steps lightness; others spread the hue).
-  const chartBase = norm(theme.chartHue);
-  const harmonyOffsets = HARMONY_RULES[theme.harmonyId]?.offsets ?? [
-    0, 120, 240, 60, 180,
-  ];
-  const monochrome = theme.harmonyId === 'monochromatic';
-  harmonyOffsets.forEach((offset, i) => {
-    const lightness = monochrome ? 0.45 + i * 0.1 : 0.64;
-    root.style.setProperty(
-      `--color-chart-${i + 1}`,
-      `oklch(${lightness} 0.17 ${norm(chartBase + offset)})`,
-    );
-  });
+  applyChartPalette(root, theme);
 
   // Density → master spacing unit (every spacing utility is calc(var(--spacing)*n)).
   const spacing = DENSITY_SCALES[theme.densityId]?.spacing ?? 0.25;
@@ -617,18 +726,14 @@ export function applyGeneratedTheme(input: GeneratedTheme): void {
     motion?.ease ?? 'cubic-bezier(0.4, 0, 0.2, 1)',
   );
 
-  // Elevation + contrast → data attributes (index.css blocks do the rest; omitted
-  // at their defaults so the base look stays pristine).
-  if (theme.elevationId && theme.elevationId !== DEFAULT_ELEVATION) {
-    root.dataset.elevation = theme.elevationId;
-  } else {
-    delete root.dataset.elevation;
-  }
-  if (theme.contrastId && theme.contrastId !== DEFAULT_CONTRAST) {
-    root.dataset.contrast = theme.contrastId;
-  } else {
-    delete root.dataset.contrast;
-  }
+  // Elevation / contrast / separation / shape / focus → data attributes
+  // (index.css blocks do the rest; omitted at their defaults).
+  applyDataAxis(root, 'elevation', theme.elevationId, DEFAULT_ELEVATION);
+  applyDataAxis(root, 'contrast', theme.contrastId, DEFAULT_CONTRAST);
+  applyDataAxis(root, 'separation', theme.separationId, DEFAULT_SEPARATION);
+  applyDataAxis(root, 'shape', theme.shapeId, DEFAULT_SHAPE);
+  applyDataAxis(root, 'focus', theme.focusId, DEFAULT_FOCUS);
+  applyTypeScale(root, theme);
 }
 
 /** Apply a neutral base colour via `data-base` (cleared for `neutral`/unknown). */

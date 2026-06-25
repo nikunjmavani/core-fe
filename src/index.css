@@ -337,6 +337,41 @@
   --color-sidebar: oklch(0 0 0);
 }
 
+/* ── Surface separation (data-separation) — border (default) / shadow (border
+   fades, leans on elevation) / tint (a tonal step instead of a line). ── */
+[data-separation='shadow'] [data-slot='card'] {
+  border-color: transparent;
+}
+[data-separation='tint'] [data-slot='card'] {
+  border-color: transparent;
+  background-color: color-mix(in oklch, var(--color-card) 92%, var(--color-foreground));
+}
+
+/* ── Shape language (data-shape) — pill (round buttons/inputs) / sharp (square
+   cards/inputs); uniform uses the global radius. ── */
+[data-shape='pill'] [data-slot='button'],
+[data-shape='pill'] [data-slot='input'],
+[data-shape='pill'] [data-slot='select-trigger'] {
+  border-radius: 9999px;
+}
+[data-shape='sharp'] [data-slot='card'],
+[data-shape='sharp'] [data-slot='input'],
+[data-shape='sharp'] [data-slot='button'],
+[data-shape='sharp'] [data-slot='select-trigger'] {
+  border-radius: 0;
+}
+
+/* ── Focus-ring personality (data-focus) — glow (soft accent halo) / underline;
+   ring is stock. Overrides the focus shadow on focusable surfaces. ── */
+[data-focus='glow'] [data-slot]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--color-ring) 40%, transparent);
+}
+[data-focus='underline'] [data-slot]:focus-visible {
+  outline: none;
+  box-shadow: inset 0 -2px 0 0 var(--color-ring);
+}
+
 /* ── Keyframes ── */
 @keyframes accordion-down {
   from {
