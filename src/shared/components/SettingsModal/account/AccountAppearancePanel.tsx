@@ -35,11 +35,13 @@ import {
   GENERATED_RADII,
   type GeneratedTheme,
   HARMONY_RULES,
+  hexToHue,
   ICON_LIBRARIES,
   ICON_WEIGHTS,
   MENU_STYLES,
   MOTION_PRESETS,
   normalizeLook,
+  oklchToHex,
   SEPARATION_STRATEGIES,
   SHAPE_LANGUAGES,
   TOAST_POSITIONS,
@@ -92,42 +94,60 @@ const TOAST_POSITION_OPTIONS = TOAST_POSITIONS.map((id) => ({
   label: POSITION_LABELS[id],
 }));
 
-/** Accent / chart colour swatches (fixed catalog; colours come from .theme-dot-* CSS). */
-function Swatches({
+/**
+ * Colour field: a native colour "snippet" for any hue, plus the preset swatches as
+ * quick suggestions. The look stores an OKLCH hue, so a custom pick is mapped via
+ * hexToHue and the snippet reflects the applied accent (oklchToHex).
+ */
+function ColourField({
   ariaLabel,
   selectedId,
-  onPick,
+  currentHex,
+  onPickHue,
   testPrefix,
 }: {
   ariaLabel: string;
   selectedId: string | null;
-  onPick: (hue: number) => void;
+  currentHex: string;
+  onPickHue: (hue: number) => void;
   testPrefix: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className="flex flex-wrap gap-2">
-      {ACCENT_COLORS.map((c) => {
-        const active = selectedId === c.id;
-        return (
-          <button
-            key={c.id}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            aria-label={c.label}
-            title={c.label}
-            onClick={() => onPick(c.hue)}
-            data-testid={`${testPrefix}-${c.id}`}
-            className={cn(
-              'focus-visible:ring-ring size-7 rounded-full transition outline-none focus-visible:ring-2',
-              `theme-dot-${c.id}`,
-              active
-                ? 'ring-foreground ring-offset-background ring-2 ring-offset-2'
-                : 'hover:scale-110',
-            )}
-          />
-        );
-      })}
+    <div className="flex flex-wrap items-center gap-2">
+      <input
+        type="color"
+        value={currentHex}
+        onChange={(e) => onPickHue(hexToHue(e.target.value))}
+        aria-label={`${ariaLabel} — custom`}
+        title="Pick any colour"
+        data-testid={`${testPrefix}-custom`}
+        className="border-border size-7 cursor-pointer rounded-full border bg-transparent p-0 outline-none"
+      />
+      <span className="bg-border mx-1 h-6 w-px" aria-hidden="true" />
+      <div role="radiogroup" aria-label={ariaLabel} className="flex flex-wrap gap-2">
+        {ACCENT_COLORS.map((c) => {
+          const active = selectedId === c.id;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              aria-label={c.label}
+              title={c.label}
+              onClick={() => onPickHue(c.hue)}
+              data-testid={`${testPrefix}-${c.id}`}
+              className={cn(
+                'focus-visible:ring-ring size-7 rounded-full transition outline-none focus-visible:ring-2',
+                `theme-dot-${c.id}`,
+                active
+                  ? 'ring-foreground ring-offset-background ring-2 ring-offset-2'
+                  : 'hover:scale-110',
+              )}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -322,6 +342,9 @@ export function AccountAppearancePanel() {
     lookFields(customTheme);
   // Fully-defaulted look → current value for every per-axis picker below.
   const look = normalizeLook(customTheme);
+  const accentChroma = ACCENT_INTENSITIES[look.intensityId]?.chroma ?? 0.16;
+  const accentHex = oklchToHex(0.58, accentChroma, look.hue);
+  const chartHex = oklchToHex(0.64, 0.17, look.chartHue);
 
   return (
     <div className="space-y-6" data-testid="settings-section-appearance">
@@ -375,19 +398,21 @@ export function AccountAppearancePanel() {
         <CardContent className="space-y-5">
           <div className="space-y-2">
             <FieldLabel>Accent colour</FieldLabel>
-            <Swatches
+            <ColourField
               ariaLabel="Accent colour"
               selectedId={accentId}
-              onPick={(hue) => updateLook({ hue })}
+              currentHex={accentHex}
+              onPickHue={(hue) => updateLook({ hue })}
               testPrefix="accent"
             />
           </div>
           <div className="space-y-2">
             <FieldLabel>Chart colour</FieldLabel>
-            <Swatches
+            <ColourField
               ariaLabel="Chart colour"
               selectedId={chartId}
-              onPick={(hue) => updateLook({ chartHue: hue })}
+              currentHex={chartHex}
+              onPickHue={(hue) => updateLook({ chartHue: hue })}
               testPrefix="chart"
             />
           </div>

@@ -448,6 +448,48 @@ export function accentForeground(L: number, C: number, H: number): string {
   return withWhite >= withBlack ? 'oklch(0.985 0 0)' : 'oklch(0.205 0 0)';
 }
 
+/** OKLCH → #rrggbb (gamut-clamped) — for binding a native `<input type="color">`. */
+export function oklchToHex(L: number, C: number, H: number): string {
+  const hr = (H * Math.PI) / 180;
+  const a = C * Math.cos(hr);
+  const b = C * Math.sin(hr);
+  const lc = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const mc = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const sc = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const channels = [
+    4.0767416621 * lc - 3.3077115913 * mc + 0.2309699292 * sc,
+    -1.2684380046 * lc + 2.6097574011 * mc - 0.3413193965 * sc,
+    -0.0041960863 * lc - 0.7034186147 * mc + 1.707614701 * sc,
+  ];
+  const hex = channels
+    .map((u) => {
+      const lin = Math.min(1, Math.max(0, u));
+      const srgb = lin <= 0.0031308 ? 12.92 * lin : 1.055 * lin ** (1 / 2.4) - 0.055;
+      return Math.round(Math.min(1, Math.max(0, srgb)) * 255)
+        .toString(16)
+        .padStart(2, '0');
+    })
+    .join('');
+  return `#${hex}`;
+}
+
+/** #rrggbb → OKLCH hue (0–359), so a picked colour maps into the hue-based look. */
+export function hexToHue(hex: string): number {
+  const digits = /^#?([0-9a-f]{6})$/i.exec(hex.trim())?.[1];
+  if (!digits) return 0;
+  const int = Number.parseInt(digits, 16);
+  const toLin = (u: number) => (u <= 0.04045 ? u / 12.92 : ((u + 0.055) / 1.055) ** 2.4);
+  const r = toLin(((int >> 16) & 255) / 255);
+  const g = toLin(((int >> 8) & 255) / 255);
+  const b = toLin((int & 255) / 255);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return ((Math.round((Math.atan2(B, A) * 180) / Math.PI) % 360) + 360) % 360;
+}
+
 /** A random accent hue (0–359). */
 export function randomThemeHue(): number {
   return Math.floor(rng() * 360);

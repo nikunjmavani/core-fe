@@ -12,10 +12,12 @@ import {
   GENERATED_RADII,
   generateSeededTheme,
   generateTheme,
+  hexToHue,
   isThemePreset,
   nextAppVariant,
   nextAuthVariant,
   nextRandomHue,
+  oklchToHex,
   randomThemeHue,
   shuffleIcons,
   THEME_PRESETS,
@@ -139,6 +141,20 @@ describe('generated themes (shuffle)', () => {
   it('accentForeground returns a contrast-safe foreground that adapts to the accent', () => {
     expect(accentForeground(0.85, 0.16, 100)).toBe('oklch(0.205 0 0)'); // light → dark text
     expect(accentForeground(0.3, 0.12, 265)).toBe('oklch(0.985 0 0)'); // dark → light text
+  });
+
+  it('oklchToHex / hexToHue round-trip an accent hue within tolerance', () => {
+    const hex = oklchToHex(0.58, 0.16, 200);
+    expect(hex).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(Math.abs(hexToHue(hex) - 200)).toBeLessThanOrEqual(8);
+  });
+
+  it('hexToHue maps primaries to the expected OKLCH hue band (and is fault-tolerant)', () => {
+    expect(hexToHue('#ff0000')).toBeGreaterThanOrEqual(20); // red
+    expect(hexToHue('#ff0000')).toBeLessThanOrEqual(40);
+    expect(hexToHue('#0000ff')).toBeGreaterThanOrEqual(250); // blue
+    expect(hexToHue('#0000ff')).toBeLessThanOrEqual(290);
+    expect(hexToHue('not-a-hex')).toBe(0); // safe fallback
   });
 
   it('applyGeneratedTheme derives the chart palette from the harmony rule', () => {
