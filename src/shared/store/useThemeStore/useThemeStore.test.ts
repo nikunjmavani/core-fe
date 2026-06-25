@@ -68,6 +68,7 @@ describe('useThemeStore', () => {
     useThemeStore.getState().shuffleTheme();
     const state = useThemeStore.getState();
     expect(state.preset).toBe('custom');
+    expect(typeof state.seed).toBe('number');
     expect(state.customTheme).toMatchObject({
       hue: expect.any(Number),
       chartHue: expect.any(Number),
@@ -95,6 +96,19 @@ describe('useThemeStore', () => {
     // on; either way the stored index stays a valid variant.
     expect([0, 1, 2]).toContain(state.authVariant);
     expect([0, 1, 2]).toContain(state.appVariant);
+  });
+
+  it('applyThemeSeed reproduces a look from its seed and stores it', () => {
+    useThemeStore.getState().applyThemeSeed(4821);
+    const look = useThemeStore.getState().customTheme;
+    expect(useThemeStore.getState().seed).toBe(4821);
+    expect(useThemeStore.getState().preset).toBe('custom');
+    // switching to a named preset clears the seed…
+    useThemeStore.getState().setPreset('default');
+    expect(useThemeStore.getState().seed).toBeNull();
+    // …and re-applying the same seed reproduces the identical look
+    useThemeStore.getState().applyThemeSeed(4821);
+    expect(useThemeStore.getState().customTheme).toEqual(look);
   });
 
   it('updateLook sets one axis and switches to the custom look', () => {

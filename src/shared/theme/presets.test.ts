@@ -9,6 +9,7 @@ import {
   GENERATED_FONTS,
   GENERATED_PRESET,
   GENERATED_RADII,
+  generateSeededTheme,
   generateTheme,
   isThemePreset,
   nextAppVariant,
@@ -111,6 +112,11 @@ describe('generated themes (shuffle)', () => {
     expect(GENERATED_FONTS[t.bodyFontId]).toBeDefined();
     expect(GENERATED_FONTS[t.headingFontId]).toBeDefined();
     expect(GENERATED_RADII[t.radiusId]).toBeDefined();
+  });
+
+  it('generateSeededTheme is reproducible (same seed → same look; different seeds differ)', () => {
+    expect(generateSeededTheme(4821)).toEqual(generateSeededTheme(4821));
+    expect(generateSeededTheme(1)).not.toEqual(generateSeededTheme(2));
   });
 
   it('applyGeneratedTheme sets accent + fonts + radius + chart, clears data-theme', () => {

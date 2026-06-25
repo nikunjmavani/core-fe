@@ -16,13 +16,14 @@ import {
   DEFAULT_TOAST_VARIANT,
   GENERATED_PRESET,
   type GeneratedTheme,
-  generateTheme,
+  generateSeededTheme,
   isThemePreset,
   nextAppVariant,
   nextAuthVariant,
   nextToastPosition,
   nextToastVariant,
   normalizeLook,
+  randomSeed,
   SHUFFLE_TEMP,
   shuffleIcons,
 } from '@/shared/theme/index.ts';
@@ -52,6 +53,9 @@ interface ThemeStore {
   toastVariant: number;
   /** TEMP: toast position (sonner Position subset); rolled by shuffle + the picker. */
   toastPosition: string;
+  /** Seed of the active generated look — enables shareable `?theme=<seed>` +
+   *  reproducible shuffles. null on a named preset or a hand-tweaked look. */
+  seed: number | null;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
   /** Set one axis of the custom look (accent/chart/font/radius); switches to custom. */
@@ -64,7 +68,9 @@ interface ThemeStore {
   setToastVariant: (index: number) => void;
   /** TEMP: set the toast position (Appearance preview). */
   setToastPosition: (position: string) => void;
-  /** Generate + apply a fresh full look (shadcn-create style). */
+  /** Apply a specific seed's look (shareable `?theme=<seed>` / reproducible). */
+  applyThemeSeed: (seed: number) => void;
+  /** Generate + apply a fresh full look from a new random seed. */
   shuffleTheme: () => void;
 }
 
@@ -93,6 +99,7 @@ export const useThemeStore = create<ThemeStore>()(
       appVariant: 0,
       toastVariant: DEFAULT_TOAST_VARIANT,
       toastPosition: DEFAULT_TOAST_POSITION,
+      seed: null,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -100,14 +107,14 @@ export const useThemeStore = create<ThemeStore>()(
       setPreset: (preset) => {
         const next = isThemePreset(preset) ? preset : DEFAULT_PRESET;
         applyThemePreset(next);
-        set({ preset: next, customTheme: null });
+        set({ preset: next, customTheme: null, seed: null });
       },
       updateLook: (partial) => {
-        // Seed from the current custom look (or defaults when on a named preset),
-        // change one axis, and switch to the custom look.
+        // Change one axis of the current look and switch to custom. A hand-tweaked
+        // look no longer maps to a seed, so clear it.
         const next = { ...normalizeLook(get().customTheme), ...partial };
         applyGeneratedTheme(next);
-        set({ preset: GENERATED_PRESET, customTheme: next });
+        set({ preset: GENERATED_PRESET, customTheme: next, seed: null });
       },
       setBaseColor: (id) => {
         applyBaseColor(id);
@@ -127,11 +134,19 @@ export const useThemeStore = create<ThemeStore>()(
       },
       setToastVariant: (index) => set({ toastVariant: index }),
       setToastPosition: (position) => set({ toastPosition: position }),
+      applyThemeSeed: (seed) => {
+        // Reproduce a specific look from its seed (shared link / QA). Icons + TEMP
+        // previews are orthogonal to the seed, so they're left as-is.
+        const look = generateSeededTheme(seed);
+        applyGeneratedTheme(look);
+        set({ preset: GENERATED_PRESET, customTheme: look, seed });
+      },
       shuffleTheme: () => {
-        // Generate a fresh full look each time (colour + chart + fonts + radius,
-        // shadcn-create style) rather than cycling a fixed preset list. Icons
-        // ride along: sometimes a new weight, sometimes a different library.
-        const next = generateTheme(get().customTheme);
+        // A fresh random seed → a fully reproducible look (colour + chart + fonts +
+        // radius + density/motion/elevation/contrast). Icons ride along: sometimes
+        // a new weight, sometimes a different library.
+        const seed = randomSeed();
+        const next = generateSeededTheme(seed);
         applyGeneratedTheme(next);
         const icons = shuffleIcons({
           weight: get().iconWeight,
@@ -141,6 +156,7 @@ export const useThemeStore = create<ThemeStore>()(
         set({
           preset: GENERATED_PRESET,
           customTheme: next,
+          seed,
           iconWeight: icons.weight,
           iconLibrary: icons.library,
           // TEMP previews — each gated by a SHUFFLE_TEMP switch (flip on/off on
@@ -184,6 +200,7 @@ export const useThemeStore = create<ThemeStore>()(
         iconLibrary: state.iconLibrary,
         toastVariant: state.toastVariant,
         toastPosition: state.toastPosition,
+        seed: state.seed,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

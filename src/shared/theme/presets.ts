@@ -175,6 +175,32 @@ const MOTION_IDS = Object.keys(MOTION_PRESETS);
 const ELEVATION_IDS = ELEVATION_LEVELS.map((e) => e.id);
 const CONTRAST_IDS = CONTRAST_MODES.map((c) => c.id);
 
+// ── Seeded generation ────────────────────────────────────────────────────────
+// The whole look derives from a single 32-bit seed, so it's reproducible and
+// shareable (`?theme=<seed>`). Generation draws from `rng`, which is swapped to a
+// seeded PRNG for the duration of generateSeededTheme — every other helper keeps
+// calling rng() and needs no change.
+
+/** Deterministic PRNG (mulberry32): same seed → same sequence. */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** The source of randomness generation draws from (seeded inside generateSeededTheme). */
+let rng: () => number = Math.random;
+
+/** A fresh random 32-bit seed (the only Math.random in the shuffle path). */
+export function randomSeed(): number {
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme seed, not security
+  return Math.floor(Math.random() * 0x1_0000_0000) >>> 0;
+}
+
 // ── Generated look ───────────────────────────────────────────────────────────
 
 /** A full generated look — accent + chart + body/heading font + radius, plus the
@@ -298,8 +324,7 @@ function norm(hue: number): number {
 
 /** A random accent hue (0–359). */
 export function randomThemeHue(): number {
-  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme generation, not security
-  return Math.floor(Math.random() * 360);
+  return Math.floor(rng() * 360);
 }
 
 function hueDistance(a: number, b: number): number {
@@ -320,8 +345,7 @@ export function nextRandomHue(current: number | null): number {
 function pickId(ids: readonly string[], exclude: string | null): string {
   const pool =
     exclude !== null && ids.length > 1 ? ids.filter((id) => id !== exclude) : ids;
-  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme generation, not security
-  const idx = Math.floor(Math.random() * pool.length);
+  const idx = Math.floor(rng() * pool.length);
   // eslint-disable-next-line security/detect-object-injection -- idx is a bounded random index into a local string[]
   return pool[idx] ?? ids[0] ?? DEFAULT_PRESET;
 }
@@ -333,44 +357,48 @@ function pickPairing(current: GeneratedTheme | null): { body: string; heading: s
     key !== null && FONT_PAIRINGS.length > 1
       ? FONT_PAIRINGS.filter((p) => `${p.body}/${p.heading}` !== key)
       : FONT_PAIRINGS;
-  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic font pairing, not security
-  const idx = Math.floor(Math.random() * pool.length);
+  const idx = Math.floor(rng() * pool.length);
   return pool[idx] ?? FONT_PAIRINGS[0] ?? { body: 'inter', heading: 'inter' };
 }
 
-/**
- * Generate a fresh full look. The core look (accent / chart / radius / font
- * pairing) always changes; the experience axes (density / motion / elevation /
- * contrast) roll PROBABILISTICALLY, so a shuffle feels like a different product
- * without lurching every dial at once.
- */
-export function generateTheme(current: GeneratedTheme | null): GeneratedTheme {
-  const hue = nextRandomHue(current?.hue ?? null);
-  const pairing = pickPairing(current);
+/** Build a full look from the current `rng` (uniform across every axis). */
+function buildLook(): GeneratedTheme {
+  const pairing = pickPairing(null);
   return {
-    hue,
-    chartHue: nextRandomHue(hue),
+    hue: randomThemeHue(),
+    chartHue: randomThemeHue(),
     bodyFontId: pairing.body,
     headingFontId: pairing.heading,
-    radiusId: pickId(RADIUS_IDS, current?.radiusId ?? null),
-    densityId: chance(0.75)
-      ? pickId(DENSITY_IDS, current?.densityId ?? null)
-      : (current?.densityId ?? DEFAULT_DENSITY),
-    motionId: chance(0.7)
-      ? pickId(MOTION_IDS, current?.motionId ?? null)
-      : (current?.motionId ?? DEFAULT_MOTION),
-    elevationId: chance(0.5)
-      ? pickId(ELEVATION_IDS, current?.elevationId ?? null)
-      : (current?.elevationId ?? DEFAULT_ELEVATION),
-    contrastId: chance(0.4)
-      ? pickId(CONTRAST_IDS, current?.contrastId ?? null)
-      : (current?.contrastId ?? DEFAULT_CONTRAST),
+    radiusId: pickId(RADIUS_IDS, null),
+    densityId: pickId(DENSITY_IDS, null),
+    motionId: pickId(MOTION_IDS, null),
+    elevationId: pickId(ELEVATION_IDS, null),
+    contrastId: pickId(CONTRAST_IDS, null),
   };
 }
 
+/** Derive the full look from a seed — pure + reproducible (same seed → same look). */
+export function generateSeededTheme(seed: number): GeneratedTheme {
+  const prev = rng;
+  rng = mulberry32(seed >>> 0);
+  try {
+    return buildLook();
+  } finally {
+    rng = prev;
+  }
+}
+
+/**
+ * Generate a fresh full look from a new random seed. Seeding (vs ad-hoc
+ * Math.random) makes every shuffle reproducible + shareable, while still feeling
+ * like a different product each time.
+ */
+export function generateTheme(_current: GeneratedTheme | null): GeneratedTheme {
+  return generateSeededTheme(randomSeed());
+}
+
 function chance(probability: number): boolean {
-  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic theme shuffle, not security
-  return Math.random() < probability;
+  return rng() < probability;
 }
 
 /**

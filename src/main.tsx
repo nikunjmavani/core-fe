@@ -12,6 +12,7 @@ import {
   hasAnalyticsConsent,
   useConsentStore,
 } from '@/shared/store/useConsentStore/index.ts';
+import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { resolveOrganizationFromSubdomain } from '@/shared/tenancy/tenancy-service.ts';
 
 import App from './App.tsx';
@@ -66,6 +67,16 @@ const root = createRoot(document.getElementById('root')!);
 // derived organization store before anything renders; the URL/guards take over
 // once routing starts.
 resolveOrganizationFromSubdomain();
+
+// Apply a shared theme seed (?theme=<seed>) before render, then strip the param so
+// it never reaches the router's search validation. Reproduces any shared look.
+const themeSeedParam = new URLSearchParams(window.location.search).get('theme');
+if (themeSeedParam && /^\d+$/.test(themeSeedParam)) {
+  useThemeStore.getState().applyThemeSeed(Number(themeSeedParam));
+  const url = new URL(window.location.href);
+  url.searchParams.delete('theme');
+  window.history.replaceState(null, '', url.toString());
+}
 
 // Mount React immediately so user sees app (spinner or login) instead of blank screen.
 // Silent refresh runs in background; when it fails, clearAuth() updates store and router reacts.
