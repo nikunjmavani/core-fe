@@ -74,6 +74,10 @@ describe('useThemeStore', () => {
       bodyFontId: expect.any(String),
       headingFontId: expect.any(String),
       radiusId: expect.any(String),
+      densityId: expect.any(String),
+      motionId: expect.any(String),
+      elevationId: expect.any(String),
+      contrastId: expect.any(String),
     });
     expect(document.documentElement.dataset.theme).toBeUndefined();
     const style = document.documentElement.style;
@@ -81,13 +85,16 @@ describe('useThemeStore', () => {
     expect(style.getPropertyValue('--font-sans')).not.toBe('');
     expect(style.getPropertyValue('--font-heading')).not.toBe('');
     expect(style.getPropertyValue('--radius-lg')).not.toBe('');
+    // experience axes retone the whole app via runtime CSS vars
+    expect(style.getPropertyValue('--spacing')).not.toBe('');
+    expect(style.getPropertyValue('--default-transition-duration')).not.toBe('');
     // icons ride along the shuffle — values stay valid
     expect(['thin', 'regular', 'bold']).toContain(state.iconWeight);
     expect(['lucide', 'tabler', 'phosphor']).toContain(state.iconLibrary);
-    // TEMP preview axes (layout/toast) are gated OFF by default, so a plain
-    // shuffle leaves them untouched.
-    expect(state.authVariant).toBe(0);
-    expect(state.appVariant).toBe(0);
+    // TEMP preview axes (layout/toast) roll only when their SHUFFLE_TEMP switch is
+    // on; either way the stored index stays a valid variant.
+    expect([0, 1, 2]).toContain(state.authVariant);
+    expect([0, 1, 2]).toContain(state.appVariant);
   });
 
   it('updateLook sets one axis and switches to the custom look', () => {

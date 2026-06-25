@@ -271,6 +271,56 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
+/* ── Surface elevation (data-contrast's sibling axis, set by the generated look) —
+   flat (border-only) … lifted (deep shadow). Targets the shadcn [data-slot]
+   surfaces, so it composes with any accent/base/contrast. ── */
+[data-elevation='flat'] [data-slot='card'],
+[data-elevation='flat'] [data-slot='popover-content'],
+[data-elevation='flat'] [data-slot='dropdown-menu-content'],
+[data-elevation='flat'] [data-slot='dialog-content'] {
+  box-shadow: none;
+}
+[data-elevation='lifted'] [data-slot='card'] {
+  box-shadow: 0 10px 24px -12px oklch(0 0 0 / 0.28);
+}
+[data-elevation='lifted'] [data-slot='popover-content'],
+[data-elevation='lifted'] [data-slot='dropdown-menu-content'],
+[data-elevation='lifted'] [data-slot='dialog-content'] {
+  box-shadow: 0 20px 44px -16px oklch(0 0 0 / 0.42);
+}
+.dark[data-elevation='lifted'] [data-slot='card'] {
+  box-shadow: 0 12px 28px -10px oklch(0 0 0 / 0.6);
+}
+
+/* ── Surface contrast (data-contrast) — soft (gentler) / crisp (sharper),
+   composed with .dark so it reads in both modes. Overrides neutral tokens only;
+   the generated accent (inline vars) is untouched. ── */
+[data-contrast='soft'] {
+  --color-border: oklch(0.93 0 0);
+  --color-muted-foreground: oklch(0.6 0 0);
+}
+.dark[data-contrast='soft'] {
+  --color-background: oklch(0.205 0 0);
+  --color-card: oklch(0.245 0 0);
+  --color-popover: oklch(0.245 0 0);
+  --color-border: oklch(0.32 0 0);
+  --color-muted-foreground: oklch(0.72 0 0);
+}
+[data-contrast='crisp'] {
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0 0 0);
+  --color-border: oklch(0.8 0 0);
+  --color-input: oklch(0.8 0 0);
+}
+.dark[data-contrast='crisp'] {
+  --color-background: oklch(0 0 0);
+  --color-foreground: oklch(1 0 0);
+  --color-card: oklch(0.16 0 0);
+  --color-popover: oklch(0.16 0 0);
+  --color-border: oklch(0.42 0 0);
+  --color-input: oklch(0.42 0 0);
+}
+
 /* ── Keyframes ── */
 @keyframes accordion-down {
   from {

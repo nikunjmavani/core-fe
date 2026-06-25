@@ -106,20 +106,91 @@ export const ICON_LIBRARIES = [
 ] as const;
 export const DEFAULT_ICON_LIBRARY = 'lucide';
 
-const FONT_IDS = Object.keys(GENERATED_FONTS);
 const RADIUS_IDS = Object.keys(GENERATED_RADII);
 const ICON_WEIGHT_IDS = ICON_WEIGHTS.map((w) => w.id);
 const ICON_LIBRARY_IDS = ICON_LIBRARIES.map((l) => l.id);
 
+// ── Experience axes (CSS-var presets) ────────────────────────────────────────
+// Each retones the WHOLE app through a runtime CSS variable (verified against the
+// compiled output), so changing a value here applies everywhere — no per-axis
+// pickers, no new components, zero bundle cost. They ride inside the generated
+// look (below), so persistence + re-apply come for free.
+
+/** Spacing density → Tailwind's master `--spacing` unit (default 0.25rem). Every
+ *  padding/margin/gap/size utility is `calc(var(--spacing) * n)`, so this one knob
+ *  rescales the entire UI at once. */
+export const DENSITY_SCALES: Record<string, { label: string; spacing: number }> = {
+  compact: { label: 'Compact', spacing: 0.215 },
+  cozy: { label: 'Cozy', spacing: 0.25 },
+  spacious: { label: 'Spacious', spacing: 0.3 },
+};
+export const DEFAULT_DENSITY = 'cozy';
+
+/** Motion personality → the inheriting `--default-transition-*` theme vars that all
+ *  `transition` utilities fall back to, so the app's base tempo + easing change at
+ *  once (explicit `duration-*`/`ease-*` utilities still win locally). */
+export const MOTION_PRESETS: Record<
+  string,
+  { label: string; duration: string; ease: string }
+> = {
+  calm: { label: 'Calm', duration: '300ms', ease: 'cubic-bezier(0.22, 1, 0.36, 1)' },
+  smooth: { label: 'Smooth', duration: '150ms', ease: 'cubic-bezier(0.4, 0, 0.2, 1)' },
+  snappy: { label: 'Snappy', duration: '80ms', ease: 'cubic-bezier(0.34, 1.1, 0.64, 1)' },
+};
+export const DEFAULT_MOTION = 'smooth';
+
+/** Surface elevation → applied via `data-elevation`; flat (border-only) … lifted
+ *  (deep shadow) on the shadcn `[data-slot]` surfaces. */
+export const ELEVATION_LEVELS = [
+  { id: 'flat', label: 'Flat' },
+  { id: 'soft', label: 'Soft' },
+  { id: 'lifted', label: 'Lifted' },
+] as const;
+export const DEFAULT_ELEVATION = 'soft';
+
+/** Surface contrast → applied via `data-contrast` (composes with `.dark`): soft
+ *  (gentler) or crisp (sharper, higher-contrast). */
+export const CONTRAST_MODES = [
+  { id: 'normal', label: 'Normal' },
+  { id: 'soft', label: 'Soft' },
+  { id: 'crisp', label: 'Crisp' },
+] as const;
+export const DEFAULT_CONTRAST = 'normal';
+
+/** Curated heading↔body font pairings — generation picks one so headings get a
+ *  distinct-but-harmonious voice instead of a random clash. */
+export const FONT_PAIRINGS: ReadonlyArray<{ body: string; heading: string }> = [
+  { body: 'inter', heading: 'inter' },
+  { body: 'inter', heading: 'grotesk' },
+  { body: 'humanist', heading: 'grotesk' },
+  { body: 'geometric', heading: 'geometric' },
+  { body: 'serif', heading: 'serif' },
+  { body: 'inter', heading: 'serif' },
+  { body: 'humanist', heading: 'slab' },
+  { body: 'grotesk', heading: 'mono' },
+];
+
+const DENSITY_IDS = Object.keys(DENSITY_SCALES);
+const MOTION_IDS = Object.keys(MOTION_PRESETS);
+const ELEVATION_IDS = ELEVATION_LEVELS.map((e) => e.id);
+const CONTRAST_IDS = CONTRAST_MODES.map((c) => c.id);
+
 // ── Generated look ───────────────────────────────────────────────────────────
 
-/** A full generated look — accent + chart anchor + body/heading font + radius. */
+/** A full generated look — accent + chart + body/heading font + radius, plus the
+ *  experience axes (density / motion / elevation / contrast) that retone the whole
+ *  app via CSS-var presets. Every field rides in `customTheme`, so it persists and
+ *  re-applies for free — no extra store fields, no extra pickers. */
 export interface GeneratedTheme {
   hue: number;
   chartHue: number;
   bodyFontId: string;
   headingFontId: string;
   radiusId: string;
+  densityId: string;
+  motionId: string;
+  elevationId: string;
+  contrastId: string;
 }
 
 const DEFAULT_LOOK: GeneratedTheme = {
@@ -128,9 +199,14 @@ const DEFAULT_LOOK: GeneratedTheme = {
   bodyFontId: 'inter',
   headingFontId: 'inter',
   radiusId: 'default',
+  densityId: DEFAULT_DENSITY,
+  motionId: DEFAULT_MOTION,
+  elevationId: DEFAULT_ELEVATION,
+  contrastId: DEFAULT_CONTRAST,
 };
 
-/** Fill a partial/legacy look with defaults (older state stored only fontId). */
+/** Fill a partial/legacy look with defaults (older state stored only fontId, and
+ *  pre-experience-axes looks omit density/motion/elevation/contrast). */
 export function normalizeLook(
   look: (Partial<GeneratedTheme> & { fontId?: string }) | null,
 ): GeneratedTheme {
@@ -142,6 +218,10 @@ export function normalizeLook(
     bodyFontId: l.bodyFontId ?? legacyFont ?? DEFAULT_LOOK.bodyFontId,
     headingFontId: l.headingFontId ?? legacyFont ?? DEFAULT_LOOK.headingFontId,
     radiusId: l.radiusId ?? DEFAULT_LOOK.radiusId,
+    densityId: l.densityId ?? DEFAULT_LOOK.densityId,
+    motionId: l.motionId ?? DEFAULT_LOOK.motionId,
+    elevationId: l.elevationId ?? DEFAULT_LOOK.elevationId,
+    contrastId: l.contrastId ?? DEFAULT_LOOK.contrastId,
   };
 }
 
@@ -172,13 +252,28 @@ const CHART_VARS = [
 ] as const;
 const CHART_HUE_OFFSETS = [0, 50, 120, 200, 280] as const;
 
-/** Remove any inline generated vars (accent/font/radius/chart). Leaves the
- *  orthogonal `data-base` / `data-menu` axes untouched. */
+/** Experience-axis vars set inline by the generated look (cleared with it). */
+const EXPERIENCE_VARS = [
+  '--spacing',
+  '--default-transition-duration',
+  '--default-transition-timing-function',
+] as const;
+
+/** Remove any inline generated vars (accent/font/radius/chart/experience) and the
+ *  generated data-axes. Leaves the orthogonal `data-base` / `data-menu` untouched. */
 function clearGeneratedTheme(): void {
   const root = document.documentElement;
-  for (const v of [...ACCENT_VARS, ...ACCENT_FG_VARS, ...SHAPE_VARS, ...CHART_VARS]) {
+  for (const v of [
+    ...ACCENT_VARS,
+    ...ACCENT_FG_VARS,
+    ...SHAPE_VARS,
+    ...CHART_VARS,
+    ...EXPERIENCE_VARS,
+  ]) {
     root.style.removeProperty(v);
   }
+  delete root.dataset.elevation;
+  delete root.dataset.contrast;
 }
 
 /**
@@ -231,15 +326,45 @@ function pickId(ids: readonly string[], exclude: string | null): string {
   return pool[idx] ?? ids[0] ?? DEFAULT_PRESET;
 }
 
-/** Generate a fresh full look; each axis differs from `current`. */
+/** Pick a curated heading↔body font pairing, avoiding the current combo. */
+function pickPairing(current: GeneratedTheme | null): { body: string; heading: string } {
+  const key = current ? `${current.bodyFontId}/${current.headingFontId}` : null;
+  const pool =
+    key !== null && FONT_PAIRINGS.length > 1
+      ? FONT_PAIRINGS.filter((p) => `${p.body}/${p.heading}` !== key)
+      : FONT_PAIRINGS;
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic font pairing, not security
+  const idx = Math.floor(Math.random() * pool.length);
+  return pool[idx] ?? FONT_PAIRINGS[0] ?? { body: 'inter', heading: 'inter' };
+}
+
+/**
+ * Generate a fresh full look. The core look (accent / chart / radius / font
+ * pairing) always changes; the experience axes (density / motion / elevation /
+ * contrast) roll PROBABILISTICALLY, so a shuffle feels like a different product
+ * without lurching every dial at once.
+ */
 export function generateTheme(current: GeneratedTheme | null): GeneratedTheme {
   const hue = nextRandomHue(current?.hue ?? null);
+  const pairing = pickPairing(current);
   return {
     hue,
     chartHue: nextRandomHue(hue),
-    bodyFontId: pickId(FONT_IDS, current?.bodyFontId ?? null),
-    headingFontId: pickId(FONT_IDS, current?.headingFontId ?? null),
+    bodyFontId: pairing.body,
+    headingFontId: pairing.heading,
     radiusId: pickId(RADIUS_IDS, current?.radiusId ?? null),
+    densityId: chance(0.75)
+      ? pickId(DENSITY_IDS, current?.densityId ?? null)
+      : (current?.densityId ?? DEFAULT_DENSITY),
+    motionId: chance(0.7)
+      ? pickId(MOTION_IDS, current?.motionId ?? null)
+      : (current?.motionId ?? DEFAULT_MOTION),
+    elevationId: chance(0.5)
+      ? pickId(ELEVATION_IDS, current?.elevationId ?? null)
+      : (current?.elevationId ?? DEFAULT_ELEVATION),
+    contrastId: chance(0.4)
+      ? pickId(CONTRAST_IDS, current?.contrastId ?? null)
+      : (current?.contrastId ?? DEFAULT_CONTRAST),
   };
 }
 
@@ -382,6 +507,31 @@ export function applyGeneratedTheme(input: GeneratedTheme): void {
       `--color-chart-${series}`,
       `oklch(0.64 0.17 ${(chart + offset) % 360})`,
     );
+  }
+
+  // Density → master spacing unit (every spacing utility is calc(var(--spacing)*n)).
+  const spacing = DENSITY_SCALES[theme.densityId]?.spacing ?? 0.25;
+  root.style.setProperty('--spacing', `${spacing}rem`);
+
+  // Motion → base transition tempo + easing (inheriting fallback theme vars).
+  const motion = MOTION_PRESETS[theme.motionId];
+  root.style.setProperty('--default-transition-duration', motion?.duration ?? '150ms');
+  root.style.setProperty(
+    '--default-transition-timing-function',
+    motion?.ease ?? 'cubic-bezier(0.4, 0, 0.2, 1)',
+  );
+
+  // Elevation + contrast → data attributes (index.css blocks do the rest; omitted
+  // at their defaults so the base look stays pristine).
+  if (theme.elevationId && theme.elevationId !== DEFAULT_ELEVATION) {
+    root.dataset.elevation = theme.elevationId;
+  } else {
+    delete root.dataset.elevation;
+  }
+  if (theme.contrastId && theme.contrastId !== DEFAULT_CONTRAST) {
+    root.dataset.contrast = theme.contrastId;
+  } else {
+    delete root.dataset.contrast;
   }
 }
 
