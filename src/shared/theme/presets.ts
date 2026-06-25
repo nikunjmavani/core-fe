@@ -154,8 +154,33 @@ export const CONTRAST_MODES = [
   { id: 'normal', label: 'Normal' },
   { id: 'soft', label: 'Soft' },
   { id: 'crisp', label: 'Crisp' },
+  { id: 'dim', label: 'Dim' },
+  { id: 'amoled', label: 'AMOLED' },
 ] as const;
 export const DEFAULT_CONTRAST = 'normal';
+
+/** Colour harmony — derives the 5 chart hues from the chart anchor instead of a
+ *  fixed spread, so a palette reads as intentional (monochromatic varies lightness
+ *  instead of hue). */
+export const HARMONY_RULES: Record<
+  string,
+  { label: string; offsets: readonly number[] }
+> = {
+  monochromatic: { label: 'Monochromatic', offsets: [0, 0, 0, 0, 0] },
+  analogous: { label: 'Analogous', offsets: [-40, -20, 0, 20, 40] },
+  complementary: { label: 'Complementary', offsets: [0, 25, 180, 155, 205] },
+  triadic: { label: 'Triadic', offsets: [0, 120, 240, 60, 180] },
+};
+export const DEFAULT_HARMONY = 'triadic';
+
+/** Accent intensity — how saturated the brand reads (OKLCH chroma). The readable
+ *  foreground is computed per accent (contrast-safe), so any intensity stays legible. */
+export const ACCENT_INTENSITIES: Record<string, { label: string; chroma: number }> = {
+  muted: { label: 'Muted', chroma: 0.1 },
+  balanced: { label: 'Balanced', chroma: 0.16 },
+  vibrant: { label: 'Vibrant', chroma: 0.22 },
+};
+export const DEFAULT_INTENSITY = 'balanced';
 
 /** Curated heading↔body font pairings — generation picks one so headings get a
  *  distinct-but-harmonious voice instead of a random clash. */
@@ -174,6 +199,8 @@ const DENSITY_IDS = Object.keys(DENSITY_SCALES);
 const MOTION_IDS = Object.keys(MOTION_PRESETS);
 const ELEVATION_IDS = ELEVATION_LEVELS.map((e) => e.id);
 const CONTRAST_IDS = CONTRAST_MODES.map((c) => c.id);
+const HARMONY_IDS = Object.keys(HARMONY_RULES);
+const INTENSITY_IDS = Object.keys(ACCENT_INTENSITIES);
 
 // ── Seeded generation ────────────────────────────────────────────────────────
 // The whole look derives from a single 32-bit seed, so it's reproducible and
@@ -217,6 +244,8 @@ export interface GeneratedTheme {
   motionId: string;
   elevationId: string;
   contrastId: string;
+  harmonyId: string;
+  intensityId: string;
 }
 
 const DEFAULT_LOOK: GeneratedTheme = {
@@ -229,6 +258,8 @@ const DEFAULT_LOOK: GeneratedTheme = {
   motionId: DEFAULT_MOTION,
   elevationId: DEFAULT_ELEVATION,
   contrastId: DEFAULT_CONTRAST,
+  harmonyId: DEFAULT_HARMONY,
+  intensityId: DEFAULT_INTENSITY,
 };
 
 /** Fill a partial/legacy look with defaults (older state stored only fontId, and
@@ -248,6 +279,8 @@ export function normalizeLook(
     motionId: l.motionId ?? DEFAULT_LOOK.motionId,
     elevationId: l.elevationId ?? DEFAULT_LOOK.elevationId,
     contrastId: l.contrastId ?? DEFAULT_LOOK.contrastId,
+    harmonyId: l.harmonyId ?? DEFAULT_LOOK.harmonyId,
+    intensityId: l.intensityId ?? DEFAULT_LOOK.intensityId,
   };
 }
 
@@ -276,7 +309,6 @@ const CHART_VARS = [
   '--color-chart-4',
   '--color-chart-5',
 ] as const;
-const CHART_HUE_OFFSETS = [0, 50, 120, 200, 280] as const;
 
 /** Experience-axis vars set inline by the generated look (cleared with it). */
 const EXPERIENCE_VARS = [
@@ -320,6 +352,32 @@ export function applyThemePreset(id: string): void {
 
 function norm(hue: number): number {
   return ((Math.round(hue) % 360) + 360) % 360;
+}
+
+/** OKLCH → WCAG relative luminance (via linear sRGB), clamped to gamut. */
+function oklchLuminance(L: number, C: number, H: number): number {
+  const hr = (H * Math.PI) / 180;
+  const a = C * Math.cos(hr);
+  const b = C * Math.sin(hr);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3;
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3;
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const clamp = (x: number) => Math.min(1, Math.max(0, x));
+  const r = clamp(4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s);
+  const g = clamp(-1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s);
+  const bl = clamp(-0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * bl;
+}
+
+/**
+ * Contrast-safe foreground for an accent — the near-white or near-black with the
+ * higher WCAG contrast, so generated accent buttons are never unreadable.
+ */
+export function accentForeground(L: number, C: number, H: number): string {
+  const y = oklchLuminance(L, C, H);
+  const withWhite = 1.05 / (y + 0.05);
+  const withBlack = (y + 0.05) / 0.05;
+  return withWhite >= withBlack ? 'oklch(0.985 0 0)' : 'oklch(0.205 0 0)';
 }
 
 /** A random accent hue (0–359). */
@@ -374,6 +432,8 @@ function buildLook(): GeneratedTheme {
     motionId: pickId(MOTION_IDS, null),
     elevationId: pickId(ELEVATION_IDS, null),
     contrastId: pickId(CONTRAST_IDS, null),
+    harmonyId: pickId(HARMONY_IDS, null),
+    intensityId: pickId(INTENSITY_IDS, null),
   };
 }
 
@@ -506,8 +566,11 @@ export function applyGeneratedTheme(input: GeneratedTheme): void {
   const theme = normalizeLook(input);
   const root = document.documentElement;
 
-  const accent = `oklch(0.58 0.21 ${norm(theme.hue)})`;
-  const onAccent = 'oklch(0.985 0 0)';
+  const hue = norm(theme.hue);
+  const chroma = ACCENT_INTENSITIES[theme.intensityId]?.chroma ?? 0.16;
+  const accent = `oklch(0.58 ${chroma} ${hue})`;
+  // Contrast-safe: pick the readable foreground for THIS accent (a11y guardrail).
+  const onAccent = accentForeground(0.58, chroma, hue);
   delete root.dataset.theme;
   for (const v of ACCENT_VARS) root.style.setProperty(v, accent);
   for (const v of ACCENT_FG_VARS) root.style.setProperty(v, onAccent);
@@ -527,15 +590,20 @@ export function applyGeneratedTheme(input: GeneratedTheme): void {
   root.style.setProperty('--radius-lg', `${base}rem`);
   root.style.setProperty('--radius-xl', `${base * 1.5}rem`);
 
-  const chart = norm(theme.chartHue);
-  let series = 0;
-  for (const offset of CHART_HUE_OFFSETS) {
-    series += 1;
+  // Chart palette → derived from the chart anchor via the harmony rule
+  // (monochromatic keeps one hue and steps lightness; others spread the hue).
+  const chartBase = norm(theme.chartHue);
+  const harmonyOffsets = HARMONY_RULES[theme.harmonyId]?.offsets ?? [
+    0, 120, 240, 60, 180,
+  ];
+  const monochrome = theme.harmonyId === 'monochromatic';
+  harmonyOffsets.forEach((offset, i) => {
+    const lightness = monochrome ? 0.45 + i * 0.1 : 0.64;
     root.style.setProperty(
-      `--color-chart-${series}`,
-      `oklch(0.64 0.17 ${(chart + offset) % 360})`,
+      `--color-chart-${i + 1}`,
+      `oklch(${lightness} 0.17 ${norm(chartBase + offset)})`,
     );
-  }
+  });
 
   // Density → master spacing unit (every spacing utility is calc(var(--spacing)*n)).
   const spacing = DENSITY_SCALES[theme.densityId]?.spacing ?? 0.25;

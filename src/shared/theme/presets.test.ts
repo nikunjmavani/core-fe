@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  accentForeground,
   applyBaseColor,
   applyGeneratedTheme,
   applyIconWeight,
@@ -38,6 +39,9 @@ const GENERATED_VARS = [
   '--color-chart-3',
   '--color-chart-4',
   '--color-chart-5',
+  '--spacing',
+  '--default-transition-duration',
+  '--default-transition-timing-function',
 ];
 
 afterEach(() => {
@@ -45,6 +49,8 @@ afterEach(() => {
   delete root.dataset.theme;
   delete root.dataset.base;
   delete root.dataset.menu;
+  delete root.dataset.contrast;
+  delete root.dataset.elevation;
   root.style.removeProperty('--icon-stroke');
   for (const v of GENERATED_VARS) root.style.removeProperty(v);
 });
@@ -117,6 +123,20 @@ describe('generated themes (shuffle)', () => {
   it('generateSeededTheme is reproducible (same seed → same look; different seeds differ)', () => {
     expect(generateSeededTheme(4821)).toEqual(generateSeededTheme(4821));
     expect(generateSeededTheme(1)).not.toEqual(generateSeededTheme(2));
+  });
+
+  it('accentForeground returns a contrast-safe foreground that adapts to the accent', () => {
+    expect(accentForeground(0.85, 0.16, 100)).toBe('oklch(0.205 0 0)'); // light → dark text
+    expect(accentForeground(0.3, 0.12, 265)).toBe('oklch(0.985 0 0)'); // dark → light text
+  });
+
+  it('applyGeneratedTheme derives the chart palette from the harmony rule', () => {
+    applyGeneratedTheme({ ...sample, harmonyId: 'monochromatic', chartHue: 200 });
+    const style = document.documentElement.style;
+    // monochromatic keeps one hue (200) across all 5 series, stepping lightness
+    for (let i = 1; i <= 5; i += 1) {
+      expect(style.getPropertyValue(`--color-chart-${i}`)).toContain('200');
+    }
   });
 
   it('applyGeneratedTheme sets accent + fonts + radius + chart, clears data-theme', () => {

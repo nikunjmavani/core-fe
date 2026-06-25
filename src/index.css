@@ -320,6 +320,22 @@
   --color-border: oklch(0.42 0 0);
   --color-input: oklch(0.42 0 0);
 }
+/* dim + amoled are dark-only surface tones (no-op in light → render as normal). */
+.dark[data-contrast='dim'] {
+  --color-background: oklch(0.22 0.012 264);
+  --color-card: oklch(0.26 0.012 264);
+  --color-popover: oklch(0.26 0.012 264);
+  --color-border: oklch(0.32 0.012 264);
+  --color-muted: oklch(0.3 0.012 264);
+  --color-sidebar: oklch(0.24 0.012 264);
+}
+.dark[data-contrast='amoled'] {
+  --color-background: oklch(0 0 0);
+  --color-card: oklch(0.13 0 0);
+  --color-popover: oklch(0.13 0 0);
+  --color-border: oklch(0.28 0 0);
+  --color-sidebar: oklch(0 0 0);
+}
 
 /* ── Keyframes ── */
 @keyframes accordion-down {
