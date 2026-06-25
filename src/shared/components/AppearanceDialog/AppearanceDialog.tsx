@@ -1,40 +1,63 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/components/ui/dialog.tsx';
+import { useEffect } from 'react';
+
+import { X } from '@/shared/icons/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
 import { AppearancePanel } from './AppearancePanel.tsx';
 
 /**
- * Dedicated Appearance dialog — the single home for theme config, opened by the
- * floating handle (and the dashboard "Customize"). Deliberately separate from the
- * Settings modal so theming has its own surface. Open state lives in useUIStore;
- * the header stays fixed while the controls scroll.
+ * Dedicated Appearance popup — a NON-MODAL side panel pinned to the right edge.
+ * No scrim, no focus trap, no scroll lock: the page behind stays fully visible +
+ * interactive while you tweak the theme. Sits above modals and any other layer
+ * (z-80, pointer-events re-enabled), and is mounted at the route root, so it works
+ * on every layout — auth, public, and app. Open state lives in useUIStore; Esc or
+ * the close button dismisses it.
  */
 export function AppearanceDialog() {
   const open = useUIStore((s) => s.appearanceOpen);
   const setOpen = useUIStore((s) => s.setAppearanceOpen);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, setOpen]);
+
+  if (!open) return null;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent
-        className="flex max-h-[85vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-[680px]"
-        data-testid="appearance-dialog"
-      >
-        <DialogHeader className="border-border space-y-1 border-b px-6 py-4 text-left">
-          <DialogTitle>Appearance</DialogTitle>
-          <DialogDescription>
-            Make the workspace yours — saved on this device.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          <AppearancePanel />
+    <aside
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="appearance-popover-title"
+      data-testid="appearance-dialog"
+      className="bg-popover text-popover-foreground border-border animate-in slide-in-from-right-2 fade-in pointer-events-auto fixed top-4 right-4 z-[80] flex max-h-[calc(100dvh-2rem)] w-[360px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-xl border shadow-2xl duration-200"
+    >
+      <div className="border-border flex items-start justify-between gap-3 border-b px-5 py-3">
+        <div className="space-y-0.5">
+          <h2 id="appearance-popover-title" className="text-sm font-semibold">
+            Appearance
+          </h2>
+          <p className="text-muted-foreground text-xs">
+            Saved on this device — changes apply live.
+          </p>
         </div>
-      </DialogContent>
-    </Dialog>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          aria-label="Close"
+          data-testid="appearance-close"
+          className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring -mr-1 rounded-md p-1.5 transition outline-none focus-visible:ring-2"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+        <AppearancePanel />
+      </div>
+    </aside>
   );
 }
