@@ -1,3 +1,5 @@
+import { useState } from 'react';
+
 import { config } from '@/core/config/env.ts';
 import { cn } from '@/lib/utils.ts';
 import { SectionHeader } from '@/shared/components/SettingsModal/SettingsPanelShell.tsx';
@@ -9,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import { Input } from '@/shared/components/ui/input.tsx';
 import {
   Select,
   SelectContent,
@@ -21,18 +24,29 @@ import { notify } from '@/shared/notify/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import {
   ACCENT_COLORS,
+  ACCENT_INTENSITIES,
   BASE_COLORS,
+  CONTRAST_MODES,
+  DENSITY_SCALES,
+  ELEVATION_LEVELS,
+  FOCUS_RINGS,
   GENERATED_FONTS,
   GENERATED_PRESET,
   GENERATED_RADII,
   type GeneratedTheme,
+  HARMONY_RULES,
   ICON_LIBRARIES,
   ICON_WEIGHTS,
   MENU_STYLES,
+  MOTION_PRESETS,
+  normalizeLook,
+  SEPARATION_STRATEGIES,
+  SHAPE_LANGUAGES,
   TOAST_POSITIONS,
   TOAST_VARIANTS,
   type ToastPosition,
   type ToastVariant,
+  TYPE_SCALES,
 } from '@/shared/theme/index.ts';
 
 const THEMES = [
@@ -50,6 +64,15 @@ const RADIUS_OPTIONS = Object.entries(GENERATED_RADII).map(([id, r]) => ({
   id,
   label: r.label,
 }));
+
+/** Record<{label}> → the {id,label}[] shape the Choices picker expects. */
+const toOptions = (rec: Record<string, { label: string }>) =>
+  Object.entries(rec).map(([id, v]) => ({ id, label: v.label }));
+const DENSITY_OPTIONS = toOptions(DENSITY_SCALES);
+const MOTION_OPTIONS = toOptions(MOTION_PRESETS);
+const HARMONY_OPTIONS = toOptions(HARMONY_RULES);
+const INTENSITY_OPTIONS = toOptions(ACCENT_INTENSITIES);
+const TYPE_SCALE_OPTIONS = toOptions(TYPE_SCALES);
 
 /** TEMP: toast-design choices for the preview picker. */
 const TOAST_VARIANT_OPTIONS = TOAST_VARIANTS.map((id) => ({
@@ -246,6 +269,9 @@ export function AccountAppearancePanel() {
   const setToastVariant = useThemeStore((s) => s.setToastVariant);
   const toastPosition = useThemeStore((s) => s.toastPosition);
   const setToastPosition = useThemeStore((s) => s.setToastPosition);
+  const seed = useThemeStore((s) => s.seed);
+  const applyThemeSeed = useThemeStore((s) => s.applyThemeSeed);
+  const [seedInput, setSeedInput] = useState('');
 
   // Shuffle rolls the toast design too — fire a toast so the new look is visible.
   const handleShuffle = () => {
@@ -253,6 +279,26 @@ export function AccountAppearancePanel() {
     notify.info('Theme shuffled', {
       description: 'New accent, fonts, radius — and toast style.',
     });
+  };
+
+  // Copy a shareable link that reproduces the current look (?theme=<seed>).
+  const handleCopyLink = () => {
+    if (seed == null) return;
+    const url = `${window.location.origin}?theme=${seed}`;
+    navigator.clipboard?.writeText(url).catch(() => undefined);
+    notify.success('Theme link copied', { description: url });
+  };
+
+  // Apply a pasted theme code (seed) — reproduces that exact look.
+  const handleApplySeed = () => {
+    const trimmed = seedInput.trim();
+    const value = Number(trimmed);
+    if (trimmed === '' || !Number.isFinite(value)) {
+      notify.error('Enter a numeric theme code');
+      return;
+    }
+    applyThemeSeed(value >>> 0);
+    setSeedInput('');
   };
 
   if (config.themeLock) {
@@ -274,6 +320,8 @@ export function AccountAppearancePanel() {
 
   const { accentId, chartId, bodyFontId, headingFontId, radiusId, customLook } =
     lookFields(customTheme);
+  // Fully-defaulted look → current value for every per-axis picker below.
+  const look = normalizeLook(customTheme);
 
   return (
     <div className="space-y-6" data-testid="settings-section-appearance">
@@ -353,6 +401,26 @@ export function AccountAppearancePanel() {
               testPrefix="base"
             />
           </div>
+          <div className="space-y-2">
+            <FieldLabel>Harmony</FieldLabel>
+            <Choices
+              ariaLabel="Colour harmony"
+              value={look.harmonyId}
+              options={HARMONY_OPTIONS}
+              onPick={(value) => updateLook({ harmonyId: value })}
+              testPrefix="harmony"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Accent intensity</FieldLabel>
+            <Choices
+              ariaLabel="Accent intensity"
+              value={look.intensityId}
+              options={INTENSITY_OPTIONS}
+              onPick={(value) => updateLook({ intensityId: value })}
+              testPrefix="intensity"
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -387,6 +455,26 @@ export function AccountAppearancePanel() {
             />
           </div>
           <div className="space-y-2">
+            <FieldLabel>Shape language</FieldLabel>
+            <Choices
+              ariaLabel="Shape language"
+              value={look.shapeId}
+              options={SHAPE_LANGUAGES}
+              onPick={(value) => updateLook({ shapeId: value })}
+              testPrefix="shape"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Type scale</FieldLabel>
+            <Choices
+              ariaLabel="Type scale"
+              value={look.typeScaleId}
+              options={TYPE_SCALE_OPTIONS}
+              onPick={(value) => updateLook({ typeScaleId: value })}
+              testPrefix="typescale"
+            />
+          </div>
+          <div className="space-y-2">
             <FieldLabel>Menu</FieldLabel>
             <Choices
               ariaLabel="Menu style"
@@ -414,6 +502,75 @@ export function AccountAppearancePanel() {
               options={ICON_LIBRARIES}
               onPick={setIconLibrary}
               testPrefix="iconlib"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Surface &amp; motion</CardTitle>
+          <CardDescription>Spacing, depth, contrast, and how it moves.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <FieldLabel>Density</FieldLabel>
+            <Choices
+              ariaLabel="Density"
+              value={look.densityId}
+              options={DENSITY_OPTIONS}
+              onPick={(value) => updateLook({ densityId: value })}
+              testPrefix="density"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Contrast</FieldLabel>
+            <Choices
+              ariaLabel="Contrast"
+              value={look.contrastId}
+              options={CONTRAST_MODES}
+              onPick={(value) => updateLook({ contrastId: value })}
+              testPrefix="contrast"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Elevation</FieldLabel>
+            <Choices
+              ariaLabel="Elevation"
+              value={look.elevationId}
+              options={ELEVATION_LEVELS}
+              onPick={(value) => updateLook({ elevationId: value })}
+              testPrefix="elevation"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Separation</FieldLabel>
+            <Choices
+              ariaLabel="Surface separation"
+              value={look.separationId}
+              options={SEPARATION_STRATEGIES}
+              onPick={(value) => updateLook({ separationId: value })}
+              testPrefix="separation"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Motion</FieldLabel>
+            <Choices
+              ariaLabel="Motion"
+              value={look.motionId}
+              options={MOTION_OPTIONS}
+              onPick={(value) => updateLook({ motionId: value })}
+              testPrefix="motion"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Focus ring</FieldLabel>
+            <Choices
+              ariaLabel="Focus ring"
+              value={look.focusId}
+              options={FOCUS_RINGS}
+              onPick={(value) => updateLook({ focusId: value })}
+              testPrefix="focus"
             />
           </div>
         </CardContent>
@@ -495,6 +652,59 @@ export function AccountAppearancePanel() {
               data-testid="toast-preview-info"
             >
               Info
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Theme code</CardTitle>
+          <CardDescription>
+            Every generated look is one number — copy a link to share it, or paste a code
+            to reproduce it exactly.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleCopyLink}
+              disabled={seed == null}
+              data-testid="theme-copy-link"
+            >
+              Copy link
+            </Button>
+            {seed == null ? (
+              <span className="text-muted-foreground text-sm">
+                Shuffle to generate a code.
+              </span>
+            ) : (
+              <span className="text-muted-foreground text-sm" data-testid="theme-seed">
+                Code: {seed}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Input
+              inputMode="numeric"
+              value={seedInput}
+              onChange={(e) => setSeedInput(e.target.value)}
+              placeholder="Paste a theme code"
+              aria-label="Theme code"
+              data-testid="theme-seed-input"
+              className="w-44"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleApplySeed}
+              data-testid="theme-seed-apply"
+            >
+              Apply
             </Button>
           </div>
         </CardContent>
