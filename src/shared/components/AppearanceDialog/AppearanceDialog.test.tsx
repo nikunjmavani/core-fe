@@ -1,6 +1,7 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
 import { AppearanceDialog } from './AppearanceDialog.tsx';
@@ -35,5 +36,15 @@ describe('AppearanceDialog', () => {
       document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     });
     expect(useUIStore.getState().appearanceOpen).toBe(false);
+  });
+
+  it('the global shuffle in the header generates a custom look', () => {
+    useThemeStore.setState({ preset: 'default', customTheme: null });
+    useUIStore.setState({ appearanceOpen: true });
+    render(<AppearanceDialog />);
+    act(() => {
+      screen.getByTestId('theme-shuffle').click();
+    });
+    expect(useThemeStore.getState().preset).toBe('custom');
   });
 });

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -41,6 +42,9 @@ import {
   MOTION_PRESETS,
   normalizeLook,
   oklchToHex,
+  rollColour,
+  rollSurface,
+  rollTypography,
   SEPARATION_STRATEGIES,
   SHAPE_LANGUAGES,
   TOAST_POSITIONS,
@@ -262,11 +266,36 @@ function lookFields(look: GeneratedTheme | null) {
   };
 }
 
+/** A small per-section shuffle button (re-rolls just one card's axes). */
+function SectionShuffle({
+  onClick,
+  label,
+  testId,
+}: {
+  onClick: () => void;
+  label: string;
+  testId: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Shuffle ${label}`}
+      title={`Shuffle ${label}`}
+      data-testid={testId}
+      className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring rounded-md p-1.5 transition outline-none focus-visible:ring-2"
+    >
+      <Sparkles className="size-4" aria-hidden="true" />
+    </button>
+  );
+}
+
 /**
  * Appearance controls — a shadcn-create-style theme studio: light/dark/system
- * mode plus per-axis pickers (colour, fonts, radius, density, motion, …) and a
- * Shuffle. Rendered inside the dedicated AppearanceDialog, persisted via
- * {@link useThemeStore}. When `config.themeLock` is set the controls are hidden.
+ * mode plus per-axis pickers (colour, fonts, radius, density, motion, …), each
+ * section re-rollable via its own shuffle. Rendered inside the dedicated
+ * AppearanceDialog, persisted via {@link useThemeStore}. The GLOBAL shuffle lives
+ * in the dialog header. When `config.themeLock` is set the controls are hidden.
  */
 export function AppearancePanel() {
   const theme = useThemeStore((s) => s.theme);
@@ -282,7 +311,6 @@ export function AppearancePanel() {
   const setMenu = useThemeStore((s) => s.setMenu);
   const setIconWeight = useThemeStore((s) => s.setIconWeight);
   const setIconLibrary = useThemeStore((s) => s.setIconLibrary);
-  const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
   const toastVariant = useThemeStore((s) => s.toastVariant);
   const setToastVariant = useThemeStore((s) => s.setToastVariant);
   const toastPosition = useThemeStore((s) => s.toastPosition);
@@ -291,13 +319,11 @@ export function AppearancePanel() {
   const applyThemeSeed = useThemeStore((s) => s.applyThemeSeed);
   const [seedInput, setSeedInput] = useState('');
 
-  // Shuffle rolls the toast design too — fire a toast so the new look is visible.
-  const handleShuffle = () => {
-    shuffleTheme();
-    notify.info('Theme shuffled', {
-      description: 'New accent, fonts, radius — and toast style.',
-    });
-  };
+  // Per-section shuffle — re-roll just one card's axes. (The global Shuffle in the
+  // dialog header rolls everything, incl. the orthogonal base/menu/icons.)
+  const shuffleColour = () => updateLook(rollColour());
+  const shuffleTypography = () => updateLook(rollTypography());
+  const shuffleSurface = () => updateLook(rollSurface());
 
   // Copy a shareable link that reproduces the current look (?theme=<seed>).
   const handleCopyLink = () => {
@@ -389,6 +415,13 @@ export function AppearancePanel() {
         <CardHeader>
           <CardTitle className="text-base">Colour</CardTitle>
           <CardDescription>Accent, charts, and the neutral base.</CardDescription>
+          <CardAction>
+            <SectionShuffle
+              onClick={shuffleColour}
+              label="colour"
+              testId="shuffle-colour"
+            />
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
@@ -448,6 +481,13 @@ export function AppearancePanel() {
         <CardHeader>
           <CardTitle className="text-base">Type &amp; shape</CardTitle>
           <CardDescription>Fonts, corner radius, and menu surface.</CardDescription>
+          <CardAction>
+            <SectionShuffle
+              onClick={shuffleTypography}
+              label="type & shape"
+              testId="shuffle-type"
+            />
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -531,6 +571,13 @@ export function AppearancePanel() {
         <CardHeader>
           <CardTitle className="text-base">Surface &amp; motion</CardTitle>
           <CardDescription>Spacing, depth, contrast, and how it moves.</CardDescription>
+          <CardAction>
+            <SectionShuffle
+              onClick={shuffleSurface}
+              label="surface & motion"
+              testId="shuffle-surface"
+            />
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
@@ -730,21 +777,15 @@ export function AppearancePanel() {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" onClick={handleShuffle} data-testid="theme-shuffle">
-          <Sparkles className="mr-2 size-4" aria-hidden />
-          Shuffle
-        </Button>
-        {preset === GENERATED_PRESET ? (
-          <span
-            className="text-muted-foreground inline-flex items-center gap-1.5 text-sm"
-            data-testid="preset-custom"
-          >
-            <Check className="text-primary size-4" aria-hidden />
-            {customLook ? `Custom — ${customLook}` : 'Custom'}
-          </span>
-        ) : null}
-      </div>
+      {preset === GENERATED_PRESET ? (
+        <div
+          className="text-muted-foreground inline-flex items-center gap-1.5 text-sm"
+          data-testid="preset-custom"
+        >
+          <Check className="text-primary size-4" aria-hidden />
+          {customLook ? `Custom — ${customLook}` : 'Custom'}
+        </div>
+      ) : null}
     </div>
   );
 }

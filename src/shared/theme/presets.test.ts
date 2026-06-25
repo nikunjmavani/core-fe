@@ -19,6 +19,9 @@ import {
   nextRandomHue,
   oklchToHex,
   randomThemeHue,
+  rollColour,
+  rollSurface,
+  rollTypography,
   shuffleIcons,
   THEME_PRESETS,
 } from './presets.ts';
@@ -141,6 +144,33 @@ describe('generated themes (shuffle)', () => {
   it('accentForeground returns a contrast-safe foreground that adapts to the accent', () => {
     expect(accentForeground(0.85, 0.16, 100)).toBe('oklch(0.205 0 0)'); // light → dark text
     expect(accentForeground(0.3, 0.12, 265)).toBe('oklch(0.985 0 0)'); // dark → light text
+  });
+
+  it('per-section rolls return scoped partial looks with valid values', () => {
+    expect(Object.keys(rollColour()).sort()).toEqual([
+      'chartHue',
+      'harmonyId',
+      'hue',
+      'intensityId',
+    ]);
+    expect(Object.keys(rollTypography()).sort()).toEqual([
+      'bodyFontId',
+      'headingFontId',
+      'radiusId',
+      'shapeId',
+      'typeScaleId',
+    ]);
+    expect(Object.keys(rollSurface()).sort()).toEqual([
+      'contrastId',
+      'densityId',
+      'elevationId',
+      'focusId',
+      'motionId',
+      'separationId',
+    ]);
+    expect(GENERATED_FONTS[rollTypography().bodyFontId as string]).toBeDefined();
+    expect(rollColour().hue).toBeGreaterThanOrEqual(0);
+    expect(rollColour().hue).toBeLessThan(360);
   });
 
   it('oklchToHex / hexToHue round-trip an accent hue within tolerance', () => {

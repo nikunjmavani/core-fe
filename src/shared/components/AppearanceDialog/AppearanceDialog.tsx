@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 
-import { X } from '@/shared/icons/index.ts';
+import { Button } from '@/shared/components/ui/button.tsx';
+import { Sparkles, X } from '@/shared/icons/index.ts';
+import { notify } from '@/shared/notify/index.ts';
+import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
 import { AppearancePanel } from './AppearancePanel.tsx';
@@ -16,6 +19,7 @@ import { AppearancePanel } from './AppearancePanel.tsx';
 export function AppearanceDialog() {
   const open = useUIStore((s) => s.appearanceOpen);
   const setOpen = useUIStore((s) => s.setAppearanceOpen);
+  const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
   const panelRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -46,6 +50,11 @@ export function AppearanceDialog() {
     };
   }, [open, setOpen]);
 
+  const handleShuffle = () => {
+    shuffleTheme();
+    notify.info('Theme shuffled', { description: 'A fresh look across every axis.' });
+  };
+
   if (!open) return null;
 
   return (
@@ -66,15 +75,27 @@ export function AppearanceDialog() {
             Saved on this device — changes apply live.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setOpen(false)}
-          aria-label="Close"
-          data-testid="appearance-close"
-          className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring -mr-1 rounded-md p-1.5 transition outline-none focus-visible:ring-2"
-        >
-          <X className="size-4" aria-hidden="true" />
-        </button>
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleShuffle}
+            data-testid="theme-shuffle"
+          >
+            <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" />
+            Shuffle
+          </Button>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label="Close"
+            data-testid="appearance-close"
+            className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring -mr-1 rounded-md p-1.5 transition outline-none focus-visible:ring-2"
+          >
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
         <AppearancePanel />

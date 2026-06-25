@@ -572,6 +572,45 @@ export function generateTheme(_current: GeneratedTheme | null): GeneratedTheme {
   return generateSeededTheme(randomSeed());
 }
 
+// ── Per-section rolls ────────────────────────────────────────────────────────
+// Re-roll just one card's axes (interactive, not seed-bound) — returned as a
+// partial look for updateLook(), which clears the seed since the result no longer
+// maps to one.
+
+/** Roll the Colour axes: accent + chart hue, harmony, intensity. */
+export function rollColour(): Partial<GeneratedTheme> {
+  return {
+    hue: randomThemeHue(),
+    chartHue: randomThemeHue(),
+    harmonyId: pickId(HARMONY_IDS, null),
+    intensityId: pickId(INTENSITY_IDS, null),
+  };
+}
+
+/** Roll the Type & shape axes: font pairing, radius, type scale, shape language. */
+export function rollTypography(): Partial<GeneratedTheme> {
+  const pairing = pickPairing(null);
+  return {
+    bodyFontId: pairing.body,
+    headingFontId: pairing.heading,
+    radiusId: pickId(RADIUS_IDS, null),
+    typeScaleId: pickId(TYPE_SCALE_IDS, null),
+    shapeId: pickId(SHAPE_IDS, null),
+  };
+}
+
+/** Roll the Surface & motion axes: density, motion, elevation, separation, contrast, focus. */
+export function rollSurface(): Partial<GeneratedTheme> {
+  return {
+    densityId: pickId(DENSITY_IDS, null),
+    motionId: pickId(MOTION_IDS, null),
+    elevationId: pickId(ELEVATION_IDS, null),
+    separationId: pickId(SEPARATION_IDS, null),
+    contrastId: pickId(CONTRAST_IDS, null),
+    focusId: pickId(FOCUS_IDS, null),
+  };
+}
+
 function chance(probability: number): boolean {
   return rng() < probability;
 }

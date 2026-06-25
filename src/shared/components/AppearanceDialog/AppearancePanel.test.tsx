@@ -35,7 +35,10 @@ describe('AppearancePanel', () => {
     expect(screen.getByTestId('menu-translucent')).toBeInTheDocument();
     expect(screen.getByTestId('icon-bold')).toBeInTheDocument();
     expect(screen.getByTestId('iconlib-tabler')).toBeInTheDocument();
-    expect(screen.getByTestId('theme-shuffle')).toBeInTheDocument();
+    // each style section has its own shuffle (the global one lives in the dialog header)
+    expect(screen.getByTestId('shuffle-colour')).toBeInTheDocument();
+    expect(screen.getByTestId('shuffle-type')).toBeInTheDocument();
+    expect(screen.getByTestId('shuffle-surface')).toBeInTheDocument();
   });
 
   it('picking an accent colour switches to the custom look', async () => {
@@ -69,10 +72,11 @@ describe('AppearancePanel', () => {
     expect(useThemeStore.getState().iconLibrary).toBe('tabler');
   });
 
-  it('shuffle generates a custom look', async () => {
+  it('a section shuffle re-rolls that section into a custom look', async () => {
     const user = userEvent.setup();
     render(<AppearancePanel />);
-    await user.click(screen.getByTestId('theme-shuffle'));
+    await user.click(screen.getByTestId('shuffle-colour'));
     expect(useThemeStore.getState().preset).toBe('custom');
+    expect(useThemeStore.getState().customTheme).not.toBeNull();
   });
 });
