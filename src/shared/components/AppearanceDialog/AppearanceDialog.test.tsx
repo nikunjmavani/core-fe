@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
@@ -25,5 +25,15 @@ describe('AppearanceDialog', () => {
     useUIStore.setState({ appearanceOpen: false });
     render(<AppearanceDialog />);
     expect(screen.queryByTestId('appearance-dialog')).not.toBeInTheDocument();
+  });
+
+  it('closes on a pointer-down outside the panel', () => {
+    useUIStore.setState({ appearanceOpen: true });
+    render(<AppearanceDialog />);
+    expect(screen.getByTestId('appearance-dialog')).toBeInTheDocument();
+    act(() => {
+      document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    });
+    expect(useUIStore.getState().appearanceOpen).toBe(false);
   });
 });
