@@ -32,92 +32,13 @@ import { execFileSync, execSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
+import {
+  GitHubApiError,
+  getRepositoryIdentifier,
+  runGhJson,
+} from './github-shared.mjs';
+
 const RULESETS_DIRECTORY = resolve(import.meta.dirname, '../../.github/rulesets');
-
-class GitHubApiError extends Error {
-  /**
-   * @param {number | null} status
-   * @param {string} message
-   */
-  constructor(status, message) {
-    super(message);
-    this.status = status;
-  }
-}
-
-function repositoryFromGitRemote() {
-  try {
-    const remoteUrl = execSync('git remote get-url origin', {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 5_000,
-    }).trim();
-
-    const sshMatch = remoteUrl.match(/git@github\.com:([^/]+\/[^/.]+?)(?:\.git)?$/);
-    if (sshMatch?.[1]) return sshMatch[1];
-
-    const httpsMatch = remoteUrl.match(/github\.com\/([^/]+\/[^/.]+?)(?:\.git)?$/);
-    if (httpsMatch?.[1]) return httpsMatch[1];
-  } catch {
-    // fall through
-  }
-  return undefined;
-}
-
-function getRepositoryIdentifier() {
-  if (process.env.GITHUB_REPOSITORY?.includes('/')) {
-    return process.env.GITHUB_REPOSITORY;
-  }
-  const fromGit = repositoryFromGitRemote();
-  if (fromGit) return fromGit;
-  try {
-    return execSync('gh repo view --json nameWithOwner -q .nameWithOwner', {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 15_000,
-    }).trim();
-  } catch {
-    throw new Error(
-      'Cannot resolve repository: set GITHUB_REPOSITORY, use a github.com git remote, or authenticate gh.',
-    );
-  }
-}
-
-/**
- * @param {readonly string[]} args
- * @param {{ stdin?: string }} [options]
- */
-function runGhJson(args, options = {}) {
-  try {
-    const output = execFileSync('gh', [...args], {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      timeout: 30_000,
-      input: options.stdin,
-    });
-    return JSON.parse(output);
-  } catch (commandError) {
-    const errorObject =
-      /** @type {{ stderr?: Buffer | string, stdout?: Buffer | string, message?: string }} */ (
-        commandError
-      );
-    const stderr =
-      typeof errorObject.stderr === 'string'
-        ? errorObject.stderr
-        : (errorObject.stderr?.toString('utf-8') ?? '');
-    const stdout =
-      typeof errorObject.stdout === 'string'
-        ? errorObject.stdout
-        : (errorObject.stdout?.toString('utf-8') ?? '');
-    const combined = `${stderr}\n${stdout}`.trim();
-    const statusMatch = combined.match(/HTTP\s+(\d{3})/i);
-    const status = statusMatch?.[1] ? Number.parseInt(statusMatch[1], 10) : null;
-    throw new GitHubApiError(
-      status,
-      combined || (errorObject.message ?? 'gh command failed'),
-    );
-  }
-}
 
 function loadLocalRulesets(directory = RULESETS_DIRECTORY) {
   const entries = readdirSync(directory)
@@ -269,11 +190,13 @@ function parseArguments() {
 function main() {
   const { mode } = parseArguments();
 
-  try {
-    execSync('gh auth status', { stdio: ['pipe', 'pipe', 'pipe'], timeout: 15_000 });
-  } catch {
-    console.error('gh is not authenticated. Run `gh auth login` first.');
-    process.exit(1);
+  if (mode !== 'dry-run') {
+    try {
+      execSync('gh auth status', { stdio: ['pipe', 'pipe', 'pipe'], timeout: 15_000 });
+    } catch {
+      console.error('gh is not authenticated. Run `gh auth login` first.');
+      process.exit(1);
+    }
   }
 
   const repository = getRepositoryIdentifier();

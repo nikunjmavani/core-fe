@@ -44,25 +44,22 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Check deploy secrets
-        id: gate
+      - name: Validate deploy secrets (fail loud)
         env:
-          API_URL: ${{ secrets.VITE_API_BASE_URL }}
-          NETLIFY_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE: ${{ secrets.NETLIFY_SITE_ID }}
-        run: |
-          if [ -n "$API_URL" ] && [ -n "$NETLIFY_TOKEN" ] && [ -n "$NETLIFY_SITE" ]; then
-            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping Netlify deploy for environment '${{ inputs.github_environment }}' — one or more required secrets are unset."
-          fi
+          GITHUB_ENV_VALIDATION_SOURCE: runtime
+          SKIP_GITHUB_ENV: '1'
+          CONFIG: ${{ inputs.github_environment }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          VITE_POSTHOG_KEY: ${{ secrets.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
+          VITE_PRIVACY_POLICY_URL: ${{ secrets.VITE_PRIVACY_POLICY_URL }}
+        run: node scripts/github/validate-github-env.mjs
 
       - uses: ./.github/actions/setup-node-pnpm
-        if: steps.gate.outputs.should_deploy == 'true'
 
       - name: Resolve app version from release-please manifest
-        if: steps.gate.outputs.should_deploy == 'true'
         id: version
         env:
           TARGET_BRANCH: ${{ inputs.target_branch }}
@@ -76,14 +73,13 @@ jobs:
           echo "vite_app_version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Build
-        if: steps.gate.outputs.should_deploy == 'true'
         run: pnpm build
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_APP_VERSION: ${{ steps.version.outputs.vite_app_version }}
 
       - name: Upload release artifact
-        if: steps.gate.outputs.should_deploy == 'true' && inputs.upload-release-artifact
+        if: inputs.upload-release-artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ${{ inputs.artifact-name }}
@@ -92,7 +88,6 @@ jobs:
 
       - name: Deploy to Netlify
         id: deploy
-        if: steps.gate.outputs.should_deploy == 'true'
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
@@ -108,7 +103,7 @@ jobs:
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
       - name: Post-deploy smoke
-        if: steps.gate.outputs.should_deploy == 'true' && steps.deploy.outputs.url != ''
+        if: steps.deploy.outputs.url != ''
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
         run: |

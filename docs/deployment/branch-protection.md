@@ -88,10 +88,19 @@ Both use `strict_required_status_checks_policy: true` (branch must be up to date
 
 ## GitHub Environments
 
-Committed environment config: [development.json](../../.github/environments/development.json), [production.json](../../.github/environments/production.json).
+Committed environment config: [development.json](../../.github/environments/development.json), [production.json](../../.github/environments/production.json). See [.github/environments/README.md](../../.github/environments/README.md).
 
-Deploy secrets (`VITE_API_BASE_URL`, `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`,
-`VITE_PRIVACY_POLICY_URL`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`) are stored
-**per environment** with the same keys — values differ between development and
-production Netlify sites. Sync via `pnpm setup:infra:github-secrets` from
-`config.setup.env` (see `scripts/setup/setup.config.json`).
+**Required deploy secrets** (post-merge Netlify deploy fails if missing):
+
+- `VITE_API_BASE_URL`
+- `NETLIFY_AUTH_TOKEN`
+- `NETLIFY_SITE_ID`
+
+Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POLICY_URL`.
+
+| Command                                      | Purpose                                                    |
+| -------------------------------------------- | ---------------------------------------------------------- |
+| `pnpm github:sync`                           | Unified IaC: rulesets + env shells + secrets from `.env.*` |
+| `pnpm github:sync --from-config-setup --yes` | Legacy path from `config.setup.env`                        |
+| `pnpm validate:github-env`                   | Fail loud if required secrets missing                      |
+| `pnpm validate:github-environments`          | Protection drift vs committed JSON                         |

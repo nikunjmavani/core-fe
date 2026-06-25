@@ -20,6 +20,11 @@
         "captureConsentEvents": true,
         "posthogEventName": "analytics_consent_decision"
       },
+      "deploySecretsRequired": [
+        "VITE_API_BASE_URL",
+        "NETLIFY_AUTH_TOKEN",
+        "NETLIFY_SITE_ID"
+      ],
       "deploySecrets": [
         "VITE_API_BASE_URL",
         "VITE_POSTHOG_KEY",
@@ -39,6 +44,11 @@
         "captureConsentEvents": true,
         "posthogEventName": "analytics_consent_decision"
       },
+      "deploySecretsRequired": [
+        "VITE_API_BASE_URL",
+        "NETLIFY_AUTH_TOKEN",
+        "NETLIFY_SITE_ID"
+      ],
       "deploySecrets": [
         "VITE_API_BASE_URL",
         "VITE_POSTHOG_KEY",
