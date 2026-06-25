@@ -28,6 +28,7 @@ import { manifest as registerManifest } from '@/pages/register/register.manifest
 import { manifest as resetPasswordManifest } from '@/pages/reset-password/reset-password.manifest.ts';
 import { manifest as verifyEmailManifest } from '@/pages/verify-email/verify-email.manifest.ts';
 import { ConsentBanner } from '@/shared/components/ConsentBanner/index.ts';
+import { FloatingSettingsButton } from '@/shared/components/FloatingSettingsButton/index.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts';
 import { RouteAnnouncer } from '@/shared/components/RouteAnnouncer/index.ts';
@@ -134,6 +135,8 @@ const rootRoute = createRootRoute({
       </div>
       {/* Global hash-driven settings modal — overlays any page (#settings/…). */}
       <SettingsModalLazy />
+      {/* Right-edge handle: open Appearance from anywhere (signed-in, unlocked). */}
+      <FloatingSettingsButton />
       <OfflineIndicator />
       {/* aria-live announcer: reads the new document.title on navigation. */}
       <RouteAnnouncer />
