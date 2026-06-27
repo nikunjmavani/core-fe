@@ -6,41 +6,70 @@ prompt-skill-router, skill-reminder, stop-gate-reminder). Always consult
 the files you change. This is advisory: skills elevate craft within the
 guardrails (shadcn components, semantic tokens, configured fonts/brand).
 
+## UI & craft stack (canonical)
+
+Read in order; **project guardrails always win** over skill suggestions.
+
+| Priority      | Skill                     | When                                                             |
+| ------------- | ------------------------- | ---------------------------------------------------------------- |
+| 1             | **shadcn**                | Any component, block, CLI, styling primitives                    |
+| 2             | **frontend-design**       | Default craft for build/style/beautify                           |
+| 3             | **web-design-guidelines** | A11y, forms, focus, UX audit                                     |
+| Advisory      | **ui-ux-pro-max**         | Query UX/style/chart DB (`python3 …/search.py`) — hints only     |
+| Explicit pass | **impeccable**            | User says redesign / audit / polish / “impeccable” on product UI |
+| Motion impl   | **animejs**               | Implement animations (dashboard uses this today)                 |
+| Motion bar    | **emil-design-eng**       | Decide if/when/how motion should exist                           |
+| Motion review | **review-animations**     | Review animation diffs in PRs only                               |
+
+**Do not use** (removed from repo): `high-end-visual-design`, `redesign-existing-projects`, `shadcn-ui-blocks`, `image-to-code`, `motion-framer`, `full-output-enforcement`.
+
 ## By intent (prompt-time)
 
-| When the task is…                              | Run skill(s)                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------------ |
-| a new page / route                             | `page-scaffolding` → `route-island`                                |
-| a component / UI / page styling                | `shadcn` (pick + add) → `frontend-design` → `composition-patterns` |
-| a form                                         | `composition-patterns` → `test-generation`                         |
-| a Query hook / data layer (`*.api.ts`, hooks/) | `react-best-practices` (api-data-patterns rule)                    |
-| styling / theme / tokens / Tailwind            | `frontend-design` (tailwind-styling + ui-sources rules)            |
-| tests / test ids                               | `test-generation` → `e2e-testids`                                  |
-| “make it premium / beautiful”                  | `frontend-design` / `high-end-visual-design` / `impeccable`        |
-| an a11y / UX review                            | `web-design-guidelines` / `ui-ux-pro-max`                          |
-| docs / README / overview                       | `documentation-maintenance`                                        |
-| where does this code go?                       | `code-structure` / `component-promotion`                           |
-| lint / quality cleanup                         | `lint-guard` / `code-smells-best-practices`                        |
-| full project check                             | `project-health-check` (`pnpm health`)                             |
+| When the task is…                              | Run skill(s)                                                          |
+| ---------------------------------------------- | --------------------------------------------------------------------- |
+| a new page / route                             | `page-scaffolding` → `route-island`                                   |
+| org-scoped route / guards / gateway / session  | `routing-tenancy` (after `route-island`)                              |
+| backend resource CRUD (list + URL dialogs)     | `route-island` → `resource-crud` → `routing-tenancy` (if org-scoped)  |
+| form mutation + API errors                     | `composition-patterns` → `http-forms-errors` → `test-generation`      |
+| env / platform config / knip / vite-env gates  | `platform-hygiene` (env keys → `env-schema-add` first)                |
+| a component / UI / page styling (default)      | `shadcn` → `frontend-design` → `web-design-guidelines`                |
+| redesign / audit / polish product UI           | `shadcn` → `impeccable` → `frontend-design` → `web-design-guidelines` |
+| a form                                         | `composition-patterns` → `test-generation`                            |
+| a Query hook / data layer (`*.api.ts`, hooks/) | `react-best-practices` (api-data-patterns rule)                       |
+| styling / theme / tokens / Tailwind            | `frontend-design` (tailwind-styling + ui-sources rules)               |
+| add animation with Anime.js                    | `animejs` → `emil-design-eng` (bar)                                   |
+| tests / test ids / Playwright E2E              | `test-generation` → `e2e-testids` → `playwright-e2e`                  |
+| an a11y / UX review                            | `web-design-guidelines` (+ `ui-ux-pro-max` for checklist hints)       |
+| docs / README / overview                       | `documentation-maintenance`                                           |
+| where does this code go?                       | `code-structure` / `component-promotion`                              |
+| lint / quality cleanup                         | `lint-guard` / `code-smells-best-practices`                           |
+| full project check                             | `project-health-check` (`pnpm health`)                                |
 
 ## By file pattern (after an edit)
 
-| File pattern                               | Skill(s)                                                     |
-| ------------------------------------------ | ------------------------------------------------------------ |
-| `**/*.route.tsx` · `**/*.manifest.ts`      | `route-island`                                               |
-| `src/pages/**/`                            | `page-scaffolding`, `route-island`                           |
-| `**/*.contracts.ts`                        | `code-structure`                                             |
-| `**/*.api.ts` · `**/hooks/use*/**`         | `react-best-practices`                                       |
-| `**/components/ui/*`                       | `shadcn`                                                     |
-| `**/components/**/*.tsx` · `**/forms/**/*` | `composition-patterns`, `frontend-design`, `test-generation` |
-| `src/index.css` · `**/*.css`               | `frontend-design`                                            |
-| `**/*.test.ts` · `**/*.test.tsx`           | `test-generation`                                            |
-| `tests/e2e/**`                             | `e2e-testids`                                                |
-| `.env.example`                             | `documentation-maintenance`                                  |
+| File pattern                                                                           | Skill(s)                                                               |
+| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `**/*.route.tsx` · `**/*.manifest.ts`                                                  | `route-island`                                                         |
+| `src/app/routes/routeTree.tsx` · `src/app/guards/**` · `src/shared/tenancy/**`         | `routing-tenancy`                                                      |
+| `**/*.resource.ts` · `**/*ListPage.tsx` · `**/dialogs/**`                              | `resource-crud`                                                        |
+| `**/forms/**/*` · mutation hooks touching `apiClient`                                  | `http-forms-errors`, `composition-patterns`                            |
+| `src/core/config/env-schema.ts` · `platform-config.ts` · `build-env.ts` · `knip.jsonc` | `platform-hygiene`, `env-schema-add` (if env key changed)              |
+| `src/pages/**/`                                                                        | `page-scaffolding`, `route-island`                                     |
+| `**/*.contracts.ts`                                                                    | `code-structure`                                                       |
+| `**/*.api.ts` · `**/hooks/use*/**`                                                     | `react-best-practices`                                                 |
+| `**/components/ui/*`                                                                   | `shadcn`                                                               |
+| `**/components/**/*.tsx` · `**/forms/**/*`                                             | `shadcn`, `composition-patterns`, `frontend-design`, `test-generation` |
+| `src/index.css` · `**/*.css`                                                           | `frontend-design`, `theme-axis-audit` (if axis work)                   |
+| `**/*.test.ts` · `**/*.test.tsx`                                                       | `test-generation`                                                      |
+| `tests/e2e/**`                                                                         | `playwright-e2e`, `e2e-testids`                                        |
+| `.env.example`                                                                         | `platform-hygiene`, `env-schema-add`, `documentation-maintenance`      |
+| `useAnimeCountUp.ts` · animation hooks                                                 | `animejs`, `emil-design-eng`                                           |
 
 ## Gates (definition of done)
 
 `pnpm health` (full check) — or individually: `pnpm tsc` · `pnpm lint` ·
 `pnpm biome:check` · `pnpm format:check` · `pnpm validate:tokens` ·
-`pnpm validate:structure` · `pnpm test` · `pnpm docs:lint`. Pre-push runs the
+`pnpm validate:structure` · `pnpm validate:testids` · `pnpm validate:theme-axis` ·
+`pnpm validate:vite-env` · `pnpm validate:client-env --production` · `pnpm knip` ·
+`pnpm test` · `pnpm docs:lint`. Pre-push runs the
 local SonarQube gate on deployed-surface changes.

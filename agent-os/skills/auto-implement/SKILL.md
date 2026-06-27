@@ -92,6 +92,24 @@ Once the user provides a requirement (Option A or B), the agent runs **all** of 
    - Add `data-testid` attributes on all interactive elements.
    - Use the correct layout (AppLayout, AuthLayout, etc.).
 
+2b. **Follow routing-tenancy skill** (`agent-os/skills/routing-tenancy/SKILL.md`) when the route is org-scoped or touches guards:
+
+- Wire `gatewayFromManifest(manifest)` in `routeTree.tsx`.
+- Apply tenancy guard chain from `GUARDS.OVERVIEW.md`.
+- Register in `docs/reference/routes-and-ui.md`.
+
+2c. **Follow resource-crud skill** (`agent-os/skills/resource-crud/SKILL.md`) when the requirement is a backend resource:
+
+- List page + URL-driven dialogs, `$param` folders, `<resource>.resource.ts`, L7 bootstrap.
+
+2d. **Follow http-forms-errors skill** (`agent-os/skills/http-forms-errors/SKILL.md`) when forms call APIs:
+
+- `mapValidationErrors` on 422; `RateLimitNotice` for 429; `QueryBoundary` on read panels.
+
+2e. **Follow platform-hygiene skill** (`agent-os/skills/platform-hygiene/SKILL.md`) when env/platform config changes:
+
+- Chain `env-schema-add` for new keys; run `validate:vite-env`, `validate:client-env`, `knip`.
+
 3. **Register route** in `src/app/routes/routeTree.tsx`:
    - Lazy import: `lazy: () => import('@/pages/<name>/<name>.route.tsx').then((m) => ({ default: m.Component }))`.
    - Wrap with `<ProtectedRoute>` if the page is protected.
@@ -105,8 +123,9 @@ Once the user provides a requirement (Option A or B), the agent runs **all** of 
 
 1. **Follow test-generation skill** (`agent-os/skills/test-generation/SKILL.md`):
    - Create colocated test files for every new component, hook, service, and page.
-   - Include `vitest-axe` accessibility checks (`toHaveNoViolations()`).
-   - Use `data-testid` for stable selectors.
+   - Include `vitest-axe` accessibility checks (`toHaveNoViolations()`); dialogs use `axeForDialog`.
+   - Use `data-testid` on test contracts; run `pnpm validate:testids` when adding pages/forms.
+   - For user flows spanning routes, add `tests/e2e/<feature>.e2e.test.ts` per **playwright-e2e** skill (hybrid selectors).
    - Skip test files for exceptions: `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<page>.constants.ts`, `types.ts`, `index.ts` (barrel), `<PAGE>.OVERVIEW.md`.
 
 2. **Run tests** (mentally or via terminal) — ensure no regressions.
@@ -197,6 +216,11 @@ User provides requirement
 
 Additional skills invoked when relevant:
 
+- **routing-tenancy** — org-scoped routes, guard chains, gateway, session context
+- **resource-crud** — backend resource list + URL-driven CRUD dialogs
+- **http-forms-errors** — mutation error mapping, QueryBoundary read paths
+- **platform-hygiene** — env read paths, knip, vite-env / client-env validators
+- **env-schema-add** — add/rename/remove env keys (chains from platform-hygiene)
 - **component-promotion** — when a component needs to move to `shared/`
 - **composition-patterns** — when building complex component APIs
 - **react-best-practices** — when optimizing performance

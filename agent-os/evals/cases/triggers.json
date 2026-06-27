@@ -7,6 +7,26 @@
       "why": "Route marker files must run the route-island skill."
     },
     {
+      "file": "src/app/routes/routeTree.tsx",
+      "expectSkills": ["routing-tenancy"],
+      "why": "Org guard chains and gatewayFromManifest live in routeTree."
+    },
+    {
+      "file": "src/core/resources/members.resource.ts",
+      "expectSkills": ["resource-crud"],
+      "why": "Resource manifests follow the resource-crud skill."
+    },
+    {
+      "file": "src/pages/login/forms/LoginForm/LoginForm.tsx",
+      "expectSkills": ["http-forms-errors", "composition-patterns"],
+      "why": "Forms with API mutations need error-mapping checklist."
+    },
+    {
+      "file": "src/core/config/env-schema.ts",
+      "expectSkills": ["platform-hygiene", "env-schema-add"],
+      "why": "Env schema changes require platform hygiene and env-schema-add."
+    },
+    {
       "file": "src/pages/dashboard/components/ActivityFeed/ActivityFeed.tsx",
       "expectSkills": ["composition-patterns", "test-generation"],
       "why": "Page components need composition + colocated tests."
@@ -33,7 +53,7 @@
     },
     {
       "file": ".env.example",
-      "expectSkills": ["documentation-maintenance"],
+      "expectSkills": ["platform-hygiene", "env-schema-add"],
       "why": "Env template changes must stay documented and secret-free."
     }
   ]

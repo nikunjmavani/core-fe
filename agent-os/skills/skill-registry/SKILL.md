@@ -25,15 +25,25 @@ Complete inventory of project skills. Use this to find the right skill for any t
 - ...check/fix code smells and best practices on new or changed code -> **code-smells-best-practices** (live code only)
 - ...add tests/write tests/coverage -> **test-generation**
 - ...E2E test ids / data-testid / Playwright selectors -> **e2e-testids**
+- ...write/refactor Playwright E2E specs -> **playwright-e2e**
 - ...route island / self-contained path / nested sub-route folder -> **route-island**
+- ...org-scoped route, guards, gateway, session context, settings hash -> **routing-tenancy**
+- ...backend resource CRUD (list, URL dialogs, resource manifest) -> **resource-crud**
+- ...form mutation errors, 422 mapping, rate limit, QueryBoundary -> **http-forms-errors**
+- ...platform config, knip, vite-env / client-env validators -> **platform-hygiene**
 - ...recommend extensions, IDE setup, productivity, workspace settings -> **extension-settings-recommendations**
 - ...add/change docs, where to document, keep README/CLAUDE in sync -> **documentation-maintenance**
 - ...run a full project health check / verify everything works after major changes -> **project-health-check**
 - ...run full code review / generate code review report -> **full-code-review**
 - ...add/style/compose a shadcn component, run the shadcn CLI, choose a component -> **shadcn** (`agent-os/skills/shadcn/SKILL.md`)
-- ...make a UI distinctive/polished/beautiful -> **frontend-design** (`agent-os/skills/frontend-design/SKILL.md`) within project guardrails
+- ...make a UI distinctive/polished/beautiful -> **frontend-design** (default) + **shadcn** + **web-design-guidelines**
+- ...redesign / audit / polish product UI ("impeccable") -> **impeccable** + **shadcn** + **frontend-design** (guardrails win)
+- ...implement Anime.js animation -> **animejs** (+ **emil-design-eng** for motion bar)
+- ...review animation code in a PR -> **review-animations**
 - ...look up design intelligence (styles, palettes, font pairings, UX/stack/chart guidelines) -> **ui-ux-pro-max** (`agent-os/skills/ui-ux-pro-max/SKILL.md`), advisory only
 - ...find/install a skill that doesn't exist yet -> **find-skills** (`agent-os/skills/find-skills/SKILL.md`)
+- ...audit Appearance/Shuffle theme axes, fix preset compliance, "do elevation" one-by-one -> **theme-axis-audit** (`agent-os/skills/theme-axis-audit/SKILL.md`)
+- ...add/rename/remove env var, sync `.env.example`, Secret vs Variable -> **env-schema-add** (`agent-os/skills/env-schema-add/SKILL.md`)
 
 ## Task → Required Skills (read in this order)
 
@@ -43,26 +53,35 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 | --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Implement a feature / requirement (end-to-end)**        | auto-implement ★ → requirement-format (if vague) → code-structure → page-scaffolding (if new route) → shadcn + frontend-design (UI) → test-generation → lint-guard → code-smells-best-practices → documentation-maintenance |
 | **New page / route / sub-route**                          | route-island → page-scaffolding → code-structure → shadcn (UI) → test-generation → e2e-testids → lint-guard → documentation-maintenance                                                                                     |
+| **Org-scoped route / guards / gateway**                   | route-island → **routing-tenancy** → test-generation → lint-guard → documentation-maintenance                                                                                                                               |
+| **Backend resource CRUD island**                          | route-island → **resource-crud** → **routing-tenancy** (if org-scoped) → **http-forms-errors** (forms) → test-generation → e2e-testids → lint-guard                                                                         |
+| **Form + API mutation**                                   | composition-patterns → **http-forms-errors** → test-generation → lint-guard                                                                                                                                                 |
+| **Platform / env hygiene**                                | **platform-hygiene** → env-schema-add (if key changed) → documentation-maintenance → lint-guard                                                                                                                             |
 | **New / changed UI component**                            | shadcn (add/compose) → frontend-design (craft) → ui-ux-pro-max (guidance, advisory) → web-design-guidelines (a11y) → composition-patterns (API) → test-generation → lint-guard                                              |
 | **Design decision (style/palette/font/chart)**            | ui-ux-pro-max (query DB, advisory) → frontend-design (direction) → shadcn (tokens/components) — never override neutral tokens/brand without user ask                                                                        |
 | **Add/choose a shadcn component or run the CLI**          | shadcn (single skill: CLI + critical rules + 20 allowed sources)                                                                                                                                                            |
 | **Style / beautify / restyle existing UI**                | frontend-design (within tokens/brand) → shadcn (primitives) → web-design-guidelines (a11y) → lint-guard                                                                                                                     |
-| **Build a form**                                          | shadcn (Field/FieldGroup/InputGroup) → code-structure (contracts.ts + react-hook-form + zod) → web-design-guidelines → test-generation → lint-guard                                                                         |
+| **Redesign / audit / polish product UI ("impeccable")**   | shadcn → impeccable → frontend-design → web-design-guidelines → lint-guard                                                                                                                                                  |
+| **Add Anime.js motion**                                   | animejs → emil-design-eng (motion bar) → lint-guard                                                                                                                                                                         |
+| **Review animation code (PR / diff)**                     | review-animations                                                                                                                                                                                                           |
 | **Data table / list / filters**                           | shadcn (Table + DataTable) → react-best-practices (perf) → web-design-guidelines → test-generation → lint-guard                                                                                                             |
 | **Promote a component to shared/**                        | component-promotion → code-structure → test-generation → lint-guard                                                                                                                                                         |
 | **Refactor a component API / remove boolean-prop sprawl** | composition-patterns → react-best-practices → test-generation → lint-guard                                                                                                                                                  |
 | **Fix React performance / re-renders / bundle size**      | react-best-practices → lint-guard                                                                                                                                                                                           |
 | **Add or update tests**                                   | test-generation → lint-guard                                                                                                                                                                                                |
 | **E2E selectors / data-testid on UI**                     | e2e-testids → test-generation (unit tests) → lint-guard                                                                                                                                                                     |
+| **Playwright E2E specs (hybrid selectors)**               | playwright-e2e → e2e-testids → lint-guard                                                                                                                                                                                   |
 | **Accessibility / UX audit**                              | web-design-guidelines (→ frontend-design if visual polish also needed)                                                                                                                                                      |
 | **Lint / type-check failures**                            | lint-guard (then code-quality-security if config changes)                                                                                                                                                                   |
 | **Code smells on changed code**                           | code-smells-best-practices → lint-guard                                                                                                                                                                                     |
 | **ESLint / Husky / CI / security pipeline change**        | code-quality-security → before-commit-guard                                                                                                                                                                                 |
 | **Before committing**                                     | before-commit-guard (env docs, assets, format, lint, types)                                                                                                                                                                 |
+| **Add/rename/remove env var**                             | **platform-hygiene** → env-schema-add → tool:sync-env-example → documentation-maintenance (runbook)                                                                                                                         |
 | **Docs change / new route affecting README/CLAUDE**       | documentation-maintenance                                                                                                                                                                                                   |
 | **Extensions / IDE setup / new tooling**                  | extension-settings-recommendations                                                                                                                                                                                          |
 | **Full project health check**                             | project-health-check (chains docs, tests, lint, build, bundle)                                                                                                                                                              |
 | **Full code review report**                               | full-code-review                                                                                                                                                                                                            |
+| **Theme axis audit** (appearance/shuffle compliance)      | theme-axis-audit → lint-guard → documentation-maintenance (playbook tracker)                                                                                                                                                |
 | **"Which skill do I use?"**                               | skill-registry (this file)                                                                                                                                                                                                  |
 | **"Is there a skill for X?" / capability missing**        | find-skills (discover + install, then wire into router/registry/docs)                                                                                                                                                       |
 
@@ -72,7 +91,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 ### 0a. auto-implement (Master Orchestrator)
 
-**Path:** `agent-os/skills/auto-implement/SKILL.md`
+**Path:** `agent-os/skills/auto-implement/SKILL.md`  
 **Purpose:** The master skill that runs the full pipeline from requirement to production-ready code. The user provides only a requirement (standard format, short sentence, or vague request); the agent handles everything else in the background: parse → implement → route → RBAC → test → lint → docs → verify.
 
 **Trigger keywords:** Any requirement, any feature request, "here's my requirement", "implement this", "build this", "add this feature"
@@ -88,6 +107,32 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 **Skills it chains:** code-structure, page-scaffolding, test-generation, lint-guard, requirement-format, component-promotion (when relevant)
 
 **Related rules:** agent-behavior, skill-router, testing-requirements
+
+### 0b. theme-axis-audit (Appearance / Shuffle compliance)
+
+**Path:** `agent-os/skills/theme-axis-audit/SKILL.md`  
+**Playbook:** `docs/reference/theme-axis-audit-playbook.md`  
+**Rule:** `agent-os/rules/theme-axis-audit.mdc`
+
+**Purpose:** One axis per cycle — inventory violations, extend `index.css` `[data-*]` / `[data-slot]` hooks, fix components, verify, update tracker, deliver detailed report.
+
+**Trigger keywords:** theme axis audit, appearance compliance, shuffle not applying, do elevation, do density, one by one theme
+
+**Key behaviors:**
+
+- Phases 0–4 mandatory; no confirmation prompts
+- Paired axes only when playbook says so (elevation + separation)
+- Radius/shape already done — same patterns for remaining axes
+- **Product floors:** `docs/reference/preset-product-design-rules.md` (type scale ≥12px, density vs fonts, motion)
+
+### 0c. Preset product-design rules (doc + Cursor rule)
+
+**Doc:** `docs/reference/preset-product-design-rules.md`  
+**Rule:** `agent-os/rules/preset-product-design.mdc`
+
+**Purpose:** Industry-backed floors for every Appearance/Shuffle axis (typography, density, contrast, touch, motion) — not a skill, but mandatory reading when editing `presets.ts`, Appearance, or dense product UI.
+
+**Trigger keywords:** preset rules, type scale too small, density guidelines, shuffle policy, product design presets
 
 ---
 
@@ -320,6 +365,50 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
+### 4d. impeccable (installed — product UI redesign)
+
+**Path:** `agent-os/skills/impeccable/SKILL.md` (pbakaus/impeccable)
+**Purpose:** Full product-register redesign: audit, polish, reshape dashboards/admin/settings with dense, intentional layout — **within** core-fe guardrails.
+
+**Trigger keywords:** "impeccable", "redesign", "audit UI", "polish dashboard", "product register", "reshape", "critique UI"
+
+**Precedence:** Invoke when the **user explicitly** asks for a redesign/audit pass — not on every UI tweak (use **frontend-design** for default polish). Never override semantic tokens, Lucide icons, or shadcn component policy.
+
+**Related skills:** shadcn, frontend-design, web-design-guidelines, theme-axis-audit
+
+---
+
+### 4e. animejs (installed — motion implementation)
+
+**Path:** `agent-os/skills/animejs/SKILL.md`
+**Purpose:** Anime.js v4 timelines, object tweens, stagger — **this repo's animation library** (`useAnimeCountUp` on dashboard stats).
+
+**Trigger keywords:** "anime.js", "count up", "timeline animation", "stagger animation"
+
+**Related skills:** emil-design-eng (when/why motion), review-animations (PR review)
+
+---
+
+### 4f. emil-design-eng (installed — motion craft bar)
+
+**Path:** `agent-os/skills/emil-design-eng/SKILL.md` (Emil Kowalski / animations.dev)
+**Purpose:** Motion philosophy — justified motion, duration budgets, reduced motion, interruptibility. Read before adding new animation.
+
+**Trigger keywords:** "should this animate", "motion feels wrong", "animation timing", "design engineering"
+
+**Related skills:** animejs (implementation), review-animations (PR review)
+
+---
+
+### 4g. review-animations (installed — motion review only)
+
+**Path:** `agent-os/skills/review-animations/SKILL.md`
+**Purpose:** Read-only review of animation diffs against Emil's craft bar. Does not implement features.
+
+**Trigger keywords:** "review animations", "review motion PR", "animation code review"
+
+---
+
 ### 5. composition-patterns
 
 **Path:** `agent-os/skills/composition-patterns/SKILL.md`
@@ -341,7 +430,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 ### 6. code-quality-security
 
 **Path:** `agent-os/skills/code-quality-security/SKILL.md`
-**Purpose:** Three-layer quality and security pipeline -- ESLint plugins, Husky pre-commit, GitHub Actions CI. Now includes commitlint, bundle budgets, Lighthouse CI, release-please, load testing, mutation testing.
+**Purpose:** Three-layer quality and security pipeline -- ESLint plugins, Husky pre-commit, GitHub Actions CI. Now includes commitlint, bundle budgets, Lighthouse CI, release-please, mutation testing.
 
 **Trigger keywords:** "add eslint rule", "lint config", "pre-commit", "CI failing", "security scan", "gitleaks", "semgrep", "what checks run", "bundle size", "release", "deploy"
 
@@ -355,7 +444,6 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - `.github/workflows/pr-ci.yml` -- PR CI workflow (Layer 3)
 - `.github/workflows/preview.yml` -- PR preview builds (Layer 3)
 - `.github/workflows/post-merge-ci.yml` -- post-merge tests, release-please, Netlify deploy (Layer 3)
-- `.github/workflows/load-test.yml` -- k6 load tests (Layer 3)
 - `.github/workflows/mutation-test.yml` -- Stryker mutation tests (Layer 3)
 - `.lighthouserc.cjs` -- Lighthouse CI assertions (Layer 3)
 - `.size-limit.json` -- Bundle size budgets (Layer 3)
@@ -375,7 +463,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 **Key behaviors:**
 
-- Runs via `./scripts/validate/before-commit-guard.sh` on every `git commit`
+- Runs via `./tooling/validate/before-commit-guard.sh` on every `git commit`
 - Checks: validate:env-example, validate:public, lint-staged, type-check
 - Plus (in pre-commit): gitleaks, merge conflict markers, large file (>1MB)
 - Manual run: `pnpm run before-commit-guard`
@@ -415,6 +503,23 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Specs: `tests/e2e/*.{e2e,integration}.test.ts` using `page.getByTestId(...)`
 
 **Auto-invocation:** With page-scaffolding, auto-implement UI, or when user prepares E2E tests.
+
+---
+
+### 6c. playwright-e2e
+
+**Path:** `agent-os/skills/playwright-e2e/SKILL.md`
+**Purpose:** Hybrid Playwright E2E — `data-testid` for actions, `getByRole`/`getByLabel` for a11y guards. Helpers in `tests/utils/e2e-hybrid.ts`.
+
+**Trigger keywords:** "playwright e2e", "e2e test", "hybrid selectors", "refactor e2e", "getByTestId"
+
+**Key artifacts:**
+
+- Skill: `agent-os/skills/playwright-e2e/SKILL.md`
+- Helpers: `tests/utils/e2e-hybrid.ts`, `tests/utils/e2e-auth.ts`
+- Specs: `tests/e2e/*.e2e.test.ts`
+
+**Auto-invocation:** When adding or refactoring E2E specs; pairs with **e2e-testids** for UI testid placement.
 
 ---
 
@@ -505,6 +610,107 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
+### 11a. env-schema-add
+
+**Path:** `agent-os/skills/env-schema-add/SKILL.md`  
+**Rule:** `agent-os/rules/env-schema-add-sync.mdc`  
+**Runbook:** `docs/deployment/runbooks/environment-variables.md`
+
+**Purpose:** Add, rename, or remove env vars safely — schema, `.env.example` halves, GitHub Secret vs Variable, platform-config wiring, and deploy sync.
+
+**Trigger keywords:** "add env var", "new VITE\_", "env-schema", ".env.example", "sync-env-example", "platform config env"
+
+**Key behaviors:**
+
+- Edit `src/core/config/env-schema.ts` first; run `pnpm tool:sync-env-example`
+- Auth switches use per-provider `VITE_AUTH_OAUTH_*` (not `VITE_DISABLED_MODULES`)
+- Update runbook + credentials doc when operator-facing
+- Wire `platform-config.ts` / `auth-methods.ts` when platform-facing
+
+**Related skills:** documentation-maintenance, before-commit-guard, **platform-hygiene**
+
+---
+
+### 11b. routing-tenancy
+
+**Path:** `agent-os/skills/routing-tenancy/SKILL.md`  
+**Rule:** `agent-os/rules/routing-tenancy-sync.mdc`  
+**Spec:** `docs/reference/routing-and-tenancy.md`
+
+**Purpose:** Org-scoped routing, guard chains, `gatewayFromManifest`, session hydrate/invalidate, settings hash modal, `/` resolver.
+
+**Trigger keywords:** "org route", "organizationSlug", "routeTree guards", "gatewayFromManifest", "session context", "settings hash", "tenancy"
+
+**Key behaviors:**
+
+- Complements `route-island` — does not replace folder scaffolding
+- Guard order from `GUARDS.OVERVIEW.md`; unknown org → 404
+- Manifest `module` + `permission` via security gateway
+- Update route-access-matrix tests when policy changes
+
+**Related skills:** route-island, resource-crud, page-scaffolding
+
+---
+
+### 11c. resource-crud
+
+**Path:** `agent-os/skills/resource-crud/SKILL.md`  
+**Reference:** `src/core/resources/members.resource.ts`
+
+**Purpose:** Backend resource pages — list, URL-driven create/edit dialogs, `$param` folders, L7 registry bootstrap.
+
+**Trigger keywords:** "resource page", "CRUD", "URL dialog", "ListPage", "resource manifest", "registerResource"
+
+**Key behaviors:**
+
+- Standard URL table (list/create/edit/show/delete)
+- List page reads pathname → opens dialog; sub-routes render `null`
+- `*.resource.ts` + `registerResource` in bootstrap
+- Chain `http-forms-errors` for mutations
+
+**Related skills:** route-island, routing-tenancy, http-forms-errors, e2e-testids
+
+---
+
+### 11d. http-forms-errors
+
+**Path:** `agent-os/skills/http-forms-errors/SKILL.md`  
+**Platform doc:** `docs/reference/frontend-platform.md` (HTTP errors, QueryBoundary)
+
+**Purpose:** Form mutations + API error UX — `mapValidationErrors`, 429 `RateLimitNotice`, `notifyError`, `QueryBoundary` on reads.
+
+**Trigger keywords:** "422", "validation error", "rate limit", "form mutation", "QueryBoundary", "mapValidationErrors"
+
+**Key behaviors:**
+
+- Never catch 401 in components
+- 422 → RHF `setError` before toast
+- Read panels use `QueryBoundary` — no duplicate loading/error branches
+
+**Related skills:** composition-patterns, test-generation, resource-crud
+
+---
+
+### 11e. platform-hygiene
+
+**Path:** `agent-os/skills/platform-hygiene/SKILL.md`  
+**Rule:** `agent-os/rules/platform-hygiene-sync.mdc`  
+**Overview:** `docs/reference/frontend-platform.md`
+
+**Purpose:** `platformConfig` vs raw Vite env, `build-env.ts` allowlist, knip, `validate:vite-env`, `validate:client-env`.
+
+**Trigger keywords:** "platformConfig", "import.meta.env", "knip", "dead code", "validate:vite-env", "validate:client-env", "build-env"
+
+**Key behaviors:**
+
+- App code reads `platformConfig` — not raw `import.meta.env`
+- Chain `env-schema-add` for key add/rename/remove
+- Run knip after removing deps/exports
+
+**Related skills:** env-schema-add, code-quality-security, documentation-maintenance
+
+---
+
 ### 12. project-health-check
 
 **Path:** `agent-os/skills/project-health-check/SKILL.md`
@@ -534,7 +740,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 - Runs lint, type-check, format check, build, size limit, tests, and coverage
 - Greps for architecture violations (app/core/shared importing from pages) and dangerous patterns (dangerouslySetInnerHTML, innerHTML, eval)
-- CLI: `pnpm report:code-review` (or `node scripts/reports/code-review-report.mjs`)
+- CLI: `pnpm report:code-review` (or `node tooling/reports/code-review-report.mjs`)
 
 **Related skills:** project-health-check (broader audit), code-quality-security (lint/CI), lint-guard (static analysis)
 
@@ -570,39 +776,50 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ## Cross-Reference: Skills by File Area
 
-| Area of Codebase                                      | Relevant Skill(s)                                                                                               |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Any new feature / requirement                         | **auto-implement** (master), code-structure, test-generation, code-smells-best-practices, lint-guard (all auto) |
-| `src/pages/`                                          | auto-implement, code-structure, page-scaffolding, component-promotion, test-generation                          |
-| `src/shared/components/`                              | component-promotion, composition-patterns, **shadcn** (`agent-os/skills/shadcn`), test-generation               |
-| `src/shared/components/ui/`                           | composition-patterns, web-design-guidelines, **shadcn** (`agent-os/skills/shadcn`)                              |
-| `src/core/`                                           | test-generation                                                                                                 |
-| `src/lib/`                                            | test-generation                                                                                                 |
-| `src/stores/`                                         | test-generation                                                                                                 |
-| `eslint.config.mjs`                                   | code-quality-security, lint-guard                                                                               |
-| `.husky/`                                             | code-quality-security                                                                                           |
-| `.github/workflows/`                                  | code-quality-security                                                                                           |
-| `catalog-info.yaml`                                   | (Backstage integration)                                                                                         |
-| `.vscode/`                                            | **extension-settings-recommendations**                                                                          |
-| `docs/`, README, CLAUDE                               | **documentation-maintenance**                                                                                   |
-| Full project / post-change audit                      | **project-health-check**, lint-guard, test-generation, documentation-maintenance                                |
-| Full code review report                               | **full-code-review**                                                                                            |
-| Any React component                                   | react-best-practices, composition-patterns, web-design-guidelines, test-generation                              |
-| UI/design decisions (style, palette, font, chart, UX) | **ui-ux-pro-max** (advisory DB), frontend-design, web-design-guidelines, shadcn                                 |
+| Area of Codebase                                      | Relevant Skill(s)                                                                                                                                |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Any new feature / requirement                         | **auto-implement** (master), code-structure, test-generation, code-smells-best-practices, lint-guard (all auto)                                  |
+| `src/pages/`                                          | auto-implement, code-structure, page-scaffolding, **route-island**, **routing-tenancy**, **resource-crud**, component-promotion, test-generation |
+| `src/app/routes/routeTree.tsx`, `src/app/guards/`     | **routing-tenancy**, test-generation                                                                                                             |
+| `src/shared/tenancy/`                                 | **routing-tenancy**, test-generation                                                                                                             |
+| `**/*.resource.ts`, `*ListPage.tsx`, `**/dialogs/**`  | **resource-crud**, route-island, e2e-testids                                                                                                     |
+| `**/forms/**`, mutation hooks                         | **http-forms-errors**, composition-patterns, test-generation                                                                                     |
+| `src/core/config/env-schema.ts`, `platform-config.ts` | **platform-hygiene**, **env-schema-add**, documentation-maintenance                                                                              |
+| `src/shared/components/`                              | component-promotion, composition-patterns, **shadcn** (`agent-os/skills/shadcn`), test-generation                                                |
+| `src/shared/components/ui/`                           | composition-patterns, web-design-guidelines, **shadcn** (`agent-os/skills/shadcn`)                                                               |
+| `src/core/`                                           | test-generation                                                                                                                                  |
+| `src/lib/`                                            | test-generation                                                                                                                                  |
+| `src/stores/`                                         | test-generation                                                                                                                                  |
+| `eslint.config.mjs`                                   | code-quality-security, lint-guard                                                                                                                |
+| `.husky/`                                             | code-quality-security                                                                                                                            |
+| `.github/workflows/`                                  | code-quality-security                                                                                                                            |
+| `catalog-info.yaml`                                   | (Backstage integration)                                                                                                                          |
+| `.vscode/`                                            | **extension-settings-recommendations**                                                                                                           |
+| `docs/`, README, CLAUDE                               | **documentation-maintenance**                                                                                                                    |
+| Full project / post-change audit                      | **project-health-check**, lint-guard, test-generation, documentation-maintenance                                                                 |
+| Full code review report                               | **full-code-review**                                                                                                                             |
+| Any React component                                   | react-best-practices, composition-patterns, web-design-guidelines, test-generation                                                               |
+| UI/design decisions (style, palette, font, chart, UX) | **ui-ux-pro-max** (advisory DB), **frontend-design**, **shadcn**, **web-design-guidelines**                                                      |
+| Product UI redesign / audit ("impeccable")            | **impeccable**, **shadcn**, **frontend-design**, **web-design-guidelines**                                                                       |
+| Animation implementation                              | **animejs**, **emil-design-eng**                                                                                                                 |
+| Animation PR review                                   | **review-animations**                                                                                                                            |
 
 ## Always-Active Rules (not skills)
 
 These Cursor rules are always loaded and do not need to be invoked:
 
-| Rule                 | File                                      | Purpose                                                                                                   |
-| -------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| project-conventions  | `agent-os/rules/project-conventions.mdc`  | Architecture, imports, state management                                                                   |
-| ui-sources           | `agent-os/rules/ui-sources.mdc`           | Allowed 20 shadcn UI sources; for all shadcn work read the single skill `agent-os/skills/shadcn/SKILL.md` |
-| file-structure       | `agent-os/rules/file-structure.mdc`       | Directory layout, route.tsx convention                                                                    |
-| testing-requirements | `agent-os/rules/testing-requirements.mdc` | Test generation auto-trigger, data-testid convention                                                      |
-| context7-libraries   | `agent-os/rules/context7-libraries.mdc`   | Library doc lookup via Context7 MCP                                                                       |
-| skill-router         | `agent-os/rules/skill-router.mdc`         | Auto-routes tasks to the right skill; complete all steps without asking                                   |
-| agent-behavior       | `agent-os/rules/agent-behavior.mdc`       | Complete tests, route reg, RBAC, docs without asking; never ask "Do you want X?"                          |
+| Rule                  | File                                       | Purpose                                                                                                   |
+| --------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| project-conventions   | `agent-os/rules/project-conventions.mdc`   | Architecture, imports, state management                                                                   |
+| ui-sources            | `agent-os/rules/ui-sources.mdc`            | Allowed 20 shadcn UI sources; for all shadcn work read the single skill `agent-os/skills/shadcn/SKILL.md` |
+| file-structure        | `agent-os/rules/file-structure.mdc`        | Directory layout, route.tsx convention                                                                    |
+| testing-requirements  | `agent-os/rules/testing-requirements.mdc`  | Test generation auto-trigger, data-testid convention                                                      |
+| context7-libraries    | `agent-os/rules/context7-libraries.mdc`    | Library doc lookup via Context7 MCP                                                                       |
+| skill-router          | `agent-os/rules/skill-router.mdc`          | Auto-routes tasks to the right skill; complete all steps without asking                                   |
+| routing-tenancy-sync  | `agent-os/rules/routing-tenancy-sync.mdc`  | Org routes, guards, gateway — read routing-tenancy skill                                                  |
+| platform-hygiene-sync | `agent-os/rules/platform-hygiene-sync.mdc` | Env/platform config — read platform-hygiene skill                                                         |
+| env-schema-add-sync   | `agent-os/rules/env-schema-add-sync.mdc`   | Env schema / `.env.example` — read env-schema-add skill                                                   |
+| agent-behavior        | `agent-os/rules/agent-behavior.mdc`        | Complete tests, route reg, RBAC, docs without asking; never ask "Do you want X?"                          |
 
 ## Enterprise Platform Integration
 

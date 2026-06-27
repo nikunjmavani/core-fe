@@ -1,0 +1,17 @@
+---
+description: When changing env schema, platform config, build-env allowlist, or platform validators, read the platform-hygiene skill (and env-schema-add for new keys) to keep read paths and CI gates correct.
+globs: src/core/config/env-schema.ts, src/core/config/env.config.ts, src/core/config/platform-config.ts, src/lib/i18n/build-env.ts, tooling/validate/vite-env-reads.mjs, tooling/validate/client-env.ts, knip.jsonc, .env.example
+alwaysApply: false
+---
+
+## Platform hygiene (core-fe)
+
+When you change any matched file:
+
+1. **Read** `agent-os/skills/platform-hygiene/SKILL.md`.
+2. **New/renamed/removed env key?** — also read `agent-os/skills/env-schema-add/SKILL.md` and run `pnpm tool:sync-env-example`.
+3. **App reads** — use `platformConfig` or `build-env.ts` helpers; never add raw `import.meta.env.VITE_*` outside the allowlist.
+4. **Validators** — run `pnpm validate:vite-env` and `pnpm validate:client-env --production` before finishing.
+5. **Dead code** — run `pnpm knip` after removing exports or dependencies.
+
+See **`docs/reference/frontend-platform.md`** and **`docs/deployment/runbooks/environment-variables.md`**.

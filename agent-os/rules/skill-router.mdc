@@ -13,11 +13,19 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 | Implement requirement, add feature, where to put code | code-structure | `agent-os/skills/code-structure/SKILL.md` |
 | Vague/feature-sized request; requirement in standard format; "use requirement format" | requirement-format | `agent-os/skills/requirement-format/SKILL.md` |
 | New page, route, scaffold, nested sub-route, self-contained path | route-island | `agent-os/skills/route-island/SKILL.md` |
+| Org-scoped routes, guard chains, gatewayFromManifest, session context, settings hash, `/` resolver | routing-tenancy | `agent-os/skills/routing-tenancy/SKILL.md` |
+| Backend resource CRUD — list, URL dialogs, `*.resource.ts`, L7 registry | resource-crud | `agent-os/skills/resource-crud/SKILL.md` |
+| Form mutations, 422 field mapping, 429 rate limit, QueryBoundary error UX | http-forms-errors | `agent-os/skills/http-forms-errors/SKILL.md` |
+| Platform config, env read paths, knip, validate:vite-env, validate:client-env | platform-hygiene | `agent-os/skills/platform-hygiene/SKILL.md` |
 | New page, route, scaffold | page-scaffolding | `agent-os/skills/page-scaffolding/SKILL.md` |
 | Move component to shared, promote | component-promotion | `agent-os/skills/component-promotion/SKILL.md` |
 | React performance, re-renders, bundle size | react-best-practices | `agent-os/skills/react-best-practices/SKILL.md` |
 | UI review, accessibility, focus, forms | web-design-guidelines | `agent-os/skills/web-design-guidelines/SKILL.md` |
 | Build/style/beautify a UI, page, component, or interface; make it distinctive/polished | frontend-design | `agent-os/skills/frontend-design/SKILL.md` |
+| Redesign, audit, polish, or reshape product UI (dashboard, settings, dense admin surfaces) — user says "impeccable" or full UX pass | impeccable | `agent-os/skills/impeccable/SKILL.md` |
+| Implement JavaScript animations (count-up, timelines, stagger) with Anime.js | animejs | `agent-os/skills/animejs/SKILL.md` |
+| Motion craft philosophy — why/when/how to animate (Emil Kowalski bar) | emil-design-eng | `agent-os/skills/emil-design-eng/SKILL.md` |
+| Review animation/motion code in a PR or diff (read-only) | review-animations | `agent-os/skills/review-animations/SKILL.md` |
 | Look up design intelligence — styles, color palettes, font pairings, UX/stack guidelines (incl. shadcn), chart choice | ui-ux-pro-max | `agent-os/skills/ui-ux-pro-max/SKILL.md` |
 | Component API, compound components, boolean props | composition-patterns | `agent-os/skills/composition-patterns/SKILL.md` |
 | Lint rules, security scan, pre-commit, CI pipeline | code-quality-security | `agent-os/skills/code-quality-security/SKILL.md` |
@@ -26,14 +34,19 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 | Code smells, best practices, live-code review when code added/changed | code-smells-best-practices | `agent-os/skills/code-smells-best-practices/SKILL.md` |
 | New test, add test, test coverage, missing tests | test-generation | `agent-os/skills/test-generation/SKILL.md` |
 | E2E selectors, data-testid, test ids for Playwright, audit test hooks | e2e-testids | `agent-os/skills/e2e-testids/SKILL.md` |
+| Write/refactor Playwright E2E specs (hybrid selectors) | playwright-e2e | `agent-os/skills/playwright-e2e/SKILL.md` |
 | **Any shadcn/ui work** — adding, fixing, debugging, styling, composing, CLI, `components.json`, presets, **and choosing which component/block** to use | shadcn (single skill) | `agent-os/skills/shadcn/SKILL.md` |
 | (merged) "which component for X", use shadcn only — now folded into the single skill above | shadcn (pointer) | `agent-os/skills/shadcn/SKILL.md` |
 | Which skill to use, list skills, help me find | skill-registry | `agent-os/skills/skill-registry/SKILL.md` |
 | "Is there a skill for X", discover/install a new skill from the ecosystem | find-skills | `agent-os/skills/find-skills/SKILL.md` |
 | Add/change docs, where to document, keep README/CLAUDE in sync | documentation-maintenance | `agent-os/skills/documentation-maintenance/SKILL.md` |
+| Extract static values to constants, i18n keys, locale JSON, move copy out of components | i18n-constants | `agent-os/skills/i18n-constants/SKILL.md` |
+| Add/rename/remove env var — schema, `.env.example`, GitHub sync, Secret vs Variable | env-schema-add | `agent-os/skills/env-schema-add/SKILL.md` |
 | Extension/settings recommendations, productivity setup, recommend extensions, new tooling | extension-settings-recommendations | `agent-os/skills/extension-settings-recommendations/SKILL.md` |
 | Full project health check, verify everything works, post-major-change audit | project-health-check | `agent-os/skills/project-health-check/SKILL.md` |
 | Full code review report, generate code review | full-code-review | `agent-os/skills/full-code-review/SKILL.md` |
+| **Theme axis audit** — appearance/shuffle compliance, "do elevation", one-by-one axis fixes | theme-axis-audit | `agent-os/skills/theme-axis-audit/SKILL.md` |
+| **Preset product rules** — type scale/density/contrast/motion floors, shuffle policy, WCAG | preset-product-design (doc + rule) | `docs/reference/preset-product-design-rules.md` · `agent-os/rules/preset-product-design.mdc` |
 
 ## Auto-Invocation Rules
 
@@ -45,7 +58,17 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 
 2b. **E2E Test IDs**: When adding or changing interactive UI, or when the user wants Playwright-ready selectors, invoke the `e2e-testids` skill: apply naming conventions, add `data-testid` on pages/forms/nav, and update `docs/reference/e2e-testids-inventory.md`.
 
+2c. **Playwright E2E**: When writing or refactoring `tests/e2e/*.e2e.test.ts`, invoke **`playwright-e2e`**: hybrid selectors (`data-testid` actions + `getByRole`/`getByLabel` guards) via `tests/utils/e2e-hybrid.ts`.
+
 3. **Route island**: When creating or refactoring any route or sub-route, invoke `route-island` first: identical directory tree, `<PAGE>.OVERVIEW.md`, imports stay inside the island (+ core/shared/lib/stores only).
+
+3b. **Routing & tenancy**: When adding or changing routes under `organization/$organizationSlug/`, root `/dashboard`, `routeTree.tsx` guards, `gatewayFromManifest`, session hydrate/invalidate, or settings hash behavior, invoke **`routing-tenancy`** after `route-island`. See **`agent-os/rules/routing-tenancy-sync.mdc`**.
+
+3c. **Resource CRUD**: When scaffolding a backend resource (list + URL-driven create/edit dialogs, `*.resource.ts`, L7 bootstrap), invoke **`resource-crud`** after `route-island` (+ **`routing-tenancy`** when org-scoped).
+
+3d. **HTTP / forms / errors**: When wiring form mutations to `apiClient`, mapping 422 to RHF, handling 429, or wrapping read panels in `QueryBoundary`, invoke **`http-forms-errors`** (with `composition-patterns` for form structure).
+
+3e. **Platform hygiene**: When touching env schema, `platformConfig`, `build-env.ts`, knip, or platform validators, invoke **`platform-hygiene`** (env key add/rename/remove chains **`env-schema-add`** first). See **`agent-os/rules/platform-hygiene-sync.mdc`**.
 
 4. **Page Scaffolding**: When creating a new page, invoke `page-scaffolding` (after `route-island`) to ensure all standard files are created and `data-testid` attributes are placed (via `e2e-testids` skill).
 
@@ -75,4 +98,18 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 
 17. **ui-ux-pro-max (installed skill)**: A searchable design-intelligence DB (50+ styles, 161 palettes, 57 font pairings, 161 product types, 99 UX guidelines, charts, and per-stack rules incl. shadcn). When making design decisions or reviewing UI, **query it for guidance** via Python: `python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <style|color|ux|typography|chart|product|icons> [--stack shadcn]` (requires `python3`; scripts are local-only — BM25 over bundled CSVs, no network). Use its `--stack shadcn` and `ux` guidance most. **Project guardrails win:** do **not** apply its palette/font/style suggestions in a way that overrides our neutral semantic tokens (`src/index.css`), configured fonts/brand, or shadcn component choices — treat it as advisory; the authoritative skills remain `shadcn` (components/tokens), `frontend-design` (craft), and `web-design-guidelines` (a11y). Don't run `--persist` (writes `design-system/` files) unless the user asks.
 
-If multiple skills match, read the most specific one first. For broad questions about available skills, use skill-registry. **For any shadcn component work, read `agent-os/skills/shadcn/SKILL.md`.**
+18. **i18n-constants**: When extracting inline strings, test ids, analytics events, or defaults into `<page>.constants.ts` + locale JSON, or when adding user-facing copy to a route island, read **`agent-os/skills/i18n-constants/SKILL.md`**. One island or module per change; wire react-i18next namespace; manifest `testId` imports from constants.
+
+18b. **env-schema-add**: When adding, renaming, or removing env vars (`env-schema.ts`, `.env.example`), read **`agent-os/skills/env-schema-add/SKILL.md`**. Run `pnpm tool:sync-env-example`; follow **`agent-os/rules/env-schema-add-sync.mdc`**.
+
+19. **theme-axis-audit (mandatory for axis work)**: When the user asks to audit/fix Appearance or Shuffle axes, continue **"one by one"**, or name a specific axis (`elevation`, `density`, …), read **`agent-os/skills/theme-axis-audit/SKILL.md`** + **`docs/reference/theme-axis-audit-playbook.md`**. Complete Phases 0–4 in one cycle, deliver the detailed report, update the playbook status tracker. See **`agent-os/rules/theme-axis-audit.mdc`**.
+
+19b. **Preset product-design rules**: When changing **`presets.ts`**, Appearance pickers, `applyGeneratedTheme`, default axes, or dense product UI under Shuffle, read **`docs/reference/preset-product-design-rules.md`** and follow **`agent-os/rules/preset-product-design.mdc`** (typography floor 12px, density≠font size, touch targets, no opacity page fades).
+
+20. **UI & craft stack (precedence — no conflicting taste skills):**
+    - **Default** (any UI build/style): **`shadcn`** → **`frontend-design`** → **`web-design-guidelines`**. Query **`ui-ux-pro-max`** for advisory UX/style/chart hints only; never override semantic tokens (`src/index.css`), Lucide icons, or shadcn choices.
+    - **Full redesign / audit / “impeccable”** (user explicitly asks): add **`impeccable`** after `shadcn`, still within project guardrails (`ui-sources.mdc`, tokens, route-island).
+    - **Motion implementation:** **`animejs`** (this repo’s animation library). Read **`emil-design-eng`** for when/why motion; **`review-animations`** for PR review of motion code only.
+    - **Removed / do not invoke:** `high-end-visual-design`, `redesign-existing-projects`, `shadcn-ui-blocks`, `image-to-code`, `motion-framer`, `full-output-enforcement` — they conflict with core-fe guardrails or duplicate `shadcn` / `frontend-design`.
+
+If multiple skills match, read the most specific one first.
