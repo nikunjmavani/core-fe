@@ -517,3 +517,29 @@ Webhooks/Notifications`). One bad record no longer blanks a whole table.
   required for correctness.
 
 ---
+
+## Iteration 7 — Converged (2026-06-29)
+
+**No remaining Critical/High findings; further passes are diminishing returns.**
+
+This pass swept robustness + performance + a11y + maintainability and found them
+well-handled — only low-severity nitpicks remain:
+
+- **Error handling:** every settings panel uses `QueryBoundary` _or_ inline
+  `isError`, under a section-level `SectionErrorBoundary`, with global
+  `QueryCache.onError` / `MutationCache.onError` — failures are contained.
+- **Effect/listener/timer cleanup:** `idle-timeout`, `useThemeStore`,
+  `version/check`, `InvisibleTurnstile` all use `AbortController` signals,
+  `clearInterval`, or one-shot singletons — no leaks.
+- **Global store subscriptions** (Sentry/PostHog/icon-registry) are init-guarded
+  app-lifetime singletons, not per-render accumulation.
+- **A11y:** the custom Appearance/Language dialogs are correctly non-modal
+  popovers (`role="dialog"`, `aria-modal="false"`, labelled, Esc/outside-click).
+- Residual nitpicks (e.g. `AppearancePanel.tsx` ~955 lines could be split) are
+  below the Critical/High bar this loop targets.
+
+The Critical/High issues this loop surfaced (5.1 list truncation, 5.2 brittle
+parse, 6.1 cross-tenant cache) are **fixed with tests**. Recurring audit loop
+stopped here. Re-run a targeted pass after major feature work.
+
+---
