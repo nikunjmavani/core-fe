@@ -1,14 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const useMockApiRef = vi.hoisted(() => ({ value: false }));
-vi.mock('@/core/config/env.ts', () => ({
-  config: {
-    get useMockApi() {
-      return useMockApiRef.value;
-    },
-  },
-}));
-
 const { getMock, postMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
@@ -24,17 +15,14 @@ import {
   disableMfa,
   getMfaStatus,
 } from './mfa-api.ts';
-import { mfaMockStore } from './mfa-mock-store.ts';
 
 beforeEach(() => {
-  useMockApiRef.value = false;
   getMock.mockReset();
   postMock.mockReset();
   deleteMock.mockReset();
-  mfaMockStore.reset();
 });
 
-describe('mfa-api (live branch)', () => {
+describe('mfa-api', () => {
   it('reads status', async () => {
     getMock.mockResolvedValue({ data: [{ method_type: 'MFA_TOTP' }] });
     await expect(getMfaStatus()).resolves.toBe(true);
@@ -66,33 +54,5 @@ describe('mfa-api (live branch)', () => {
     deleteMock.mockResolvedValue({ data: null });
     await disableMfa();
     expect(deleteMock).toHaveBeenCalledWith(expect.stringContaining('/auth/me/mfa'));
-  });
-});
-
-describe('mfa-api (mock branch)', () => {
-  beforeEach(() => {
-    useMockApiRef.value = true;
-  });
-
-  it('enrolls then enables with recovery codes', async () => {
-    expect(await getMfaStatus()).toBe(false);
-    const enrollment = await beginMfaEnrollment();
-    expect(enrollment.secret).toBeTruthy();
-    expect(enrollment.otpauthUri).toContain('otpauth://');
-    const { recoveryCodes } = await confirmMfaEnrollment('123456');
-    expect(recoveryCodes.length).toBeGreaterThan(0);
-    expect(await getMfaStatus()).toBe(true);
-  });
-
-  it('rejects a malformed confirmation code (and stays disabled)', async () => {
-    await expect(confirmMfaEnrollment('12')).rejects.toThrow();
-    expect(await getMfaStatus()).toBe(false);
-  });
-
-  it('disables MFA', async () => {
-    await confirmMfaEnrollment('123456');
-    expect(await getMfaStatus()).toBe(true);
-    await disableMfa();
-    expect(await getMfaStatus()).toBe(false);
   });
 });

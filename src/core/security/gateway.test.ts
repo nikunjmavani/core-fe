@@ -1,9 +1,18 @@
+import { isNotFound, isRedirect } from '@tanstack/react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type * as PlatformConfigModule from '@/core/config/platform-config.ts';
+import { isPlatformModuleEnabled } from '@/core/config/platform-config.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
-import { gateway, gatewayFromPolicy } from './gateway.ts';
+import { gateway, gatewayFromManifest, gatewayFromPolicy } from './gateway.ts';
+
+vi.mock('@/core/config/platform-config.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof PlatformConfigModule>();
+  // Default: every module enabled — individual tests override per call.
+  return { ...actual, isPlatformModuleEnabled: vi.fn(() => true) };
+});
 
 const ctx = {
   location: { pathname: '/x', search: '', hash: '', href: '/x' },
@@ -84,5 +93,42 @@ describe('gatewayFromPolicy (default-deny)', () => {
     await expect(
       gatewayFromPolicy({ permission: 'membership:read' })(ctx),
     ).resolves.toBeUndefined();
+  });
+
+  it('runs the static module gate before the permission gate (disabled module → notFound, permission unreached)', async () => {
+    signIn();
+    // Empty permissions would 403 if the permission gate ran first — it must not.
+    useOrganizationStore.setState({ permissions: [] });
+    vi.mocked(isPlatformModuleEnabled).mockReturnValueOnce(false);
+
+    const run = gatewayFromPolicy({
+      permission: 'membership:read',
+      module: 'billing',
+      onDeny: 'unauthorized',
+    });
+    const err = await run(ctx).then(
+      () => undefined,
+      (e: unknown) => e,
+    );
+
+    expect(isNotFound(err)).toBe(true); // module gate (404) won → ran before permission
+    expect(isRedirect(err)).toBe(false); // not the /unauthorized redirect
+  });
+});
+
+describe('gatewayFromManifest', () => {
+  beforeEach(() => {
+    useOrganizationStore.getState().clearOrganization();
+  });
+
+  it('maps manifest permission and module into the policy gateway', async () => {
+    signIn();
+    useOrganizationStore.setState({ permissions: ['organization:read'] });
+    const run = gatewayFromManifest({
+      permission: 'organization:read',
+      module: 'billing',
+      onDeny: 'unauthorized',
+    });
+    await expect(run(ctx)).resolves.toBeUndefined();
   });
 });

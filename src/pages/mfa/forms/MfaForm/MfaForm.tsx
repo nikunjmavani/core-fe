@@ -1,27 +1,44 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useLocation, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
+import { translateFormMessage } from '@/lib/i18n/translate-form-message.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { type MfaVerifyInput, mfaVerifySchema } from '@/shared/api/auth-contracts.ts';
+import { clearMfaHandoff, readMfaHandoff } from '@/shared/auth/mfa-handoff.ts';
 import { safeRedirect } from '@/shared/auth/redirect-safety.ts';
 import { establishSession } from '@/shared/auth/service.ts';
+import { TotpCodeInput } from '@/shared/components/TotpCodeInput/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
+import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
 import { FormError } from '@/shared/forms/FormError/index.ts';
+
+import {
+  AUTH_KEYS,
+  AUTH_MFA_RECOVERY_MAX_LENGTH,
+  AUTH_NS,
+  MFA_TEST_IDS,
+} from '../../mfa.constants.ts';
 
 type LocationState = { mfaToken?: string; redirect?: string };
 
 export function MfaForm() {
+  const { t } = useTranslation(AUTH_NS);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [otpShake, setOtpShake] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const state = location.state as LocationState | undefined;
-  const mfaToken = state?.mfaToken ?? '';
+  const handoff = readMfaHandoff();
+  const mfaToken = state?.mfaToken ?? handoff.mfaSessionToken;
+  const redirectTarget = state?.redirect ?? handoff.redirect;
 
   const {
+    control,
     register,
     handleSubmit,
     setValue,
@@ -36,71 +53,106 @@ export function MfaForm() {
   const onSubmit = async (data: MfaVerifyInput) => {
     setApiError(null);
     if (!mfaToken) {
-      setApiError('Session expired. Please sign in again.');
+      setApiError(t(AUTH_KEYS.mfa.errors.sessionExpired));
       return;
     }
     try {
       const { accessToken } = await authApi.mfaVerify(data, mfaToken);
+      clearMfaHandoff();
       await establishSession(accessToken);
-      // Honor the returnTo carried from login (FE-59), else the `/` resolver.
-      void navigate({ to: safeRedirect(state?.redirect) ?? '/', replace: true });
+      void navigate({ to: safeRedirect(redirectTarget) ?? '/', replace: true });
     } catch (err) {
-      setApiError(err instanceof Error ? err.message : 'Invalid code. Please try again.');
+      if (!useRecovery) {
+        setValue('code', '');
+        setOtpShake(true);
+        window.setTimeout(() => setOtpShake(false), 450);
+      }
+      setApiError(mapFrontendError(err));
     }
   };
 
   if (!mfaToken) {
     return (
-      <div className="space-y-6" data-testid="mfa-form">
-        <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Session expired</h1>
+      <div className="flex flex-col gap-6" data-testid={MFA_TEST_IDS.form}>
+        <div className="flex flex-col gap-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {t(AUTH_KEYS.mfa.sessionExpiredHeading)}
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Please sign in again to continue.
+            {t(AUTH_KEYS.mfa.sessionExpiredSubheading)}
           </p>
         </div>
         <Button asChild className="w-full">
-          <Link to="/login">Sign in</Link>
+          <Link to="/login">{t(AUTH_KEYS.common.signIn)}</Link>
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="mfa-form">
-      <div className="space-y-2 text-center">
+    <div className="flex flex-col gap-6" data-testid={MFA_TEST_IDS.form}>
+      <div className="flex flex-col gap-2 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">
-          Two-factor authentication
+          {t(AUTH_KEYS.mfa.heading)}
         </h1>
         <p className="text-muted-foreground text-sm">
           {useRecovery
-            ? 'Enter one of your one-time recovery codes.'
-            : 'Enter the 6-digit code from your authenticator app.'}
+            ? t(AUTH_KEYS.mfa.recoveryHint)
+            : t(AUTH_KEYS.mfa.authenticatorHint)}
         </p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className="space-y-4">
-          <FormError message={apiError} data-testid="form-error" />
+        <div className="flex flex-col gap-4">
+          <FormError message={apiError} data-testid={MFA_TEST_IDS.formError} />
 
-          <div className="space-y-2">
-            <Label htmlFor="mfa-code">{useRecovery ? 'Recovery code' : 'Code'}</Label>
-            <Input
-              id="mfa-code"
-              type="text"
-              inputMode={useRecovery ? 'text' : 'numeric'}
-              autoComplete="one-time-code"
-              placeholder={useRecovery ? 'xxxxxxxx' : '000000'}
-              maxLength={useRecovery ? 32 : 6}
-              aria-invalid={!!errors.code}
-              aria-describedby={errors.code ? 'mfa-code-error' : undefined}
-              data-testid="mfa-code"
-              {...register('code')}
-            />
-            {errors.code && (
-              <p id="mfa-code-error" className="text-destructive text-xs" role="alert">
-                {errors.code.message}
-              </p>
+          <div className="flex flex-col gap-2">
+            {useRecovery ? (
+              <>
+                <Label htmlFor="mfa-code">{t(AUTH_KEYS.mfa.recoveryCodeLabel)}</Label>
+                <Input
+                  id="mfa-code"
+                  type="text"
+                  inputMode="text"
+                  autoComplete="one-time-code"
+                  placeholder={t(AUTH_KEYS.mfa.recoveryPlaceholder)}
+                  maxLength={AUTH_MFA_RECOVERY_MAX_LENGTH}
+                  aria-invalid={!!errors.code}
+                  aria-describedby={errors.code ? 'mfa-code-error' : undefined}
+                  data-testid={MFA_TEST_IDS.code}
+                  {...register('code')}
+                />
+              </>
+            ) : (
+              <>
+                <Label htmlFor="mfa-code">{t(AUTH_KEYS.mfa.codeLabel)}</Label>
+                <Controller
+                  name="code"
+                  control={control}
+                  render={({ field }) => (
+                    <TotpCodeInput
+                      id="mfa-code"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onComplete={() => {
+                        handleSubmit(onSubmit)().catch(() => {
+                          /* onSubmit maps its own errors to form state */
+                        });
+                      }}
+                      invalid={!!errors.code || !!apiError}
+                      shake={otpShake}
+                      testId={MFA_TEST_IDS.code}
+                      aria-label={t(AUTH_KEYS.mfa.codeLabel)}
+                    />
+                  )}
+                />
+              </>
             )}
+            {errors.code ? (
+              <p id="mfa-code-error" className="text-destructive text-xs" role="alert">
+                {translateFormMessage(errors.code.message)}
+              </p>
+            ) : null}
           </div>
 
           <div>
@@ -108,9 +160,9 @@ export function MfaForm() {
               type="submit"
               className="w-full"
               disabled={isSubmitting}
-              data-testid="mfa-submit"
+              data-testid={MFA_TEST_IDS.submit}
             >
-              {isSubmitting ? 'Verifying...' : 'Verify'}
+              {isSubmitting ? t(AUTH_KEYS.mfa.verifying) : t(AUTH_KEYS.mfa.submit)}
             </Button>
           </div>
 
@@ -125,11 +177,11 @@ export function MfaForm() {
                 setValue('code', '', { shouldValidate: false });
                 setApiError(null);
               }}
-              data-testid="mfa-toggle-recovery"
+              data-testid={MFA_TEST_IDS.toggleRecovery}
             >
               {useRecovery
-                ? 'Use your authenticator app instead'
-                : 'Use a recovery code instead'}
+                ? t(AUTH_KEYS.mfa.useAuthenticator)
+                : t(AUTH_KEYS.mfa.useRecovery)}
             </Button>
           </div>
         </div>

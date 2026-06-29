@@ -1,8 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { queryClient } from '@/core/http/queryClient.ts';
 import { getMyPermissions } from '@/shared/api/organization-api.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
+import { type MeContext, meContextQueryKey } from './me-context.ts';
+import type * as MyOrganizationsModule from './my-organizations.ts';
+import { listMyOrganizations } from './my-organizations.ts';
 import {
   ensurePermissionsFor,
   findMembership,
@@ -14,11 +18,15 @@ vi.mock('@/shared/api/organization-api.ts', () => ({
   getMyPermissions: vi.fn().mockResolvedValue(['organization:read']),
 }));
 
-vi.mock('./my-organizations.ts', () => ({
-  listMyOrganizations: vi
-    .fn()
-    .mockResolvedValue([{ id: 'org_acme', name: 'Acme Inc.', slug: 'acme' }]),
-}));
+vi.mock('./my-organizations.ts', async (importOriginal) => {
+  const actual = await importOriginal<typeof MyOrganizationsModule>();
+  return {
+    ...actual,
+    listMyOrganizations: vi
+      .fn()
+      .mockResolvedValue([{ id: 'org_acme', name: 'Acme Inc.', slug: 'acme' }]),
+  };
+});
 
 describe('findMembership', () => {
   it('returns the organization when the user is a member', async () => {
@@ -35,6 +43,10 @@ describe('findMembership', () => {
 });
 
 describe('findMembershipBySlug (team URL resolution, FE-22)', () => {
+  afterEach(() => {
+    queryClient.removeQueries({ queryKey: meContextQueryKey });
+  });
+
   it('resolves a slug to the canonical org when the user is a member', async () => {
     await expect(findMembershipBySlug('acme')).resolves.toEqual({
       id: 'org_acme',
@@ -43,8 +55,58 @@ describe('findMembershipBySlug (team URL resolution, FE-22)', () => {
     });
   });
 
+  it('resolves from the warm me/context cache without a list call (happy path)', async () => {
+    vi.mocked(listMyOrganizations).mockClear();
+    queryClient.setQueryData(meContextQueryKey, {
+      organizations: [
+        {
+          id: 'org_acme',
+          name: 'Acme Inc.',
+          slug: 'acme',
+          type: 'TEAM',
+          status: 'ACTIVE',
+          logoUrl: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+          isActive: true,
+        },
+      ],
+    } as MeContext);
+
+    await expect(findMembershipBySlug('acme')).resolves.toMatchObject({
+      id: 'org_acme',
+      slug: 'acme',
+    });
+    // Cache-first: the parent already fetched me/context, so no extra round-trip.
+    expect(listMyOrganizations).not.toHaveBeenCalled();
+  });
+
   it('returns null for an unknown slug (existence never leaked → 404)', async () => {
     await expect(findMembershipBySlug('ghost')).resolves.toBeNull();
+  });
+
+  it('falls back to cached me/context when the list API lags after onboarding', async () => {
+    vi.mocked(listMyOrganizations).mockResolvedValueOnce([]);
+    queryClient.setQueryData(meContextQueryKey, {
+      organizations: [
+        {
+          id: 'org_new',
+          name: 'New Co',
+          slug: 'new-co',
+          type: 'TEAM',
+          status: 'ACTIVE',
+          logoUrl: null,
+          createdAt: '2026-01-01T00:00:00.000Z',
+          updatedAt: '2026-01-01T00:00:00.000Z',
+          isActive: true,
+        },
+      ],
+    } as MeContext);
+
+    await expect(findMembershipBySlug('new-co')).resolves.toMatchObject({
+      id: 'org_new',
+      slug: 'new-co',
+    });
   });
 });
 

@@ -1,10 +1,15 @@
 import { z } from 'zod';
 
 import { API_BASE_PATH } from '@/core/config/constants.ts';
-import { config } from '@/core/config/env.ts';
 import { apiClient } from '@/core/http/fetch-client.ts';
-import { mockResponse } from '@/core/http/mock.ts';
 import { isoDateString, publicId } from '@/core/types/wire.ts';
+
+import {
+  type DeploymentFlags,
+  mergeDeploymentFlags,
+  parseDeploymentFlagsFromUserWire,
+  userDeploymentFlagsWire,
+} from './deployment-mode.ts';
 
 // ── Wire schemas (snake_case — mirror the core-be serializers) ──────────────
 // core-be #795 removed the per-org `capabilities` object. The app gates UI by
@@ -32,6 +37,11 @@ const userWire = z.object({
   status: z.enum(['ACTIVE', 'LOCKED', 'SUSPENDED']),
   created_at: isoDateString,
   updated_at: isoDateString,
+  /** Deployment flags — NOT per-org capabilities (those are ignored on org wire). */
+  capabilities: userDeploymentFlagsWire,
+  personal_organization_id: publicId('org').nullable().optional(),
+  personal_organizations: z.boolean().optional(),
+  team_organizations: z.boolean().optional(),
 });
 
 /** Wire shape of the `GET /auth/me/context` response `data` (snake_case). */
@@ -81,6 +91,10 @@ export interface MeContext {
   myPermissions: string[];
   globalRole: GlobalRole | null;
   organizations: Array<OrganizationSummary & { isActive: boolean }>;
+  /** Deployment-wide toggles (personal / team orgs enabled for this install). */
+  deploymentFlags: DeploymentFlags;
+  /** User's personal workspace id when personal orgs are enabled. */
+  personalOrganizationId: string | null;
 }
 
 export function toOrganization(w: z.infer<typeof organizationWire>): OrganizationSummary {
@@ -99,6 +113,9 @@ export function toOrganization(w: z.infer<typeof organizationWire>): Organizatio
 
 /** Map the validated wire payload to the camel-cased {@link MeContext}. */
 export function toMeContext(wire: MeContextWire): MeContext {
+  const deploymentFlags = mergeDeploymentFlags(
+    parseDeploymentFlagsFromUserWire(wire.user),
+  );
   return {
     user: {
       id: wire.user.id,
@@ -121,104 +138,14 @@ export function toMeContext(wire: MeContextWire): MeContext {
       ...toOrganization(o),
       isActive: o.is_active,
     })),
+    deploymentFlags,
+    personalOrganizationId: wire.user.personal_organization_id ?? null,
   };
 }
 
-// ── Mock context (dev only — live builds reject mock mode) ──────────────────
-const MOCK_PERMISSIONS = [
-  'organization:read',
-  'organization:update',
-  'organization:delete',
-  'membership:read',
-  'membership:manage',
-  'invitation:manage',
-  'role:read',
-  'role:manage',
-  'api-key:read',
-  'api-key:manage',
-  'notification-policy:read',
-  'notification-policy:manage',
-  'subscription:read',
-  'subscription:manage',
-  'webhook:read',
-  'webhook:manage',
-  'audit-log:read',
-];
-const MOCK_TEAM_ORG: OrganizationSummary = {
-  id: 'org_acme',
-  name: 'Acme Inc.',
-  slug: 'acme',
-  type: 'TEAM',
-  status: 'ACTIVE',
-  logoUrl: null,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-};
-const MOCK_PERSONAL_ORG: OrganizationSummary = {
-  id: 'org_personal',
-  name: 'Personal',
-  slug: null,
-  type: 'PERSONAL',
-  status: 'ACTIVE',
-  logoUrl: null,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-};
-const MOCK_GLOBEX_ORG: OrganizationSummary = {
-  id: 'org_globex',
-  name: 'Globex',
-  slug: 'globex',
-  type: 'TEAM',
-  status: 'ACTIVE',
-  logoUrl: null,
-  createdAt: '2026-01-01T00:00:00.000Z',
-  updatedAt: '2026-01-01T00:00:00.000Z',
-};
-
-/** Every org the demo user belongs to — mirrors MY_ORGANIZATIONS_FIXTURE + personal. */
-const MOCK_ORGANIZATIONS = [MOCK_TEAM_ORG, MOCK_GLOBEX_ORG, MOCK_PERSONAL_ORG];
-
-const MOCK_ME_CONTEXT: MeContext = {
-  user: {
-    id: 'usr_demo',
-    email: 'you@acme.test',
-    isEmailVerified: true,
-    isMfaEnabled: false,
-    firstName: 'You',
-    lastName: null,
-    avatarUrl: null,
-    status: 'ACTIVE',
-    createdAt: '2026-01-01T00:00:00.000Z',
-    updatedAt: '2026-01-01T00:00:00.000Z',
-  },
-  activeOrganization: MOCK_TEAM_ORG,
-  myPermissions: MOCK_PERMISSIONS,
-  globalRole: null,
-  organizations: MOCK_ORGANIZATIONS.map((o) => ({
-    ...o,
-    isActive: o.id === MOCK_TEAM_ORG.id,
-  })),
-};
-
-/**
- * Mock me/context with the active org DERIVED FROM THE URL — the single source of
- * truth (docs/reference/routing-and-tenancy.md §4). `/organization/<slug>/…`
- * selects that org; anything else (personal `/dashboard`) is the personal org. So
- * the switcher, dashboard, and URL always agree, even after a me/context refetch.
- */
-function mockMeContext(): MeContext {
-  const path = typeof window === 'undefined' ? '' : window.location.pathname;
-  const slug = /\/organization\/([^/]+)/.exec(path)?.[1];
-  const active =
-    (slug && MOCK_ORGANIZATIONS.find((o) => o.slug === slug)) || MOCK_PERSONAL_ORG;
-  return {
-    ...MOCK_ME_CONTEXT,
-    activeOrganization: active,
-    organizations: MOCK_ORGANIZATIONS.map((o) => ({
-      ...o,
-      isActive: o.id === active.id,
-    })),
-  };
+/** True when the session has no active org and no memberships yet (fresh signup). */
+export function needsOnboarding(ctx: MeContext): boolean {
+  return !ctx.activeOrganization && ctx.organizations.length === 0;
 }
 
 /** React Query key for the caller's session context (`GET /auth/me/context`). */
@@ -232,8 +159,6 @@ export const meContextQueryKey = ['auth', 'me-context'] as const;
  * endpoint already returns the active-org delta (no extra call needed).
  */
 export async function fetchMeContext(): Promise<MeContext> {
-  // REPLACE_WITH_API: GET /api/v1/auth/me/context
-  if (config.useMockApi) return mockResponse(mockMeContext());
   const res = await apiClient.get<unknown>(`${API_BASE_PATH}/auth/me/context`);
   return toMeContext(meContextWire.parse(res.data));
 }

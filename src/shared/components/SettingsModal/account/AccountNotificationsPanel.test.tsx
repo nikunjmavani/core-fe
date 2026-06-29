@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/shared/api/notification-fixtures.ts';
+import { DEFAULT_NOTIFICATION_PREFERENCES } from '@/tests/fixtures/notification-fixtures.ts';
 
 const { usePrefsMock, updateMutate, requestPermissionMock } = vi.hoisted(() => ({
   usePrefsMock: vi.fn(),

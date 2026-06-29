@@ -1,0 +1,223 @@
+import { z } from 'zod';
+
+import { API_BASE_PATH } from '@/core/config/constants.ts';
+import { apiClient } from '@/core/http/fetch-client.ts';
+import type {
+  BillingCycle,
+  BillingInvoice,
+  BillingPaymentMethod,
+  BillingPlan,
+  BillingSubscription,
+  BillingSubscriptionStatus,
+} from '@/shared/api/billing-contracts.ts';
+import {
+  billingInvoiceWireSchema,
+  billingPaymentMethodWireSchema,
+  billingPaymentSetupWireSchema,
+  billingPlanWireSchema,
+  billingSubscriptionWireSchema,
+} from '@/shared/api/billing-contracts.ts';
+
+const BILLING_API = `${API_BASE_PATH}/billing`;
+
+const TERMINAL_SUBSCRIPTION_STATUSES = new Set<BillingSubscriptionStatus>([
+  'canceled',
+  'incomplete_expired',
+]);
+
+function parseMoneyToCents(value: string): number {
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return Math.round(parsed * 100);
+}
+
+function normalizeBillingCycle(value: string): BillingCycle {
+  return value.toLowerCase() === 'yearly' ? 'yearly' : 'monthly';
+}
+
+function normalizeSubscriptionStatus(value: string): BillingSubscriptionStatus {
+  const normalized = value.toLowerCase();
+  switch (normalized) {
+    case 'active':
+    case 'trialing':
+    case 'past_due':
+    case 'canceled':
+    case 'paused':
+    case 'unpaid':
+    case 'incomplete':
+    case 'incomplete_expired':
+      return normalized;
+    default:
+      return 'active';
+  }
+}
+
+function toBillingPlan(w: z.infer<typeof billingPlanWireSchema>): BillingPlan {
+  return {
+    id: w.id,
+    name: w.name,
+    description: w.description,
+    priceMonthly: parseMoneyToCents(w.price_monthly),
+    priceYearly: parseMoneyToCents(w.price_yearly),
+    currency: w.currency.toLowerCase(),
+    isActive: w.is_active,
+    seatLimit: w.limits.seats,
+  };
+}
+
+function toBillingSubscription(
+  w: z.infer<typeof billingSubscriptionWireSchema>,
+): BillingSubscription {
+  return {
+    id: w.id,
+    planId: w.plan_id,
+    status: normalizeSubscriptionStatus(w.status),
+    billingCycle: normalizeBillingCycle(w.billing_cycle),
+    currentPeriodStart: w.current_period_start,
+    currentPeriodEnd: w.current_period_end,
+    trialEnd: w.trial_end,
+    cancelAtPeriodEnd: w.cancel_at_period_end,
+    canceledAt: w.canceled_at,
+    provider: w.provider,
+    seatsTotal: w.seats_total,
+    seatsUsed: w.seats_used,
+    createdAt: w.created_at,
+    updatedAt: w.updated_at,
+  };
+}
+
+function normalizeInvoiceStatus(value: string): BillingInvoice['status'] {
+  const normalized = value.toLowerCase();
+  if (
+    normalized === 'draft' ||
+    normalized === 'open' ||
+    normalized === 'paid' ||
+    normalized === 'void' ||
+    normalized === 'uncollectible'
+  ) {
+    return normalized;
+  }
+  return 'draft';
+}
+
+function toBillingInvoice(w: z.infer<typeof billingInvoiceWireSchema>): BillingInvoice {
+  return {
+    id: w.id,
+    invoiceNumber: w.invoice_number,
+    status: normalizeInvoiceStatus(w.status),
+    amountDue: parseMoneyToCents(w.amount_due),
+    amountPaid: parseMoneyToCents(w.amount_paid),
+    currency: w.currency.toLowerCase(),
+    createdAt: w.created_at,
+    dueDate: w.due_date,
+    hostedInvoiceUrl: w.hosted_invoice_url,
+    invoicePdfUrl: w.invoice_pdf,
+  };
+}
+
+function toBillingPaymentMethod(
+  w: z.infer<typeof billingPaymentMethodWireSchema>,
+): BillingPaymentMethod {
+  return {
+    id: w.id,
+    brand: w.brand,
+    last4: w.last4,
+    expMonth: w.exp_month,
+    expYear: w.exp_year,
+    isDefault: w.is_default,
+  };
+}
+
+export async function listBillingPlans(): Promise<BillingPlan[]> {
+  const res = await apiClient.get<unknown>(`${BILLING_API}/plans`);
+  return z.array(billingPlanWireSchema).parse(res.data).map(toBillingPlan);
+}
+
+export async function listSubscriptions(): Promise<BillingSubscription[]> {
+  const res = await apiClient.get<unknown>(`${BILLING_API}/subscriptions`);
+  return z
+    .array(billingSubscriptionWireSchema)
+    .parse(res.data)
+    .map(toBillingSubscription);
+}
+
+/** First non-terminal subscription for the active organization, if any. */
+export async function getActiveSubscription(): Promise<BillingSubscription | null> {
+  const subscriptions = await listSubscriptions();
+  return (
+    subscriptions.find(
+      (subscription) => !TERMINAL_SUBSCRIPTION_STATUSES.has(subscription.status),
+    ) ?? null
+  );
+}
+
+export async function createSubscription(input: {
+  planId: string;
+  billingCycle: BillingCycle;
+}): Promise<BillingSubscription> {
+  const res = await apiClient.post<unknown>(`${BILLING_API}/subscriptions`, {
+    plan_id: input.planId,
+    billing_cycle: input.billingCycle,
+  });
+  return toBillingSubscription(billingSubscriptionWireSchema.parse(res.data));
+}
+
+export async function changeSubscriptionPlan(input: {
+  subscriptionId: string;
+  planId: string;
+}): Promise<BillingSubscription> {
+  const res = await apiClient.post<unknown>(
+    `${BILLING_API}/subscriptions/${encodeURIComponent(input.subscriptionId)}/change-plan`,
+    { plan_id: input.planId },
+  );
+  return toBillingSubscription(billingSubscriptionWireSchema.parse(res.data));
+}
+
+export async function cancelSubscription(
+  subscriptionId: string,
+): Promise<BillingSubscription> {
+  const res = await apiClient.post<unknown>(
+    `${BILLING_API}/subscriptions/${encodeURIComponent(subscriptionId)}/cancel`,
+  );
+  return toBillingSubscription(billingSubscriptionWireSchema.parse(res.data));
+}
+
+export async function resumeSubscription(
+  subscriptionId: string,
+): Promise<BillingSubscription> {
+  const res = await apiClient.post<unknown>(
+    `${BILLING_API}/subscriptions/${encodeURIComponent(subscriptionId)}/resume`,
+  );
+  return toBillingSubscription(billingSubscriptionWireSchema.parse(res.data));
+}
+
+export async function getSubscriptionPaymentSetup(
+  subscriptionId: string,
+): Promise<{ clientSecret: string | null }> {
+  const res = await apiClient.get<unknown>(
+    `${BILLING_API}/subscriptions/${encodeURIComponent(subscriptionId)}/payment-setup`,
+  );
+  const wire = billingPaymentSetupWireSchema.parse(res.data);
+  return { clientSecret: wire.client_secret };
+}
+
+export async function listBillingInvoices(): Promise<BillingInvoice[]> {
+  const res = await apiClient.get<unknown>(`${BILLING_API}/invoices`);
+  return z.array(billingInvoiceWireSchema).parse(res.data).map(toBillingInvoice);
+}
+
+export async function listBillingPaymentMethods(): Promise<BillingPaymentMethod[]> {
+  const res = await apiClient.get<unknown>(`${BILLING_API}/payment-methods`);
+  return z
+    .array(billingPaymentMethodWireSchema)
+    .parse(res.data)
+    .map(toBillingPaymentMethod);
+}
+
+export async function createPaymentMethodSetup(): Promise<{
+  clientSecret: string | null;
+}> {
+  const res = await apiClient.post<unknown>(`${BILLING_API}/payment-methods/setup`);
+  const wire = billingPaymentSetupWireSchema.parse(res.data);
+  return { clientSecret: wire.client_secret };
+}

@@ -148,4 +148,11 @@ describe('useThemeStore', () => {
     // base colour is orthogonal — survives a preset change
     expect(useThemeStore.getState().baseId).toBe('slate');
   });
+
+  it('setLayoutWidth normalizes layout width ids', () => {
+    useThemeStore.getState().setLayoutWidth('reading');
+    expect(useThemeStore.getState().layoutWidth).toBe('reading');
+    useThemeStore.getState().setLayoutWidth('bogus' as 'contained');
+    expect(useThemeStore.getState().layoutWidth).toBe('contained');
+  });
 });

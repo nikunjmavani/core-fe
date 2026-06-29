@@ -8,9 +8,11 @@ export interface AccessCheck {
   permission?: OrganizationPermission;
   /**
    * Require a TEAM organization — a personal org is blocked. The explicit
-   * personal-vs-team guard that replaced the removed `capabilities` object.
+   * personal-vs-team guard that replaced the removed per-org `capabilities` object.
    */
   teamOrganizationOnly?: boolean;
+  /** Require team organizations to be enabled on this deployment. */
+  requiresTeamOrganizations?: boolean;
 }
 
 function passes(
@@ -18,12 +20,15 @@ function passes(
   user: ReturnType<typeof useAuthStore.getState>['user'],
   permissions: ReturnType<typeof useOrganizationStore.getState>['permissions'],
   organizationType: ReturnType<typeof useOrganizationStore.getState>['organizationType'],
+  deploymentFlags: ReturnType<typeof useOrganizationStore.getState>['deploymentFlags'],
 ): boolean {
   const permissionOk =
     !check.permission ||
     (!!user && hasPermission({ role: user.role, permissions }, check.permission));
   const teamOk = !check.teamOrganizationOnly || organizationType === 'TEAM';
-  return permissionOk && teamOk;
+  const deploymentTeamOk =
+    !check.requiresTeamOrganizations || deploymentFlags.teamOrganizations;
+  return permissionOk && teamOk && deploymentTeamOk;
 }
 
 /**
@@ -36,7 +41,8 @@ export function useCan(check: AccessCheck): boolean {
   const user = useAuthStore((s) => s.user);
   const permissions = useOrganizationStore((s) => s.permissions);
   const organizationType = useOrganizationStore((s) => s.organizationType);
-  return passes(check, user, permissions, organizationType);
+  const deploymentFlags = useOrganizationStore((s) => s.deploymentFlags);
+  return passes(check, user, permissions, organizationType, deploymentFlags);
 }
 
 /**
@@ -47,5 +53,8 @@ export function useVisibleNav<T extends AccessCheck>(items: readonly T[]): T[] {
   const user = useAuthStore((s) => s.user);
   const permissions = useOrganizationStore((s) => s.permissions);
   const organizationType = useOrganizationStore((s) => s.organizationType);
-  return items.filter((item) => passes(item, user, permissions, organizationType));
+  const deploymentFlags = useOrganizationStore((s) => s.deploymentFlags);
+  return items.filter((item) =>
+    passes(item, user, permissions, organizationType, deploymentFlags),
+  );
 }

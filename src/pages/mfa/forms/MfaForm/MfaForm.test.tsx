@@ -97,7 +97,6 @@ describe('MfaForm', () => {
     renderWithRouter();
 
     await user.type(await screen.findByTestId('mfa-code'), '123456');
-    await user.click(screen.getByTestId('mfa-submit'));
 
     await waitFor(() =>
       expect(mfaVerifyMock).toHaveBeenCalledWith(

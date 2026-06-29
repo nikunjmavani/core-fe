@@ -5,11 +5,12 @@ Route: `/onboarding`. Where a freshly authenticated user with **no organization*
 
 ## Files
 
-| File                     | Responsibility                                                                                                                                                                                                                                                           |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `onboarding.route.tsx`   | Route marker — exports `Component` rendering `OnboardingPage`.                                                                                                                                                                                                           |
-| `onboarding.manifest.ts` | Page manifest (`path: '/onboarding'`, `testId`, `kind: leaf`).                                                                                                                                                                                                           |
-| `OnboardingPage.tsx`     | Multi-step wizard (welcome → profile → questions → workspace → invite → done). Reads/writes progress from `@/shared/store/useOnboardingStore/` so a refresh resumes mid-flow. On finish it creates the org, sends invitations, and redirects to the new org's dashboard. |
+| File                      | Responsibility                                                                                                                                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onboarding.route.tsx`    | Route marker — exports `Component` rendering `OnboardingPage`.                                                                                                                                                                                                           |
+| `onboarding.manifest.ts`  | Page manifest — `testId` + document title from `onboarding.constants.ts` + i18n.                                                                                                                                                                                         |
+| `onboarding.constants.ts` | i18n keys, test ids, analytics events, API defaults for this island.                                                                                                                                                                                                     |
+| `OnboardingPage.tsx`      | Multi-step wizard (welcome → profile → questions → workspace → invite → done). Reads/writes progress from `@/shared/store/useOnboardingStore/` so a refresh resumes mid-flow. On finish it creates the org, sends invitations, and redirects to the new org's dashboard. |
 
 Step UIs live in `components/` (folder-per-unit): `WelcomeStep`, `ProfileStep`,
 `QuestionsStep` (optional team-size / use-case / referral chips), `WorkspaceStep` (org name +

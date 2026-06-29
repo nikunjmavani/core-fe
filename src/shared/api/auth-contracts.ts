@@ -1,99 +1,42 @@
 import { z } from 'zod';
 
-// ── Login ──
+import { AUTH_KEYS } from '@/shared/auth/auth-shell.constants.ts';
+
+const v = AUTH_KEYS.validation;
+
+/** Email/password login — retained for MFA handoff tests and legacy API surface. */
 export const loginSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, 'Email is required')
-    .pipe(z.email('Invalid email address')),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters'),
+  email: z.string().trim().min(1, v.emailRequired).pipe(z.email(v.invalidEmail)),
+  password: z.string().min(1, v.passwordRequired).min(8, v.passwordMinLength),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
-// ── Register (minimal: email + password only) ──
-export const registerSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, 'Email is required')
-    .pipe(z.email('Invalid email address')),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .min(8, 'Password must be at least 8 characters'),
-});
-
-export type RegisterInput = z.infer<typeof registerSchema>;
-
-// ── Forgot password ──
-export const forgotPasswordSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, 'Email is required')
-    .pipe(z.email('Invalid email address')),
-});
-
-export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
-
-// ── Reset password (token from email link) ──
-export const resetPasswordSchema = z
-  .object({
-    token: z.string().min(1, 'Token is required'),
-    password: z
-      .string()
-      .min(1, 'Password is required')
-      .min(8, 'Password must be at least 8 characters'),
-    confirmPassword: z.string().min(1, 'Confirm password is required'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
-    path: ['confirmPassword'],
-  });
-
-export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
-
-// ── Verify email (token from email link) ──
-/** Staged for the auth-module rebuild (verify-email flow). @public */
-export const verifyEmailSchema = z.object({
-  token: z.string().min(1, 'Token is required'),
-});
-
-export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
-
-// ── MFA (TOTP code or one-time recovery code) ──
 export const mfaVerifySchema = z
   .object({
-    code: z.string().trim().min(1, 'Code is required'),
+    code: z.string().trim().min(1, v.codeRequired),
     useRecoveryCode: z.boolean().optional(),
   })
   .superRefine((val, ctx) => {
-    // Authenticator (TOTP) codes are exactly 6 digits; recovery codes vary in
-    // shape and are validated server-side, so only enforce the TOTP format.
-    if (!val.useRecoveryCode && !/^\d{6}$/.test(val.code)) {
+    if (!(val.useRecoveryCode || /^\d{6}$/.test(val.code))) {
       ctx.addIssue({
         code: 'custom',
         path: ['code'],
-        message: 'Enter the 6-digit code from your authenticator app',
+        message: v.mfaTotpFormat,
       });
     }
   });
 
 export type MfaVerifyInput = z.infer<typeof mfaVerifySchema>;
 
-// ── Magic link (passwordless 6-digit code) ──
-export const magicLinkVerifySchema = z.object({
-  email: z
+export const emailVerificationCodeSchema = z.object({
+  email: z.string().trim().min(1, v.emailRequired).pipe(z.email(v.invalidEmail)),
+  code: z
     .string()
     .trim()
-    .min(1, 'Email is required')
-    .pipe(z.email('Invalid email address')),
-  code: z.string().trim().min(1, 'Code is required').length(6, 'Code must be 6 digits'),
+    .min(1, v.codeRequired)
+    .length(6, v.emailVerificationCodeLength)
+    .regex(/^[A-Za-z0-9]+$/, v.emailVerificationCodeLength),
 });
 
-export type MagicLinkVerifyInput = z.infer<typeof magicLinkVerifySchema>;
+export type EmailVerificationCodeInput = z.infer<typeof emailVerificationCodeSchema>;

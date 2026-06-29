@@ -7,8 +7,7 @@ import { isoDateString, publicId } from '@/core/types/wire.ts';
  *
  * Categories drive the bell glyph and the preferences grid. The wire shape is
  * snake_case per core-be; the UI consumes the camelCase domain shape via
- * {@link toNotification}. Mock-first (REPLACE_WITH_API) — the live endpoint
- * shape is pinned here and validated on parse.
+ * {@link toNotification}. Wire shape is snake_case per core-be; validated on parse.
  */
 export const notificationCategorySchema = z.enum([
   'system',

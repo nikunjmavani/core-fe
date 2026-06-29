@@ -1,9 +1,12 @@
 import { useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils.ts';
 import type { Notification } from '@/shared/api/notification-contracts.ts';
 import { EmptyState } from '@/shared/components/EmptyState/index.ts';
+import { FormattedDate } from '@/shared/components/FormattedDate/index.ts';
+import { RetryError } from '@/shared/components/RetryError/index.ts';
 import { settingsHash } from '@/shared/components/SettingsModal/settings-hash.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -21,44 +24,42 @@ import {
 import {
   Bell,
   BellOff,
-  Check,
   type LucideIcon,
   Settings,
   ShieldCheck,
   UserPlus,
   Zap,
 } from '@/shared/icons/index.ts';
-
-/** Coarse relative time for the inbox ("just now", "5m ago", "3d ago"). */
-function relativeTime(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const min = Math.round(diffMs / 60_000);
-  if (min < 1) return 'just now';
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  return `${Math.round(hr / 24)}d ago`;
-}
+import { LAYOUT_KEYS, LAYOUT_NS } from '@/shared/layouts/layout.constants.ts';
 
 /** Category → glyph, so the inbox is scannable at a glance. */
 function categoryIcon(category: Notification['category']): LucideIcon {
   if (category === 'member') return UserPlus;
   if (category === 'billing') return Zap;
   if (category === 'security') return ShieldCheck;
-  return Bell; // system + any future category
+  return Bell;
 }
 
 /**
  * Notification center — header bell with an unread badge that opens a **popover**
  * inbox. Each row carries a category glyph (tinted while unread), title, body, and
- * relative time; unread rows mark themselves read on click and expose an explicit
- * check on hover/focus. The list scrolls within a capped height (custom
- * scrollbar); a footer jumps to notification settings. Data: useNotifications.
+ * locale-formatted time; unread rows mark themselves read on click. Data: useNotifications.
  */
-export function NotificationCenter() {
+export function NotificationCenter({
+  surface = 'default',
+  popoverSide,
+  popoverAlign = 'end',
+}: {
+  /** Tinted shell the bell trigger sits on (e.g. icon rail). */
+  surface?: 'default' | 'sidebar';
+  /** Popover side — `right` when the trigger is in a narrow left rail. */
+  popoverSide?: 'top' | 'right' | 'bottom' | 'left';
+  popoverAlign?: 'start' | 'center' | 'end';
+}) {
+  const { t } = useTranslation(LAYOUT_NS);
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { data: items, isLoading, isError } = useNotifications();
+  const { data: items, isLoading, isError, refetch, isFetching } = useNotifications();
   const { data: unread = 0 } = useUnreadCount();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
@@ -67,14 +68,23 @@ export function NotificationCenter() {
     if (!item.isRead) markRead.mutate(item.id);
   }
 
+  const triggerSurfaceClass =
+    surface === 'sidebar'
+      ? 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+      : undefined;
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
-          className="relative"
-          aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'}
+          className={cn('relative', triggerSurfaceClass)}
+          aria-label={
+            unread > 0
+              ? t(LAYOUT_KEYS.app.notifications.ariaWithUnread, { count: unread })
+              : t(LAYOUT_KEYS.app.notifications.ariaDefault)
+          }
           data-testid="notification-bell"
         >
           <Bell className="h-4 w-4" />
@@ -90,17 +100,21 @@ export function NotificationCenter() {
       </PopoverTrigger>
 
       <PopoverContent
-        align="end"
+        align={popoverAlign}
+        side={popoverSide}
         sideOffset={8}
+        collisionPadding={8}
         className="w-[22rem] overflow-hidden p-0"
         data-testid="notification-popover"
       >
         <div className="flex items-center justify-between gap-2 border-b px-4 py-3">
           <div className="flex min-w-0 items-center gap-2">
-            <p className="text-sm font-semibold">Notifications</p>
+            <p className="text-sm font-semibold">
+              {t(LAYOUT_KEYS.app.notifications.title)}
+            </p>
             {unread > 0 ? (
               <span className="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[10px] font-semibold">
-                {unread} new
+                {t(LAYOUT_KEYS.app.notifications.newBadge, { count: unread })}
               </span>
             ) : null}
           </div>
@@ -112,31 +126,37 @@ export function NotificationCenter() {
             onClick={() => markAll.mutate()}
             data-testid="notification-mark-all"
           >
-            Mark all read
+            {t(LAYOUT_KEYS.app.notifications.markAllRead)}
           </Button>
         </div>
 
-        <div className="scrollbar-custom max-h-[24rem] overflow-y-auto overscroll-contain">
+        <div className="max-h-[24rem] overflow-y-auto overscroll-contain">
           {isLoading ? (
             <div className="space-y-2 p-3" data-testid="notifications-loading">
               {['a', 'b', 'c'].map((key) => (
-                <Skeleton key={key} className="h-14 w-full rounded-lg" />
+                <Skeleton key={key} className="h-14 w-full" />
               ))}
             </div>
           ) : null}
 
           {isError ? (
-            <p className="text-destructive p-4 text-sm" role="alert">
-              Couldn&apos;t load notifications. Please try again.
-            </p>
+            <div className="p-4" data-testid="notifications-error">
+              <RetryError
+                message={t(LAYOUT_KEYS.app.notifications.loadError)}
+                onRetry={() => {
+                  void refetch();
+                }}
+                isRetrying={isFetching}
+              />
+            </div>
           ) : null}
 
           {items && items.length === 0 ? (
             <div className="p-4">
               <EmptyState
                 icon={<BellOff />}
-                title="No notifications"
-                description="You'll see updates about your account and organization here."
+                title={t(LAYOUT_KEYS.app.notifications.emptyTitle)}
+                description={t(LAYOUT_KEYS.app.notifications.emptyDescription)}
               />
             </div>
           ) : null}
@@ -146,20 +166,22 @@ export function NotificationCenter() {
               {items.map((item) => {
                 const Icon = categoryIcon(item.category);
                 return (
-                  <li key={item.id} className="group flex items-stretch">
+                  <li key={item.id}>
                     <button
                       type="button"
+                      data-slot="menu-item"
                       onClick={() => handleItemClick(item)}
                       className={cn(
-                        'flex min-w-0 flex-1 items-start gap-3 px-4 py-3 text-left transition-colors',
+                        'flex w-full min-w-0 items-start gap-3 px-4 py-3 text-left transition-colors',
                         'hover:bg-muted/50 focus-visible:bg-muted/50 outline-none',
                         !item.isRead && 'bg-muted/30',
                       )}
                       data-testid={`notification-${item.id}`}
                     >
                       <span
+                        data-slot="icon-chip"
                         className={cn(
-                          'flex size-9 shrink-0 items-center justify-center rounded-lg',
+                          'flex size-9 shrink-0 items-center justify-center',
                           item.isRead
                             ? 'bg-muted text-muted-foreground'
                             : 'bg-primary/10 text-primary',
@@ -184,22 +206,10 @@ export function NotificationCenter() {
                           {item.body}
                         </span>
                         <span className="text-muted-foreground/70 mt-1 block text-[11px]">
-                          {relativeTime(item.createdAt)}
+                          <FormattedDate value={item.createdAt} relative />
                         </span>
                       </span>
                     </button>
-                    {item.isRead ? null : (
-                      <button
-                        type="button"
-                        onClick={() => markRead.mutate(item.id)}
-                        aria-label="Mark as read"
-                        title="Mark as read"
-                        data-testid={`notification-mark-${item.id}`}
-                        className="text-muted-foreground hover:text-foreground hover:bg-foreground/10 my-2 mr-2 flex shrink-0 items-center rounded-md px-2 opacity-0 transition outline-none group-hover:opacity-100 focus-visible:opacity-100"
-                      >
-                        <Check className="size-4" />
-                      </button>
-                    )}
                   </li>
                 );
               })}
@@ -210,6 +220,7 @@ export function NotificationCenter() {
         {items && items.length > 0 ? (
           <button
             type="button"
+            data-slot="menu-item"
             onClick={() => {
               setOpen(false);
               void navigate({ to: '.', hash: settingsHash('account', 'notifications') });
@@ -218,7 +229,7 @@ export function NotificationCenter() {
             data-testid="notification-settings-link"
           >
             <Settings className="size-3.5" aria-hidden="true" />
-            Notification settings
+            {t(LAYOUT_KEYS.app.notifications.settingsLink)}
           </button>
         ) : null}
       </PopoverContent>

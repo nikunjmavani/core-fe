@@ -1,24 +1,37 @@
+import type { AnyRouter } from '@tanstack/react-router';
 import posthog from 'posthog-js';
 
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { scrubObjectUrls } from '@/lib/telemetry-scrub.ts';
+import {
+  attachPostHogIdentitySync,
+  attachPostHogRouter,
+  registerPostHogBootstrap,
+  registerPostHogSuperProperties,
+} from '@/shared/analytics/capture.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { hasAnalyticsConsent } from '@/shared/store/useConsentStore/index.ts';
 
 let initialized = false;
+let routerAttached = false;
 
 /**
  * Initialize PostHog analytics.
  *
  * Gracefully handles missing key or init failure — analytics
  * is never a hard dependency and must not block the app.
+ *
+ * @param router - Optional TanStack Router for SPA `route_viewed` events.
  */
-export function initPostHog(): void {
-  if (initialized) return;
+export function initPostHog(router?: AnyRouter): void {
+  if (initialized) {
+    if (router && !routerAttached) {
+      attachPostHogRouter(posthog, router);
+      routerAttached = true;
+    }
+    return;
+  }
 
-  // Defense in depth: PostHog sets cookies + captures pageviews, so it must
-  // never initialize without analytics consent — even if a caller forgets to
-  // gate it (the boot sequence and ConsentBanner already do).
   if (!hasAnalyticsConsent()) {
     if (import.meta.env.DEV) {
       console.info('[PostHog] Analytics consent not granted — not initializing');
@@ -26,8 +39,8 @@ export function initPostHog(): void {
     return;
   }
 
-  const key = config.posthogKey;
-  const host = config.posthogHost;
+  const key = platformConfig.posthogKey;
+  const host = platformConfig.posthogHost;
 
   if (!key) {
     if (import.meta.env.DEV) {
@@ -42,14 +55,8 @@ export function initPostHog(): void {
       capture_pageview: true,
       capture_pageleave: true,
       persistence: 'localStorage+cookie',
-      autocapture: false, // We capture specific events explicitly
-      // Passive capture stays OFF: no autocapture, and session recording is
-      // disabled in code so a server-side dashboard toggle can't silently
-      // start recording the authenticated admin DOM (member lists, org data).
+      autocapture: false,
       disable_session_recording: true,
-      // Pageview/pageleave events capture $current_url (and $set_once
-      // person props capture the initial URL) — scrub reset/verify
-      // `?token=` secrets before anything leaves the browser.
       before_send: (event) => {
         if (event?.properties) scrubObjectUrls(event.properties);
         return event;
@@ -57,10 +64,13 @@ export function initPostHog(): void {
     });
     initialized = true;
 
-    // The anonymous distinct_id persists in localStorage: without a reset,
-    // successive users on a shared admin workstation chain into ONE PostHog
-    // profile. Synchronous (zustand notifies inline), so it lands before
-    // forceLogout's hard redirect unloads the page.
+    registerPostHogSuperProperties(posthog);
+    attachPostHogIdentitySync(posthog);
+    if (router) {
+      attachPostHogRouter(posthog, router);
+      routerAttached = true;
+    }
+
     let hadUser = useAuthStore.getState().user !== null;
     useAuthStore.subscribe((state) => {
       const hasUser = state.user !== null;
@@ -73,5 +83,7 @@ export function initPostHog(): void {
     }
   }
 }
+
+registerPostHogBootstrap(initPostHog);
 
 export { posthog };

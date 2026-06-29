@@ -1,7 +1,11 @@
-import { useRouterState } from '@tanstack/react-router';
-import { lazy, Suspense, useEffect } from 'react';
+import { useNavigate, useRouterState } from '@tanstack/react-router';
+import { lazy, Suspense, useLayoutEffect } from 'react';
+
+import { useAuthenticatedIdleChunkPrefetch } from '@/lib/chunk-prefetch.ts';
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 import { isSettingsHash } from './settings-hash.ts';
+import { isSettingsPathAllowed } from './settings-route-policy.ts';
 
 const SettingsModalInner = lazy(() =>
   import('./SettingsModal.tsx').then((m) => ({ default: m.SettingsModal })),
@@ -12,27 +16,36 @@ const SettingsModalInner = lazy(() =>
  * panels, forms, react-hook-form) is a separate chunk: mounting THIS on the
  * root route keeps the whole settings tree out of the entry preload graph.
  *
- * The chunk is prefetched at idle so the first `#settings/…` open is instant;
- * a deep link present at boot imports it immediately via Suspense.
+ * Prefetch runs only on authenticated app surfaces (not `/login` etc.) so auth
+ * funnels keep first-paint lean. A `#settings/…` deep link imports via Suspense.
  */
 export function SettingsModalLazy() {
   const hash = useRouterState({ select: (s) => s.location.hash });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isAuthLoading = useAuthStore((s) => s.isLoading);
+  const hasSettingsHash = isSettingsHash(hash);
+  const pathAllowed = isSettingsPathAllowed(pathname);
 
-  useEffect(() => {
-    const prefetch = () => {
-      import('./SettingsModal.tsx').catch(() => {
-        /* prefetch is best-effort; opening retries via Suspense */
-      });
-    };
-    if (typeof window.requestIdleCallback === 'function') {
-      const id = window.requestIdleCallback(prefetch, { timeout: 5000 });
-      return () => window.cancelIdleCallback(id);
+  useLayoutEffect(() => {
+    if (!hasSettingsHash) return;
+    if (!pathAllowed) {
+      void navigate({ to: '.', hash: '', search: (prev) => prev, replace: true });
+      return;
     }
-    const id = window.setTimeout(prefetch, 2000);
-    return () => window.clearTimeout(id);
-  }, []);
+    if (!(isAuthLoading || isAuthenticated)) {
+      void navigate({ to: '.', hash: '', search: (prev) => prev, replace: true });
+    }
+  }, [hasSettingsHash, pathAllowed, isAuthLoading, isAuthenticated, navigate]);
 
-  if (!isSettingsHash(hash)) return null;
+  const prefetchEnabled =
+    isAuthenticated && !isAuthLoading && pathAllowed && !hasSettingsHash;
+  useAuthenticatedIdleChunkPrefetch(() => import('./SettingsModal.tsx'), prefetchEnabled);
+
+  if (!(hasSettingsHash && pathAllowed) || isAuthLoading || !isAuthenticated) {
+    return null;
+  }
 
   return (
     <Suspense fallback={null}>

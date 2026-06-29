@@ -1,7 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import * as api from '@/shared/api/sessions-api.ts';
-import { notify } from '@/shared/notify/index.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
 const sessionsQueryKey = ['auth', 'sessions'] as const;
 
@@ -12,13 +14,11 @@ export function useSessions() {
 
 /** Revoke another session, then refresh the list. */
 export function useRevokeSession() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (id: string) => api.revokeSession(id),
-    onSuccess: () => {
-      notify.success('Signed out of that session');
-      return queryClient.invalidateQueries({ queryKey: sessionsQueryKey });
-    },
-    onError: () => notify.error('Could not sign out that session'),
+    invalidateKeys: [sessionsQueryKey],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.sessions.signOutSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }

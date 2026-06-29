@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 
+import { closeControlClassName } from '@/lib/icon-surface.ts';
+import { cn } from '@/lib/utils.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Sparkles, X } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
@@ -64,7 +66,8 @@ export function AppearanceDialog() {
       aria-modal="false"
       aria-labelledby="appearance-popover-title"
       data-testid="appearance-dialog"
-      className="bg-popover text-popover-foreground border-border animate-in slide-in-from-right-2 fade-in pointer-events-auto fixed top-3 right-3 z-[80] flex max-h-[calc(100dvh-1.5rem)] w-[460px] max-w-[calc(100vw-1.5rem)] flex-col overflow-hidden rounded-xl border shadow-2xl duration-200"
+      data-slot="popover-content"
+      className="bg-popover text-popover-foreground border-border animate-in slide-in-from-right-2 fade-in pointer-events-auto fixed top-3 right-3 z-[80] flex max-h-[calc(100dvh-1.5rem)] w-[min(100vw-1.5rem,480px)] flex-col overflow-hidden rounded-md border transition"
     >
       <div className="border-border flex items-start justify-between gap-3 border-b px-5 py-3">
         <div className="space-y-0.5">
@@ -91,7 +94,8 @@ export function AppearanceDialog() {
             onClick={() => setOpen(false)}
             aria-label="Close"
             data-testid="appearance-close"
-            className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring -mr-1 rounded-md p-1.5 transition outline-none focus-visible:ring-2"
+            data-slot="button"
+            className={cn(closeControlClassName, '-mr-1')}
           >
             <X className="size-4" aria-hidden="true" />
           </button>

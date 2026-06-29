@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { MeContext, OrganizationType } from './me-context.ts';
-import { fetchMeContext } from './me-context.ts';
-import { resolveRootRedirect, resolveRootTarget } from './organization-resolver.ts';
+import {
+  resolveRootRedirect,
+  resolveRootTarget,
+  workspaceRedirectForPersonalDashboard,
+  workspaceRedirectForTeamEntry,
+} from './organization-resolver.ts';
+import { hydrateSessionContext } from './session-context.ts';
 
-vi.mock('./me-context.ts', async (importOriginal) => {
+vi.mock('./session-context.ts', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
-  return { ...actual, fetchMeContext: vi.fn() };
+  return { ...actual, hydrateSessionContext: vi.fn() };
 });
 
 function meCtx(activeOrganization: MeContext['activeOrganization']): MeContext {
@@ -27,6 +32,8 @@ function meCtx(activeOrganization: MeContext['activeOrganization']): MeContext {
     myPermissions: [],
     globalRole: null,
     organizations: [],
+    deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+    personalOrganizationId: null,
   };
 }
 
@@ -45,36 +52,61 @@ function activeOrg(type: OrganizationType, slug: string | null) {
 
 describe('resolveRootRedirect (`/` → active org from me/context)', () => {
   beforeEach(() => {
-    vi.mocked(fetchMeContext).mockReset();
+    vi.mocked(hydrateSessionContext).mockReset();
   });
 
-  it('redirects to onboarding when there is no active org', async () => {
-    vi.mocked(fetchMeContext).mockResolvedValue(meCtx(null));
+  it('redirects to onboarding when there is no active org and no memberships', async () => {
+    vi.mocked(hydrateSessionContext).mockResolvedValue(meCtx(null));
     await expect(resolveRootRedirect()).resolves.toEqual({ to: '/onboarding' });
   });
 
+  it('redirects to organization picker when there is no active org but user has orgs (team-only)', async () => {
+    vi.mocked(hydrateSessionContext).mockResolvedValue({
+      ...meCtx(null),
+      organizations: [{ ...activeOrg('TEAM', 'acme'), isActive: false }],
+      deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+    });
+    await expect(resolveRootRedirect()).resolves.toEqual({ to: '/organization' });
+  });
+
   it('routes a personal active org to the root /dashboard', async () => {
-    vi.mocked(fetchMeContext).mockResolvedValue(meCtx(activeOrg('PERSONAL', null)));
+    vi.mocked(hydrateSessionContext).mockResolvedValue(
+      meCtx(activeOrg('PERSONAL', null)),
+    );
     await expect(resolveRootRedirect()).resolves.toEqual({ to: '/dashboard' });
   });
 
   it('routes a team active org to its $organizationSlug dashboard', async () => {
-    vi.mocked(fetchMeContext).mockResolvedValue(meCtx(activeOrg('TEAM', 'acme')));
+    vi.mocked(hydrateSessionContext).mockResolvedValue(meCtx(activeOrg('TEAM', 'acme')));
     await expect(resolveRootRedirect()).resolves.toEqual({
       to: '/organization/$organizationSlug/dashboard',
       params: { organizationSlug: 'acme' },
     });
   });
 
-  it('routes a team active org WITHOUT a slug to onboarding (invariant violation)', async () => {
-    vi.mocked(fetchMeContext).mockResolvedValue(meCtx(activeOrg('TEAM', null)));
-    await expect(resolveRootRedirect()).resolves.toEqual({ to: '/onboarding' });
+  it('routes a team active org WITHOUT a slug to organization picker when not onboarding', async () => {
+    vi.mocked(hydrateSessionContext).mockResolvedValue({
+      ...meCtx(activeOrg('TEAM', null)),
+      organizations: [{ ...activeOrg('TEAM', null), isActive: true }],
+      deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+    });
+    await expect(resolveRootRedirect()).resolves.toEqual({ to: '/organization' });
   });
 });
 
 describe('resolveRootTarget (dual-URL `/` decision — slug variant)', () => {
-  it('routes to onboarding when there is no active org', () => {
+  it('routes to onboarding when there is no active org and no memberships', () => {
     expect(resolveRootTarget(meCtx(null))).toEqual({ to: '/onboarding' });
+  });
+
+  it('routes to organization picker when there is no active org but memberships exist (team-only)', () => {
+    expect(
+      resolveRootTarget({
+        ...meCtx(null),
+        organizations: [{ ...activeOrg('TEAM', 'acme'), isActive: false }],
+        deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+      }),
+    ).toEqual({ to: '/organization' });
   });
 
   it('routes a personal org to the root /dashboard', () => {
@@ -90,9 +122,73 @@ describe('resolveRootTarget (dual-URL `/` decision — slug variant)', () => {
     });
   });
 
-  it('routes a slugless team to onboarding (backend invariant violation)', () => {
-    expect(resolveRootTarget(meCtx(activeOrg('TEAM', null)))).toEqual({
+  it('routes a slugless team to organization picker when not onboarding', () => {
+    expect(
+      resolveRootTarget({
+        ...meCtx(activeOrg('TEAM', null)),
+        organizations: [{ ...activeOrg('TEAM', null), isActive: true }],
+        deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+      }),
+    ).toEqual({ to: '/organization' });
+  });
+});
+
+describe('workspace surface guards (URL vs me/context)', () => {
+  it('blocks personal /dashboard when onboarding is required', () => {
+    expect(workspaceRedirectForPersonalDashboard(meCtx(null))).toEqual({
       to: '/onboarding',
     });
+  });
+
+  it('allows personal /dashboard when the active org is personal', () => {
+    expect(
+      workspaceRedirectForPersonalDashboard(meCtx(activeOrg('PERSONAL', null))),
+    ).toBeNull();
+  });
+
+  it('redirects personal /dashboard to team slug when that is the active org', () => {
+    expect(
+      workspaceRedirectForPersonalDashboard(meCtx(activeOrg('TEAM', 'acme'))),
+    ).toEqual({
+      to: '/organization/$organizationSlug/dashboard',
+      params: { organizationSlug: 'acme' },
+    });
+  });
+
+  it('sends team entry to organization picker when there is no active org but memberships exist', () => {
+    expect(
+      workspaceRedirectForTeamEntry({
+        ...meCtx(null),
+        organizations: [{ ...activeOrg('TEAM', 'acme'), isActive: false }],
+        deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+      }),
+    ).toEqual({ to: '/organization' });
+  });
+
+  it('allows organization picker when resolver target is organization picker', () => {
+    expect(
+      workspaceRedirectForTeamEntry(
+        {
+          ...meCtx(null),
+          organizations: [{ ...activeOrg('TEAM', 'acme'), isActive: false }],
+          deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+        },
+        { organizationPicker: true },
+      ),
+    ).toBeNull();
+  });
+
+  it('sends team entry to onboarding when there are no orgs yet', () => {
+    expect(workspaceRedirectForTeamEntry(meCtx(null))).toEqual({ to: '/onboarding' });
+  });
+
+  it('sends team entry to /dashboard when the active org is personal', () => {
+    expect(workspaceRedirectForTeamEntry(meCtx(activeOrg('PERSONAL', null)))).toEqual({
+      to: '/dashboard',
+    });
+  });
+
+  it('allows team entry when a team org is active', () => {
+    expect(workspaceRedirectForTeamEntry(meCtx(activeOrg('TEAM', 'acme')))).toBeNull();
   });
 });

@@ -1,12 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { NotificationPreference } from '@/shared/api/notification-contracts.ts';
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
+import type {
+  Notification,
+  NotificationPreference,
+} from '@/shared/api/notification-contracts.ts';
 import { notificationQueryKeys } from '@/shared/api/notification-query-keys.ts';
 import * as api from '@/shared/api/notifications-api.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 
 /**
- * Notifications inbox hooks. With no realtime channel in mock mode, the inbox +
+ * Notifications inbox hooks. With no realtime channel yet, the inbox +
  * unread badge poll on an interval (FE-63); a future SSE/WebSocket subscription
  * would replace the poll by invalidating these query keys on push. Server state
  * only — never mirrored into Zustand.
@@ -31,25 +37,54 @@ export function useUnreadCount() {
   });
 }
 
-/** Mark one notification read, then refresh the inbox + badge. */
+/** Mark one notification read with optimistic UI, then refresh. */
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => api.markNotificationRead(id),
-    onSuccess: () =>
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: notificationQueryKeys.all });
+      const previousList = queryClient.getQueryData<Notification[]>(
+        notificationQueryKeys.list(),
+      );
+      const previousCount = queryClient.getQueryData<number>(
+        notificationQueryKeys.unreadCount(),
+      );
+      queryClient.setQueryData<Notification[]>(notificationQueryKeys.list(), (old) =>
+        old?.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      );
+      if (typeof previousCount === 'number') {
+        queryClient.setQueryData(
+          notificationQueryKeys.unreadCount(),
+          Math.max(0, previousCount - 1),
+        );
+      }
+      return { previousList, previousCount };
+    },
+    onError: (_err, _id, context) => {
+      if (context?.previousList) {
+        queryClient.setQueryData(notificationQueryKeys.list(), context.previousList);
+      }
+      if (context?.previousCount !== undefined) {
+        queryClient.setQueryData(
+          notificationQueryKeys.unreadCount(),
+          context.previousCount,
+        );
+      }
+      notify.error(
+        i18n.t(ERRORS_KEYS.frontend.hooks.notifications.updateFailed, { ns: ERRORS_NS }),
+      );
+    },
+    onSettled: () =>
       queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all }),
-    onError: () => notify.error('Could not update notification'),
   });
 }
 
 /** Mark the whole inbox read, then refresh. */
 export function useMarkAllNotificationsRead() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: () => api.markAllNotificationsRead(),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all }),
-    onError: () => notify.error('Could not update notifications'),
+    invalidateKeys: [notificationQueryKeys.all],
   });
 }
 
@@ -64,13 +99,17 @@ export function useNotificationPreferences() {
 /** Full-replace the preference set, seeding the cache with the saved result. */
 export function useUpdateNotificationPreferences() {
   const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (prefs: NotificationPreference[]) =>
       api.updateNotificationPreferences(prefs),
-    onSuccess: (saved) => {
+    successMessage: i18n.t(
+      ERRORS_KEYS.frontend.hooks.notifications.savePreferencesSuccess,
+      {
+        ns: ERRORS_NS,
+      },
+    ),
+    onSuccess: async (saved) => {
       queryClient.setQueryData(notificationQueryKeys.preferences(), saved);
-      notify.success('Notification preferences saved');
     },
-    onError: () => notify.error('Could not save preferences'),
   });
 }

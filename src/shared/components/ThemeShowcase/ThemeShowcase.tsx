@@ -1,5 +1,8 @@
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
+import { iconChipClassName, iconOnPrimarySurface } from '@/lib/icon-surface.ts';
+import { cn } from '@/lib/utils.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
+import { Card, CardContent } from '@/shared/components/ui/card.tsx';
 import { Palette, Sparkles } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
@@ -54,58 +57,66 @@ export function ThemeShowcase() {
       : (THEME_PRESETS.find((p) => p.id === preset)?.label ?? 'Default');
 
   return (
-    <section
+    <Card
       aria-label="Workspace theme"
       data-testid="dashboard-theme-showcase"
-      className="from-primary/15 via-card to-card border-primary/20 relative overflow-hidden rounded-xl border bg-gradient-to-br p-4 sm:p-5"
+      className="from-primary/15 via-card to-card border-primary/20 relative gap-0 overflow-hidden bg-gradient-to-br py-0"
     >
       <div
         className="bg-primary/20 pointer-events-none absolute -top-12 -right-10 h-36 w-36 rounded-full blur-3xl"
         aria-hidden="true"
       />
-      <div className="relative flex flex-wrap items-center gap-x-4 gap-y-3">
-        <span className="bg-primary text-primary-foreground shadow-primary/30 flex size-10 shrink-0 items-center justify-center rounded-lg shadow-lg">
-          <Palette className="size-5" aria-hidden="true" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-            Workspace theme
-          </p>
-          <p className="truncate font-medium" data-testid="dashboard-theme-label">
-            {label}
-          </p>
-        </div>
-        <div
-          className="flex items-center gap-1.5"
-          aria-hidden="true"
-          data-testid="dashboard-theme-palette"
-        >
-          {CHART_SWATCHES.map((swatch) => (
-            <span
-              key={swatch}
-              className={`ring-border size-4 rounded-full ring-1 ${swatch}`}
-            />
-          ))}
-        </div>
-        {config.themeLock ? null : (
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleShuffle}
-            data-testid="dashboard-theme-shuffle"
+      <CardContent className="relative p-4 sm:p-5">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <span
+            data-slot="icon-chip"
+            className={cn(
+              'bg-primary text-primary-foreground shadow-primary/30 size-10',
+              iconChipClassName,
+            )}
           >
-            <Sparkles className="mr-2 size-4" aria-hidden="true" /> Shuffle
-          </Button>
-        )}
-        <button
-          type="button"
-          onClick={() => setAppearanceOpen(true)}
-          className="text-primary text-sm font-medium hover:underline"
-          data-testid="dashboard-theme-customize"
-        >
-          Customize →
-        </button>
-      </div>
-    </section>
+            <Palette className={cn('size-5', iconOnPrimarySurface)} aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              Workspace theme
+            </p>
+            <p className="truncate font-medium" data-testid="dashboard-theme-label">
+              {label}
+            </p>
+          </div>
+          <div
+            className="flex items-center gap-1.5"
+            aria-hidden="true"
+            data-testid="dashboard-theme-palette"
+          >
+            {CHART_SWATCHES.map((swatch) => (
+              <span
+                key={swatch}
+                className={`ring-border size-4 rounded-full ring-1 ${swatch}`}
+              />
+            ))}
+          </div>
+          {platformConfig.themeLock ? null : (
+            <Button
+              type="button"
+              size="sm"
+              onClick={handleShuffle}
+              data-testid="dashboard-theme-shuffle"
+            >
+              <Sparkles className="mr-2 size-4" aria-hidden="true" /> Shuffle
+            </Button>
+          )}
+          <button
+            type="button"
+            onClick={() => setAppearanceOpen(true)}
+            className="text-primary text-sm font-medium hover:underline"
+            data-testid="dashboard-theme-customize"
+          >
+            Customize →
+          </button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

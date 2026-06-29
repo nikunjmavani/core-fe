@@ -3,6 +3,17 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
+vi.mock('@tanstack/react-router', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  useRouterState: ({ select }: { select: (s: unknown) => unknown }) =>
+    select({ location: { pathname: '/dashboard' } }),
+}));
+vi.mock('@/shared/store/useAuthStore/index.ts', () => ({
+  useAuthStore: (
+    selector: (s: { isAuthenticated: boolean; isLoading: boolean }) => unknown,
+  ) => selector({ isAuthenticated: true, isLoading: false }),
+}));
+
 // Stub the dialog: this suite tests the lazy SHELL (store gating + chunk mount),
 // not the panel — AppearanceDialog.test.tsx covers that.
 vi.mock('./AppearanceDialog.tsx', () => ({

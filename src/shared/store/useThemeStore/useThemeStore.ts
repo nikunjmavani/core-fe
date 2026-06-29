@@ -4,12 +4,15 @@ import { persist } from 'zustand/middleware';
 import {
   applyBaseColor,
   applyGeneratedTheme,
+  applyIconColor,
   applyIconWeight,
   applyMenuStyle,
   applyThemePreset,
   DEFAULT_BASE,
+  DEFAULT_ICON_COLOR,
   DEFAULT_ICON_LIBRARY,
   DEFAULT_ICON_WEIGHT,
+  DEFAULT_LAYOUT_WIDTH,
   DEFAULT_MENU,
   DEFAULT_PRESET,
   DEFAULT_TOAST_POSITION,
@@ -18,10 +21,13 @@ import {
   type GeneratedTheme,
   generateSeededTheme,
   isThemePreset,
+  type LayoutWidthId,
   nextAppVariant,
   nextAuthVariant,
+  nextPublicVariant,
   nextToastPosition,
   nextToastVariant,
+  normalizeLayoutWidthId,
   normalizeLook,
   randomSeed,
   SHUFFLE_TEMP,
@@ -43,12 +49,16 @@ interface ThemeStore {
   menu: string;
   /** Icon weight — Lucide stroke-width (orthogonal). */
   iconWeight: string;
+  /** Icon colour — semantic token via data-icon-color (orthogonal). */
+  iconColor: string;
   /** Icon library — lucide (default) | tabler | phosphor (orthogonal). */
   iconLibrary: string;
   /** TEMP: AuthLayout preview design index (0..2); rolled by shuffle. */
   authVariant: number;
   /** TEMP: AppLayout preview shell index (0..2); rolled by shuffle. */
   appVariant: number;
+  /** TEMP: PublicLayout preview shell index (0..2); rolled by shuffle. */
+  publicVariant: number;
   /** TEMP: custom-toast design index (0..N-1); rolled by shuffle + the picker. */
   toastVariant: number;
   /** TEMP: toast position (sonner Position subset); rolled by shuffle + the picker. */
@@ -56,6 +66,8 @@ interface ThemeStore {
   /** Seed of the active generated look — enables shareable `?theme=<seed>` +
    *  reproducible shuffles. null on a named preset or a hand-tweaked look. */
   seed: number | null;
+  /** Main content shell width (orthogonal — Appearance → Layout). */
+  layoutWidth: LayoutWidthId;
   setTheme: (theme: Mode) => void;
   setPreset: (preset: string) => void;
   /** Set one axis of the custom look (accent/chart/font/radius); switches to custom. */
@@ -63,11 +75,14 @@ interface ThemeStore {
   setBaseColor: (id: string) => void;
   setMenu: (id: string) => void;
   setIconWeight: (id: string) => void;
+  setIconColor: (id: string) => void;
   setIconLibrary: (id: string) => void;
   /** TEMP: set the custom-toast design index (Appearance preview). */
   setToastVariant: (index: number) => void;
   /** TEMP: set the toast position (Appearance preview). */
   setToastPosition: (position: string) => void;
+  /** Set app main content width (contained | full | reading). */
+  setLayoutWidth: (id: LayoutWidthId) => void;
   /** Apply a specific seed's look (shareable `?theme=<seed>` / reproducible). */
   applyThemeSeed: (seed: number) => void;
   /** Generate + apply a fresh full look from a new random seed. */
@@ -94,12 +109,15 @@ export const useThemeStore = create<ThemeStore>()(
       baseId: DEFAULT_BASE,
       menu: DEFAULT_MENU,
       iconWeight: DEFAULT_ICON_WEIGHT,
+      iconColor: DEFAULT_ICON_COLOR,
       iconLibrary: DEFAULT_ICON_LIBRARY,
       authVariant: 0,
       appVariant: 0,
+      publicVariant: 0,
       toastVariant: DEFAULT_TOAST_VARIANT,
       toastPosition: DEFAULT_TOAST_POSITION,
       seed: null,
+      layoutWidth: DEFAULT_LAYOUT_WIDTH,
       setTheme: (theme) => {
         applyMode(theme);
         set({ theme });
@@ -128,12 +146,19 @@ export const useThemeStore = create<ThemeStore>()(
         applyIconWeight(id);
         set({ iconWeight: id });
       },
+      setIconColor: (id) => {
+        applyIconColor(id);
+        set({ iconColor: id });
+      },
       setIconLibrary: (id) => {
         // The @/shared/icons barrel subscribes to this and lazy-loads the set.
         set({ iconLibrary: id });
       },
       setToastVariant: (index) => set({ toastVariant: index }),
       setToastPosition: (position) => set({ toastPosition: position }),
+      setLayoutWidth: (id) => {
+        set({ layoutWidth: normalizeLayoutWidthId(id) });
+      },
       applyThemeSeed: (seed) => {
         // Reproduce a specific look from its seed (shared link / QA). Icons + TEMP
         // previews are orthogonal to the seed, so they're left as-is.
@@ -151,13 +176,16 @@ export const useThemeStore = create<ThemeStore>()(
         const icons = shuffleIcons({
           weight: get().iconWeight,
           library: get().iconLibrary,
+          color: get().iconColor,
         });
         applyIconWeight(icons.weight);
+        applyIconColor(icons.color);
         set({
           preset: GENERATED_PRESET,
           customTheme: next,
           seed,
           iconWeight: icons.weight,
+          iconColor: icons.color,
           iconLibrary: icons.library,
           // TEMP previews — each gated by a SHUFFLE_TEMP switch (flip on/off on
           // request); when off, shuffle leaves that axis untouched.
@@ -167,6 +195,9 @@ export const useThemeStore = create<ThemeStore>()(
           appVariant: SHUFFLE_TEMP.appLayout
             ? nextAppVariant(get().appVariant)
             : get().appVariant,
+          publicVariant: SHUFFLE_TEMP.publicLayout
+            ? nextPublicVariant(get().publicVariant)
+            : get().publicVariant,
           toastVariant: SHUFFLE_TEMP.toastVariant
             ? nextToastVariant(get().toastVariant)
             : get().toastVariant,
@@ -178,14 +209,19 @@ export const useThemeStore = create<ThemeStore>()(
     }),
     {
       name: 'theme-preference',
-      version: 1,
-      // v1: the TEMP auth/app layout previews no longer persist — drop any stored
-      // values so everyone returns to the default (variant 0) layouts.
-      migrate: (persisted) => {
+      version: 3,
+      migrate: (persisted, version) => {
         if (persisted && typeof persisted === 'object') {
           const next: Record<string, unknown> = { ...persisted };
+          if (version < 2) {
+            next.iconColor = DEFAULT_ICON_COLOR;
+          }
+          if (version < 3) {
+            next.layoutWidth = DEFAULT_LAYOUT_WIDTH;
+          }
           delete next.authVariant;
           delete next.appVariant;
+          delete next.publicVariant;
           return next as unknown as ThemeStore;
         }
         return persisted as ThemeStore;
@@ -197,10 +233,12 @@ export const useThemeStore = create<ThemeStore>()(
         baseId: state.baseId,
         menu: state.menu,
         iconWeight: state.iconWeight,
+        iconColor: state.iconColor,
         iconLibrary: state.iconLibrary,
         toastVariant: state.toastVariant,
         toastPosition: state.toastPosition,
         seed: state.seed,
+        layoutWidth: state.layoutWidth,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
@@ -208,6 +246,7 @@ export const useThemeStore = create<ThemeStore>()(
           applyBaseColor(state.baseId ?? DEFAULT_BASE);
           applyMenuStyle(state.menu ?? DEFAULT_MENU);
           applyIconWeight(state.iconWeight ?? DEFAULT_ICON_WEIGHT);
+          applyIconColor(state.iconColor ?? DEFAULT_ICON_COLOR);
           if (state.preset === GENERATED_PRESET && state.customTheme != null) {
             applyGeneratedTheme(state.customTheme);
           } else {

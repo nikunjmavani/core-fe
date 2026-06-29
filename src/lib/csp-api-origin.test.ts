@@ -71,6 +71,17 @@ describe('buildContentSecurityPolicy', () => {
     expect(policy).not.toMatch(/script-src[^;]*unsafe-(inline|eval)/);
   });
 
+  it('allowlists Cloudflare Turnstile in script-src and frame-src', () => {
+    expect(policy).toContain("script-src 'self' https://challenges.cloudflare.com");
+    expect(policy).toContain('frame-src https://challenges.cloudflare.com');
+  });
+
+  it('allowlists Stripe.js in script-src, frame-src, and connect-src', () => {
+    expect(policy).toContain('https://js.stripe.com');
+    expect(policy).toContain('https://hooks.stripe.com');
+    expect(policy).toContain('https://api.stripe.com');
+  });
+
   it('omits reporting directives when no collector is configured', () => {
     expect(policy).not.toContain('report-uri');
     expect(policy).not.toContain('report-to');

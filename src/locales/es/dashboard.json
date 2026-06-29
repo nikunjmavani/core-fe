@@ -1,0 +1,93 @@
+{
+  "greeting": "Bienvenido de nuevo, {{name}}",
+  "greetingFallback": "ahí",
+  "heroSubtitle": "Esto es lo que ocurre hoy en tu espacio de trabajo.",
+  "heroSubtitleSolo": "Esto es lo que ocurre hoy.",
+  "title": "Panel",
+  "errorLoad": "No pudimos cargar tu espacio de trabajo. Actualiza la página e inténtalo de nuevo.",
+  "workspaceFallback": "Tu espacio de trabajo",
+  "workspaceNameFallback": "tu espacio de trabajo",
+  "orgType": {
+    "team": "Equipo",
+    "personal": "Personal"
+  },
+  "status": {
+    "active": "Activo",
+    "suspended": "Suspendido",
+    "archived": "Archivado"
+  },
+  "overview": {
+    "ariaLabel": "Resumen"
+  },
+  "stats": {
+    "workspaces": "Espacios de trabajo",
+    "workspacesHintOne": "Solo este",
+    "workspacesHintMany": "Eres miembro",
+    "permissions": "Tus permisos",
+    "permissionsHint": "En este espacio",
+    "type": "Tipo de espacio",
+    "typeHintTeam": "Compartido con tu equipo",
+    "typeHintPersonal": "Privado para ti",
+    "billing": "Facturación",
+    "billingManaged": "Gestionada",
+    "billingNone": "—",
+    "billingHintTeam": "Plan de equipo",
+    "billingHintPersonal": "Personal — ninguno"
+  },
+  "nextSteps": {
+    "ariaLabel": "Próximos pasos sugeridos",
+    "heading": "Próximos pasos sugeridos"
+  },
+  "quickActions": {
+    "ariaLabel": "Acciones rápidas",
+    "heading": "Acciones rápidas",
+    "inviteTitle": "Invitar miembros",
+    "inviteDescription": "Añade compañeros a {{orgName}}",
+    "rolesTitle": "Gestionar roles",
+    "rolesDescription": "Define quién puede hacer qué",
+    "billingTitle": "Facturación y plan",
+    "billingDescription": "Suscripción y facturas",
+    "orgSettingsTitle": "Configuración de la organización",
+    "orgSettingsDescription": "Nombre, marca y más",
+    "accountTitle": "Tu cuenta",
+    "accountDescription": "Perfil, seguridad, sesiones"
+  },
+  "organizations": {
+    "ariaLabel": "Tus organizaciones",
+    "heading": "Tus organizaciones",
+    "current": "Actual",
+    "openWorkspace": "Abrir espacio →"
+  },
+  "highlights": {
+    "ariaLabel": "Destacados del espacio",
+    "heading": "Destacados",
+    "description": "Formas seleccionadas de sacar más partido a tu espacio",
+    "tabsLabel": "Temas destacados",
+    "slideAnnouncement": "Diapositiva {{current}} de {{total}}: {{title}}",
+    "previousSlide": "Destacado anterior",
+    "nextSlide": "Siguiente destacado",
+    "goToSlide": "Ir al destacado {{title}}",
+    "tabs": {
+      "appearance": "Apariencia",
+      "invite": "Equipo",
+      "security": "Seguridad"
+    },
+    "slides": {
+      "appearance": {
+        "title": "Hazlo tuyo",
+        "description": "Ajusta tema, densidad y acento para que el espacio encaje con tu equipo.",
+        "action": "Abrir configuración de apariencia"
+      },
+      "invite": {
+        "title": "Haz crecer tu equipo",
+        "description": "Invita compañeros y asigna roles para que todos tengan el acceso adecuado desde el primer día.",
+        "action": "Invitar miembros"
+      },
+      "security": {
+        "title": "Refuerza la seguridad",
+        "description": "Revisa MFA, sesiones activas y métodos de inicio de sesión para mantener tu cuenta segura.",
+        "action": "Revisar configuración de seguridad"
+      }
+    }
+  }
+}

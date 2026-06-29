@@ -20,7 +20,7 @@ export const organizationSlugParamSchema = z
   // Single char-class (ReDoS-safe — no nested quantifiers) plus an edge check
   // rejecting leading/trailing hyphens; the membership lookup is the real gate.
   .regex(/^[a-z0-9-]+$/, 'invalid organization slug')
-  .refine((s) => !s.startsWith('-') && !s.endsWith('-'), 'invalid organization slug');
+  .refine((s) => !(s.startsWith('-') || s.endsWith('-')), 'invalid organization slug');
 
 /** Parse a raw `$organizationSlug` param; `null` when malformed. */
 export function parseOrganizationSlugParam(raw: string): string | null {

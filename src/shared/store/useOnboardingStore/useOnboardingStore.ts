@@ -11,6 +11,8 @@ export const ONBOARDING_STEPS = [
   'done',
 ] as const;
 
+export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
 /** Data collected across the onboarding wizard (persisted so it is resumable). */
 interface OnboardingData {
   fullName: string;
@@ -47,8 +49,8 @@ interface OnboardingStore {
   next: () => void;
   back: () => void;
   patch: (data: Partial<OnboardingData>) => void;
-  setCreatedOrganizationId: (id: string) => void;
-  setCreatedOrganizationSlug: (slug: string) => void;
+  setCreatedOrganizationId: (id: string | null) => void;
+  setCreatedOrganizationSlug: (slug: string | null) => void;
   complete: () => void;
   reset: () => void;
 }

@@ -1,6 +1,13 @@
 import type { Gate } from '@/core/security/gate.types.ts';
 
-import { requireActiveOrganization, requireOrganizationContext } from './route-guards.ts';
+import {
+  requireActiveOrganization,
+  requireOrganizationContext,
+  requirePersonalOrganizationsDeployment,
+  requireProvisionedPersonalDashboard,
+  requireProvisionedTeamWorkspace,
+  requireTeamOrganizationsDeployment,
+} from './route-guards.ts';
 
 /** These gates only read the route params (the org slug). */
 type OrgRouteCtx = { params: Record<string, string> };
@@ -29,4 +36,26 @@ export const resolveActiveOrg: Gate<OrgRouteCtx> = async (ctx) => {
  */
 export const requireOrgStatus: Gate<OrgRouteCtx> = (ctx) => {
   requireActiveOrganization(ctx.params.organizationSlug ?? '');
+};
+
+/** Block team slug routes when this deployment is personal-only. */
+export const requireTeamDeployment: Gate<OrgRouteCtx> = () => {
+  requireTeamOrganizationsDeployment();
+};
+
+/** Block root personal dashboard when this deployment is team-only. */
+export const requirePersonalDeployment: Gate<unknown> = () => {
+  requirePersonalOrganizationsDeployment();
+};
+
+/** `/dashboard` — session must have a personal active org (else onboarding / team URL). */
+export const requirePersonalDashboardWorkspace: Gate<unknown> = async () => {
+  await requireProvisionedPersonalDashboard();
+};
+
+/** Team slug space — no active org → onboarding or picker; personal active org → `/dashboard`. */
+export const requireProvisionedWorkspace: Gate<OrgRouteCtx> = async (ctx) => {
+  await requireProvisionedTeamWorkspace({
+    organizationPicker: !ctx.params.organizationSlug,
+  });
 };

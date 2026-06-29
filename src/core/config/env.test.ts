@@ -1,49 +1,9 @@
 import {
-  config,
+  platformConfig,
   resolveLayoutWidth,
+  resolveLayoutWidthForced,
   resolveThemeLock,
-  resolveUseMockApi,
 } from './env.ts';
-
-describe('resolveUseMockApi', () => {
-  it('is false in test mode', () => {
-    expect(
-      resolveUseMockApi({ mode: 'test', isProd: false, useMockApiFlag: undefined }),
-    ).toBe(false);
-  });
-
-  it('is false in production even when flag is unset', () => {
-    expect(
-      resolveUseMockApi({ mode: 'production', isProd: true, useMockApiFlag: undefined }),
-    ).toBe(false);
-  });
-
-  it('throws when mock is explicitly enabled in production', () => {
-    expect(() =>
-      resolveUseMockApi({ mode: 'production', isProd: true, useMockApiFlag: 'true' }),
-    ).toThrow(/not allowed in production/i);
-  });
-
-  it('is true in development by default', () => {
-    expect(
-      resolveUseMockApi({
-        mode: 'development',
-        isProd: false,
-        useMockApiFlag: undefined,
-      }),
-    ).toBe(true);
-  });
-
-  it('is false in development when VITE_USE_MOCK_API=false', () => {
-    expect(
-      resolveUseMockApi({
-        mode: 'development',
-        isProd: false,
-        useMockApiFlag: 'false',
-      }),
-    ).toBe(false);
-  });
-});
 
 describe('resolveLayoutWidth', () => {
   it('defaults to contained', () => {
@@ -66,25 +26,49 @@ describe('resolveThemeLock', () => {
   });
 });
 
-describe('config', () => {
-  it('config.layoutWidth is contained or full', () => {
-    expect(['contained', 'full']).toContain(config.layoutWidth);
+describe('resolveLayoutWidth', () => {
+  it('maps env flag to layout width ids', () => {
+    expect(resolveLayoutWidth(undefined)).toBe('contained');
+    expect(resolveLayoutWidth('full')).toBe('full');
+    expect(resolveLayoutWidth('reading')).toBe('reading');
+    expect(resolveLayoutWidth('bogus')).toBe('contained');
+  });
+});
+
+describe('resolveLayoutWidthForced', () => {
+  it('returns null when env omits layout width', () => {
+    expect(resolveLayoutWidthForced(undefined)).toBeNull();
   });
 
-  it('config.themeLock is a boolean', () => {
-    expect(typeof config.themeLock).toBe('boolean');
+  it('locks when env sets a valid layout width', () => {
+    expect(resolveLayoutWidthForced('full')).toBe('full');
+    expect(resolveLayoutWidthForced('reading')).toBe('reading');
+    expect(resolveLayoutWidthForced('contained')).toBe('contained');
+  });
+});
+
+describe('platformConfig', () => {
+  it('platformConfig.layoutWidthForced is null or a layout id', () => {
+    expect(
+      platformConfig.layoutWidthForced === null ||
+        ['contained', 'full', 'reading'].includes(platformConfig.layoutWidthForced),
+    ).toBe(true);
   });
 
-  it('config.environment is a string', () => {
-    expect(typeof config.environment).toBe('string');
-    expect(['development', 'production', 'test']).toContain(config.environment);
+  it('platformConfig.themeLock is a boolean', () => {
+    expect(typeof platformConfig.themeLock).toBe('boolean');
   });
 
-  it('config.isDevelopment is boolean', () => {
-    expect(typeof config.isDevelopment).toBe('boolean');
+  it('platformConfig.environment is a string', () => {
+    expect(typeof platformConfig.environment).toBe('string');
+    expect(['development', 'production', 'test']).toContain(platformConfig.environment);
   });
 
-  it('config.apiBaseUrl is a string', () => {
-    expect(typeof config.apiBaseUrl).toBe('string');
+  it('platformConfig.isDevelopment is boolean', () => {
+    expect(typeof platformConfig.isDevelopment).toBe('boolean');
+  });
+
+  it('platformConfig.apiBaseUrl is a string', () => {
+    expect(typeof platformConfig.apiBaseUrl).toBe('string');
   });
 });

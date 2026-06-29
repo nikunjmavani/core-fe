@@ -100,7 +100,7 @@ describe('startVersionCheck', () => {
       const { startVersionCheck } = await import('./check.ts');
       const cleanup = startVersionCheck();
 
-      await vi.advanceTimersByTimeAsync(5_000); // initial check → reload pending
+      await vi.advanceTimersByTimeAsync(2_000); // initial check → reload pending
       expect(reload).not.toHaveBeenCalled(); // still "active" — deferred
 
       await vi.advanceTimersByTimeAsync(60_000); // cross the idle threshold
@@ -110,12 +110,34 @@ describe('startVersionCheck', () => {
       cleanup?.();
     });
 
+    it('calls onUpdateAvailable once per new buildId with reloadNow', async () => {
+      mockVersionResponse('build-NEW');
+      const onUpdateAvailable = vi.fn();
+      const { startVersionCheck } = await import('./check.ts');
+      const cleanup = startVersionCheck({ onUpdateAvailable });
+
+      await vi.advanceTimersByTimeAsync(2_000);
+
+      expect(onUpdateAvailable).toHaveBeenCalledOnce();
+      const ctx = onUpdateAvailable.mock.calls[0]?.[0] as {
+        buildId: string;
+        reloadNow: () => void;
+      };
+      expect(ctx.buildId).toBe('build-NEW');
+      ctx.reloadNow();
+      expect(reload).toHaveBeenCalledTimes(1);
+
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(onUpdateAvailable).toHaveBeenCalledOnce(); // not duplicated on poll
+      cleanup?.();
+    });
+
     it('reloads immediately when the tab is hidden (invisible reload)', async () => {
       mockVersionResponse('build-NEW');
       const { startVersionCheck } = await import('./check.ts');
       const cleanup = startVersionCheck();
 
-      await vi.advanceTimersByTimeAsync(5_000); // detect → pending (visible + active)
+      await vi.advanceTimersByTimeAsync(2_000); // detect → pending (visible + active)
       expect(reload).not.toHaveBeenCalled();
 
       setVisibility('hidden');
@@ -135,7 +157,7 @@ describe('startVersionCheck', () => {
       const { startVersionCheck } = await import('./check.ts');
       const cleanup = startVersionCheck();
 
-      await vi.advanceTimersByTimeAsync(5_000); // detect
+      await vi.advanceTimersByTimeAsync(2_000); // detect
       await vi.advanceTimersByTimeAsync(60_000); // idle elapsed, but field is focused
       expect(reload).not.toHaveBeenCalled();
 
@@ -154,7 +176,7 @@ describe('startVersionCheck', () => {
       const { startVersionCheck } = await import('./check.ts');
       const cleanup = startVersionCheck();
 
-      await vi.advanceTimersByTimeAsync(5_000); // initial check
+      await vi.advanceTimersByTimeAsync(2_000); // initial check
       await vi.advanceTimersByTimeAsync(60_000); // first poll
 
       expect(reload).not.toHaveBeenCalled();
@@ -169,13 +191,28 @@ describe('startVersionCheck', () => {
       const { startVersionCheck } = await import('./check.ts');
       const cleanup = startVersionCheck();
 
-      await vi.advanceTimersByTimeAsync(5_000);
+      await vi.advanceTimersByTimeAsync(2_000);
       await vi.advanceTimersByTimeAsync(60_000); // idle → apply the deferred reload
 
       expect(reload).toHaveBeenCalledTimes(1);
       expect(sessionStorage.getItem('core:version-check:reloaded-for')).toBe(
         'build-NEWER',
       );
+      cleanup?.();
+    });
+    it('does not re-notify while snoozed', async () => {
+      mockVersionResponse('build-NEW');
+      const onUpdateAvailable = vi.fn();
+      const { startVersionCheck } = await import('./check.ts');
+      const { snoozeVersionUpdate } = await import('./version-update-snooze.ts');
+      const cleanup = startVersionCheck({ onUpdateAvailable });
+
+      await vi.advanceTimersByTimeAsync(2_000);
+      expect(onUpdateAvailable).toHaveBeenCalledOnce();
+      snoozeVersionUpdate('build-NEW');
+
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(onUpdateAvailable).toHaveBeenCalledOnce();
       cleanup?.();
     });
   });

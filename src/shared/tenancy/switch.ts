@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
 import { API_BASE_PATH } from '@/core/config/constants.ts';
-import { config } from '@/core/config/env.ts';
 import { apiClient } from '@/core/http/fetch-client.ts';
 import { queryClient } from '@/core/http/queryClient.ts';
+import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
+import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 
@@ -17,11 +18,6 @@ import {
 } from './me-context.ts';
 import { deriveOrgContext } from './organization-context.ts';
 
-/**
- * Active-org switch response `data` (snake_case). Switching **re-mints the access
- * token** (the new `org` claim is what authorizes subsequent calls) and returns
- * the active-org delta inline, so the FE never needs a follow-up `/me/context`.
- */
 const switchWire = z.object({
   access_token: z.string().min(1),
   active_organization: organizationWire.nullable(),
@@ -29,11 +25,6 @@ const switchWire = z.object({
   global_role: z.enum(['super_admin', 'admin', 'user']).nullable(),
 });
 
-/**
- * Apply an active-org delta to the cached me/context: swap the active org, its
- * resolved permissions, and flip the `isActive` flag across the switcher list.
- * `user` + the org list are stable across a switch, so they are preserved.
- */
 function applyActiveOrg(
   active: OrganizationSummary | null,
   permissions: string[],
@@ -55,13 +46,6 @@ function applyActiveOrg(
   );
 }
 
-/** Mock switch: flip the active org locally from the cached switcher list. */
-function mockSwitch(match: (o: OrganizationSummary) => boolean): MeContext | undefined {
-  const prev = queryClient.getQueryData<MeContext>(meContextQueryKey);
-  const target = prev?.organizations.find(match) ?? null;
-  return applyActiveOrg(target, prev?.myPermissions ?? [], prev?.globalRole ?? null);
-}
-
 async function liveSwitch(
   path: string,
   body: Record<string, unknown>,
@@ -77,24 +61,31 @@ async function liveSwitch(
   );
 }
 
-/** Switch the active organization to a team (by immutable id). */
 export async function switchToOrganization(
   organizationId: string,
 ): Promise<MeContext | undefined> {
-  const result = config.useMockApi
-    ? mockSwitch((o) => o.id === organizationId)
-    : await liveSwitch('/auth/switch-to-organization', {
-        organization_id: organizationId,
-      });
-  if (result) deriveOrgContext(result);
+  const result = await liveSwitch('/auth/switch-to-organization', {
+    organization_id: organizationId,
+  });
+  if (result) {
+    deriveOrgContext(result);
+    captureAnalyticsEvent(ANALYTICS_EVENTS.organizationSwitched, {
+      target_organization_id: organizationId,
+      target_type: result.activeOrganization?.type ?? null,
+      switch_target: 'organization',
+    });
+  }
   return result;
 }
 
-/** Switch the active organization to the caller's personal org. */
 export async function switchToPersonal(): Promise<MeContext | undefined> {
-  const result = config.useMockApi
-    ? mockSwitch((o) => o.type === 'PERSONAL')
-    : await liveSwitch('/auth/switch-to-personal', {});
-  if (result) deriveOrgContext(result);
+  const result = await liveSwitch('/auth/switch-to-personal', {});
+  if (result) {
+    deriveOrgContext(result);
+    captureAnalyticsEvent(ANALYTICS_EVENTS.organizationSwitched, {
+      target_type: result.activeOrganization?.type ?? 'PERSONAL',
+      switch_target: 'personal',
+    });
+  }
   return result;
 }

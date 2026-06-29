@@ -7,7 +7,7 @@
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
-  "theme_color": "#4f46e5",
+  "theme_color": "#0a0a0a",
   "categories": ["business", "productivity"],
   "dir": "ltr",
   "lang": "en-US",
@@ -29,7 +29,7 @@
       "purpose": "maskable"
     },
     {
-      "src": "/vite.svg",
+      "src": "/app-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

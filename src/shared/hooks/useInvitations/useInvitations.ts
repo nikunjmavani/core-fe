@@ -1,9 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import * as orgApi from '@/shared/api/organization-api.ts';
 import type { OrgRole } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
-import { notify } from '@/shared/notify/index.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
 /**
  * Invitations of the active organization — list query + send/revoke/resend mutations.
@@ -19,40 +21,38 @@ export function useInvitations() {
 
 /** Send a new invitation, then refresh the invitations list. */
 export function useCreateInvitation() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (input: { email: string; role: OrgRole }) =>
       orgApi.createInvitation(input),
-    onSuccess: (invitation) => {
-      notify.success(`Invitation sent to ${invitation.email}`);
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.invitations() });
-    },
-    onError: () => notify.error('Could not send invitation'),
+    invalidateKeys: [orgQueryKeys.invitations()],
+    successMessage: (invitation) =>
+      i18n.t(ERRORS_KEYS.frontend.hooks.invitations.sendSuccess, {
+        ns: ERRORS_NS,
+        email: invitation.email,
+      }),
   });
 }
 
 /** Revoke a pending invitation, then refresh the list. */
 export function useRevokeInvitation() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (invitationId: string) => orgApi.revokeInvitation(invitationId),
-    onSuccess: () => {
-      notify.success('Invitation revoked');
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.invitations() });
-    },
-    onError: () => notify.error('Could not revoke invitation'),
+    invalidateKeys: [orgQueryKeys.invitations()],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.invitations.revokeSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }
 
 /** Resend a pending invitation, then refresh the list. */
 export function useResendInvitation() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (invitationId: string) => orgApi.resendInvitation(invitationId),
-    onSuccess: (invitation) => {
-      notify.success(`Invitation resent to ${invitation.email}`);
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.invitations() });
-    },
-    onError: () => notify.error('Could not resend invitation'),
+    invalidateKeys: [orgQueryKeys.invitations()],
+    successMessage: (invitation) =>
+      i18n.t(ERRORS_KEYS.frontend.hooks.invitations.resendSuccess, {
+        ns: ERRORS_NS,
+        email: invitation.email,
+      }),
   });
 }

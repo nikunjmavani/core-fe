@@ -1,8 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import type { CreateWebhookInput } from '@/shared/api/webhook-contracts.ts';
 import * as api from '@/shared/api/webhooks-api.ts';
-import { notify } from '@/shared/notify/index.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
 const webhooksQueryKey = ['org', 'webhooks'] as const;
 
@@ -13,26 +15,22 @@ export function useWebhooks() {
 
 /** Create a webhook, then refresh the list. */
 export function useCreateWebhook() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (input: CreateWebhookInput) => api.createWebhook(input),
-    onSuccess: () => {
-      notify.success('Webhook created');
-      return queryClient.invalidateQueries({ queryKey: webhooksQueryKey });
-    },
-    onError: () => notify.error('Could not create webhook'),
+    invalidateKeys: [webhooksQueryKey],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.webhooks.createSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }
 
 /** Delete a webhook, then refresh the list. */
 export function useDeleteWebhook() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (id: string) => api.deleteWebhook(id),
-    onSuccess: () => {
-      notify.success('Webhook deleted');
-      return queryClient.invalidateQueries({ queryKey: webhooksQueryKey });
-    },
-    onError: () => notify.error('Could not delete webhook'),
+    invalidateKeys: [webhooksQueryKey],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.webhooks.deleteSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }

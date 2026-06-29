@@ -1,6 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { type ChangeEvent, useRef, useState } from 'react';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
+import { QueryBoundary } from '@/shared/components/QueryBoundary/index.ts';
+import { useRegisterSettingsDirty } from '@/shared/components/SettingsModal/settings-dirty.tsx';
+import { SectionHeader } from '@/shared/components/SettingsModal/SettingsPanelShell.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
   Card,
@@ -17,16 +22,14 @@ import { notify } from '@/shared/notify/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import { listMyOrganizations } from '@/shared/tenancy/my-organizations.ts';
 
-import { SectionHeader } from '../SettingsPanelShell.tsx';
-
-/** Max logo size accepted by the (mock) uploader — keeps the data URL sane. */
+/** Max logo size accepted by the uploader — keeps the data URL sane until CDN upload lands. */
 const MAX_LOGO_BYTES = 1024 * 1024;
 
 type UpdateMutation = ReturnType<typeof useUpdateOrganization>;
 
 /**
- * Organization logo (FE-33) — preview + upload/remove. Mock mode stores a data
- * URL on the org; the live API takes a CDN URL (`logo_url`). Gated on the manage
+ * Organization logo (FE-33) — preview + upload/remove. Client preview uses a data
+ * URL until the live API accepts a CDN `logo_url`. Gated on the manage permission;
  * permission; rejects non-images and oversized files before reading.
  */
 function OrgLogoCard({
@@ -48,18 +51,25 @@ function OrgLogoCard({
     event.target.value = ''; // allow re-selecting the same file after a failure
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      notify.error('Please choose an image file.');
+      notify.error(
+        i18n.t(ERRORS_KEYS.frontend.organization.logoInvalidType, { ns: ERRORS_NS }),
+      );
       return;
     }
     if (file.size > MAX_LOGO_BYTES) {
-      notify.error('Logo must be under 1 MB.');
+      notify.error(
+        i18n.t(ERRORS_KEYS.frontend.organization.logoTooLarge, { ns: ERRORS_NS }),
+      );
       return;
     }
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') update.mutate({ logoUrl: reader.result });
     };
-    reader.onerror = () => notify.error('Could not read that file.');
+    reader.onerror = () =>
+      notify.error(
+        i18n.t(ERRORS_KEYS.frontend.organization.logoReadFailed, { ns: ERRORS_NS }),
+      );
     reader.readAsDataURL(file);
   }
 
@@ -73,7 +83,8 @@ function OrgLogoCard({
       </CardHeader>
       <CardContent className="flex items-center gap-4">
         <div
-          className="bg-muted flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg"
+          data-slot="icon-chip"
+          className="bg-muted flex size-16 shrink-0 items-center justify-center overflow-hidden"
           data-testid="org-logo-preview"
         >
           {logoUrl ? (
@@ -143,22 +154,10 @@ export function OrganizationGeneralPanel() {
   });
   const update = useUpdateOrganization();
 
-  const { data: orgs } = useQuery({
+  const orgsQuery = useQuery({
     queryKey: ['organizations'],
     queryFn: listMyOrganizations,
   });
-  const activeOrg = orgs?.find((o) => o.id === organizationId);
-
-  const serverName = activeOrg?.name ?? '';
-  const [draft, setDraft] = useState<string | null>(null);
-  const name = draft ?? serverName;
-  const trimmed = name.trim();
-  const dirty = trimmed !== serverName && trimmed.length > 0;
-
-  function save() {
-    if (!dirty) return;
-    update.mutate({ name: trimmed }, { onSuccess: () => setDraft(null) });
-  }
 
   return (
     <div className="space-y-6" data-testid="settings-section-org-general">
@@ -166,6 +165,50 @@ export function OrganizationGeneralPanel() {
         title="Organization · General"
         description="Identity for your organization across the platform."
       />
+      <QueryBoundary query={orgsQuery} errorMessage="Couldn't load organization details.">
+        {(orgs) => (
+          <OrganizationGeneralForm
+            orgs={orgs}
+            organizationId={organizationId}
+            organizationSlug={organizationSlug}
+            canManage={canManage}
+            update={update}
+          />
+        )}
+      </QueryBoundary>
+    </div>
+  );
+}
+
+function OrganizationGeneralForm({
+  orgs,
+  organizationId,
+  organizationSlug,
+  canManage,
+  update,
+}: {
+  orgs: Awaited<ReturnType<typeof listMyOrganizations>>;
+  organizationId: string | null;
+  organizationSlug: string | null;
+  canManage: boolean;
+  update: UpdateMutation;
+}) {
+  const activeOrg = orgs.find((o) => o.id === organizationId);
+
+  const serverName = activeOrg?.name ?? '';
+  const [draft, setDraft] = useState<string | null>(null);
+  const name = draft ?? serverName;
+  const trimmed = name.trim();
+  const dirty = trimmed !== serverName && trimmed.length > 0;
+  useRegisterSettingsDirty('org-general-name', dirty);
+
+  function save() {
+    if (!dirty) return;
+    update.mutate({ name: trimmed }, { onSuccess: () => setDraft(null) });
+  }
+
+  return (
+    <>
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Basics</CardTitle>
@@ -219,6 +262,6 @@ export function OrganizationGeneralPanel() {
         canManage={canManage}
         update={update}
       />
-    </div>
+    </>
   );
 }

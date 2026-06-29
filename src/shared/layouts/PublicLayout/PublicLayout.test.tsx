@@ -6,7 +6,9 @@ import {
   RouterProvider,
 } from '@tanstack/react-router';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+
+import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 
 import { PublicLayout } from './PublicLayout.tsx';
 
@@ -25,7 +27,23 @@ function renderInRouter() {
 }
 
 describe('PublicLayout', () => {
+  beforeAll(async () => {
+    await import('./variants/PublicLayoutCentered.tsx');
+  });
+
+  beforeEach(() => {
+    useThemeStore.setState({ publicVariant: 0 });
+  });
+
   it('renders centered chrome with the routed child via <Outlet>', async () => {
+    renderInRouter();
+    expect(await screen.findByTestId('public-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('child')).toHaveTextContent('child content');
+  });
+
+  it('renders the card preview variant (1)', async () => {
+    useThemeStore.setState({ publicVariant: 1 });
+    await import('./variants/PublicLayoutCard.tsx');
     renderInRouter();
     expect(await screen.findByTestId('public-layout')).toBeInTheDocument();
     expect(screen.getByTestId('child')).toHaveTextContent('child content');

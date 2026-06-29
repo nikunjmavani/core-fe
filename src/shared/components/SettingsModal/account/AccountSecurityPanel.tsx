@@ -1,7 +1,18 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { copySensitiveText } from '@/lib/sensitive-clipboard.ts';
 import type { MfaEnrollment } from '@/shared/api/mfa-api.ts';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/index.ts';
+import { QrCode } from '@/shared/components/QrCode/index.ts';
+import { RecoveryCodesPanel } from '@/shared/components/RecoveryCodesPanel/index.ts';
+import { SecurityOverviewCard } from '@/shared/components/SecurityOverviewCard/index.ts';
+import {
+  SETTINGS_KEYS,
+  SETTINGS_NS,
+} from '@/shared/components/SettingsModal/settings.constants.ts';
+import { SectionHeader } from '@/shared/components/SettingsModal/SettingsPanelShell.tsx';
+import { TotpCodeInput } from '@/shared/components/TotpCodeInput/index.ts';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -32,13 +43,12 @@ import {
   useRegisterPasskey,
   useRemovePasskey,
 } from '@/shared/hooks/usePasskeys/index.ts';
-import { Fingerprint, ShieldCheck, Trash2 } from '@/shared/icons/index.ts';
+import { Copy, Fingerprint, ShieldCheck, Trash2 } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 
-import { SectionHeader } from '../SettingsPanelShell.tsx';
-
-/** Two-factor card: real setup (secret → code → recovery codes) + disable. */
+/** Two-factor card: QR enroll → 6-digit OTP → recovery codes + disable. */
 function MfaCard() {
+  const { t } = useTranslation(SETTINGS_NS);
   const { data: mfaEnabled = false } = useMfaStatus();
   const begin = useBeginMfaEnrollment();
   const confirm = useConfirmMfaEnrollment();
@@ -50,6 +60,7 @@ function MfaCard() {
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [disableOpen, setDisableOpen] = useState(false);
+  const [secretCopied, setSecretCopied] = useState(false);
 
   function closeSetup() {
     setSetupOpen(false);
@@ -57,29 +68,42 @@ function MfaCard() {
     setCode('');
     setRecoveryCodes(null);
     setConfirmError(null);
+    setSecretCopied(false);
   }
 
   function handleStartSetup() {
     setCode('');
     setConfirmError(null);
     setRecoveryCodes(null);
+    setSecretCopied(false);
     begin
       .mutateAsync()
       .then((result) => {
         setEnrollment(result);
         setSetupOpen(true);
       })
-      .catch(() => notify.error('Could not start setup. Please try again.'));
+      .catch(() => notify.error(t(SETTINGS_KEYS.security.mfa.errors.setupFailed)));
   }
 
-  function handleSubmitCode() {
+  function handleSubmitCode(nextCode = code) {
+    if (nextCode.length < 6) return;
     setConfirmError(null);
     confirm
-      .mutateAsync(code)
+      .mutateAsync(nextCode)
       .then((result) => setRecoveryCodes(result.recoveryCodes))
-      .catch(() =>
-        setConfirmError('That code didn’t match. Enter the current 6-digit code.'),
-      );
+      .catch(() => setConfirmError(t(SETTINGS_KEYS.security.mfa.errors.invalidCode)));
+  }
+
+  async function handleCopySecret() {
+    if (!enrollment?.secret) return;
+    const ok = await copySensitiveText(enrollment.secret);
+    if (ok) {
+      setSecretCopied(true);
+      window.setTimeout(() => setSecretCopied(false), 2000);
+      notify.info(t(SETTINGS_KEYS.security.recoveryCodes.clipboardNotice));
+    } else {
+      notify.error(t(SETTINGS_KEYS.security.mfa.errors.setupFailed));
+    }
   }
 
   return (
@@ -87,11 +111,15 @@ function MfaCard() {
       <CardHeader>
         <div className="flex items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-base">Two-factor authentication</CardTitle>
-            <CardDescription>Require an authenticator code at sign-in.</CardDescription>
+            <CardTitle className="text-base">
+              {t(SETTINGS_KEYS.security.mfa.title)}
+            </CardTitle>
+            <CardDescription>{t(SETTINGS_KEYS.security.mfa.description)}</CardDescription>
           </div>
           <Badge variant={mfaEnabled ? 'success' : 'secondary'} data-testid="mfa-status">
-            {mfaEnabled ? 'Enabled' : 'Disabled'}
+            {mfaEnabled
+              ? t(SETTINGS_KEYS.security.mfa.enabled)
+              : t(SETTINGS_KEYS.security.mfa.disabled)}
           </Badge>
         </div>
       </CardHeader>
@@ -103,7 +131,7 @@ function MfaCard() {
             onClick={() => setDisableOpen(true)}
             data-testid="mfa-disable"
           >
-            Disable two-factor
+            {t(SETTINGS_KEYS.security.mfa.disable)}
           </Button>
         ) : (
           <Button
@@ -112,8 +140,8 @@ function MfaCard() {
             disabled={begin.isPending}
             data-testid="mfa-setup"
           >
-            <ShieldCheck className="mr-2 h-4 w-4" />
-            Set up two-factor
+            <ShieldCheck data-icon="inline-start" />
+            {t(SETTINGS_KEYS.security.mfa.setup)}
           </Button>
         )}
       </CardContent>
@@ -124,54 +152,81 @@ function MfaCard() {
           if (!open) closeSetup();
         }}
       >
-        <DialogContent data-testid="mfa-setup-dialog">
+        <DialogContent className="sm:max-w-md" data-testid="mfa-setup-dialog">
           {recoveryCodes ? (
             <>
               <DialogHeader>
-                <DialogTitle>Save your recovery codes</DialogTitle>
+                <DialogTitle>{t(SETTINGS_KEYS.security.mfa.recoveryTitle)}</DialogTitle>
                 <DialogDescription>
-                  Store these somewhere safe. Each one works once if you lose your device.
+                  {t(SETTINGS_KEYS.security.mfa.recoveryDescription)}
                 </DialogDescription>
               </DialogHeader>
-              <ul
-                className="bg-muted grid grid-cols-2 gap-2 rounded-md p-3 font-mono text-sm"
-                data-testid="mfa-recovery-codes"
-              >
-                {recoveryCodes.map((rc) => (
-                  <li key={rc}>{rc}</li>
-                ))}
-              </ul>
-              <DialogFooter>
-                <Button onClick={closeSetup} data-testid="mfa-done">
-                  Done
-                </Button>
-              </DialogFooter>
+              <RecoveryCodesPanel codes={recoveryCodes} onDone={closeSetup} />
             </>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>Set up two-factor authentication</DialogTitle>
+                <DialogTitle>{t(SETTINGS_KEYS.security.mfa.setupTitle)}</DialogTitle>
                 <DialogDescription>
-                  Add this secret to your authenticator app, then enter the 6-digit code.
+                  {t(SETTINGS_KEYS.security.mfa.setupDescription)}
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-3">
-                <div
-                  className="bg-muted rounded-md p-3 font-mono text-sm break-all"
-                  data-testid="mfa-secret"
-                >
-                  {enrollment?.secret}
+              <div className="flex flex-col gap-4">
+                {enrollment?.otpauthUri ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <Card className="gap-0 py-0" data-testid="mfa-qr">
+                      <CardContent className="flex size-44 items-center justify-center p-3">
+                        <QrCode data={enrollment.otpauthUri} />
+                      </CardContent>
+                    </Card>
+                    <p className="text-muted-foreground text-center text-xs">
+                      {t(SETTINGS_KEYS.security.mfa.scanHint)}
+                    </p>
+                  </div>
+                ) : null}
+
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="mfa-secret">
+                    {t(SETTINGS_KEYS.security.mfa.secretLabel)}
+                  </Label>
+                  <div className="flex gap-2">
+                    <div
+                      id="mfa-secret"
+                      className="bg-muted flex-1 rounded-md p-3 font-mono text-sm break-all"
+                      data-testid="mfa-secret"
+                    >
+                      {enrollment?.secret}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      aria-label={t(SETTINGS_KEYS.security.mfa.copySecret)}
+                      onClick={() => void handleCopySecret()}
+                      data-testid="mfa-copy-secret"
+                    >
+                      <Copy data-icon="inline-start" />
+                    </Button>
+                  </div>
+                  {secretCopied ? (
+                    <p className="text-success text-xs">
+                      {t(SETTINGS_KEYS.security.mfa.copiedSecret)}
+                    </p>
+                  ) : null}
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="mfa-code">6-digit code</Label>
-                  <Input
+
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="mfa-code">
+                    {t(SETTINGS_KEYS.security.mfa.codeLabel)}
+                  </Label>
+                  <TotpCodeInput
                     id="mfa-code"
-                    inputMode="numeric"
-                    maxLength={6}
                     value={code}
-                    onChange={(event) => setCode(event.target.value)}
-                    placeholder="123456"
-                    data-testid="mfa-code"
+                    onChange={setCode}
+                    onComplete={handleSubmitCode}
+                    invalid={!!confirmError}
+                    testId="mfa-code"
+                    aria-label={t(SETTINGS_KEYS.security.mfa.codeAria)}
                   />
                   {confirmError ? (
                     <p className="text-destructive text-xs" role="alert">
@@ -182,14 +237,14 @@ function MfaCard() {
               </div>
               <DialogFooter>
                 <Button variant="ghost" onClick={closeSetup}>
-                  Cancel
+                  {t(SETTINGS_KEYS.security.mfa.cancel)}
                 </Button>
                 <Button
-                  onClick={handleSubmitCode}
+                  onClick={() => handleSubmitCode()}
                   disabled={code.length < 6 || confirm.isPending}
                   data-testid="mfa-verify"
                 >
-                  Verify &amp; enable
+                  {t(SETTINGS_KEYS.security.mfa.verifyEnable)}
                 </Button>
               </DialogFooter>
             </>
@@ -200,9 +255,9 @@ function MfaCard() {
       <ConfirmDialog
         open={disableOpen}
         onOpenChange={setDisableOpen}
-        title="Disable two-factor authentication?"
-        description="Your account will be less protected. You can turn it back on anytime."
-        confirmLabel="Disable"
+        title={t(SETTINGS_KEYS.security.mfa.disableTitle)}
+        description={t(SETTINGS_KEYS.security.mfa.disableDescription)}
+        confirmLabel={t(SETTINGS_KEYS.security.mfa.disableConfirm)}
         destructive
         onConfirm={async () => {
           await disable.mutateAsync();
@@ -212,8 +267,9 @@ function MfaCard() {
   );
 }
 
-/** Passkeys card: list + named registration + revoke (FE-32, mock-first). */
+/** Passkeys card: list + named registration + revoke (FE-32). */
 function PasskeysCard() {
+  const { t } = useTranslation(SETTINGS_NS);
   const { data: passkeys = [] } = usePasskeys();
   const register = useRegisterPasskey();
   const remove = useRemovePasskey();
@@ -237,9 +293,11 @@ function PasskeysCard() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-base">Passkeys</CardTitle>
+            <CardTitle className="text-base">
+              {t(SETTINGS_KEYS.security.passkeys.title)}
+            </CardTitle>
             <CardDescription>
-              Sign in without a password using your device.
+              {t(SETTINGS_KEYS.security.passkeys.description)}
             </CardDescription>
           </div>
           <Button
@@ -248,15 +306,15 @@ function PasskeysCard() {
             onClick={() => setAddOpen(true)}
             data-testid="add-passkey"
           >
-            <Fingerprint className="mr-2 h-4 w-4" />
-            Add passkey
+            <Fingerprint data-icon="inline-start" />
+            {t(SETTINGS_KEYS.security.passkeys.add)}
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="flex flex-col gap-2">
         {passkeys.length === 0 ? (
           <p className="text-muted-foreground text-sm" data-testid="passkeys-empty">
-            No passkeys yet. Add one to sign in without a password.
+            {t(SETTINGS_KEYS.security.passkeys.empty)}
           </p>
         ) : (
           passkeys.map((passkey) => (
@@ -266,18 +324,20 @@ function PasskeysCard() {
               data-testid="passkey-row"
             >
               <div className="flex items-center gap-2 text-sm">
-                <Fingerprint className="text-muted-foreground h-4 w-4" />
+                <Fingerprint className="text-muted-foreground" aria-hidden />
                 {passkey.name}
               </div>
               <Button
                 variant="ghost"
                 size="icon-sm"
-                aria-label={`Remove ${passkey.name}`}
+                aria-label={t(SETTINGS_KEYS.security.passkeys.removeAria, {
+                  name: passkey.name,
+                })}
                 onClick={() => remove.mutate(passkey.id)}
                 disabled={remove.isPending}
                 data-testid="passkey-remove"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 />
               </Button>
             </div>
           ))
@@ -292,32 +352,33 @@ function PasskeysCard() {
       >
         <DialogContent data-testid="passkey-add-dialog">
           <DialogHeader>
-            <DialogTitle>Add a passkey</DialogTitle>
+            <DialogTitle>{t(SETTINGS_KEYS.security.passkeys.addTitle)}</DialogTitle>
             <DialogDescription>
-              Name it so you can recognize it later. Your device will prompt you to create
-              the passkey.
+              {t(SETTINGS_KEYS.security.passkeys.addDescription)}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-1.5">
-            <Label htmlFor="passkey-name">Name</Label>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="passkey-name">
+              {t(SETTINGS_KEYS.security.passkeys.nameLabel)}
+            </Label>
             <Input
               id="passkey-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="MacBook Touch ID"
+              placeholder={t(SETTINGS_KEYS.security.passkeys.namePlaceholder)}
               data-testid="passkey-name"
             />
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={closeAdd}>
-              Cancel
+              {t(SETTINGS_KEYS.security.passkeys.cancel)}
             </Button>
             <Button
               onClick={submitAdd}
               disabled={register.isPending}
               data-testid="passkey-add-submit"
             >
-              Add passkey
+              {t(SETTINGS_KEYS.security.passkeys.submit)}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -332,12 +393,18 @@ function PasskeysCard() {
  * own panel (FE-31), so they are no longer duplicated here.
  */
 export function AccountSecurityPanel() {
+  const { t } = useTranslation(SETTINGS_NS);
+  const { data: mfaEnabled = false } = useMfaStatus();
+  const { data: passkeys = [] } = usePasskeys();
+
   return (
-    <div className="space-y-6" data-testid="settings-section-security">
+    <div className="flex flex-col gap-6" data-testid="settings-section-security">
       <SectionHeader
-        title="Security"
-        description="Two-factor authentication and passkeys."
+        title={t(SETTINGS_KEYS.security.heading)}
+        description={t(SETTINGS_KEYS.security.description)}
       />
+
+      <SecurityOverviewCard mfaEnabled={mfaEnabled} passkeyCount={passkeys.length} />
 
       <MfaCard />
 

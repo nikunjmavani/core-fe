@@ -2,15 +2,40 @@
 import { ExpirationPlugin } from 'workbox-expiration';
 import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
-import { CacheFirst } from 'workbox-strategies';
+import { CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 
 declare const self: ServiceWorkerGlobalScope;
+
+/** Heavy deferred chunks — precache shell only; fetch at runtime when needed. */
+const DEFERRED_PRECACH_PATTERN =
+  /\/(sentry|posthog|SettingsModal|dashboard\.route|iconset-phosphor|iconset-tabler|CommandPalette|AppearanceDialog|LanguageDialog)-/;
+
+function shouldPrecache(entry: string | { url: string }): boolean {
+  const url = typeof entry === 'string' ? entry : entry.url;
+  return !DEFERRED_PRECACH_PATTERN.test(url);
+}
 
 // Clean old caches on SW update
 cleanupOutdatedCaches();
 
-// Precache all assets from the build manifest injected by vite-plugin-pwa
-precacheAndRoute(self.__WB_MANIFEST);
+const manifest = self.__WB_MANIFEST.filter(shouldPrecache);
+precacheAndRoute(manifest);
+
+// Lazy JS/CSS chunks — cache on first navigation, reuse on repeat visits
+registerRoute(
+  ({ request, url }) =>
+    url.origin === self.location.origin &&
+    (request.destination === 'script' || request.destination === 'style'),
+  new StaleWhileRevalidate({
+    cacheName: 'app-assets',
+    plugins: [
+      new ExpirationPlugin({
+        maxEntries: 80,
+        maxAgeSeconds: 7 * 24 * 60 * 60,
+      }),
+    ],
+  }),
+);
 
 // Cache fonts with CacheFirst
 registerRoute(

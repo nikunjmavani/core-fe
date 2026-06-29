@@ -1,7 +1,15 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { type Control, Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
+import {
+  SETTINGS_KEYS,
+  SETTINGS_NS,
+} from '@/shared/components/SettingsModal/settings.constants.ts';
+import { useRegisterSettingsDirty } from '@/shared/components/SettingsModal/settings-dirty.tsx';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -84,6 +92,8 @@ function toDefaults(values?: Partial<ProfileInput>): ProfileInput {
  * REPLACE_WITH_API: PATCH /api/v1/users/me
  */
 export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFormProps) {
+  const { t } = useTranslation(SETTINGS_NS);
+  const panels = SETTINGS_KEYS.panels.profile;
   const [showConfirm, setShowConfirm] = useState(false);
 
   const {
@@ -98,6 +108,8 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
     defaultValues: toDefaults(defaultValues),
   });
 
+  useRegisterSettingsDirty('profile', isDirty && !showConfirm);
+
   useEffect(() => {
     if (!onValuesChange) return undefined;
     // eslint-disable-next-line react-hooks/incompatible-library -- watch() subscription is intentional and cleaned up below
@@ -110,7 +122,7 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
   const onConfirmedSubmit = handleSubmit((values) => {
     setShowConfirm(false);
     reset(values);
-    notify.success('Profile updated');
+    notify.success(i18n.t(ERRORS_KEYS.frontend.profileUpdated, { ns: ERRORS_NS }));
   });
 
   return (
@@ -217,27 +229,27 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
           disabled={isSubmitting || !isDirty}
           data-testid="profile-submit"
         >
-          {isSubmitting ? 'Saving...' : 'Save changes'}
+          {isSubmitting ? t(panels.saving) : t(panels.save)}
         </Button>
       </form>
 
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Save profile changes?</AlertDialogTitle>
+            <AlertDialogTitle>{t(panels.confirmTitle)}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to update your profile information?
+              {t(panels.confirmDescription)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel data-testid="profile-confirm-cancel">
-              Cancel
+              {t(panels.confirmCancel)}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => void onConfirmedSubmit()}
               data-testid="profile-confirm-save"
             >
-              Save changes
+              {t(panels.confirmSave)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

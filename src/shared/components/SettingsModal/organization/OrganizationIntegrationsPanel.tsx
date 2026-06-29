@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import type { ApiKey } from '@/shared/api/organization-contracts.ts';
 import {
   createWebhookSchema,
@@ -8,7 +10,10 @@ import {
 } from '@/shared/api/webhook-contracts.ts';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/index.ts';
 import { EmptyState } from '@/shared/components/EmptyState/index.ts';
+import { FormattedDate } from '@/shared/components/FormattedDate/index.ts';
+import { SectionHeader } from '@/shared/components/SettingsModal/SettingsPanelShell.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
+import { Card } from '@/shared/components/ui/card.tsx';
 import {
   Dialog,
   DialogContent,
@@ -29,12 +34,6 @@ import {
 } from '@/shared/hooks/useWebhooks/index.ts';
 import { Boxes, Plus, Trash2 } from '@/shared/icons/index.ts';
 
-import { SectionHeader } from '../SettingsPanelShell.tsx';
-
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(new Date(iso));
-}
-
 function useCanManageIntegrations(): boolean {
   return useCan({ permission: 'role:manage', teamOrganizationOnly: true });
 }
@@ -52,7 +51,7 @@ function ApiKeysSection() {
       {isLoading ? (
         <div className="space-y-2" data-testid="apikeys-loading">
           {['a', 'b'].map((key) => (
-            <Skeleton key={key} className="h-14 w-full rounded-lg" />
+            <Skeleton key={key} className="h-14 w-full" />
           ))}
         </div>
       ) : null}
@@ -69,32 +68,31 @@ function ApiKeysSection() {
         />
       ) : null}
       {keys && keys.length > 0 ? (
-        <ul
-          className="divide-border bg-card divide-y rounded-lg border"
-          data-testid="apikeys-list"
-        >
-          {keys.map((key) => (
-            <li key={key.id} className="flex items-center gap-3 p-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{key.name}</p>
-                <p className="text-muted-foreground truncate font-mono text-xs">
-                  {key.prefix}•••••••• · added {formatDate(key.createdAt)}
-                </p>
-              </div>
-              {canManage ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Revoke ${key.name}`}
-                  onClick={() => setToRevoke(key)}
-                  data-testid={`apikey-revoke-${key.id}`}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <Card className="gap-0 overflow-hidden py-0">
+          <ul className="divide-border divide-y" data-testid="apikeys-list">
+            {keys.map((key) => (
+              <li key={key.id} className="flex items-center gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{key.name}</p>
+                  <p className="text-muted-foreground truncate font-mono text-xs">
+                    {key.prefix}•••••••• · added <FormattedDate value={key.createdAt} />
+                  </p>
+                </div>
+                {canManage ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Revoke ${key.name}`}
+                    onClick={() => setToRevoke(key)}
+                    data-testid={`apikey-revoke-${key.id}`}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </Card>
       ) : null}
       <ConfirmDialog
         open={toRevoke !== null}
@@ -134,7 +132,10 @@ function WebhooksSection() {
   function submit() {
     const parsed = createWebhookSchema.safeParse({ url, events });
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Check the form');
+      setError(
+        parsed.error.issues[0]?.message ??
+          i18n.t(ERRORS_KEYS.frontend.organization.formCheck, { ns: ERRORS_NS }),
+      );
       return;
     }
     setError(null);
@@ -165,7 +166,7 @@ function WebhooksSection() {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-14 w-full rounded-lg" data-testid="webhooks-loading" />
+        <Skeleton className="h-14 w-full" data-testid="webhooks-loading" />
       ) : null}
 
       {hooks && hooks.length === 0 ? (
@@ -177,32 +178,31 @@ function WebhooksSection() {
       ) : null}
 
       {hooks && hooks.length > 0 ? (
-        <ul
-          className="divide-border bg-card divide-y rounded-lg border"
-          data-testid="webhooks-list"
-        >
-          {hooks.map((hook) => (
-            <li key={hook.id} className="flex items-center gap-3 p-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-mono text-sm">{hook.url}</p>
-                <p className="text-muted-foreground truncate text-xs">
-                  {hook.events.join(', ')}
-                </p>
-              </div>
-              {canManage ? (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Delete webhook ${hook.url}`}
-                  onClick={() => setToDelete(hook)}
-                  data-testid={`webhook-delete-${hook.id}`}
-                >
-                  <Trash2 className="size-4" />
-                </Button>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+        <Card className="gap-0 overflow-hidden py-0">
+          <ul className="divide-border divide-y" data-testid="webhooks-list">
+            {hooks.map((hook) => (
+              <li key={hook.id} className="flex items-center gap-3 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-mono text-sm">{hook.url}</p>
+                  <p className="text-muted-foreground truncate text-xs">
+                    {hook.events.join(', ')}
+                  </p>
+                </div>
+                {canManage ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Delete webhook ${hook.url}`}
+                    onClick={() => setToDelete(hook)}
+                    data-testid={`webhook-delete-${hook.id}`}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </Card>
       ) : null}
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>

@@ -10,13 +10,27 @@ import {
 } from '@tanstack/react-router';
 import { Suspense } from 'react';
 
-import { requireOrgStatus, resolveActiveOrg } from '@/app/guards/org-gates.ts';
+import {
+  requireOrgStatus,
+  requirePersonalDashboardWorkspace,
+  requirePersonalDeployment,
+  requireProvisionedWorkspace,
+  requireTeamDeployment,
+  resolveActiveOrg,
+} from '@/app/guards/org-gates.ts';
+import { requireOnboardingWorkspace } from '@/app/guards/route-guards.ts';
 import { redirectIfAuthenticated, requireAuth } from '@/core/rbac/guards.ts';
-import { APP_TITLE, composePageTitle, manifestHead } from '@/lib/routes/page-head.ts';
+import { toGateContext } from '@/core/security/gate-context.ts';
+import { gatewayFromManifest } from '@/core/security/gateway.ts';
+import {
+  APP_DESCRIPTION,
+  APP_TITLE,
+  composePageTitle,
+  manifestHead,
+} from '@/lib/routes/page-head.ts';
 import { parseInvitationIdParam } from '@/lib/routes/params.ts';
 import { manifest as acceptInviteManifest } from '@/pages/accept-invite/accept-invite.manifest.ts';
 import { manifest as callbackManifest } from '@/pages/callback/callback.manifest.ts';
-import { manifest as forgotPasswordManifest } from '@/pages/forgot-password/forgot-password.manifest.ts';
 import { manifest as loginManifest } from '@/pages/login/login.manifest.ts';
 import { manifest as mfaManifest } from '@/pages/mfa/mfa.manifest.ts';
 import { manifest as onboardingManifest } from '@/pages/onboarding/onboarding.manifest.ts';
@@ -24,13 +38,11 @@ import { manifest as dashboardManifest } from '@/pages/organization/$organizatio
 import { manifest as organizationShellManifest } from '@/pages/organization/$organizationSlug/organization-slug.manifest.ts';
 import { manifest as suspendedManifest } from '@/pages/organization/$organizationSlug/suspended/suspended.manifest.ts';
 import { manifest as organizationPickerManifest } from '@/pages/organization/organization.manifest.ts';
-import { manifest as registerManifest } from '@/pages/register/register.manifest.ts';
-import { manifest as resetPasswordManifest } from '@/pages/reset-password/reset-password.manifest.ts';
-import { manifest as verifyEmailManifest } from '@/pages/verify-email/verify-email.manifest.ts';
 import { AppearanceDialogLazy } from '@/shared/components/AppearanceDialog/index.ts';
 import { ConsentBanner } from '@/shared/components/ConsentBanner/index.ts';
-import { FloatingSettingsButton } from '@/shared/components/FloatingSettingsButton/index.ts';
+import { FloatingEdgeControls } from '@/shared/components/FloatingEdgeControls/index.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
+import { LanguageDialogLazy } from '@/shared/components/LanguageDialog/index.ts';
 import { OfflineIndicator } from '@/shared/components/OfflineIndicator/index.ts';
 import { RouteAnnouncer } from '@/shared/components/RouteAnnouncer/index.ts';
 import { RouteErrorBoundary } from '@/shared/components/RouteErrorBoundary/index.ts';
@@ -53,22 +65,6 @@ const AuthLayout = lazyRouteComponent(
 );
 const LoginPage = lazyRouteComponent(
   () => import('@/pages/login/login.route.tsx'),
-  'Component',
-);
-const RegisterPage = lazyRouteComponent(
-  () => import('@/pages/register/register.route.tsx'),
-  'Component',
-);
-const ForgotPasswordPage = lazyRouteComponent(
-  () => import('@/pages/forgot-password/forgot-password.route.tsx'),
-  'Component',
-);
-const ResetPasswordPage = lazyRouteComponent(
-  () => import('@/pages/reset-password/reset-password.route.tsx'),
-  'Component',
-);
-const VerifyEmailPage = lazyRouteComponent(
-  () => import('@/pages/verify-email/verify-email.route.tsx'),
   'Component',
 );
 const MfaPage = lazyRouteComponent(
@@ -116,14 +112,15 @@ const NotFoundPage = lazyRouteComponent(
   () => import('@/app/routes/NotFoundPage.tsx'),
   'Component',
 );
+const PublicLayout = lazyRouteComponent(
+  () => import('@/shared/layouts/PublicLayout/index.ts'),
+  'PublicLayout',
+);
 
 // ── Root ──
 const rootRoute = createRootRoute({
   head: () => ({
-    meta: [
-      { title: APP_TITLE },
-      { name: 'description', content: 'Enterprise admin dashboard' },
-    ],
+    meta: [{ title: APP_TITLE }, { name: 'description', content: APP_DESCRIPTION }],
   }),
   component: () => (
     <>
@@ -136,10 +133,12 @@ const rootRoute = createRootRoute({
       </div>
       {/* Global hash-driven settings modal — overlays any page (#settings/…). */}
       <SettingsModalLazy />
-      {/* Right-edge handle: open Appearance from anywhere (signed-in, unlocked). */}
-      <FloatingSettingsButton />
+      {/* Right-edge handles: appearance (when unlocked) + language. */}
+      <FloatingEdgeControls />
       {/* Dedicated Appearance dialog — its own surface, opened via useUIStore. */}
       <AppearanceDialogLazy />
+      {/* Dedicated Language & region dialog — mirrors Appearance, opened via useUIStore. */}
+      <LanguageDialogLazy />
       <OfflineIndicator />
       {/* aria-live announcer: reads the new document.title on navigation. */}
       <RouteAnnouncer />
@@ -162,7 +161,9 @@ const authShellRoute = createRoute({
   id: 'auth-shell',
   // Guest-only gateway (FE-18): a signed-in user never sees any auth page —
   // one redirect here covers every child (login, register, reset, mfa, …).
-  beforeLoad: () => redirectIfAuthenticated(),
+  beforeLoad: async () => {
+    await redirectIfAuthenticated();
+  },
   component: () => (
     <Suspense fallback={<FullPageSpinner />}>
       <AuthLayout>
@@ -187,42 +188,6 @@ const loginRoute = createRoute({
   errorComponent: RouteErrorBoundary,
 });
 
-const registerRoute = createRoute({
-  getParentRoute: () => authShellRoute,
-  path: '/register',
-  head: manifestHead(registerManifest),
-  // `redirect` = returnTo when a deep link routes a guest here (FE-59).
-  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
-  }),
-  component: RegisterPage,
-  errorComponent: RouteErrorBoundary,
-});
-
-const forgotPasswordRoute = createRoute({
-  getParentRoute: () => authShellRoute,
-  path: '/forgot-password',
-  head: manifestHead(forgotPasswordManifest),
-  component: ForgotPasswordPage,
-  errorComponent: RouteErrorBoundary,
-});
-
-const resetPasswordRoute = createRoute({
-  getParentRoute: () => authShellRoute,
-  path: '/reset-password',
-  head: manifestHead(resetPasswordManifest),
-  component: ResetPasswordPage,
-  errorComponent: RouteErrorBoundary,
-});
-
-const verifyEmailRoute = createRoute({
-  getParentRoute: () => authShellRoute,
-  path: '/verify-email',
-  head: manifestHead(verifyEmailManifest),
-  component: VerifyEmailPage,
-  errorComponent: RouteErrorBoundary,
-});
-
 const mfaRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/mfa',
@@ -231,11 +196,25 @@ const mfaRoute = createRoute({
   errorComponent: RouteErrorBoundary,
 });
 
-// One provider-agnostic OAuth / magic-link return URL for all third parties —
+// One provider-agnostic OAuth return URL for all third parties —
 // the backend brokers each provider's dance and lands every flow on /callback.
-// Outside the auth shell: it renders a bare spinner, not the split-screen form.
-const callbackRoute = createRoute({
+
+// ── Public shell ──
+// Pathless layout for callback, onboarding, accept-invite, and unauthorized —
+// centered chrome without the auth split-screen or app sidebar.
+const publicShellRoute = createRoute({
   getParentRoute: () => rootRoute,
+  id: 'public-shell',
+  component: () => (
+    <Suspense fallback={<FullPageSpinner />}>
+      <PublicLayout />
+    </Suspense>
+  ),
+  errorComponent: RouteErrorBoundary,
+});
+
+const callbackRoute = createRoute({
+  getParentRoute: () => publicShellRoute,
   path: '/callback',
   head: manifestHead(callbackManifest),
   component: CallbackPage,
@@ -243,16 +222,19 @@ const callbackRoute = createRoute({
 });
 
 const onboardingRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => publicShellRoute,
   path: '/onboarding',
   head: manifestHead(onboardingManifest),
-  beforeLoad: ({ location }) => requireAuth(location.href),
+  beforeLoad: async ({ location }) => {
+    await requireAuth(location.href);
+    await requireOnboardingWorkspace();
+  },
   component: OnboardingPage,
   errorComponent: RouteErrorBoundary,
 });
 
 const acceptInviteRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => publicShellRoute,
   path: '/accept-invite/$invitationId',
   head: manifestHead(acceptInviteManifest),
   beforeLoad: ({ params }) => {
@@ -263,7 +245,7 @@ const acceptInviteRoute = createRoute({
 });
 
 const unauthorizedRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => publicShellRoute,
   path: '/unauthorized',
   head: () => ({ meta: [{ title: composePageTitle('Unauthorized') }] }),
   component: UnauthorizedPage,
@@ -280,7 +262,7 @@ const indexRoute = createRoute({
     // Resolving `/` triggers fetches and always throws a redirect — pointless
     // (and side-effectful) for hover preloads.
     if (preload) return;
-    requireAuth(location.href);
+    await requireAuth(location.href);
     throw redirect(await resolveRootRedirect());
   },
   component: () => null,
@@ -291,7 +273,11 @@ const organizationPickerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/organization',
   head: manifestHead(organizationPickerManifest),
-  beforeLoad: ({ location }) => requireAuth(location.href),
+  beforeLoad: async ({ location, preload }) => {
+    await requireAuth(location.href);
+    if (preload) return;
+    await requireProvisionedWorkspace({ params: {} });
+  },
   component: OrganizationPickerPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -305,11 +291,10 @@ const organizationShellRoute = createRoute({
   path: '/organization/$organizationSlug',
   head: manifestHead(organizationShellManifest),
   beforeLoad: async ({ location, params, preload }) => {
-    requireAuth(location.href);
-    // Context sync mutates the organization store and fetches permissions —
-    // never run it for a hover preload (the chunk still preloads). With
-    // defaultPreloadStaleTime: 0 the guard re-runs on real navigation.
+    await requireAuth(location.href);
     if (preload) return;
+    requireTeamDeployment({ params });
+    await requireProvisionedWorkspace({ params });
     await resolveActiveOrg({ params });
   },
   component: function OrganizationShellRoute() {
@@ -328,8 +313,9 @@ const organizationDashboardRoute = createRoute({
   getParentRoute: () => organizationShellRoute,
   path: 'dashboard',
   head: manifestHead(dashboardManifest),
-  beforeLoad: ({ params, preload }) => {
+  beforeLoad: async ({ params, preload, location }) => {
     if (preload) return;
+    await gatewayFromManifest(dashboardManifest)(toGateContext(location, params));
     requireOrgStatus({ params });
   },
   component: DashboardPage,
@@ -354,9 +340,11 @@ const organizationSuspendedRoute = createRoute({
 const personalShellRoute = createRoute({
   getParentRoute: () => rootRoute,
   id: 'personal-app',
-  beforeLoad: ({ location, preload }) => {
+  beforeLoad: async ({ location, preload }) => {
     if (preload) return;
-    requireAuth(location.href);
+    await requireAuth(location.href);
+    requirePersonalDeployment({});
+    await requirePersonalDashboardWorkspace({});
   },
   component: function PersonalShellRoute() {
     return (
@@ -371,7 +359,11 @@ const personalShellRoute = createRoute({
 const personalDashboardRoute = createRoute({
   getParentRoute: () => personalShellRoute,
   path: '/dashboard',
-  head: () => ({ meta: [{ title: composePageTitle('Dashboard') }] }),
+  head: manifestHead(dashboardManifest),
+  beforeLoad: async ({ preload, location, params }) => {
+    if (preload) return;
+    await gatewayFromManifest(dashboardManifest)(toGateContext(location, params));
+  },
   component: DashboardPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -393,18 +385,13 @@ const notFoundRoute = createRoute({
 // ── Tree ──
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  authShellRoute.addChildren([
-    loginRoute,
-    registerRoute,
-    forgotPasswordRoute,
-    resetPasswordRoute,
-    verifyEmailRoute,
-    mfaRoute,
+  authShellRoute.addChildren([loginRoute, mfaRoute]),
+  publicShellRoute.addChildren([
+    callbackRoute,
+    onboardingRoute,
+    acceptInviteRoute,
+    unauthorizedRoute,
   ]),
-  callbackRoute,
-  onboardingRoute,
-  acceptInviteRoute,
-  unauthorizedRoute,
   organizationPickerRoute,
   organizationShellRoute.addChildren([
     organizationDashboardRoute,

@@ -1,3 +1,4 @@
+import type { LucideIcon } from '@/shared/icons/index.ts';
 import {
   Bell,
   Building2,
@@ -6,13 +7,17 @@ import {
   MonitorSmartphone,
   Plug,
   Shield,
+  ShieldCheck,
   User,
   UserCog,
   Users,
-} from 'lucide-react';
-
-import type { LucideIcon } from '@/shared/icons/index.ts';
+} from '@/shared/icons/index.ts';
 import type { OrganizationType } from '@/shared/tenancy/me-context.ts';
+
+import {
+  SETTINGS_GROUP_LABEL_KEYS,
+  SETTINGS_SECTION_LABEL_KEYS,
+} from './settings.constants.ts';
 
 /**
  * Settings registry — two scopes, one modal (routing-and-tenancy.md §7).
@@ -26,14 +31,14 @@ type AccountSettingsSection =
   | 'account'
   | 'security'
   | 'notifications'
-  | 'sessions';
+  | 'sessions'
+  | 'billing';
 
 export type OrganizationSettingsSection =
   | 'general'
   | 'members'
   | 'roles'
   | 'branches'
-  | 'billing'
   | 'integrations';
 
 export type SettingsSection = AccountSettingsSection | OrganizationSettingsSection;
@@ -45,8 +50,8 @@ export interface SettingsSectionRef {
 }
 
 export const SECTIONS_BY_SCOPE: Record<SettingsScope, readonly SettingsSection[]> = {
-  account: ['profile', 'account', 'security', 'notifications', 'sessions'],
-  organization: ['general', 'members', 'roles', 'branches', 'billing', 'integrations'],
+  account: ['profile', 'account', 'security', 'notifications', 'sessions', 'billing'],
+  organization: ['general', 'members', 'roles', 'branches', 'integrations'],
 };
 
 export const DEFAULT_SETTINGS: SettingsSectionRef = {
@@ -55,24 +60,21 @@ export const DEFAULT_SETTINGS: SettingsSectionRef = {
 };
 
 /**
- * Organization sections available per org type. **Personal** organizations are
- * intentionally lean — General + Billing only (members/roles/integrations need
- * a team). **Team** organizations get the full management set. `branches` is
- * omitted until it has a backend. Permission gating (settings-permissions.ts)
- * still applies on top of this.
+ * Organization sections available per org type. **Personal** organizations have
+ * no organization settings group — billing lives under Account. **Team**
+ * organizations get the full management set. `branches` is omitted until it has
+ * a backend. Permission gating (settings-permissions.ts) still applies on top.
  */
 export function sectionsForOrgType(
   type: OrganizationType,
 ): readonly OrganizationSettingsSection[] {
-  return type === 'TEAM'
-    ? ['general', 'members', 'roles', 'billing', 'integrations']
-    : ['general', 'billing'];
+  return type === 'TEAM' ? ['general', 'members', 'roles', 'integrations'] : [];
 }
 
 interface SettingsNavItem {
   scope: SettingsScope;
   section: SettingsSection;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   /** Keywords used by the search box; lowercase. */
   keywords: readonly string[];
@@ -80,95 +82,95 @@ interface SettingsNavItem {
 
 export interface SettingsNavGroup {
   scope: SettingsScope;
-  label: string;
+  labelKey: string;
   items: readonly SettingsNavItem[];
 }
 
 export const SETTINGS_NAV: readonly SettingsNavGroup[] = [
   {
     scope: 'account',
-    label: 'Account',
+    labelKey: SETTINGS_GROUP_LABEL_KEYS.account,
     items: [
       {
         scope: 'account',
         section: 'profile',
-        label: 'Profile',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.profile,
         icon: User,
         keywords: ['profile', 'name', 'bio', 'avatar', 'timezone', 'location'],
       },
       {
         scope: 'account',
         section: 'account',
-        label: 'Account',
+        labelKey: SETTINGS_GROUP_LABEL_KEYS.account,
         icon: UserCog,
         keywords: ['account', 'id', 'email', 'role', 'delete', 'deactivate'],
       },
       {
         scope: 'account',
         section: 'security',
-        label: 'Security',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.security,
         icon: Shield,
         keywords: ['security', 'mfa', 'two-factor', 'passkey', 'password'],
       },
       {
         scope: 'account',
         section: 'notifications',
-        label: 'Notifications',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.notifications,
         icon: Bell,
         keywords: ['notifications', 'email', 'alerts', 'push'],
       },
       {
         scope: 'account',
         section: 'sessions',
-        label: 'Sessions',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.sessions,
         icon: MonitorSmartphone,
         keywords: ['sessions', 'devices', 'sign out', 'active'],
+      },
+      {
+        scope: 'account',
+        section: 'billing',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.billing,
+        icon: CreditCard,
+        keywords: ['billing', 'plan', 'subscription', 'invoices', 'payment'],
       },
     ],
   },
   {
     scope: 'organization',
-    label: 'Organization',
+    labelKey: SETTINGS_GROUP_LABEL_KEYS.organization,
     items: [
       {
         scope: 'organization',
         section: 'general',
-        label: 'General',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.general,
         icon: Building2,
         keywords: ['organization', 'name', 'slug', 'general'],
       },
       {
         scope: 'organization',
         section: 'members',
-        label: 'Members',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.members,
         icon: Users,
         keywords: ['members', 'invitations', 'people', 'team'],
       },
       {
         scope: 'organization',
         section: 'roles',
-        label: 'Roles',
-        icon: Shield,
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.roles,
+        icon: ShieldCheck,
         keywords: ['roles', 'permissions', 'rbac'],
       },
       {
         scope: 'organization',
         section: 'branches',
-        label: 'Branches',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.branches,
         icon: GitBranch,
         keywords: ['branches', 'locations', 'sites'],
       },
       {
         scope: 'organization',
-        section: 'billing',
-        label: 'Billing',
-        icon: CreditCard,
-        keywords: ['billing', 'plan', 'subscription', 'invoices', 'payment'],
-      },
-      {
-        scope: 'organization',
         section: 'integrations',
-        label: 'Integrations',
+        labelKey: SETTINGS_SECTION_LABEL_KEYS.integrations,
         icon: Plug,
         keywords: ['integrations', 'webhooks', 'api keys', 'connect'],
       },
@@ -183,6 +185,7 @@ export const SETTINGS_NAV: readonly SettingsNavGroup[] = [
 export function filterNav(
   groups: readonly SettingsNavGroup[],
   query: string,
+  translate: (key: string) => string,
 ): readonly SettingsNavGroup[] {
   const q = query.trim().toLowerCase();
   if (!q) return groups;
@@ -191,7 +194,7 @@ export function filterNav(
       ...group,
       items: group.items.filter(
         (item) =>
-          item.label.toLowerCase().includes(q) ||
+          translate(item.labelKey).toLowerCase().includes(q) ||
           item.keywords.some((k) => k.includes(q)),
       ),
     }))

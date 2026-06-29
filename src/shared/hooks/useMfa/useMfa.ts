@@ -1,7 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import * as api from '@/shared/api/mfa-api.ts';
-import { notify } from '@/shared/notify/index.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
 const mfaQueryKey = ['auth', 'mfa'] as const;
 
@@ -17,25 +19,22 @@ export function useBeginMfaEnrollment() {
 
 /** Confirm enrollment with a TOTP code; refreshes status on success. */
 export function useConfirmMfaEnrollment() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (code: string) => api.confirmMfaEnrollment(code),
-    onSuccess: () => {
-      notify.success('Two-factor authentication enabled');
-      return queryClient.invalidateQueries({ queryKey: mfaQueryKey });
-    },
+    invalidateKeys: [mfaQueryKey],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.mfa.enableSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }
 
 /** Disable MFA; refreshes status on success. */
 export function useDisableMfa() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: () => api.disableMfa(),
-    onSuccess: () => {
-      notify.success('Two-factor authentication disabled');
-      return queryClient.invalidateQueries({ queryKey: mfaQueryKey });
-    },
-    onError: () => notify.error('Could not disable two-factor authentication'),
+    invalidateKeys: [mfaQueryKey],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.mfa.disableSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }

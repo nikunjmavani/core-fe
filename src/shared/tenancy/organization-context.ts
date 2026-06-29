@@ -50,7 +50,7 @@ export function deriveOrgContext(ctx: MeContext): void {
   const permissions = ctx.myPermissions.filter((p): p is OrganizationPermission =>
     VALID_PERMISSIONS.has(p),
   );
-  useOrganizationStore
-    .getState()
-    .setActiveOrganization(ctx.activeOrganization, permissions);
+  const store = useOrganizationStore.getState();
+  store.setDeploymentContext(ctx.deploymentFlags, ctx.personalOrganizationId);
+  store.setActiveOrganization(ctx.activeOrganization, permissions);
 }

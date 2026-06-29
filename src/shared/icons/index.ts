@@ -15,6 +15,7 @@ import {
   BellOff as LuBellOff,
   Boxes as LuBoxes,
   Building2 as LuBuilding2,
+  CalendarDays as LuCalendarDays,
   Check as LuCheck,
   CheckCircle2 as LuCheckCircle2,
   ChevronLeft as LuChevronLeft,
@@ -23,26 +24,34 @@ import {
   ChevronsRight as LuChevronsRight,
   ChevronsUpDown as LuChevronsUpDown,
   Copy as LuCopy,
+  CreditCard as LuCreditCard,
   Download as LuDownload,
   Eye as LuEye,
   EyeOff as LuEyeOff,
   Fingerprint as LuFingerprint,
+  GitBranch as LuGitBranch,
   Github as LuGithub,
+  Globe as LuGlobe,
+  Languages as LuLanguages,
   Laptop as LuLaptop,
   LayoutDashboard as LuLayoutDashboard,
   Loader2 as LuLoader2,
   LogOut as LuLogOut,
   Mail as LuMail,
   Menu as LuMenu,
+  Minus as LuMinus,
   Monitor as LuMonitor,
+  MonitorSmartphone as LuMonitorSmartphone,
   Moon as LuMoon,
   MoreHorizontal as LuMoreHorizontal,
   Palette as LuPalette,
+  Plug as LuPlug,
   Plus as LuPlus,
   Rocket as LuRocket,
   RotateCw as LuRotateCw,
   Search as LuSearch,
   Settings as LuSettings,
+  Shield as LuShield,
   ShieldAlert as LuShieldAlert,
   ShieldCheck as LuShieldCheck,
   SlidersHorizontal as LuSlidersHorizontal,
@@ -51,6 +60,8 @@ import {
   Sun as LuSun,
   Trash2 as LuTrash2,
   TriangleAlert as LuTriangleAlert,
+  User as LuUser,
+  UserCog as LuUserCog,
   UserPlus as LuUserPlus,
   Users as LuUsers,
   X as LuX,
@@ -75,6 +86,7 @@ const lucideIcons = {
   BellOff: LuBellOff,
   Boxes: LuBoxes,
   Building2: LuBuilding2,
+  CalendarDays: LuCalendarDays,
   Check: LuCheck,
   CheckCircle2: LuCheckCircle2,
   ChevronLeft: LuChevronLeft,
@@ -83,27 +95,35 @@ const lucideIcons = {
   ChevronsRight: LuChevronsRight,
   ChevronsUpDown: LuChevronsUpDown,
   Copy: LuCopy,
+  CreditCard: LuCreditCard,
   Download: LuDownload,
   Eye: LuEye,
   EyeOff: LuEyeOff,
   Fingerprint: LuFingerprint,
+  GitBranch: LuGitBranch,
   Github: LuGithub,
+  Globe: LuGlobe,
   Laptop: LuLaptop,
+  Languages: LuLanguages,
   LayoutDashboard: LuLayoutDashboard,
   Loader2: LuLoader2,
   LogOut: LuLogOut,
   Mail: LuMail,
   Menu: LuMenu,
+  Minus: LuMinus,
   Monitor: LuMonitor,
+  MonitorSmartphone: LuMonitorSmartphone,
   Moon: LuMoon,
   MoreHorizontal: LuMoreHorizontal,
   Palette: LuPalette,
   Plus: LuPlus,
+  Plug: LuPlug,
   Rocket: LuRocket,
   RotateCw: LuRotateCw,
   Search: LuSearch,
   Settings: LuSettings,
   ShieldAlert: LuShieldAlert,
+  Shield: LuShield,
   ShieldCheck: LuShieldCheck,
   SlidersHorizontal: LuSlidersHorizontal,
   Smartphone: LuSmartphone,
@@ -111,6 +131,8 @@ const lucideIcons = {
   Sun: LuSun,
   Trash2: LuTrash2,
   TriangleAlert: LuTriangleAlert,
+  User: LuUser,
+  UserCog: LuUserCog,
   UserPlus: LuUserPlus,
   Users: LuUsers,
   X: LuX,
@@ -143,6 +165,7 @@ export const Bell = makeIcon('Bell');
 export const BellOff = makeIcon('BellOff');
 export const Boxes = makeIcon('Boxes');
 export const Building2 = makeIcon('Building2');
+export const CalendarDays = makeIcon('CalendarDays');
 export const Check = makeIcon('Check');
 export const CheckCircle2 = makeIcon('CheckCircle2');
 export const ChevronLeft = makeIcon('ChevronLeft');
@@ -151,27 +174,35 @@ export const ChevronsLeft = makeIcon('ChevronsLeft');
 export const ChevronsRight = makeIcon('ChevronsRight');
 export const ChevronsUpDown = makeIcon('ChevronsUpDown');
 export const Copy = makeIcon('Copy');
+export const CreditCard = makeIcon('CreditCard');
 export const Download = makeIcon('Download');
 export const Eye = makeIcon('Eye');
 export const EyeOff = makeIcon('EyeOff');
 export const Fingerprint = makeIcon('Fingerprint');
+export const GitBranch = makeIcon('GitBranch');
 export const Github = makeIcon('Github');
+export const Globe = makeIcon('Globe');
 export const Laptop = makeIcon('Laptop');
+export const Languages = makeIcon('Languages');
 export const LayoutDashboard = makeIcon('LayoutDashboard');
 export const Loader2 = makeIcon('Loader2');
 export const LogOut = makeIcon('LogOut');
 export const Mail = makeIcon('Mail');
 export const Menu = makeIcon('Menu');
+export const Minus = makeIcon('Minus');
 export const Monitor = makeIcon('Monitor');
+export const MonitorSmartphone = makeIcon('MonitorSmartphone');
 export const Moon = makeIcon('Moon');
 export const MoreHorizontal = makeIcon('MoreHorizontal');
 export const Palette = makeIcon('Palette');
 export const Plus = makeIcon('Plus');
+export const Plug = makeIcon('Plug');
 export const Rocket = makeIcon('Rocket');
 export const RotateCw = makeIcon('RotateCw');
 export const Search = makeIcon('Search');
 export const Settings = makeIcon('Settings');
 export const ShieldAlert = makeIcon('ShieldAlert');
+export const Shield = makeIcon('Shield');
 export const ShieldCheck = makeIcon('ShieldCheck');
 export const SlidersHorizontal = makeIcon('SlidersHorizontal');
 export const Smartphone = makeIcon('Smartphone');
@@ -179,6 +210,8 @@ export const Sparkles = makeIcon('Sparkles');
 export const Sun = makeIcon('Sun');
 export const Trash2 = makeIcon('Trash2');
 export const TriangleAlert = makeIcon('TriangleAlert');
+export const User = makeIcon('User');
+export const UserCog = makeIcon('UserCog');
 export const UserPlus = makeIcon('UserPlus');
 export const Users = makeIcon('Users');
 export const X = makeIcon('X');

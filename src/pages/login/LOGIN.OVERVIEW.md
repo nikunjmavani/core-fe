@@ -1,33 +1,41 @@
-# `pages/login` — Sign-in page
+# `pages/login` — Unified auth entry
 
-Route: `/login`. Public, unauthenticated entry point where users sign in with
-email + password or one of the passwordless options (Google OAuth, passkey, magic link).
-Successful sign-in redirects to either the `?redirect=` target (if a safe internal path)
-or the dashboard (`/`).
+Route: `/login`. **Single public entry for both sign-in and sign-up.** Users never pick
+“login vs register”; the backend treats send uniformly and auto-signs up on first OTP verify
+for unknown email.
+
+**Email OTP** is open by default below OAuth and passkey. Alternate methods: Google, GitHub, passkey.
+
+New passwordless users → `/onboarding` → app.
+
+**Docs:** [unified-auth-flows.md](../../../docs/reference/unified-auth-flows.md) ·
+[unified-auth-otp-requirement.md](../../../docs/getting-started/requirements/unified-auth-otp-requirement.md)
 
 ## Files
 
-| File                         | Responsibility                                                                                                                              |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `login.route.tsx`            | Route marker — exports `Component` rendering `LoginPage` inside the shared `AuthLayout`, plus a `loader` enforcing the manifest permission. |
-| `login.manifest.ts`          | Page manifest (`path`, `testId`, `permission`, `kind`).                                                                                     |
-| `LoginPage.tsx`              | Thin top-level UI wrapper around `<LoginForm />`. Owns `data-testid="login-page"`.                                                          |
-| `forms/LoginForm/`           | Email + password form with client-side validation, cooldown after repeated failures, and post-login navigation.                             |
-| `forms/PasswordlessOptions/` | Google OAuth + passkey + magic-link buttons shown above the form.                                                                           |
-| `hooks/useCooldownClock/`    | Interval-driven `now` clock that ticks while a cooldown is active (used by the submit button countdown).                                    |
+| File                     | Responsibility                                            |
+| ------------------------ | --------------------------------------------------------- |
+| `login.route.tsx`        | Route marker — exports `Component` rendering `LoginPage`. |
+| `LoginPage.tsx`          | Thin wrapper around shared `<AuthForm />`.                |
+| `shared/forms/AuthForm/` | Unified auth UI — default email OTP + provider buttons.   |
+
+## Flow
+
+1. **Email (default):** email → Continue → 6-digit code → verify → onboarding (new) or app (returning)
+   - On the **verify** step, OAuth/passkey and the full welcome copy are hidden — focused “Check your email” + code entry only.
+2. **OAuth / passkey:** `/callback` → `silentRefresh()` → post-auth resolver (onboarding or dashboard)
+
+## Login + signup rules (product)
+
+| Step         | FE                         | BE                                                            |
+| ------------ | -------------------------- | ------------------------------------------------------------- |
+| Send OTP     | Same UI for everyone       | `201` + uniform body — no “account exists” leak               |
+| Verify OTP   | Same code UI               | Known user → session; unknown → auto-create account + session |
+| After verify | New signup → `/onboarding` | Personal org provisioned on first verify (BE)                 |
 
 ## Test IDs
 
-- `login-page` — outer page container
-- `login-form` — the email/password form root
-- `login-email`, `login-password`, `login-password-toggle`, `login-submit`
-- `login-email-error`, `login-password-error`, `login-error`
-- `login-oauth-<provider>` (e.g. `login-oauth-google`, `login-oauth-github`), `login-passkey`, `login-magic-link`
-- `magic-link-email`, `magic-link-send` (magic-link panel)
-- `login-link-forgot-password`, `login-link-sign-up`
-
-## Related
-
-- Shared auth contracts: `shared/api/auth-contracts.ts`
-- Shared auth API calls: `shared/api/auth-api.ts`
-- Auth layout: `src/shared/layouts/AuthLayout/AuthLayout.tsx`
+- `auth-form`, `auth-email-panel`, `auth-email-verify-panel`
+- `auth-email`, `auth-email-submit`, `auth-email-code`, `auth-email-verify`
+- `auth-email-resend`, `auth-email-change`
+- `auth-continue-google`, `auth-continue-github`, `auth-continue-passkey`

@@ -1,7 +1,7 @@
 /**
  * Idle session timeout.
  *
- * Tracks user activity (mouse, keyboard, touch, scroll) and triggers
+ * Tracks intentional user activity (click, key, touch) and triggers
  * a warning callback when the user has been idle for `warnAfterMs`.
  * If the user does not interact within the grace period (`logoutAfterMs - warnAfterMs`),
  * the logout callback fires.
@@ -33,10 +33,9 @@ interface IdleTimeoutOptions {
 
 const ACTIVITY_EVENTS: Array<keyof DocumentEventMap> = [
   'mousedown',
+  'click',
   'keydown',
   'touchstart',
-  'scroll',
-  'mousemove',
 ];
 
 /** Throttle activity resets to avoid excessive timer restarts */

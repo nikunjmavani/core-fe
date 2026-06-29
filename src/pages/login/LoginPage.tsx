@@ -1,14 +1,15 @@
-import { LoginForm } from './forms/LoginForm/index.ts';
+import { AuthForm } from '@/shared/forms/AuthForm/index.ts';
+
+import { LOGIN_TEST_IDS } from './login.constants.ts';
 
 /**
- * Top-level UI for the `/login` route island. Thin wrapper that hosts the
- * `LoginForm`; the auth shell (logo, background) comes from `AuthLayout`
- * mounted by `login.route.tsx`.
+ * Top-level UI for the unified auth route (`/login`). One screen for sign-in
+ * and sign-up — continue with Google, GitHub, passkey, or email OTP.
  */
 export function LoginPage() {
   return (
-    <div data-testid="login-page">
-      <LoginForm />
+    <div data-testid={LOGIN_TEST_IDS.page}>
+      <AuthForm />
     </div>
   );
 }

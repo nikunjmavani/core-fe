@@ -2,15 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('posthog-js', () => ({
   default: {
-    init: vi.fn(),
     capture: vi.fn(),
-    reset: vi.fn(),
-    __loaded: false,
+    __loaded: true,
   },
 }));
 
 vi.mock('@/core/config/env.ts', () => ({
-  config: {
+  platformConfig: {
     posthogKey: 'phc_test_key',
     posthogHost: 'https://us.i.posthog.com',
   },
@@ -35,10 +33,14 @@ describe('captureAnalyticsConsentDecision', () => {
 
   it('captures a PostHog event when consent is granted', async () => {
     await captureAnalyticsConsentDecision('granted');
-
-    expect(posthog.capture).toHaveBeenCalledWith(ANALYTICS_CONSENT_EVENT, {
-      decision: 'granted',
-      source: 'consent_banner',
+    await vi.waitFor(() => {
+      expect(posthog.capture).toHaveBeenCalledWith(
+        ANALYTICS_CONSENT_EVENT,
+        expect.objectContaining({
+          decision: 'granted',
+          source: 'consent_banner',
+        }),
+      );
     });
   });
 

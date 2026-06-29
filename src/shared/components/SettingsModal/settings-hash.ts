@@ -25,6 +25,27 @@ function normalize(hash: string): string {
   return hash.startsWith('#') ? hash.slice(1) : hash;
 }
 
+/**
+ * Settings hash path only — `settings/<scope>/<section>` with any trailing
+ * `?query` or `#fragment` removed. Page-level search params (`?q=…` before
+ * `#`) are untouched; only garbage appended to the hash itself is stripped.
+ */
+export function settingsHashPath(hash: string): string {
+  const h = normalize(hash);
+  if (!isSettingsHash(h)) return h;
+  return h.split(/[?#]/)[0] ?? h;
+}
+
+/** Normalized hash path (no leading `#`, no trailing `?…`). */
+export function normalizeSettingsHash(hash: string): string {
+  return settingsHashPath(hash);
+}
+
+/** True when the location hash exactly matches the canonical deep link for `ref`. */
+export function isCanonicalSettingsHash(hash: string, ref: SettingsSectionRef): boolean {
+  return normalize(hash) === settingsHash(ref.scope, ref.section);
+}
+
 /** True when the hash addresses the settings modal at all. */
 export function isSettingsHash(hash: string): boolean {
   const h = normalize(hash);
@@ -38,15 +59,19 @@ function isSectionOf(scope: SettingsScope, section: string): section is Settings
 
 /**
  * Parse a location hash. Returns `null` when the hash is not settings-related
- * (modal closed). Invalid scope/section combinations fall back to
- * `account/profile` rather than erroring — a mistyped deep link still opens
- * something useful.
+ * (modal closed). Malformed scope/section pairs fall back to account/profile.
+ * Context-aware availability (permissions, org type) is applied in
+ * {@link resolveSettingsSection} inside the modal.
  */
 export function parseSettingsHash(hash: string): SettingsSectionRef | null {
-  const h = normalize(hash);
+  const h = settingsHashPath(hash);
   if (!isSettingsHash(h)) return null;
 
   const [, scope, section] = h.split('/');
+  // Legacy deep links: billing moved from organization → account scope.
+  if (scope === 'organization' && section === 'billing') {
+    return { scope: 'account', section: 'billing' };
+  }
   if (scope === 'account' || scope === 'organization') {
     if (section && isSectionOf(scope, section)) {
       return { scope, section };

@@ -5,16 +5,6 @@ import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.
 
 import { type MeContext, meContextQueryKey } from './me-context.ts';
 
-const useMockApiRef = vi.hoisted(() => ({ value: false }));
-vi.mock('@/core/config/env.ts', () => ({
-  config: {
-    get useMockApi() {
-      return useMockApiRef.value;
-    },
-    apiBaseUrl: '',
-  },
-}));
-
 const { postMock, setAccessTokenMock } = vi.hoisted(() => ({
   postMock: vi.fn(),
   setAccessTokenMock: vi.fn(),
@@ -78,6 +68,8 @@ const BASE_CTX: MeContext = {
       isActive: false,
     },
   ],
+  deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+  personalOrganizationId: PERSONAL_ID,
 };
 
 const PERSONAL_WIRE = {
@@ -92,7 +84,6 @@ const PERSONAL_WIRE = {
 };
 
 beforeEach(() => {
-  useMockApiRef.value = false;
   postMock.mockReset();
   setAccessTokenMock.mockReset();
   useOrganizationStore.getState().clearOrganization();
@@ -149,15 +140,5 @@ describe('tenancy/switch', () => {
       expect.stringContaining('/auth/switch-to-organization'),
       { organization_id: TEAM_ID },
     );
-  });
-
-  it('flips the active org locally in mock mode (no network)', async () => {
-    useMockApiRef.value = true;
-
-    const result = await switchToPersonal();
-
-    expect(postMock).not.toHaveBeenCalled();
-    expect(result?.activeOrganization?.type).toBe('PERSONAL');
-    expect(result?.organizations.find((o) => o.type === 'PERSONAL')?.isActive).toBe(true);
   });
 });

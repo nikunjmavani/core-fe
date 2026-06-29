@@ -1,14 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const useMockApiRef = vi.hoisted(() => ({ value: false }));
-vi.mock('@/core/config/env.ts', () => ({
-  config: {
-    get useMockApi() {
-      return useMockApiRef.value;
-    },
-  },
-}));
-
 const { getMock, postMock, patchMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
@@ -23,7 +14,6 @@ import {
   createApiKey,
   createRole,
   deleteRole,
-  getSubscription,
   listApiKeys,
   listMembers,
   listRoles,
@@ -31,7 +21,6 @@ import {
   revokeApiKey,
   updateMemberRole,
   updateMemberStatus,
-  updateSubscriptionPlan,
 } from './organization-api.ts';
 
 const TS = '2026-01-01T00:00:00.000Z';
@@ -56,7 +45,6 @@ const WIRE_MEMBER = {
 };
 
 beforeEach(() => {
-  useMockApiRef.value = false;
   getMock.mockReset();
   postMock.mockReset();
   patchMock.mockReset();
@@ -108,10 +96,10 @@ describe('organization-api memberships (live)', () => {
     );
   });
 
-  it('updateMemberRole requires a role id in live mode', async () => {
+  it('updateMemberRole requires a role id', async () => {
     await expect(
       updateMemberRole({ membershipId: 'mem_x', role: 'admin' }),
-    ).rejects.toThrow(/role id is required/i);
+    ).rejects.toMatchObject({ code: 'MEMBER_ROLE_REQUIRED' });
   });
 
   it('updateMemberStatus posts the uppercase status and maps the result', async () => {
@@ -135,15 +123,6 @@ describe('organization-api memberships (live)', () => {
     expect(deleteMock).toHaveBeenCalledWith(
       expect.stringContaining('/memberships/mem_x'),
     );
-  });
-});
-
-describe('organization-api memberships (mock)', () => {
-  it('listMembers returns the in-memory mock members without a network call', async () => {
-    useMockApiRef.value = true;
-    const members = await listMembers();
-    expect(Array.isArray(members)).toBe(true);
-    expect(getMock).not.toHaveBeenCalled();
   });
 });
 
@@ -233,40 +212,5 @@ describe('organization-api api-keys (live)', () => {
     deleteMock.mockResolvedValue({ data: null });
     expect(await revokeApiKey('key_1')).toEqual({ id: 'key_1' });
     expect(deleteMock).toHaveBeenCalledWith(expect.stringContaining('/api-keys/key_1'));
-  });
-});
-
-const SUB_WIRE = {
-  plan: 'pro',
-  status: 'active',
-  seats: 10,
-  seats_used: 4,
-  renews_at: TS,
-  amount_cents: 9900,
-  currency: 'usd',
-};
-
-describe('organization-api subscription (live)', () => {
-  it('maps the subscription wire to the domain shape', async () => {
-    getMock.mockResolvedValue({ data: SUB_WIRE });
-    const sub = await getSubscription();
-    expect(sub).toMatchObject({
-      plan: 'pro',
-      status: 'active',
-      seats: 10,
-      seatsUsed: 4,
-      renewsAt: TS,
-      amountCents: 9900,
-      currency: 'usd',
-    });
-  });
-
-  it('updateSubscriptionPlan patches the plan', async () => {
-    patchMock.mockResolvedValue({ data: { ...SUB_WIRE, plan: 'starter' } });
-    const sub = await updateSubscriptionPlan('starter');
-    expect(patchMock).toHaveBeenCalledWith(expect.stringContaining('/subscription'), {
-      plan: 'starter',
-    });
-    expect(sub.plan).toBe('starter');
   });
 });

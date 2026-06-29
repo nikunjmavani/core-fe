@@ -5,8 +5,7 @@
  */
 /**
  * Shared TanStack Query hooks for the organization domain (members, invitations,
- * roles, API keys, subscription). Used by both the dashboard and the org
- * management settings. Server state only — never mirrored into Zustand.
+ * roles, API keys). Billing hooks live in `useSubscription/` but use `billingQueryKeys`.
  */
 export const orgQueryKeys = {
   all: ['organization'] as const,
@@ -14,5 +13,4 @@ export const orgQueryKeys = {
   invitations: () => [...orgQueryKeys.all, 'invitations'] as const,
   roles: () => [...orgQueryKeys.all, 'roles'] as const,
   apiKeys: () => [...orgQueryKeys.all, 'api-keys'] as const,
-  subscription: () => [...orgQueryKeys.all, 'subscription'] as const,
 };

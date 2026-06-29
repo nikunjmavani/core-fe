@@ -1,6 +1,9 @@
 import { Link } from '@tanstack/react-router';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import { Button } from '@/shared/components/ui/button.tsx';
 import { reportError } from '@/shared/errors/errorHandler.ts';
 
 /** Error-like with optional status (e.g. from TanStack Router or Response). */
@@ -18,6 +21,7 @@ function hasStatus(e: unknown): e is { status: number; statusText?: string } {
  * Receives error from route errorComponent. Reports non-404 errors to Sentry.
  */
 export function ErrorBoundary({ error }: { error?: unknown }) {
+  const { t } = useTranslation(ERRORS_NS);
   const err = error;
 
   useEffect(() => {
@@ -35,15 +39,12 @@ export function ErrorBoundary({ error }: { error?: unknown }) {
         <h1 className="text-foreground text-4xl font-bold">{err.status}</h1>
         <p className="text-muted-foreground text-lg">
           {err.status === 404
-            ? 'The page you are looking for does not exist.'
-            : (err.statusText ?? 'Something went wrong.')}
+            ? t(ERRORS_KEYS.route.notFound)
+            : (err.statusText ?? t(ERRORS_KEYS.route.generic))}
         </p>
-        <Link
-          to="/"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 rounded-md px-4 py-2 text-sm font-medium"
-        >
-          Go Home
-        </Link>
+        <Button asChild className="mt-4">
+          <Link to="/">{t(ERRORS_KEYS.route.goHome)}</Link>
+        </Button>
       </div>
     );
   }
@@ -53,17 +54,13 @@ export function ErrorBoundary({ error }: { error?: unknown }) {
       className="flex min-h-screen flex-col items-center justify-center gap-4 p-8"
       data-testid="route-error-boundary"
     >
-      <h1 className="text-foreground text-4xl font-bold">Something went wrong</h1>
-      <p className="text-muted-foreground text-lg">
-        An unexpected error occurred. Please try refreshing the page.
-      </p>
-      <button
-        type="button"
-        onClick={() => window.location.reload()}
-        className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 rounded-md px-4 py-2 text-sm font-medium"
-      >
-        Refresh Page
-      </button>
+      <h1 className="text-foreground text-4xl font-bold">
+        {t(ERRORS_KEYS.global.title)}
+      </h1>
+      <p className="text-muted-foreground text-lg">{t(ERRORS_KEYS.global.message)}</p>
+      <Button type="button" className="mt-4" onClick={() => window.location.reload()}>
+        {t(ERRORS_KEYS.route.refresh)}
+      </Button>
     </div>
   );
 }

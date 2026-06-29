@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
+import type { DeploymentFlags } from '@/shared/tenancy/deployment-mode.ts';
+import { DEFAULT_DEPLOYMENT_FLAGS } from '@/shared/tenancy/deployment-mode.ts';
 import type {
   OrganizationSummary,
   OrganizationType,
@@ -55,12 +57,19 @@ interface OrganizationStore {
   organizationType: OrganizationType | null;
   /** Org-scoped permission codes the user holds in the active organization. */
   permissions: OrganizationPermission[];
+  /** Deployment-wide personal/team toggles (from me/context). */
+  deploymentFlags: DeploymentFlags;
+  personalOrganizationId: string | null;
 
   setOrganization: (id: string, slug: string, status?: 'active' | 'suspended') => void;
   /** Derive the full active-org context from me/context (the canonical source). */
   setActiveOrganization: (
     org: OrganizationSummary | null,
     permissions: OrganizationPermission[],
+  ) => void;
+  setDeploymentContext: (
+    flags: DeploymentFlags,
+    personalOrganizationId: string | null,
   ) => void;
   /** Replace the active org's permission set (from the membership response). */
   setPermissions: (permissions: OrganizationPermission[]) => void;
@@ -81,6 +90,8 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
   organizationStatus: null,
   organizationType: null,
   permissions: [],
+  deploymentFlags: DEFAULT_DEPLOYMENT_FLAGS,
+  personalOrganizationId: null,
 
   setActiveOrganization: (org, permissions) =>
     set({
@@ -90,6 +101,9 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       organizationType: org?.type ?? null,
       permissions,
     }),
+
+  setDeploymentContext: (deploymentFlags, personalOrganizationId) =>
+    set({ deploymentFlags, personalOrganizationId }),
 
   setOrganization: (organizationId, organizationSlug, organizationStatus) =>
     set({
@@ -105,5 +119,7 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       organizationStatus: null,
       organizationType: null,
       permissions: [],
+      deploymentFlags: DEFAULT_DEPLOYMENT_FLAGS,
+      personalOrganizationId: null,
     }),
 }));

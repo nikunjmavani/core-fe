@@ -13,13 +13,14 @@ vi.mock('sonner', () => ({ toast: toastMock }));
 import { notify } from './notify.ts';
 
 describe('notify', () => {
-  it('renders a custom toast per level (success / error / info / warning)', () => {
+  it('renders a custom toast per level (success / error / info / warning / loading)', () => {
     notify.success('ok');
     notify.error('bad');
     notify.info('fyi');
     notify.warning('careful');
+    notify.loading('wait');
 
-    expect(toastMock.custom).toHaveBeenCalledTimes(4);
+    expect(toastMock.custom).toHaveBeenCalledTimes(5);
     // The first arg is a render fn that builds a CustomToast element; invoking it
     // lets us assert the level + message wired through.
     const types = toastMock.custom.mock.calls.map((call) => {
@@ -28,7 +29,13 @@ describe('notify', () => {
       };
       return render('toast-id').props;
     });
-    expect(types.map((p) => p.type)).toEqual(['success', 'error', 'info', 'warning']);
+    expect(types.map((p) => p.type)).toEqual([
+      'success',
+      'error',
+      'info',
+      'warning',
+      'loading',
+    ]);
     expect(types[0]?.title).toBe('ok');
   });
 
@@ -38,6 +45,13 @@ describe('notify', () => {
     expect(lastCall?.[1]).toMatchObject({ id: 'save', duration: 1000, unstyled: true });
     const render = lastCall?.[0] as (id: string) => { props: { description?: string } };
     expect(render('x').props.description).toBe('All set');
+  });
+
+  it('omits id from sonner options when not provided (sonner #679 dismiss bug)', () => {
+    notify.success('Saved');
+    const lastCall = toastMock.custom.mock.calls.at(-1);
+    expect(lastCall?.[1]).not.toHaveProperty('id');
+    expect(lastCall?.[1]).toMatchObject({ unstyled: true, className: 'w-full' });
   });
 
   it('drives a toast from a promise', () => {

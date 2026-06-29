@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { startIdleTimeout } from '@/shared/auth/idle-timeout.ts';
 import { forceLogout } from '@/shared/auth/service.ts';
@@ -13,6 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/shared/components/ui/alert-dialog.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
+import { LAYOUT_KEYS, LAYOUT_NS } from '@/shared/layouts/layout.constants.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 /** Warn after 5 minutes idle, auto-logout after grace (90 s) */
@@ -21,11 +23,17 @@ const GRACE_MS = 90 * 1000;
 const LOGOUT_AFTER_MS = WARN_AFTER_MS + GRACE_MS;
 const GRACE_SECONDS = Math.round(GRACE_MS / 1000);
 
+function formatCountdown(seconds: number): string {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
 export function SessionTimeoutDialog() {
+  const { t } = useTranslation(LAYOUT_NS);
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [open, setOpen] = useState(false);
   const [countdown, setCountdown] = useState(GRACE_SECONDS);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const keys = LAYOUT_KEYS.app.sessionTimeout;
 
   const startCountdown = useCallback(() => {
     setCountdown(GRACE_SECONDS);
@@ -68,9 +76,6 @@ export function SessionTimeoutDialog() {
       },
     });
 
-    // Absolute lifetime cap — fires regardless of activity (the idle timer
-    // above only covers *inactivity*). A long-lived session kept warm by the
-    // proactive refresh is force-logged-out once it exceeds SESSION.MAX_AGE_MS.
     const stopLifetimeWatch = startSessionLifetimeWatch(() => {
       stopCountdown();
       setOpen(false);
@@ -87,7 +92,6 @@ export function SessionTimeoutDialog() {
   const handleStaySignedIn = () => {
     stopCountdown();
     setOpen(false);
-    // Activity will be detected via mouse/keyboard, resetting the idle timer
   };
 
   const handleSignOut = () => {
@@ -100,21 +104,17 @@ export function SessionTimeoutDialog() {
     <AlertDialog open={open}>
       <AlertDialogContent data-testid="session-timeout-dialog">
         <AlertDialogHeader>
-          <AlertDialogTitle>Session expiring</AlertDialogTitle>
+          <AlertDialogTitle>{t(keys.title)}</AlertDialogTitle>
           <AlertDialogDescription>
-            Your session will expire in{' '}
-            <span className="font-semibold tabular-nums" data-testid="session-countdown">
-              {Math.floor(countdown / 60)}:{String(countdown % 60).padStart(2, '0')}
-            </span>{' '}
-            due to inactivity. Click &ldquo;Stay signed in&rdquo; to continue.
+            {t(keys.description, { countdown: formatCountdown(countdown) })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <Button variant="outline" onClick={handleSignOut} data-testid="session-signout">
-            Sign out
+            {t(keys.signOut)}
           </Button>
           <AlertDialogAction onClick={handleStaySignedIn} data-testid="session-stay">
-            Stay signed in
+            {t(keys.staySignedIn)}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

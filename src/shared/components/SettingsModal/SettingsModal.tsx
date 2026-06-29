@@ -1,10 +1,28 @@
 import { useNavigate, useRouter, useRouterState } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ORGANIZATION } from '@/core/config/constants.ts';
-import { organizationPicker } from '@/lib/routes/index.ts';
 import { cn } from '@/lib/utils.ts';
-import { Button } from '@/shared/components/ui/button.tsx';
+import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
+import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/components/ui/alert-dialog.tsx';
 import { Dialog, DialogContent, DialogTitle } from '@/shared/components/ui/dialog.tsx';
 import {
   Select,
@@ -13,32 +31,45 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select.tsx';
+import { SectionErrorBoundary } from '@/shared/components/WidgetErrorBoundary/index.ts';
+import { useDeploymentFlags } from '@/shared/hooks/useDeploymentFlags/index.ts';
 import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
-import { Building2 } from '@/shared/icons/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
-import type { OrganizationType } from '@/shared/tenancy/me-context.ts';
 
+import { AccountBillingPanel } from './account/AccountBillingPanel.tsx';
 import { AccountNotificationsPanel } from './account/AccountNotificationsPanel.tsx';
 import { AccountPanel } from './account/AccountPanel.tsx';
 import { AccountProfilePanel } from './account/AccountProfilePanel.tsx';
 import { AccountSecurityPanel } from './account/AccountSecurityPanel.tsx';
 import { AccountSessionsPanel } from './account/AccountSessionsPanel.tsx';
-import { OrganizationBillingPanel } from './organization/OrganizationBillingPanel.tsx';
 import { OrganizationBranchesPanel } from './organization/OrganizationBranchesPanel.tsx';
 import { OrganizationGeneralPanel } from './organization/OrganizationGeneralPanel.tsx';
 import { OrganizationIntegrationsPanel } from './organization/OrganizationIntegrationsPanel.tsx';
 import { OrganizationMembersPanel } from './organization/OrganizationMembersPanel.tsx';
 import { OrganizationRolesPanel } from './organization/OrganizationRolesPanel.tsx';
-import { parseSettingsHash, settingsHash } from './settings-hash.ts';
-import { canViewSettingsSection } from './settings-permissions.ts';
+import {
+  SETTINGS_KEYS,
+  SETTINGS_NS,
+  SETTINGS_SECTION_LABEL_KEYS,
+} from './settings.constants.ts';
+import { SettingsDirtyProvider, useSettingsDirty } from './settings-dirty.tsx';
+import {
+  isCanonicalSettingsHash,
+  isSettingsHash,
+  parseSettingsHash,
+  settingsHash,
+} from './settings-hash.ts';
+import {
+  firstVisibleSettingsSection,
+  visibleSettingsNavGroups,
+} from './settings-nav-visibility.ts';
+import { resolveSettingsSection } from './settings-resolve.ts';
 import type {
-  OrganizationSettingsSection,
   SettingsScope,
   SettingsSection,
   SettingsSectionRef,
 } from './settings-sections.ts';
-import { sectionsForOrgType, SETTINGS_NAV } from './settings-sections.ts';
 import { SettingsNav } from './SettingsNav.tsx';
 
 /**
@@ -51,6 +82,16 @@ import { SettingsNav } from './SettingsNav.tsx';
  * gating all happen here (settings-permissions.ts). routing-and-tenancy.md §7.
  */
 export function SettingsModal() {
+  return (
+    <SettingsDirtyProvider>
+      <SettingsModalBody />
+    </SettingsDirtyProvider>
+  );
+}
+
+function SettingsModalBody() {
+  const { t } = useTranslation(SETTINGS_NS);
+  const dirtyCtx = useSettingsDirty();
   const hash = useRouterState({ select: (s) => s.location.hash });
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const user = useAuthStore((s) => s.user);
@@ -59,143 +100,194 @@ export function SettingsModal() {
   // Active org type (PERSONAL/TEAM) drives which org sections exist. Undefined
   // while me/context loads → fall back to permission-only gating.
   const orgType = useMeContext().data?.activeOrganization?.type;
+  const deploymentFlags = useDeploymentFlags();
   const navigate = useNavigate();
   const router = useRouter();
   // Drives the top scroll-shadow on the content panel (elevates the header bar
   // once the user scrolls down past the top).
   const [scrolled, setScrolled] = useState(false);
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const pendingActionRef = useRef<(() => void) | null>(null);
 
-  const active = isAuthenticated ? parseSettingsHash(hash) : null;
+  const parsed = isAuthenticated ? parseSettingsHash(hash) : null;
+  const hasOrganizationContext =
+    !!organizationId && organizationId !== ORGANIZATION.LOCALHOST_FALLBACK;
+  const navCtx = useMemo(
+    () => ({
+      hasOrganizationContext,
+      orgType,
+      teamOrganizations: deploymentFlags.teamOrganizations,
+      role: user?.role ?? ('user' as const),
+      permissions,
+    }),
+    [
+      deploymentFlags.teamOrganizations,
+      hasOrganizationContext,
+      orgType,
+      permissions,
+      user?.role,
+    ],
+  );
+  const visibleGroups = useMemo(() => visibleSettingsNavGroups(navCtx), [navCtx]);
+  const fallbackSection = useMemo(
+    () => firstVisibleSettingsSection(visibleGroups),
+    [visibleGroups],
+  );
+  const active = parsed ? resolveSettingsSection(parsed, navCtx, fallbackSection) : null;
   const scope = active?.scope;
   const section = active?.section;
+
+  useLayoutEffect(() => {
+    if (!(active && isSettingsHash(hash))) return;
+    if (isCanonicalSettingsHash(hash, active)) return;
+    void navigate({
+      to: '.',
+      hash: settingsHash(active.scope, active.section),
+      search: (prev) => prev,
+      replace: true,
+    });
+  }, [active, hash, navigate]);
 
   // Hash changes are invisible to pageview analytics — emit explicitly.
   useEffect(() => {
     if (scope && section) {
-      // Lazy: posthog loads at idle (main.tsx); resolve from the module cache
-      // instead of pulling the chunk into this component's static graph.
-      import('posthog-js')
-        .then(({ default: posthog }) => {
-          if (posthog.__loaded) {
-            posthog.capture('settings_section_viewed', { scope, section });
-          }
-        })
-        .catch(() => {
-          /* analytics must never break settings */
-        });
+      captureAnalyticsEvent(ANALYTICS_EVENTS.settingsSectionViewed, { scope, section });
     }
   }, [scope, section]);
 
-  if (!active) return null;
-
-  const hasOrganizationContext =
-    !!organizationId && organizationId !== ORGANIZATION.LOCALHOST_FALLBACK;
-  const ctx = { role: user?.role ?? ('user' as const), permissions };
-
-  const allowedForOrgType = (section: OrganizationSettingsSection) =>
-    !orgType || sectionsForOrgType(orgType).includes(section);
-
-  const visibleGroups = SETTINGS_NAV.map((group) =>
-    group.scope === 'organization'
-      ? {
-          ...group,
-          items: group.items.filter(
-            (item) =>
-              hasOrganizationContext &&
-              canViewSettingsSection(item, ctx) &&
-              allowedForOrgType(item.section as OrganizationSettingsSection),
-          ),
-        }
-      : group,
-  ).filter((group) => group.items.length > 0);
-
-  const close = () => {
+  const close = useCallback(() => {
     if (router.history.length > 1) {
       router.history.back();
     } else {
-      void navigate({ to: '.', hash: '', replace: true });
+      void navigate({ to: '.', hash: '', search: (prev) => prev, replace: true });
     }
-  };
+  }, [navigate, router]);
+
+  const runOrConfirmDiscard = useCallback(
+    (action: () => void) => {
+      if (dirtyCtx?.isDirty) {
+        pendingActionRef.current = action;
+        setDiscardOpen(true);
+        return;
+      }
+      action();
+    },
+    [dirtyCtx?.isDirty],
+  );
+
+  if (!active) return null;
+
+  const guardedClose = () => runOrConfirmDiscard(close);
 
   // Section switches replace the history entry so a single Back closes the
   // modal from anywhere instead of replaying every visited section.
   const goTo = (next: SettingsSectionRef) => {
-    void navigate({
-      to: '.',
-      hash: settingsHash(next.scope, next.section),
-      replace: true,
+    runOrConfirmDiscard(() => {
+      void navigate({
+        to: '.',
+        hash: settingsHash(next.scope, next.section),
+        search: (prev) => prev,
+        replace: true,
+      });
     });
   };
 
+  const confirmDiscard = () => {
+    const action = pendingActionRef.current;
+    pendingActionRef.current = null;
+    setDiscardOpen(false);
+    action?.();
+  };
+
   return (
-    <Dialog open onOpenChange={(o) => !o && close()}>
-      <DialogContent
-        className="h-dvh max-h-dvh w-full max-w-full gap-0 overflow-hidden rounded-none p-0 sm:h-[640px] sm:max-h-[85vh] sm:max-w-[960px] sm:rounded-xl"
-        data-testid="settings-modal"
-        onInteractOutside={(e) => {
-          // Toasts render outside the dialog (sonner) — clicking one (e.g. its
-          // close button) must dismiss the toast, not close Settings.
-          const node = e.detail.originalEvent.target as Element | null;
-          if (node?.closest('[data-sonner-toaster]')) e.preventDefault();
-        }}
-      >
-        <DialogTitle className="sr-only">Settings</DialogTitle>
-        <div className="grid h-full min-h-0 grid-cols-1 sm:grid-cols-[240px_1fr]">
-          <SettingsNav groups={visibleGroups} active={active} onSelect={goTo} />
-          <div className="flex min-h-0 flex-col">
-            {/* Mobile section picker — the sidebar is hidden below sm */}
-            <div className="shrink-0 border-b p-3 sm:hidden">
-              <Select
-                value={`${active.scope}/${active.section}`}
-                onValueChange={(v) => {
-                  const [scope, section] = v.split('/') as [
-                    SettingsScope,
-                    SettingsSection,
-                  ];
-                  goTo({ scope, section });
-                }}
-              >
-                <SelectTrigger className="w-full" data-testid="settings-mobile-section">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {visibleGroups
-                    .flatMap((group) => group.items)
-                    .map((item) => (
-                      <SelectItem
-                        key={`${item.scope}/${item.section}`}
-                        value={`${item.scope}/${item.section}`}
-                      >
-                        {item.label}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            {/* Desktop: empty header strip — gives the dialog's close button room
+    <>
+      <Dialog open onOpenChange={(o) => !o && guardedClose()}>
+        <DialogContent
+          className="h-dvh max-h-dvh w-full max-w-full gap-0 overflow-hidden rounded-none p-0 sm:h-[640px] sm:max-h-[85vh] sm:max-w-[960px]"
+          data-testid="settings-modal"
+          onInteractOutside={(e) => {
+            // Toasts render outside the dialog (sonner) — clicking one (e.g. its
+            // close button) must dismiss the toast, not close Settings.
+            const node = e.detail.originalEvent.target as Element | null;
+            if (node?.closest('[data-sonner-toaster]')) e.preventDefault();
+          }}
+        >
+          <DialogTitle className="sr-only">Settings</DialogTitle>
+          <div className="grid h-full min-h-0 grid-cols-1 sm:grid-cols-[240px_1fr]">
+            <SettingsNav groups={visibleGroups} active={active} onSelect={goTo} />
+            <div className="flex min-h-0 flex-col">
+              {/* Mobile section picker — the sidebar is hidden below sm */}
+              <div className="shrink-0 border-b p-3 sm:hidden">
+                <Select
+                  value={`${active.scope}/${active.section}`}
+                  onValueChange={(v) => {
+                    const [scope, section] = v.split('/') as [
+                      SettingsScope,
+                      SettingsSection,
+                    ];
+                    goTo({ scope, section });
+                  }}
+                >
+                  <SelectTrigger className="w-full" data-testid="settings-mobile-section">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {visibleGroups
+                      .flatMap((group) => group.items)
+                      .map((item) => (
+                        <SelectItem
+                          key={`${item.scope}/${item.section}`}
+                          value={`${item.scope}/${item.section}`}
+                        >
+                          {t(item.labelKey)}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Desktop: empty header strip — gives the dialog's close button room
                 and elevates with a shadow once the content scrolls beneath it. */}
-            <div
-              aria-hidden
-              className={cn(
-                'pointer-events-none z-10 hidden h-12 shrink-0 transition-shadow duration-200 sm:block',
-                scrolled && 'scroll-shadow-top',
-              )}
-            />
-            <div
-              className="scrollbar-custom min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-6 sm:px-8 sm:pt-2 sm:pb-8"
-              data-testid="settings-content"
-              onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}
-            >
-              <ActivePanel
-                active={active}
-                hasOrganizationContext={hasOrganizationContext}
-                orgType={orgType}
+              <div
+                aria-hidden
+                className={cn(
+                  'pointer-events-none z-10 hidden h-12 shrink-0 transition-shadow duration-200 sm:block',
+                  scrolled && 'scroll-shadow-top',
+                )}
               />
+              <div
+                className="min-h-0 flex-1 overflow-y-auto px-4 pt-4 pb-6 sm:px-8 sm:pt-2 sm:pb-8"
+                data-testid="settings-content"
+                onScroll={(e) => setScrolled(e.currentTarget.scrollTop > 0)}
+              >
+                <ActivePanel active={active} />
+              </div>
             </div>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+        <AlertDialogContent data-testid="settings-discard-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t(SETTINGS_KEYS.discard.title)}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t(SETTINGS_KEYS.discard.description)}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="settings-discard-stay">
+              {t(SETTINGS_KEYS.discard.stay)}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDiscard}
+              data-testid="settings-discard-leave"
+            >
+              {t(SETTINGS_KEYS.discard.leave)}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
 
@@ -211,6 +303,8 @@ function panelForSection(section: SettingsSection) {
       return <AccountNotificationsPanel />;
     case 'sessions':
       return <AccountSessionsPanel />;
+    case 'billing':
+      return <AccountBillingPanel />;
     case 'general':
       return <OrganizationGeneralPanel />;
     case 'members':
@@ -219,76 +313,25 @@ function panelForSection(section: SettingsSection) {
       return <OrganizationRolesPanel />;
     case 'branches':
       return <OrganizationBranchesPanel />;
-    case 'billing':
-      return <OrganizationBillingPanel />;
     case 'integrations':
       return <OrganizationIntegrationsPanel />;
   }
 }
 
-function ActivePanel({
-  active,
-  hasOrganizationContext,
-  orgType,
-}: {
-  active: SettingsSectionRef;
-  hasOrganizationContext: boolean;
-  orgType: OrganizationType | undefined;
-}) {
-  if (active.scope === 'organization' && !hasOrganizationContext) {
-    return <SelectOrganizationFirst />;
-  }
-  if (
-    active.scope === 'organization' &&
-    orgType &&
-    !sectionsForOrgType(orgType).includes(active.section as OrganizationSettingsSection)
-  ) {
-    return <SectionNotAvailable />;
-  }
-  return panelForSection(active.section);
-}
-
-/** Organization settings opened with no organization context. */
-function SelectOrganizationFirst() {
-  const navigate = useNavigate();
-  return (
-    <div
-      className="flex h-full flex-col items-center justify-center gap-4 text-center"
-      data-testid="settings-select-organization"
-    >
-      <div className="bg-muted text-muted-foreground flex h-12 w-12 items-center justify-center rounded-full">
-        <Building2 className="h-6 w-6" />
-      </div>
-      <div className="space-y-1">
-        <h2 className="text-base font-semibold">Select an organization first</h2>
-        <p className="text-muted-foreground max-w-xs text-sm">
-          Organization settings apply to a specific organization — pick one to continue.
-        </p>
-      </div>
-      <Button
-        variant="outline"
-        onClick={() => void navigate({ ...organizationPicker(), hash: '' })}
-        data-testid="settings-go-to-picker"
-      >
-        Select organization
-      </Button>
-    </div>
+function ActivePanel({ active }: { active: SettingsSectionRef }) {
+  const { t: tSettings } = useTranslation(SETTINGS_NS);
+  const sectionLabel = tSettings(
+    SETTINGS_SECTION_LABEL_KEYS[
+      active.section as keyof typeof SETTINGS_SECTION_LABEL_KEYS
+    ],
   );
-}
 
-/** An org section that isn't available for this organization's type (e.g. a
- * personal org has no Members/Roles). Reached only via a stale deep link. */
-function SectionNotAvailable() {
   return (
-    <div
-      className="flex h-full flex-col items-center justify-center gap-2 text-center"
-      data-testid="settings-section-unavailable"
+    <SectionErrorBoundary
+      title={sectionLabel}
+      testId={`settings-panel-error-${active.section}`}
     >
-      <h2 className="text-base font-semibold">Not available here</h2>
-      <p className="text-muted-foreground max-w-xs text-sm">
-        This section isn't available for a personal organization. Create or switch to a
-        team to manage it.
-      </p>
-    </div>
+      {panelForSection(active.section)}
+    </SectionErrorBoundary>
   );
 }

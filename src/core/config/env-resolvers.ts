@@ -1,0 +1,84 @@
+/** OAuth provider ids exposed on `/login` (env-only — no backend config fetch). */
+export const OAUTH_PROVIDER_IDS = ['google', 'github', 'apple'] as const;
+
+export type OAuthProviderId = (typeof OAUTH_PROVIDER_IDS)[number];
+
+/** Parse `true`/`false` env flags; omitted → default. @internal Exported for unit tests. */
+export function resolveAuthMethodFlag(
+  flag: string | undefined,
+  defaultValue: boolean,
+): boolean {
+  if (flag === undefined || flag === '') return defaultValue;
+  return flag !== 'false';
+}
+
+/**
+ * Optional tri-state deployment override: unset → defer to API; `true`/`false` → env wins.
+ * @internal Exported for unit tests.
+ */
+export function resolveDeploymentOverride(flag: string | undefined): boolean | null {
+  if (flag === undefined || flag === '') return null;
+  return flag !== 'false';
+}
+
+/**
+ * Feature modules disabled for this deployment (`VITE_DISABLED_MODULES`, comma-separated).
+ * @internal Exported for unit tests.
+ */
+export function resolveDisabledModules(flag: string | undefined): ReadonlySet<string> {
+  return new Set(
+    (flag ?? '')
+      .split(',')
+      .map((module) => module.trim())
+      .filter(Boolean),
+  );
+}
+
+/** App content layout width id. @internal Exported for unit tests. */
+export function resolveLayoutWidth(
+  flag: string | undefined,
+): 'contained' | 'full' | 'reading' {
+  if (flag === 'full' || flag === 'reading') return flag;
+  return 'contained';
+}
+
+/** When set, locks shell width — Appearance picker hidden. @internal Exported for unit tests. */
+export function resolveLayoutWidthForced(
+  flag: string | undefined,
+): 'contained' | 'full' | 'reading' | null {
+  if (flag === 'contained' || flag === 'full' || flag === 'reading') return flag;
+  return null;
+}
+
+/** When true, theme switcher + shuffle are hidden. @internal Exported for unit tests. */
+export function resolveThemeLock(flag: string | undefined): boolean {
+  return flag === 'true';
+}
+
+export type OAuthProviderFlags = Record<OAuthProviderId, boolean>;
+
+/** Per-provider OAuth toggles from env (hard break — no legacy VITE_AUTH_OAUTH). */
+export function resolveOAuthProviderFlags(
+  get: (key: string) => string | undefined,
+): OAuthProviderFlags {
+  return {
+    google: resolveAuthMethodFlag(get('AUTH_OAUTH_GOOGLE'), true),
+    github: resolveAuthMethodFlag(get('AUTH_OAUTH_GITHUB'), true),
+    apple: resolveAuthMethodFlag(get('AUTH_OAUTH_APPLE'), false),
+  };
+}
+
+/** Whether any auth surface is enabled for `/login`. */
+export function hasAnyAuthSurface(methods: {
+  email: boolean;
+  passkey: boolean;
+  oauth: OAuthProviderFlags;
+}): boolean {
+  if (methods.email || methods.passkey) return true;
+  return OAUTH_PROVIDER_IDS.some((id) => methods.oauth[id]);
+}
+
+/** Providers enabled for this deployment's login UI (env-only). */
+export function enabledOAuthProviders(oauth: OAuthProviderFlags): OAuthProviderId[] {
+  return OAUTH_PROVIDER_IDS.filter((id) => oauth[id]);
+}

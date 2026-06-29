@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { isSettingsHash, parseSettingsHash, settingsHash } from './settings-hash.ts';
+import {
+  isCanonicalSettingsHash,
+  isSettingsHash,
+  parseSettingsHash,
+  settingsHash,
+  settingsHashPath,
+} from './settings-hash.ts';
 
 describe('settingsHash', () => {
   it('builds the hash value without a leading #', () => {
@@ -31,10 +37,18 @@ describe('parseSettingsHash', () => {
   it.each([
     ['settings/account/profile', 'account', 'profile'],
     ['settings/account/sessions', 'account', 'sessions'],
+    ['settings/account/billing', 'account', 'billing'],
     ['#settings/organization/general', 'organization', 'general'],
     ['settings/organization/integrations', 'organization', 'integrations'],
   ])('parses %s', (hash, scope, section) => {
     expect(parseSettingsHash(hash)).toEqual({ scope, section });
+  });
+
+  it('remaps legacy organization billing hashes to account billing', () => {
+    expect(parseSettingsHash('settings/organization/billing')).toEqual({
+      scope: 'account',
+      section: 'billing',
+    });
   });
 
   it('returns null for non-settings hashes (modal closed)', () => {
@@ -59,10 +73,48 @@ describe('parseSettingsHash', () => {
       scope: 'account',
       section: 'profile',
     });
+    expect(parseSettingsHash('settings/account123/profile123123')).toEqual({
+      scope: 'account',
+      section: 'profile',
+    });
     // Section from the wrong scope is invalid too.
     expect(parseSettingsHash('settings/account/general')).toEqual({
       scope: 'account',
       section: 'profile',
     });
+  });
+});
+
+describe('settingsHashPath', () => {
+  it('strips query or fragment junk appended to the hash', () => {
+    expect(settingsHashPath('settings/account/profile?foo=bar')).toBe(
+      'settings/account/profile',
+    );
+    expect(settingsHashPath('#settings/account/profile#oops')).toBe(
+      'settings/account/profile',
+    );
+  });
+});
+
+describe('isCanonicalSettingsHash', () => {
+  it('accepts an exact deep link', () => {
+    expect(
+      isCanonicalSettingsHash('#settings/account/profile', {
+        scope: 'account',
+        section: 'profile',
+      }),
+    ).toBe(true);
+  });
+
+  it('rejects malformed, bare, and legacy hashes', () => {
+    const profile = { scope: 'account' as const, section: 'profile' as const };
+    expect(isCanonicalSettingsHash('settings', profile)).toBe(false);
+    expect(isCanonicalSettingsHash('settings/account123/profile123123', profile)).toBe(
+      false,
+    );
+    expect(isCanonicalSettingsHash('settings/organization/billing', profile)).toBe(false);
+    expect(isCanonicalSettingsHash('settings/account/profile?foo=bar', profile)).toBe(
+      false,
+    );
   });
 });

@@ -1,48 +1,95 @@
+import type * as SentryReact from '@sentry/react';
 import type { AnyRouter } from '@tanstack/react-router';
 
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { scrubEventUrls } from '@/lib/telemetry-scrub.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+
+type SentryModule = typeof SentryReact;
+
+function syncUserContext(Sentry: SentryModule): void {
+  const user = useAuthStore.getState().user;
+  if (user) {
+    Sentry.setUser({ id: user.id });
+  } else {
+    Sentry.setUser(null);
+  }
+}
+
+function syncOrganizationTags(Sentry: SentryModule): void {
+  const org = useOrganizationStore.getState();
+  if (org.organizationId) {
+    Sentry.setTag('organization_id', org.organizationId);
+    Sentry.setTag('organization_slug', org.organizationSlug ?? 'unknown');
+  } else {
+    Sentry.setTag('organization_id', undefined);
+    Sentry.setTag('organization_slug', undefined);
+  }
+}
+
+function buildIntegrations(Sentry: SentryModule, router: AnyRouter) {
+  const integrations = [
+    Sentry.tanstackRouterBrowserTracingIntegration(router),
+    Sentry.httpClientIntegration(),
+    Sentry.captureConsoleIntegration({ levels: ['error', 'warn'] }),
+    Sentry.reportingObserverIntegration(),
+    Sentry.extraErrorDataIntegration({ depth: 5 }),
+  ];
+
+  // Replay, profiling, logs, and feedback whenever a DSN is configured —
+  // including local `pnpm dev` with `.env.development` for full-flow QA.
+  integrations.push(
+    Sentry.replayIntegration({
+      maskAllText: true,
+      blockAllMedia: true,
+    }),
+    Sentry.browserProfilingIntegration(),
+    Sentry.consoleLoggingIntegration({ levels: ['warn', 'error'] }),
+    Sentry.feedbackIntegration({
+      colorScheme: 'system',
+      showBranding: false,
+      autoInject: true,
+    }),
+  );
+
+  return integrations;
+}
 
 /**
  * Initialize Sentry off the critical path.
  *
- * The module is dynamically imported from `main.tsx` during idle time. Heavy
- * integrations (session replay, browser profiling) are only registered in
- * production so dev/preview bundles stay smaller.
+ * The module is dynamically imported from `main.tsx` during idle time.
+ * Active whenever `VITE_SENTRY_DSN` is set (development **and** production).
+ * See `docs/integrations/sentry-frontend.md` for the full data catalog.
  *
  * @param router - TanStack Router instance for route-aware tracing.
  */
 export async function initSentry(router: AnyRouter): Promise<void> {
-  if (!config.sentryDsn) return;
+  if (!platformConfig.sentryDsn) return;
 
   const Sentry = await import('@sentry/react');
 
-  const integrations = [Sentry.tanstackRouterBrowserTracingIntegration(router)];
-
-  if (config.isProduction) {
-    integrations.push(
-      Sentry.replayIntegration({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
-      Sentry.browserProfilingIntegration(),
-    );
-  }
-
   Sentry.init({
-    dsn: config.sentryDsn,
-    environment: config.environment,
-    release: import.meta.env.VITE_APP_VERSION as string | undefined,
-    enabled: config.isProduction,
-    integrations,
+    dsn: platformConfig.sentryDsn,
+    environment: platformConfig.environment,
+    release: platformConfig.appVersion,
+    enabled: true,
+    integrations: buildIntegrations(Sentry, router),
 
-    tracesSampleRate: config.isProduction ? 0.1 : 1.0,
-    profilesSampleRate: config.isProduction ? 1.0 : 0,
+    sendDefaultPii: false,
+    attachStacktrace: true,
+    maxBreadcrumbs: 100,
+    normalizeDepth: 6,
+
+    enableLogs: true,
+
+    tracesSampleRate: platformConfig.isProduction ? 0.1 : 1.0,
+    profilesSampleRate: 1.0,
     tracePropagationTargets: ['localhost', /^https:\/\/api\./, /^\/api\//],
 
-    replaysSessionSampleRate: config.isProduction ? 0.1 : 0,
-    replaysOnErrorSampleRate: config.isProduction ? 1.0 : 0,
+    replaysSessionSampleRate: platformConfig.isProduction ? 0.1 : 0.2,
+    replaysOnErrorSampleRate: 1.0,
 
     ignoreErrors: [/Object \[object Object\] has no method 'updateFrom'/],
 
@@ -55,23 +102,61 @@ export async function initSentry(router: AnyRouter): Promise<void> {
           return breadcrumb;
         });
       }
-      // Reset/verify tokens must never reach Sentry via request.url or
-      // navigation breadcrumbs (the pages scrub the address bar, but an
-      // error can fire before that effect runs).
       return scrubEventUrls(event);
     },
 
     // Transactions skip beforeSend; pageload spans carry the full URL.
     beforeSendTransaction(event) {
+      if (event.breadcrumbs) {
+        event.breadcrumbs = event.breadcrumbs.map((breadcrumb) => {
+          if (breadcrumb.category === 'ui.input') {
+            return { ...breadcrumb, message: '[Filtered]' };
+          }
+          return breadcrumb;
+        });
+      }
       return scrubEventUrls(event);
     },
   });
 
-  useAuthStore.subscribe((state) => {
-    if (state.user) {
-      Sentry.setUser({ id: state.user.id });
-    } else {
-      Sentry.setUser(null);
-    }
-  });
+  if (platformConfig.appBuildId) {
+    Sentry.setTag('app.build_id', platformConfig.appBuildId);
+  }
+
+  syncUserContext(Sentry);
+  syncOrganizationTags(Sentry);
+
+  useAuthStore.subscribe(() => syncUserContext(Sentry));
+  useOrganizationStore.subscribe(() => syncOrganizationTags(Sentry));
+}
+
+/**
+ * Report a React error boundary failure with component stack linkage.
+ * Lazy-imports Sentry to keep the entry preload graph lean.
+ */
+export function reportReactError(
+  error: unknown,
+  errorInfo: { componentStack?: string | null },
+): void {
+  if (!platformConfig.sentryDsn) return;
+
+  import('@sentry/react')
+    .then((Sentry) => {
+      const user = useAuthStore.getState().user;
+      const org = useOrganizationStore.getState();
+
+      Sentry.withScope((scope) => {
+        if (user) scope.setUser({ id: user.id });
+        if (org.organizationId) {
+          scope.setTag('organization_id', org.organizationId);
+          scope.setTag('organization_slug', org.organizationSlug ?? 'unknown');
+        }
+        Sentry.captureReactException(error, {
+          componentStack: errorInfo.componentStack ?? '',
+        });
+      });
+    })
+    .catch(() => {
+      /* error reporting must never throw */
+    });
 }

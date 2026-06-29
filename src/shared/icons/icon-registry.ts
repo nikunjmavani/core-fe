@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from 'react';
 
+import { afterPaint } from '@/lib/app-splash.ts';
+import { IDLE_PREFETCH_TIMEOUT_MS } from '@/lib/chunk-prefetch.ts';
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 
 import type { IconName } from './icon-names.ts';
@@ -48,8 +51,41 @@ export function useIconSet(lib: string): IconSet | null {
   );
 }
 
-// Load the persisted library on boot, and whenever the selection changes.
-loadIconSet(useThemeStore.getState().iconLibrary);
-useThemeStore.subscribe((state) => {
-  loadIconSet(state.iconLibrary);
-});
+function scheduleAltIconSetLoad(): void {
+  const lib = useThemeStore.getState().iconLibrary;
+  if (lib === 'lucide') return;
+
+  afterPaint(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(() => loadIconSet(lib), {
+        timeout: IDLE_PREFETCH_TIMEOUT_MS,
+      });
+    } else {
+      globalThis.setTimeout(() => loadIconSet(lib), 2000);
+    }
+  });
+}
+
+/**
+ * Defer Phosphor/Tabler chunks until after auth — Lucide covers login and boot.
+ * Call once from `main.tsx`.
+ */
+export function initDeferredIconSets(): void {
+  useAuthStore.subscribe((state, prev) => {
+    const becameAuthed =
+      state.isAuthenticated &&
+      !state.isLoading &&
+      (!prev.isAuthenticated || prev.isLoading);
+    if (becameAuthed) scheduleAltIconSetLoad();
+  });
+
+  useThemeStore.subscribe((state, prev) => {
+    if (state.iconLibrary === prev.iconLibrary) return;
+    if (state.iconLibrary === 'lucide') return;
+    const auth = useAuthStore.getState();
+    if (auth.isAuthenticated && !auth.isLoading) loadIconSet(state.iconLibrary);
+  });
+
+  const auth = useAuthStore.getState();
+  if (auth.isAuthenticated && !auth.isLoading) scheduleAltIconSetLoad();
+}

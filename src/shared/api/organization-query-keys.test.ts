@@ -9,7 +9,6 @@ describe('orgQueryKeys', () => {
       orgQueryKeys.invitations(),
       orgQueryKeys.roles(),
       orgQueryKeys.apiKeys(),
-      orgQueryKeys.subscription(),
     ];
     for (const key of resourceKeys) {
       expect(key[0]).toBe(orgQueryKeys.all[0]);
@@ -22,7 +21,6 @@ describe('orgQueryKeys', () => {
       orgQueryKeys.invitations(),
       orgQueryKeys.roles(),
       orgQueryKeys.apiKeys(),
-      orgQueryKeys.subscription(),
     ].map((k) => JSON.stringify(k));
     expect(new Set(serialized).size).toBe(serialized.length);
   });

@@ -1,14 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const useMockApiRef = vi.hoisted(() => ({ value: false }));
-vi.mock('@/core/config/env.ts', () => ({
-  config: {
-    get useMockApi() {
-      return useMockApiRef.value;
-    },
-  },
-}));
-
 const { getMock, postMock, patchMock, putMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
@@ -19,8 +10,6 @@ vi.mock('@/core/http/fetch-client.ts', () => ({
   apiClient: { get: getMock, post: postMock, patch: patchMock, put: putMock },
 }));
 
-import { NOTIFICATIONS_FIXTURE } from './notification-fixtures.ts';
-import { notificationMockStore } from './notification-mock-store.ts';
 import {
   getNotificationPreferences,
   getUnreadCount,
@@ -42,15 +31,13 @@ const WIRE = {
 };
 
 beforeEach(() => {
-  useMockApiRef.value = false;
   getMock.mockReset();
   postMock.mockReset();
   patchMock.mockReset();
   putMock.mockReset();
-  notificationMockStore.reset();
 });
 
-describe('notifications-api (live branch)', () => {
+describe('notifications-api', () => {
   it('lists and maps wire → domain', async () => {
     getMock.mockResolvedValue({ data: [WIRE] });
     const result = await listNotifications();
@@ -94,56 +81,7 @@ describe('notifications-api (live branch)', () => {
   });
 });
 
-describe('notifications-api (mock branch)', () => {
-  beforeEach(() => {
-    useMockApiRef.value = true;
-  });
-
-  const UNREAD_COUNT = NOTIFICATIONS_FIXTURE.filter((n) => !n.isRead).length;
-
-  it('lists fixtures newest-first', async () => {
-    const list = await listNotifications();
-    expect(list).toHaveLength(NOTIFICATIONS_FIXTURE.length);
-    const [first, second] = list;
-    expect(first && second && first.createdAt >= second.createdAt).toBe(true);
-  });
-
-  it('counts unread, then marks one and all read', async () => {
-    expect(await getUnreadCount()).toBe(UNREAD_COUNT);
-    const list = await listNotifications();
-    const firstUnread = list.find((n) => !n.isRead);
-    expect(firstUnread).toBeDefined();
-    if (firstUnread) await markNotificationRead(firstUnread.id);
-    expect(await getUnreadCount()).toBe(UNREAD_COUNT - 1);
-    await markAllNotificationsRead();
-    expect(await getUnreadCount()).toBe(0);
-  });
-});
-
-describe('notification preferences (mock branch)', () => {
-  beforeEach(() => {
-    useMockApiRef.value = true;
-  });
-
-  it('returns the default preference matrix (4 categories × 3 channels)', async () => {
-    const prefs = await getNotificationPreferences();
-    expect(prefs).toHaveLength(12);
-    expect(prefs.filter((p) => p.channel === 'desktop').every((p) => !p.enabled)).toBe(
-      true,
-    );
-  });
-
-  it('full-replaces the preference set', async () => {
-    const next = [
-      { category: 'system' as const, channel: 'email' as const, enabled: false },
-    ];
-    const result = await updateNotificationPreferences(next);
-    expect(result).toEqual(next);
-    expect(await getNotificationPreferences()).toEqual(next);
-  });
-});
-
-describe('notification preferences (live branch)', () => {
+describe('notification preferences', () => {
   it('maps the in_app wire channel to inApp', async () => {
     getMock.mockResolvedValue({
       data: [{ category: 'member', channel: 'in_app', enabled: true }],

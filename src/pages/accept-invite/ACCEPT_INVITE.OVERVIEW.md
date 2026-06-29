@@ -5,11 +5,11 @@ email link.
 
 ## Files
 
-| File                        | Responsibility                                                                                                                                                                                                             |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accept-invite.route.tsx`   | Route marker — exports `Component` rendering `AcceptInvitePage`.                                                                                                                                                           |
-| `accept-invite.manifest.ts` | Page manifest (`path: '/accept-invite/$invitationId'`, `testId`, `kind: leaf`, no permission).                                                                                                                             |
-| `AcceptInvitePage.tsx`      | Calls `acceptInvitation(invitationId)`, performs an **auto-login** (`performMockLogin` in mock mode), sets the active tenant, and redirects to the dashboard. Shows loading / error states for invalid or expired invites. |
+| File                        | Responsibility                                                                                                                                                                      |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `accept-invite.route.tsx`   | Route marker — exports `Component` rendering `AcceptInvitePage`.                                                                                                                    |
+| `accept-invite.manifest.ts` | Page manifest (`path: '/accept-invite/$invitationId'`, `testId`, `kind: leaf`, no permission).                                                                                      |
+| `AcceptInvitePage.tsx`      | Calls `acceptInvitation(invitationId)`, refreshes the session, sets the active tenant, and redirects to the dashboard. Shows loading / error states for invalid or expired invites. |
 
 ## Flow
 

@@ -1,5 +1,7 @@
+import { iconOnPrimarySurface } from '@/lib/icon-surface.ts';
+import { cn } from '@/lib/utils.ts';
 import { Check } from '@/shared/icons/index.ts';
-import { ONBOARDING_STEPS } from '@/shared/store/useOnboardingStore/index.ts';
+import type { OnboardingStep } from '@/shared/store/useOnboardingStore/index.ts';
 
 type StepState = 'done' | 'current' | 'upcoming';
 
@@ -10,18 +12,25 @@ function stepState(index: number, current: number): StepState {
 }
 
 function stepCircleClass(state: StepState): string {
-  const base = 'flex h-7 w-7 items-center justify-center rounded-full text-xs';
+  const base =
+    'flex size-7 items-center justify-center rounded-full text-xs transition-all duration-300 ease-out';
   if (state === 'done') return `bg-primary text-primary-foreground ${base}`;
   if (state === 'current')
-    return `border-primary text-primary border font-medium ${base}`;
+    return `border-primary text-primary ring-primary/25 border font-medium ring-2 ${base}`;
   return `border-muted text-muted-foreground border ${base}`;
 }
 
 /** Numbered progress dots across the top of the onboarding card. */
-export function StepIndicator({ current }: { current: number }) {
+export function StepIndicator({
+  current,
+  steps,
+}: {
+  current: number;
+  steps: readonly OnboardingStep[];
+}) {
   return (
     <ol className="flex items-center gap-2" aria-label="Onboarding progress">
-      {ONBOARDING_STEPS.map((step, i) => {
+      {steps.map((step, i) => {
         const state = stepState(i, current);
         return (
           <li key={step} className="flex items-center gap-2">
@@ -29,10 +38,20 @@ export function StepIndicator({ current }: { current: number }) {
               className={stepCircleClass(state)}
               aria-current={state === 'current' ? 'step' : undefined}
             >
-              {state === 'done' ? <Check className="h-4 w-4" /> : i + 1}
+              {state === 'done' ? (
+                <Check className={cn('h-4 w-4', iconOnPrimarySurface)} />
+              ) : (
+                i + 1
+              )}
             </span>
-            {i < ONBOARDING_STEPS.length - 1 && (
-              <span className="bg-border h-px w-6" aria-hidden="true" />
+            {i < steps.length - 1 && (
+              <span
+                className={cn(
+                  'h-px w-6 transition-colors duration-300 ease-out',
+                  i < current ? 'bg-primary' : 'bg-border',
+                )}
+                aria-hidden="true"
+              />
             )}
           </li>
         );

@@ -2,7 +2,11 @@ import { useUIStore } from './useUIStore.ts';
 
 describe('useUIStore', () => {
   beforeEach(() => {
-    useUIStore.setState({ sidebarOpen: true, commandPaletteOpen: false });
+    useUIStore.setState({
+      sidebarOpen: true,
+      commandPaletteOpen: false,
+      shortcutsOpen: false,
+    });
   });
 
   it('initial state: sidebarOpen=true, commandPaletteOpen=false', () => {
@@ -47,5 +51,32 @@ describe('useUIStore', () => {
     expect(useUIStore.getState().appearanceOpen).toBe(true);
     useUIStore.getState().setAppearanceOpen(false);
     expect(useUIStore.getState().appearanceOpen).toBe(false);
+  });
+
+  it('shortcuts dialog: defaults closed, toggles + sets', () => {
+    expect(useUIStore.getState().shortcutsOpen).toBe(false);
+    useUIStore.getState().toggleShortcuts();
+    expect(useUIStore.getState().shortcutsOpen).toBe(true);
+    useUIStore.getState().setShortcutsOpen(false);
+    expect(useUIStore.getState().shortcutsOpen).toBe(false);
+  });
+
+  it('language dialog: defaults closed, toggles + sets', () => {
+    expect(useUIStore.getState().languageOpen).toBe(false);
+    useUIStore.getState().toggleLanguage();
+    expect(useUIStore.getState().languageOpen).toBe(true);
+    useUIStore.getState().setLanguageOpen(false);
+    expect(useUIStore.getState().languageOpen).toBe(false);
+  });
+
+  it('appearance and language side panels are mutually exclusive', () => {
+    useUIStore.getState().setAppearanceOpen(true);
+    expect(useUIStore.getState().appearanceOpen).toBe(true);
+    useUIStore.getState().setLanguageOpen(true);
+    expect(useUIStore.getState().languageOpen).toBe(true);
+    expect(useUIStore.getState().appearanceOpen).toBe(false);
+    useUIStore.getState().setAppearanceOpen(true);
+    expect(useUIStore.getState().appearanceOpen).toBe(true);
+    expect(useUIStore.getState().languageOpen).toBe(false);
   });
 });

@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "ariaSections": "设置分区",
+    "ariaSettings": "设置",
+    "searchPlaceholder": "搜索",
+    "searchAria": "搜索设置",
+    "empty": "无匹配项",
+    "groups": {
+      "account": "账户",
+      "organization": "组织"
+    },
+    "profile": "个人资料",
+    "account": "账户",
+    "security": "安全",
+    "notifications": "通知",
+    "sessions": "会话",
+    "general": "常规",
+    "members": "成员",
+    "roles": "角色",
+    "branches": "分支",
+    "billing": "账单",
+    "integrations": "集成"
+  },
+  "security": {
+    "heading": "安全",
+    "description": "双因素认证与通行密钥。",
+    "mfa": {
+      "title": "双因素认证",
+      "description": "登录时需要验证器代码。",
+      "enabled": "已启用",
+      "disabled": "未启用",
+      "setup": "设置双因素认证",
+      "disable": "关闭双因素认证",
+      "disableTitle": "关闭双因素认证？",
+      "disableDescription": "账户保护会降低。您可以随时重新开启。",
+      "disableConfirm": "关闭",
+      "setupTitle": "设置双因素认证",
+      "setupDescription": "使用验证器应用扫描二维码，或手动输入密钥。",
+      "recoveryTitle": "保存恢复代码",
+      "recoveryDescription": "请妥善保管。丢失设备时每个代码只能使用一次。",
+      "done": "完成",
+      "cancel": "取消",
+      "verifyEnable": "验证并启用",
+      "codeLabel": "输入 6 位代码",
+      "codeAria": "六位验证器代码",
+      "secretLabel": "手动输入密钥",
+      "copySecret": "复制密钥",
+      "copiedSecret": "已复制",
+      "scanHint": "打开 Google Authenticator、1Password 或其他 TOTP 应用并扫描此码。",
+      "errors": {
+        "setupFailed": "无法开始设置。请重试。",
+        "invalidCode": "代码不匹配。请输入当前的 6 位代码。"
+      }
+    },
+    "passkeys": {
+      "title": "通行密钥",
+      "description": "使用设备免密登录。",
+      "add": "添加通行密钥",
+      "empty": "暂无通行密钥。添加后可免密登录。",
+      "removeAria": "移除 {{name}}",
+      "addTitle": "添加通行密钥",
+      "addDescription": "为其命名以便识别。设备将提示您创建通行密钥。",
+      "nameLabel": "名称",
+      "namePlaceholder": "MacBook Touch ID",
+      "cancel": "取消",
+      "submit": "添加通行密钥"
+    },
+    "overview": {
+      "title": "账户保护",
+      "description": "快速查看登录保护措施。",
+      "score": "已启用 {{score}}/{{total}} 项",
+      "mfaOn": "双因素认证已开启",
+      "mfaOff": "双因素认证未开启",
+      "passkeysOn": "已注册 {{count}} 个通行密钥",
+      "passkeysOn_other": "已注册 {{count}} 个通行密钥",
+      "passkeysOff": "未注册通行密钥",
+      "idleProtection": "空闲自动登出已启用"
+    },
+    "recoveryCodes": {
+      "reveal": "显示代码",
+      "hide": "隐藏代码",
+      "copyAll": "全部复制",
+      "download": "下载 .txt",
+      "copySuccess": "恢复代码已复制 — 剪贴板将在 1 分钟后清除",
+      "copyFailed": "无法复制到剪贴板",
+      "downloadStarted": "已开始下载",
+      "clipboardNotice": "复制的密钥会在一分钟后从剪贴板清除。",
+      "acknowledge": "我已将这些恢复代码保存在安全的地方"
+    }
+  },
+  "discard": {
+    "title": "放弃未保存的更改？",
+    "description": "您有未保存的更改。离开将丢弃它们。",
+    "stay": "继续编辑",
+    "leave": "放弃更改"
+  }
+}

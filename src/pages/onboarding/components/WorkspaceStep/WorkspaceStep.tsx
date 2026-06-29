@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { organizationNameFromEmail } from '@/lib/onboarding-defaults.ts';
 import { Input } from '@/shared/components/ui/input.tsx';
@@ -7,15 +8,18 @@ import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 import { deriveOrganizationSlug } from '@/shared/tenancy/my-organizations.ts';
 
+import {
+  ONBOARDING_KEYS,
+  ONBOARDING_NS,
+  ONBOARDING_TEST_IDS,
+} from '../../onboarding.constants.ts';
+
 /** Names the organization that the final step will create. */
 export function WorkspaceStep() {
+  const { t } = useTranslation(ONBOARDING_NS);
   const { data, patch } = useOnboardingStore();
   const email = useAuthStore((s) => s.user?.email);
 
-  // Prefill the org name from a work-email domain — once email is known, and
-  // never over something the user already typed. Reads/writes the store via
-  // getState() so the effect depends only on `email` (no churn per keystroke,
-  // and nothing for the exhaustive-deps linters to flag).
   useEffect(() => {
     const store = useOnboardingStore.getState();
     if (store.data.organizationName) return;
@@ -23,36 +27,46 @@ export function WorkspaceStep() {
     if (suggested) store.patch({ organizationName: suggested });
   }, [email]);
 
-  // What the final URL will actually be (mirrors createOrganization's logic).
   const previewSlug =
     data.organizationSlug.trim() ||
     deriveOrganizationSlug(data.organizationName) ||
-    'your-workspace';
+    t(ONBOARDING_KEYS.workspace.slugFallback);
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="ob-org">Organization name</Label>
+        <Label htmlFor="ob-org">
+          {t(ONBOARDING_KEYS.workspace.organizationNameLabel)}
+        </Label>
         <Input
           id="ob-org"
           value={data.organizationName}
           onChange={(e) => patch({ organizationName: e.target.value })}
-          placeholder="Acme Inc."
-          data-testid="onboarding-organization-name"
+          placeholder={t(ONBOARDING_KEYS.workspace.organizationNamePlaceholder)}
+          data-testid={ONBOARDING_TEST_IDS.organizationName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="ob-slug">Workspace URL (optional)</Label>
+        <Label htmlFor="ob-slug">{t(ONBOARDING_KEYS.workspace.slugLabel)}</Label>
         <Input
           id="ob-slug"
           value={data.organizationSlug}
           onChange={(e) => patch({ organizationSlug: e.target.value })}
-          placeholder="acme"
-          data-testid="onboarding-organization-slug"
+          placeholder={t(ONBOARDING_KEYS.workspace.slugPlaceholder)}
+          data-testid={ONBOARDING_TEST_IDS.organizationSlug}
         />
-        <p className="text-muted-foreground text-xs" data-testid="onboarding-url-preview">
-          Your workspace will live at{' '}
-          <span className="text-foreground font-medium">core.app/{previewSlug}</span>
+        <p
+          className="text-muted-foreground text-xs"
+          data-testid={ONBOARDING_TEST_IDS.urlPreview}
+        >
+          <Trans
+            ns={ONBOARDING_NS}
+            i18nKey={ONBOARDING_KEYS.workspace.urlPreview}
+            values={{ slug: previewSlug }}
+            components={{
+              1: <span className="text-foreground font-medium" />,
+            }}
+          />
         </p>
       </div>
     </div>

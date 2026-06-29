@@ -1,6 +1,7 @@
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import type { ReactNode } from 'react';
 
+import { closeControlClassName } from '@/lib/icon-surface.ts';
 import { cn } from '@/lib/utils.ts';
 import { X } from '@/shared/icons/index.ts';
 
@@ -26,7 +27,7 @@ const OVERLAY =
   'fixed inset-0 z-50 bg-overlay/50 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0';
 
 const BASE =
-  'bg-background fixed z-50 flex flex-col gap-4 border shadow-lg outline-none duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0';
+  'bg-background fixed z-50 flex flex-col gap-4 border outline-none transition data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0';
 
 const MODAL =
   'top-[50%] left-[50%] max-h-[calc(100dvh-2rem)] w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] rounded-lg p-6 sm:max-w-lg data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95';
@@ -90,9 +91,10 @@ export function Surface({
           {showCloseButton ? (
             <DialogPrimitive.Close
               aria-label="Close"
-              className="ring-offset-background focus:ring-ring absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden"
+              data-slot="button"
+              className={cn(closeControlClassName, 'absolute top-4 right-4')}
             >
-              <X className="h-4 w-4" />
+              <X className="size-4" />
             </DialogPrimitive.Close>
           ) : null}
         </DialogPrimitive.Content>

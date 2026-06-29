@@ -1,5 +1,13 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
+import {
+  SETTINGS_KEYS,
+  SETTINGS_NS,
+} from '@/shared/components/SettingsModal/settings.constants.ts';
+import { SectionHeader } from '@/shared/components/SettingsModal/SettingsPanelShell.tsx';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +32,6 @@ import { Copy, ShieldCheck, Trash2, TriangleAlert } from '@/shared/icons/index.t
 import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
-import { SectionHeader } from '../SettingsPanelShell.tsx';
-
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2">
@@ -44,6 +50,8 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
  * DELETE /api/v1/users/me
  */
 export function AccountPanel() {
+  const { t } = useTranslation(SETTINGS_NS);
+  const accountPanels = SETTINGS_KEYS.panels.account;
   const user = useAuthStore((s) => s.user);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -54,9 +62,9 @@ export function AccountPanel() {
   const copyId = async () => {
     try {
       await navigator.clipboard.writeText(userId);
-      notify.success('Account ID copied');
+      notify.success(i18n.t(ERRORS_KEYS.frontend.account.copySuccess, { ns: ERRORS_NS }));
     } catch {
-      notify.error('Could not copy to clipboard');
+      notify.error(i18n.t(ERRORS_KEYS.frontend.account.copyFailed, { ns: ERRORS_NS }));
     }
   };
 
@@ -118,7 +126,13 @@ export function AccountPanel() {
             </div>
             <Button
               variant="outline"
-              onClick={() => notify.success('Account deactivated (mock)')}
+              onClick={() =>
+                notify.success(
+                  i18n.t(ERRORS_KEYS.frontend.account.accountDeactivatedPending, {
+                    ns: ERRORS_NS,
+                  }),
+                )
+              }
               data-testid="account-deactivate"
             >
               Deactivate
@@ -146,25 +160,28 @@ export function AccountPanel() {
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogTitle>{t(accountPanels.deleteTitle)}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action is permanent and cannot be undone. All your data will be
-              removed.
+              {t(accountPanels.deleteDescription)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel data-testid="account-delete-cancel">
-              Cancel
+              {t(accountPanels.deleteCancel)}
             </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
               onClick={() => {
                 setConfirmDelete(false);
-                notify.success('Account deletion requested (mock)');
+                notify.success(
+                  i18n.t(ERRORS_KEYS.frontend.account.accountDeletionPending, {
+                    ns: ERRORS_NS,
+                  }),
+                );
               }}
               data-testid="account-delete-confirm"
             >
-              Delete account
+              {t(accountPanels.deleteConfirm)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

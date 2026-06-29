@@ -14,5 +14,5 @@ export interface GateProps extends AccessCheck {
  * UI gating is defense-in-depth — the route gates + API stay authoritative.
  */
 export function Gate({ children, fallback = null, ...check }: GateProps) {
-  return useCan(check) ? <>{children}</> : <>{fallback}</>;
+  return useCan(check) ? children : fallback;
 }

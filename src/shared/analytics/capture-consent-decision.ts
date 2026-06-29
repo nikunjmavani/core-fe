@@ -1,12 +1,14 @@
+import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
+import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import type { ConsentDecision } from '@/shared/store/useConsentStore/index.ts';
 
-/** PostHog event emitted once when the user accepts the cookie banner. */
-export const ANALYTICS_CONSENT_EVENT = 'analytics_consent_decision';
+/** @deprecated Use {@link ANALYTICS_EVENTS.consentDecision}. */
+export const ANALYTICS_CONSENT_EVENT = ANALYTICS_EVENTS.consentDecision;
 
 /**
  * Record an explicit analytics-consent choice for audit/compliance.
  *
- * - **granted** — initializes PostHog (idempotent) and captures a single event.
+ * - **granted** — bootstraps PostHog (via registry) and captures a single event.
  * - **denied** — no third-party capture; the decision lives in {@link useConsentStore} only.
  */
 export async function captureAnalyticsConsentDecision(
@@ -14,9 +16,7 @@ export async function captureAnalyticsConsentDecision(
 ): Promise<void> {
   if (decision === 'denied') return;
 
-  const { initPostHog, posthog } = await import('@/app/analytics/posthog.ts');
-  initPostHog();
-  posthog.capture(ANALYTICS_CONSENT_EVENT, {
+  captureAnalyticsEvent(ANALYTICS_EVENTS.consentDecision, {
     decision: 'granted',
     source: 'consent_banner',
   });

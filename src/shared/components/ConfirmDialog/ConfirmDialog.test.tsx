@@ -1,7 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { axe } from 'vitest-axe';
+
+import { axeForDialog } from '@/tests/utils/axe-for-dialog.ts';
 
 import { ConfirmDialog } from './ConfirmDialog.tsx';
 
@@ -47,6 +48,6 @@ describe('ConfirmDialog', () => {
 
   it('has no accessibility violations', async () => {
     const { baseElement } = render(<ConfirmDialog {...base} />);
-    expect(await axe(baseElement)).toHaveNoViolations();
+    expect(await axeForDialog(baseElement)).toHaveNoViolations();
   });
 });

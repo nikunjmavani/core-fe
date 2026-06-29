@@ -1,5 +1,6 @@
 import type { DenyMode } from '@/core/rbac/guards.ts';
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
+import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
 import type { Gate } from './gate.types.ts';
 import { requireModuleGate } from './gates/require-module.ts';
@@ -42,9 +43,26 @@ export interface RoutePolicy {
  */
 export function gatewayFromPolicy(policy: RoutePolicy) {
   const gates: Gate[] = [requireSession];
+  // Static, most-restrictive gate first: a deployment-disabled module 404s the
+  // whole surface (build-time flag read), so short-circuit before the later
+  // org-scoped permission read. Session stays first (default-deny invariant).
+  if (policy.module) gates.push(requireModuleGate(policy.module));
   if (policy.permission) {
     gates.push(requirePermissionGate(policy.permission, policy.onDeny));
   }
-  if (policy.module) gates.push(requireModuleGate(policy.module));
   return gateway(...gates);
+}
+
+/**
+ * Compose the gateway from a route island manifest — maps `permission`,
+ * `module`, and `onDeny` into {@link gatewayFromPolicy}.
+ */
+export function gatewayFromManifest(
+  manifest: Pick<PageManifest, 'permission' | 'module' | 'onDeny'>,
+) {
+  return gatewayFromPolicy({
+    permission: manifest.permission ?? undefined,
+    module: manifest.module,
+    onDeny: manifest.onDeny,
+  });
 }

@@ -1,6 +1,17 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
+import {
+  appearanceChoiceClassName,
+  appearanceModeCardClassName,
+  appearancePreviewWellClassName,
+  appearanceTileActiveClassName,
+  appearanceTileIdleClassName,
+} from '@/lib/appearance-surface.ts';
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
+import { closeControlClassName } from '@/lib/icon-surface.ts';
 import { cn } from '@/lib/utils.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -19,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/shared/components/ui/select.tsx';
+import { Separator } from '@/shared/components/ui/separator.tsx';
 import { Check, Monitor, Moon, Sparkles, Sun } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
@@ -36,10 +48,13 @@ import {
   type GeneratedTheme,
   HARMONY_RULES,
   hexToHue,
+  ICON_COLORS,
   ICON_LIBRARIES,
   ICON_WEIGHTS,
+  LAYOUT_WIDTHS,
   MENU_STYLES,
   MOTION_PRESETS,
+  nextToastVariant,
   normalizeLook,
   oklchToHex,
   rollColour,
@@ -47,6 +62,8 @@ import {
   rollTypography,
   SEPARATION_STRATEGIES,
   SHAPE_LANGUAGES,
+  THEME_PRESETS,
+  TOAST_POSITION_LABELS,
   TOAST_POSITIONS,
   TOAST_VARIANTS,
   type ToastPosition,
@@ -85,17 +102,61 @@ const TOAST_VARIANT_OPTIONS = TOAST_VARIANTS.map((id) => ({
   label: id.charAt(0).toUpperCase() + id.slice(1),
 }));
 
-/** TEMP: toast-position choices for the preview picker. */
-const POSITION_LABELS: Record<ToastPosition, string> = {
-  'top-right': 'Top right',
-  'top-center': 'Top center',
-  'bottom-right': 'Bottom right',
-  'bottom-center': 'Bottom center',
-};
+/** Toast-position choices for the preview picker. */
 const TOAST_POSITION_OPTIONS = TOAST_POSITIONS.map((id) => ({
   id,
-  label: POSITION_LABELS[id],
+  label: TOAST_POSITION_LABELS[id],
 }));
+
+/** Inline swatches — each variant uses live semantic tokens (success tone as sample). */
+function ToastVariantSwatches({
+  activeIndex,
+  onPick,
+}: {
+  activeIndex: number;
+  onPick: (index: number) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2" data-testid="toast-variant-swatches">
+      {TOAST_VARIANTS.map((variant, index) => (
+        <button
+          key={variant}
+          type="button"
+          data-slot="button"
+          aria-label={`${variant} toast style`}
+          aria-pressed={index === activeIndex}
+          data-testid={`toast-swatch-${variant}`}
+          onClick={() => onPick(index)}
+          className={cn(
+            'relative flex h-9 min-w-[4.25rem] flex-1 items-center justify-center rounded-lg border text-[10px] font-semibold capitalize transition',
+            variant === 'tint' &&
+              'border-success/25 bg-success/10 text-success border-transparent',
+            variant === 'solid' &&
+              'bg-success text-success-foreground border-transparent',
+            variant === 'outline' &&
+              'bg-popover text-popover-foreground border-success/50',
+            variant === 'accent' &&
+              'border-border bg-popover text-popover-foreground pl-3',
+            variant === 'minimal' &&
+              'border-border/60 bg-background/80 text-foreground border-dashed',
+            variant === 'glass' &&
+              'border-border/40 bg-popover/55 text-popover-foreground backdrop-blur-md',
+            index === activeIndex &&
+              'ring-ring ring-offset-background ring-2 ring-offset-2',
+          )}
+        >
+          {variant === 'accent' ? (
+            <span
+              className="bg-success absolute inset-y-1 left-0 w-1 rounded-full"
+              aria-hidden="true"
+            />
+          ) : null}
+          {variant}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Colour field: a native colour "snippet" for any hue, plus the preset swatches as
@@ -135,13 +196,14 @@ function ColourField({
               key={c.id}
               type="button"
               role="radio"
+              data-slot="button"
               aria-checked={active}
               aria-label={c.label}
               title={c.label}
               onClick={() => onPickHue(c.hue)}
               data-testid={`${testPrefix}-${c.id}`}
               className={cn(
-                'focus-visible:ring-ring size-7 rounded-full transition outline-none focus-visible:ring-2',
+                'size-7 rounded-full transition outline-none focus-visible:outline-hidden',
                 `theme-dot-${c.id}`,
                 active
                   ? 'ring-foreground ring-offset-background ring-2 ring-offset-2'
@@ -178,11 +240,12 @@ function Choices({
             key={o.id}
             type="button"
             role="radio"
+            data-slot="button"
             aria-checked={active}
             onClick={() => onPick(o.id)}
             data-testid={`${testPrefix}-${o.id}`}
             className={cn(
-              'focus-visible:ring-ring rounded-md border px-3 py-1.5 text-sm transition-colors outline-none focus-visible:ring-2',
+              appearanceChoiceClassName,
               active
                 ? 'border-primary bg-primary/10 text-foreground'
                 : 'border-border text-muted-foreground hover:border-primary/50',
@@ -221,7 +284,7 @@ function FontSelect({
         >
           <SelectValue />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="z-[90]">
           {Object.entries(GENERATED_FONTS).map(([fid, f]) => (
             <SelectItem key={fid} value={fid}>
               {f.label}
@@ -279,11 +342,15 @@ function SectionShuffle({
   return (
     <button
       type="button"
+      data-slot="button"
       onClick={onClick}
       aria-label={`Shuffle ${label}`}
       title={`Shuffle ${label}`}
       data-testid={testId}
-      className="text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-ring rounded-md p-1.5 transition outline-none focus-visible:ring-2"
+      className={cn(
+        'text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition',
+        closeControlClassName,
+      )}
     >
       <Sparkles className="size-4" aria-hidden="true" />
     </button>
@@ -295,26 +362,32 @@ function SectionShuffle({
  * mode plus per-axis pickers (colour, fonts, radius, density, motion, …), each
  * section re-rollable via its own shuffle. Rendered inside the dedicated
  * AppearanceDialog, persisted via {@link useThemeStore}. The GLOBAL shuffle lives
- * in the dialog header. When `config.themeLock` is set the controls are hidden.
+ * in the dialog header. When `platformConfig.themeLock` is set the controls are hidden.
  */
 export function AppearancePanel() {
+  const { t } = useTranslation(ERRORS_NS);
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const preset = useThemeStore((s) => s.preset);
+  const setPreset = useThemeStore((s) => s.setPreset);
   const customTheme = useThemeStore((s) => s.customTheme);
   const baseId = useThemeStore((s) => s.baseId);
   const menu = useThemeStore((s) => s.menu);
   const iconWeight = useThemeStore((s) => s.iconWeight);
+  const iconColor = useThemeStore((s) => s.iconColor);
   const iconLibrary = useThemeStore((s) => s.iconLibrary);
   const updateLook = useThemeStore((s) => s.updateLook);
   const setBaseColor = useThemeStore((s) => s.setBaseColor);
   const setMenu = useThemeStore((s) => s.setMenu);
   const setIconWeight = useThemeStore((s) => s.setIconWeight);
+  const setIconColor = useThemeStore((s) => s.setIconColor);
   const setIconLibrary = useThemeStore((s) => s.setIconLibrary);
   const toastVariant = useThemeStore((s) => s.toastVariant);
   const setToastVariant = useThemeStore((s) => s.setToastVariant);
   const toastPosition = useThemeStore((s) => s.toastPosition);
   const setToastPosition = useThemeStore((s) => s.setToastPosition);
+  const layoutWidth = useThemeStore((s) => s.layoutWidth);
+  const setLayoutWidth = useThemeStore((s) => s.setLayoutWidth);
   const seed = useThemeStore((s) => s.seed);
   const applyThemeSeed = useThemeStore((s) => s.applyThemeSeed);
   const [seedInput, setSeedInput] = useState('');
@@ -324,13 +397,33 @@ export function AppearancePanel() {
   const shuffleColour = () => updateLook(rollColour());
   const shuffleTypography = () => updateLook(rollTypography());
   const shuffleSurface = () => updateLook(rollSurface());
+  const shuffleNotifications = () => {
+    const next = nextToastVariant(toastVariant);
+    setToastVariant(next);
+    const name = TOAST_VARIANTS[next] ?? 'tint';
+    notify.success(
+      i18n.t(ERRORS_KEYS.frontend.account.notificationStylePreview, { ns: ERRORS_NS }),
+      {
+        description: i18n.t(
+          ERRORS_KEYS.frontend.account.notificationStylePreviewDescription,
+          {
+            ns: ERRORS_NS,
+            variant: `${name.charAt(0).toUpperCase() + name.slice(1)}`,
+          },
+        ),
+      },
+    );
+  };
 
   // Copy a shareable link that reproduces the current look (?theme=<seed>).
   const handleCopyLink = () => {
     if (seed == null) return;
     const url = `${window.location.origin}?theme=${seed}`;
     navigator.clipboard?.writeText(url).catch(() => undefined);
-    notify.success('Theme link copied', { description: url });
+    notify.success(
+      i18n.t(ERRORS_KEYS.frontend.account.themeLinkCopied, { ns: ERRORS_NS }),
+      { description: url },
+    );
   };
 
   // Apply a pasted theme code (seed) — reproduces that exact look.
@@ -338,14 +431,16 @@ export function AppearancePanel() {
     const trimmed = seedInput.trim();
     const value = Number(trimmed);
     if (trimmed === '' || !Number.isFinite(value)) {
-      notify.error('Enter a numeric theme code');
+      notify.error(
+        i18n.t(ERRORS_KEYS.frontend.account.themeCodeNumeric, { ns: ERRORS_NS }),
+      );
       return;
     }
     applyThemeSeed(value >>> 0);
     setSeedInput('');
   };
 
-  if (config.themeLock) {
+  if (platformConfig.themeLock) {
     return (
       <div className="space-y-6" data-testid="appearance-panel">
         <Card>
@@ -370,7 +465,70 @@ export function AppearancePanel() {
   const chartHex = oklchToHex(0.64, 0.17, look.chartHue);
 
   return (
-    <div className="space-y-6" data-testid="appearance-panel">
+    <div className="flex flex-col gap-4" data-testid="appearance-panel">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Theme</CardTitle>
+          <CardDescription>
+            Named accent presets — or copy a link / paste a theme code to reproduce an
+            exact generated look.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Choices
+            ariaLabel="Named accent preset"
+            value={preset === GENERATED_PRESET ? '__none__' : preset}
+            options={THEME_PRESETS}
+            onPick={setPreset}
+            testPrefix="named-preset"
+          />
+          <Separator />
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCopyLink}
+                disabled={seed == null}
+                data-testid="theme-copy-link"
+              >
+                Copy link
+              </Button>
+              {seed == null ? (
+                <span className="text-muted-foreground text-sm">
+                  Shuffle to generate a code.
+                </span>
+              ) : (
+                <span className="text-muted-foreground text-sm" data-testid="theme-seed">
+                  Code: {seed}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Input
+                inputMode="numeric"
+                value={seedInput}
+                onChange={(e) => setSeedInput(e.target.value)}
+                placeholder="Paste a theme code"
+                aria-label="Theme code"
+                data-testid="theme-seed-input"
+                className="w-44"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleApplySeed}
+                data-testid="theme-seed-apply"
+              >
+                Apply
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Mode</CardTitle>
@@ -385,15 +543,13 @@ export function AppearancePanel() {
                   key={t.id}
                   type="button"
                   role="radio"
+                  data-slot="button"
                   aria-checked={active}
                   onClick={() => setTheme(t.id)}
                   data-testid={`theme-${t.id}`}
                   className={cn(
-                    'group bg-background relative flex flex-col items-start gap-2 rounded-lg border p-4 text-left transition-all',
-                    'focus-visible:ring-ring outline-none focus-visible:ring-2',
-                    active
-                      ? 'border-primary ring-primary/20 ring-2'
-                      : 'border-border hover:border-primary/50',
+                    appearanceModeCardClassName,
+                    active ? appearanceTileActiveClassName : appearanceTileIdleClassName,
                   )}
                 >
                   <div className="flex w-full items-center justify-between">
@@ -544,6 +700,20 @@ export function AppearancePanel() {
               testPrefix="menu"
             />
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Icons</CardTitle>
+          <CardDescription>Stroke weight, colour, and icon set.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-5">
+          <div className={appearancePreviewWellClassName} aria-hidden>
+            <Sparkles className="size-6" data-testid="icon-preview-star" />
+            <Sun className="size-6" data-testid="icon-preview-sun" />
+            <Moon className="size-6" data-testid="icon-preview-moon" />
+          </div>
           <div className="space-y-2">
             <FieldLabel>Icon weight</FieldLabel>
             <Choices
@@ -552,6 +722,16 @@ export function AppearancePanel() {
               options={ICON_WEIGHTS}
               onPick={setIconWeight}
               testPrefix="icon"
+            />
+          </div>
+          <div className="space-y-2">
+            <FieldLabel>Icon colour</FieldLabel>
+            <Choices
+              ariaLabel="Icon colour"
+              value={iconColor}
+              options={ICON_COLORS}
+              onPick={setIconColor}
+              testPrefix="iconcolor"
             />
           </div>
           <div className="space-y-2">
@@ -566,6 +746,31 @@ export function AppearancePanel() {
           </div>
         </CardContent>
       </Card>
+
+      {platformConfig.layoutWidthForced === null ? (
+        <Card data-testid="layout-width-card">
+          <CardHeader>
+            <CardTitle className="text-base">Layout</CardTitle>
+            <CardDescription>
+              How wide the main workspace is — standard for dashboards, reading for
+              focused copy.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <FieldLabel>Content width</FieldLabel>
+            <Choices
+              ariaLabel="Content width"
+              value={layoutWidth}
+              options={LAYOUT_WIDTHS.map(({ id, label }) => ({ id, label }))}
+              onPick={(value) => setLayoutWidth(value as typeof layoutWidth)}
+              testPrefix="layout-width"
+            />
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              {LAYOUT_WIDTHS.find((option) => option.id === layoutWidth)?.description}
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -647,12 +852,20 @@ export function AppearancePanel() {
         <CardHeader>
           <CardTitle className="text-base">Notifications</CardTitle>
           <CardDescription>
-            Temporary — pick a toast design, then fire a sample to preview it.
+            Pick or shuffle a toast design — previews use your live theme tokens.
           </CardDescription>
+          <CardAction>
+            <SectionShuffle
+              onClick={shuffleNotifications}
+              label="notification style"
+              testId="shuffle-notifications"
+            />
+          </CardAction>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <FieldLabel>Toast design</FieldLabel>
+            <ToastVariantSwatches activeIndex={toastVariant} onPick={setToastVariant} />
             <Choices
               ariaLabel="Toast design"
               value={TOAST_VARIANTS[toastVariant] ?? TOAST_VARIANTS[0]}
@@ -677,8 +890,8 @@ export function AppearancePanel() {
               variant="outline"
               size="sm"
               onClick={() =>
-                notify.success('Changes saved', {
-                  description: 'Your settings are live.',
+                notify.success(t(ERRORS_KEYS.toast.preview.successTitle), {
+                  description: t(ERRORS_KEYS.toast.preview.successDescription),
                 })
               }
               data-testid="toast-preview-success"
@@ -690,7 +903,9 @@ export function AppearancePanel() {
               variant="outline"
               size="sm"
               onClick={() =>
-                notify.error('Something went wrong', { description: 'Please try again.' })
+                notify.error(t(ERRORS_KEYS.toast.preview.errorTitle), {
+                  description: t(ERRORS_KEYS.toast.preview.errorDescription),
+                })
               }
               data-testid="toast-preview-error"
             >
@@ -701,7 +916,9 @@ export function AppearancePanel() {
               variant="outline"
               size="sm"
               onClick={() =>
-                notify.warning('Heads up', { description: 'This action needs a review.' })
+                notify.warning(t(ERRORS_KEYS.toast.preview.warningTitle), {
+                  description: t(ERRORS_KEYS.toast.preview.warningDescription),
+                })
               }
               data-testid="toast-preview-warning"
             >
@@ -712,8 +929,8 @@ export function AppearancePanel() {
               variant="outline"
               size="sm"
               onClick={() =>
-                notify.info('Did you know?', {
-                  description: 'Shuffle also rolls this design.',
+                notify.info(t(ERRORS_KEYS.toast.preview.infoTitle), {
+                  description: t(ERRORS_KEYS.toast.preview.infoDescription),
                 })
               }
               data-testid="toast-preview-info"
@@ -724,62 +941,9 @@ export function AppearancePanel() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Theme code</CardTitle>
-          <CardDescription>
-            Every generated look is one number — copy a link to share it, or paste a code
-            to reproduce it exactly.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleCopyLink}
-              disabled={seed == null}
-              data-testid="theme-copy-link"
-            >
-              Copy link
-            </Button>
-            {seed == null ? (
-              <span className="text-muted-foreground text-sm">
-                Shuffle to generate a code.
-              </span>
-            ) : (
-              <span className="text-muted-foreground text-sm" data-testid="theme-seed">
-                Code: {seed}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              inputMode="numeric"
-              value={seedInput}
-              onChange={(e) => setSeedInput(e.target.value)}
-              placeholder="Paste a theme code"
-              aria-label="Theme code"
-              data-testid="theme-seed-input"
-              className="w-44"
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleApplySeed}
-              data-testid="theme-seed-apply"
-            >
-              Apply
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
       {preset === GENERATED_PRESET ? (
         <div
-          className="text-muted-foreground inline-flex items-center gap-1.5 text-sm"
+          className="text-muted-foreground mt-2 inline-flex items-center gap-1.5 text-sm"
           data-testid="preset-custom"
         >
           <Check className="text-primary size-4" aria-hidden />

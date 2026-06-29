@@ -1,16 +1,25 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 
+import { closeControlClassName } from '@/lib/icon-surface.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { Plus, X } from '@/shared/icons/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 
+import {
+  ONBOARDING_KEYS,
+  ONBOARDING_NS,
+  ONBOARDING_TEST_IDS,
+} from '../../onboarding.constants.ts';
+
 const inviteEmailSchema = z.string().trim().pipe(z.email());
 
 /** Collects optional teammate emails; the final step sends the invitations. */
 export function InviteStep() {
+  const { t } = useTranslation(ONBOARDING_NS);
   const { data, patch } = useOnboardingStore();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -18,12 +27,12 @@ export function InviteStep() {
   const add = () => {
     const parsed = inviteEmailSchema.safeParse(email);
     if (!parsed.success) {
-      setError('Enter a valid email address.');
+      setError(t(ONBOARDING_KEYS.invite.invalidEmail));
       return;
     }
     const trimmed = parsed.data.toLowerCase();
     if (data.invites.includes(trimmed)) {
-      setError('That teammate is already on the list.');
+      setError(t(ONBOARDING_KEYS.invite.duplicateEmail));
       return;
     }
     patch({ invites: [...data.invites, trimmed] });
@@ -35,7 +44,7 @@ export function InviteStep() {
     <div className="space-y-4">
       <div className="flex items-end gap-2">
         <div className="flex-1 space-y-2">
-          <Label htmlFor="ob-invite">Teammate email</Label>
+          <Label htmlFor="ob-invite">{t(ONBOARDING_KEYS.invite.emailLabel)}</Label>
           <Input
             id="ob-invite"
             type="email"
@@ -52,18 +61,18 @@ export function InviteStep() {
             }}
             aria-invalid={!!error}
             aria-describedby={error ? 'onboarding-invite-error' : undefined}
-            placeholder="teammate@company.com"
-            data-testid="onboarding-invite-email"
+            placeholder={t(ONBOARDING_KEYS.invite.emailPlaceholder)}
+            data-testid={ONBOARDING_TEST_IDS.inviteEmail}
           />
         </div>
         <Button
           type="button"
           variant="outline"
           onClick={add}
-          data-testid="onboarding-invite-add"
+          data-testid={ONBOARDING_TEST_IDS.inviteAdd}
         >
           <Plus className="mr-1 h-4 w-4" />
-          Add
+          {t(ONBOARDING_KEYS.invite.addButton)}
         </Button>
       </div>
       {error && (
@@ -71,13 +80,13 @@ export function InviteStep() {
           id="onboarding-invite-error"
           className="text-destructive text-xs"
           role="alert"
-          data-testid="onboarding-invite-error"
+          data-testid={ONBOARDING_TEST_IDS.inviteError}
         >
           {error}
         </p>
       )}
       {data.invites.length > 0 && (
-        <ul className="space-y-2" data-testid="onboarding-invite-list">
+        <ul className="space-y-2" data-testid={ONBOARDING_TEST_IDS.inviteList}>
           {data.invites.map((invite) => (
             <li
               key={invite}
@@ -86,11 +95,12 @@ export function InviteStep() {
               {invite}
               <button
                 type="button"
-                aria-label={`Remove ${invite}`}
+                data-slot="button"
+                aria-label={t(ONBOARDING_KEYS.invite.removeAriaLabel, { email: invite })}
                 onClick={() =>
                   patch({ invites: data.invites.filter((i) => i !== invite) })
                 }
-                className="text-muted-foreground hover:text-foreground"
+                className={closeControlClassName}
               >
                 <X className="h-4 w-4" />
               </button>

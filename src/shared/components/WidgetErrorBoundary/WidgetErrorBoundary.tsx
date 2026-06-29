@@ -1,9 +1,13 @@
-import { Component, type ErrorInfo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import { useTranslation } from 'react-i18next';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
+import { Card, CardContent } from '@/shared/components/ui/card.tsx';
 import { AlertTriangle } from '@/shared/icons/index.ts';
 
-interface WidgetErrorBoundaryProps {
+interface SectionErrorBoundaryProps {
   children: ReactNode;
   /** Short label shown in the fallback (e.g. "Analytics"). */
   title: string;
@@ -11,54 +15,56 @@ interface WidgetErrorBoundaryProps {
   testId?: string;
 }
 
-interface WidgetErrorBoundaryState {
-  hasError: boolean;
+function SectionErrorFallback({
+  title,
+  testId,
+  resetErrorBoundary,
+}: FallbackProps & { title: string; testId?: string }) {
+  const { t } = useTranslation(ERRORS_NS);
+
+  return (
+    <Card className="border-dashed" data-testid={testId ?? 'widget-error'} role="alert">
+      <CardContent className="flex min-h-[120px] flex-col items-center justify-center gap-3 p-4 text-center">
+        <AlertTriangle className="text-muted-foreground size-7" aria-hidden="true" />
+        <div>
+          <p className="text-sm font-medium">
+            {t(ERRORS_KEYS.widget.unavailable, { title })}
+          </p>
+          <p className="text-muted-foreground mt-1 text-xs">
+            {t(ERRORS_KEYS.widget.message)}
+          </p>
+        </div>
+        <Button type="button" variant="outline" size="sm" onClick={resetErrorBoundary}>
+          {t(ERRORS_KEYS.widget.retry)}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }
 
 /**
  * Section-level error boundary so one failing widget does not blank the whole page.
  */
-export class WidgetErrorBoundary extends Component<
-  WidgetErrorBoundaryProps,
-  WidgetErrorBoundaryState
-> {
-  state: WidgetErrorBoundaryState = { hasError: false };
-
-  static getDerivedStateFromError(): WidgetErrorBoundaryState {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, info: ErrorInfo): void {
-    if (import.meta.env.DEV) {
-      console.error(`[WidgetErrorBoundary:${this.props.title}]`, error, info);
-    }
-  }
-
-  private readonly handleRetry = (): void => {
-    this.setState({ hasError: false });
-  };
-
-  render(): ReactNode {
-    if (this.state.hasError) {
-      return (
-        <div
-          className="border-border flex min-h-[160px] flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-6 text-center"
-          data-testid={this.props.testId ?? 'widget-error'}
-          role="alert"
-        >
-          <AlertTriangle className="text-muted-foreground h-8 w-8" aria-hidden="true" />
-          <div>
-            <p className="text-sm font-medium">{this.props.title} unavailable</p>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Something went wrong loading this section. Try again.
-            </p>
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={this.handleRetry}>
-            Retry
-          </Button>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
+export function SectionErrorBoundary({
+  children,
+  title,
+  testId,
+}: SectionErrorBoundaryProps) {
+  return (
+    <ErrorBoundary
+      fallbackRender={(props) => (
+        <SectionErrorFallback {...props} title={title} testId={testId} />
+      )}
+      onError={(error, info) => {
+        if (import.meta.env.DEV) {
+          console.error(`[SectionErrorBoundary:${title}]`, error, info);
+        }
+      }}
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }
+
+/** @deprecated Use {@link SectionErrorBoundary} — kept for existing imports/tests. */
+export const WidgetErrorBoundary = SectionErrorBoundary;

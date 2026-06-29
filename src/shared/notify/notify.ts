@@ -12,18 +12,37 @@ import { CustomToast, type ToastType } from './CustomToast.tsx';
  * @example
  *   notify.success('Saved');
  *   notify.error(mapApiError(err));
+ *   notify.loading('Saving…');
  *   notify.promise(save(), { loading: 'Saving…', success: 'Saved', error: 'Save failed' });
  */
+export interface NotifyAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface NotifyOptions {
   /** Stable id to de-dupe / replace an existing toast. */
   id?: string | number;
   /** Secondary line under the message. */
   description?: string;
-  /** Auto-dismiss after N ms (omit for the default). */
+  /** Auto-dismiss after N ms (omit for the default). Use `Infinity` to persist. */
   duration?: number;
+  /** Optional inline action (e.g. Undo). */
+  action?: NotifyAction;
+  /** Fires when the toast is dismissed (close button or auto-dismiss). */
+  onDismiss?: () => void;
 }
 
 function show(type: ToastType, message: string, opts?: NotifyOptions) {
+  // Never pass `id: undefined` — sonner #679 overwrites the generated id and breaks dismiss.
+  const toastOpts = {
+    ...(opts?.id !== undefined ? { id: opts.id } : {}),
+    ...(opts?.duration !== undefined ? { duration: opts.duration } : {}),
+    unstyled: true as const,
+    className: 'w-full',
+    ...(opts?.onDismiss ? { onDismiss: () => opts.onDismiss?.() } : {}),
+  };
+
   return toast.custom(
     (id) =>
       createElement(CustomToast, {
@@ -31,9 +50,10 @@ function show(type: ToastType, message: string, opts?: NotifyOptions) {
         type,
         title: message,
         description: opts?.description,
+        action: opts?.action,
+        onDismiss: opts?.onDismiss,
       }),
-    // `unstyled` strips sonner's default chrome so CustomToast owns the look.
-    { id: opts?.id, duration: opts?.duration, unstyled: true, className: 'w-full' },
+    toastOpts,
   );
 }
 
@@ -42,6 +62,9 @@ export const notify = {
   error: (message: string, opts?: NotifyOptions) => show('error', message, opts),
   info: (message: string, opts?: NotifyOptions) => show('info', message, opts),
   warning: (message: string, opts?: NotifyOptions) => show('warning', message, opts),
+  /** Spinner toast for in-flight work — dismiss explicitly when done. */
+  loading: (message: string, opts?: NotifyOptions) =>
+    show('loading', message, { duration: Infinity, ...opts }),
   /** Drive a toast from a promise's lifecycle (loading → success / error). */
   promise: <T>(
     promise: Promise<T>,

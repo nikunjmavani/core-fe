@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   accentForeground,
   applyBaseColor,
   applyGeneratedTheme,
+  applyIconColor,
   applyIconWeight,
   applyMenuStyle,
   applyThemePreset,
@@ -200,16 +201,49 @@ describe('generated themes (shuffle)', () => {
     applyGeneratedTheme({
       ...sample,
       shapeId: 'pill',
-      separationId: 'tint',
+      separationId: 'shadow',
       focusId: 'glow',
       typeScaleId: 'grand',
     });
     const root = document.documentElement;
     expect(root.dataset.shape).toBe('pill');
-    expect(root.dataset.separation).toBe('tint');
+    expect(root.dataset.separation).toBe('shadow');
     expect(root.dataset.focus).toBe('glow');
     // a non-default type scale overrides --text-* (default leaves them stock)
     expect(root.style.getPropertyValue('--text-lg')).not.toBe('');
+  });
+
+  it('applyThemePreset sets rose and ocean presets', () => {
+    applyThemePreset('rose');
+    expect(document.documentElement.dataset.theme).toBe('rose');
+    applyThemePreset('ocean');
+    expect(document.documentElement.dataset.theme).toBe('ocean');
+  });
+
+  it('THEME_PRESETS includes rose and ocean', () => {
+    expect(THEME_PRESETS.map((p) => p.id)).toEqual(
+      expect.arrayContaining(['rose', 'ocean', 'violet', 'emerald']),
+    );
+  });
+
+  it('applyGeneratedTheme uses instant motion when prefers-reduced-motion', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn().mockImplementation((query: string) => ({
+        matches: query === '(prefers-reduced-motion: reduce)',
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
+    );
+    applyGeneratedTheme({ ...sample, motionId: 'calm' });
+    expect(
+      document.documentElement.style.getPropertyValue('--default-transition-duration'),
+    ).toBe('0ms');
+    vi.unstubAllGlobals();
   });
 
   it('applyGeneratedTheme sets accent + fonts + radius + chart, clears data-theme', () => {
@@ -251,24 +285,37 @@ describe('orthogonal base colour + menu', () => {
   it('applyMenuStyle sets/clears data-menu', () => {
     applyMenuStyle('translucent');
     expect(document.documentElement.dataset.menu).toBe('translucent');
+    applyMenuStyle('glass');
+    expect(document.documentElement.dataset.menu).toBe('glass');
     applyMenuStyle('default');
     expect(document.documentElement.dataset.menu).toBeUndefined();
   });
 
   it('shuffleIcons keeps valid ids and varies weight + library over many rolls', () => {
-    const current = { weight: 'regular', library: 'lucide' };
+    const current = { weight: 'regular', library: 'lucide', color: 'default' };
     let weightChanged = false;
     let libraryChanged = false;
+    let colorChanged = false;
     for (let i = 0; i < 60; i += 1) {
       const next = shuffleIcons(current);
       expect(['thin', 'regular', 'bold']).toContain(next.weight);
       expect(['lucide', 'tabler', 'phosphor']).toContain(next.library);
+      expect([
+        'default',
+        'foreground',
+        'muted',
+        'primary',
+        'accent',
+        'destructive',
+      ]).toContain(next.color);
       if (next.weight !== current.weight) weightChanged = true;
       if (next.library !== current.library) libraryChanged = true;
+      if (next.color !== current.color) colorChanged = true;
     }
-    // ~50% / ~35% per roll → effectively certain to flip at least once in 60.
+    // ~50% / ~35% / ~30% per roll → effectively certain to flip at least once in 60.
     expect(weightChanged).toBe(true);
     expect(libraryChanged).toBe(true);
+    expect(colorChanged).toBe(true);
   });
 
   it('nextAuthVariant returns a different design index in range (TEMP)', () => {
@@ -298,5 +345,12 @@ describe('orthogonal base colour + menu', () => {
     expect(document.documentElement.style.getPropertyValue('--icon-stroke')).toBe('2.5');
     applyIconWeight('regular'); // default → cleared
     expect(document.documentElement.style.getPropertyValue('--icon-stroke')).toBe('');
+  });
+
+  it('applyIconColor sets/clears data-icon-color', () => {
+    applyIconColor('primary');
+    expect(document.documentElement.dataset.iconColor).toBe('primary');
+    applyIconColor('default');
+    expect(document.documentElement.dataset.iconColor).toBeUndefined();
   });
 });

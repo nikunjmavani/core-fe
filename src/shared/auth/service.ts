@@ -4,33 +4,20 @@ import {
   AUTH_ROUTES,
   HTTP,
 } from '@/core/config/constants.ts';
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { queryClient } from '@/core/http/queryClient.ts';
+import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
+import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { broadcastLogout } from '@/shared/auth/auth-channel.ts';
-import {
-  endMockSession,
-  hasMockSession,
-  MOCK_ACCESS_TOKEN,
-  MOCK_USER,
-} from '@/shared/auth/mock-auth.ts';
 import { cancelTokenRefresh, scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
 import { clearSessionStart, markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
-import { authTokenResponseSchema, authUserSchema } from '@/shared/auth/types.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import {
-  fetchMeContext,
-  type MeContext,
-  meContextQueryKey,
-} from '@/shared/tenancy/me-context.ts';
-import { deriveOrgContext } from '@/shared/tenancy/organization-context.ts';
+import type { MeContext } from '@/shared/tenancy/me-context.ts';
+import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
 
 import type { AuthUser } from './types.ts';
 
-/**
- * Raw fetch with timeout and credentials for auth endpoints.
- * Does not use apiClient to avoid interceptor recursion.
- */
 async function authFetch(
   url: string,
   init: RequestInit & { timeout?: number } = {},
@@ -54,13 +41,11 @@ async function authFetch(
   }
 }
 
-/** Clear ALL local auth state (token, mock session, store, query cache). */
 function clearLocalAuthState(): void {
   try {
     cancelTokenRefresh();
     clearAccessToken();
     clearSessionStart();
-    endMockSession();
     useAuthStore.getState().clearAuth();
     queryClient.clear();
   } catch (cleanupError) {
@@ -70,48 +55,25 @@ function clearLocalAuthState(): void {
   }
 }
 
-/**
- * Shared logout helper — clears ALL auth state and redirects to login.
- * Used by both the manual `logout()` flow and the fetch client's
- * refresh-failure path. Also broadcasts to sibling tabs so a dead session
- * (admin-suspend, logout-all, expiry) logs every open tab out at once.
- */
-export function forceLogout(): void {
+export function forceLogout(
+  opts: { reason?: 'force_logout' | 'logout' | 'cross_tab' } = {},
+): void {
+  captureAnalyticsEvent(ANALYTICS_EVENTS.sessionEnded, {
+    reason: opts.reason ?? 'force_logout',
+  });
   clearLocalAuthState();
   broadcastLogout();
   window.location.href = AUTH_ROUTES.LOGIN;
 }
 
-/**
- * Cross-tab logout receiver — invoked when ANOTHER tab broadcasts a logout.
- * Clears local state and redirects, but never re-broadcasts (loop guard).
- * Skips the redirect when already on the login page so an idle login tab is
- * not pointlessly reloaded.
- *
- * @remarks
- * Wired once at boot via `subscribeToAuthBroadcast` in `main.tsx`. The
- * broadcast carries only the logout signal — never the token — so each tab
- * clears its own in-memory closure independently.
- */
 export function handleCrossTabLogout(): void {
+  captureAnalyticsEvent(ANALYTICS_EVENTS.sessionEnded, { reason: 'cross_tab' });
   clearLocalAuthState();
   if (window.location.pathname !== AUTH_ROUTES.LOGIN) {
     window.location.href = AUTH_ROUTES.LOGIN;
   }
 }
 
-/**
- * Silent refresh — called at app bootstrap BEFORE React mounts.
- *
- * Uses raw `fetch` (NOT apiClient) to avoid the interceptor cycle.
- * The HttpOnly refresh cookie is sent automatically via credentials: 'include'.
- *
- * Atomic: if getCurrentUser() fails after setAccessToken(), the token
- * is rolled back so auth state is never left in an inconsistent state.
- *
- * A module-level mutex prevents concurrent refresh calls (e.g. from
- * multiple 401 interceptor triggers racing).
- */
 let refreshPromise: Promise<void> | null = null;
 
 export async function silentRefresh(): Promise<void> {
@@ -122,26 +84,39 @@ export async function silentRefresh(): Promise<void> {
   return refreshPromise;
 }
 
-const authBase = () => `${config.apiBaseUrl}${API_BASE_PATH}`;
+let authBootstrapPromise: Promise<void> | null = null;
+
+export function startAuthBootstrap(): Promise<void> {
+  if (!authBootstrapPromise) {
+    authBootstrapPromise = (async () => {
+      try {
+        await silentRefresh();
+      } catch {
+        const { isAuthenticated } = useAuthStore.getState();
+        if (!(isAuthenticated || getAccessToken())) {
+          if (import.meta.env.DEV) {
+            console.info('[Bootstrap] No active session');
+          }
+          useAuthStore.getState().clearAuth();
+        }
+      } finally {
+        if (useAuthStore.getState().isLoading) {
+          useAuthStore.getState().setLoading(false);
+        }
+      }
+    })();
+  }
+  return authBootstrapPromise;
+}
+
+export async function awaitAuthBootstrap(): Promise<void> {
+  await startAuthBootstrap();
+}
+
+const authBase = () => `${platformConfig.apiBaseUrl}${API_BASE_PATH}`;
 
 let tokenRefreshPromise: Promise<void> | null = null;
 
-/**
- * THE single-flight token refresh — the only code path that calls
- * `/auth/refresh`. Both the proactive timer (via {@link silentRefresh}) and
- * the fetch client's 401 interceptor consume this promise, so the two can
- * never race each other into parallel refreshes.
- *
- * @remarks
- * The backend rotates the refresh session on every refresh and treats a
- * concurrent reuse of the old cookie as theft (reuse-detection kills the
- * session). That makes parallelism the failure mode twice over: within a tab
- * (timer vs 401) the module promise serializes callers, and ACROSS tabs the
- * network call is wrapped in `navigator.locks` ('core-auth:refresh') so N
- * tabs refreshing at the same instant — every tab schedules its timer off
- * the same token expiry — take turns instead of tripping reuse-detection.
- * Falls back to the plain call where Web Locks is unavailable.
- */
 export async function refreshAccessToken(): Promise<void> {
   if (tokenRefreshPromise) return tokenRefreshPromise;
   tokenRefreshPromise = runExclusiveRefresh().finally(() => {
@@ -158,16 +133,6 @@ async function runExclusiveRefresh(): Promise<void> {
 }
 
 async function doTokenRefresh(): Promise<void> {
-  // REPLACE_WITH_API: POST /api/v1/auth/refresh
-  if (config.useMockApi) {
-    if (!hasMockSession()) {
-      throw new Error('[Auth] No mock session');
-    }
-    setAccessToken(MOCK_ACCESS_TOKEN);
-    scheduleTokenRefresh();
-    return;
-  }
-
   const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.REFRESH}`, {
     method: 'POST',
     timeout: HTTP.REFRESH_TIMEOUT,
@@ -175,62 +140,27 @@ async function doTokenRefresh(): Promise<void> {
 
   const data = (await response.json()) as unknown;
   if (!response.ok) {
+    const envelope = data as { message?: string; error?: { detail?: string } };
     const message =
-      (data as { message?: string })?.message ?? `Refresh failed (${response.status})`;
+      envelope?.error?.detail ??
+      envelope?.message ??
+      `Refresh failed (${response.status})`;
     throw new Error(message);
   }
-  const { accessToken } = authTokenResponseSchema.parse(data);
-  setAccessToken(accessToken);
 
-  // Schedule proactive refresh for this new token
+  const payload =
+    data && typeof data === 'object' && 'data' in data
+      ? (data as { data: unknown }).data
+      : data;
+  const raw = payload as { access_token?: string; accessToken?: string } | null;
+  const token = raw?.access_token ?? raw?.accessToken;
+  if (typeof token !== 'string' || token.length === 0) {
+    throw new Error(`Refresh failed (${response.status})`);
+  }
+  setAccessToken(token);
   scheduleTokenRefresh();
 }
 
-async function doSilentRefresh(): Promise<void> {
-  await refreshAccessToken();
-
-  if (config.useMockApi) {
-    useAuthStore.getState().setUser(MOCK_USER);
-    return;
-  }
-
-  // Fetch and cache user profile — roll back token if this fails
-  try {
-    const user = await getCurrentUser();
-    useAuthStore.getState().setUser(user);
-  } catch (error) {
-    clearAccessToken();
-    throw error;
-  }
-}
-
-/**
- * Fetch the current authenticated user's profile.
- * Uses raw fetch with the token manually injected.
- */
-async function getCurrentUser(): Promise<AuthUser> {
-  const token = getAccessToken();
-
-  if (!token) {
-    throw new Error('[Auth] No access token available for getCurrentUser');
-  }
-
-  const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.ME}`, {
-    method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  const data = (await response.json()) as unknown;
-  if (!response.ok) {
-    const message =
-      (data as { message?: string })?.message ??
-      `Profile fetch failed (${response.status})`;
-    throw new Error(message);
-  }
-  return authUserSchema.parse(data);
-}
-
-/** Map the authoritative me/context payload → the lightweight header AuthUser. */
 function meContextToAuthUser(ctx: MeContext): AuthUser {
   const name = [ctx.user.firstName, ctx.user.lastName].filter(Boolean).join(' ');
   return {
@@ -243,28 +173,26 @@ function meContextToAuthUser(ctx: MeContext): AuthUser {
   };
 }
 
-/**
- * Establish a fully authenticated session from a freshly minted access token —
- * the single post-auth completion path shared by login, register, magic-link,
- * and OAuth. Stores the token, starts the idle-session clock, then loads the
- * authoritative session context (`GET /auth/me/context`) and seeds the React
- * Query cache so the app has user + active-org + permissions with no extra
- * round-trip, sets the header user, and schedules proactive refresh. Rolls the
- * token back if the context load fails so auth state is never half-initialised.
- */
+async function hydrateSessionFromContext(): Promise<void> {
+  const ctx = await hydrateSessionContext();
+  useAuthStore.getState().setUser(meContextToAuthUser(ctx));
+}
+
+async function doSilentRefresh(): Promise<void> {
+  await refreshAccessToken();
+  try {
+    await hydrateSessionFromContext();
+  } catch (error) {
+    clearAccessToken();
+    throw error;
+  }
+}
+
 export async function establishSession(accessToken: string): Promise<void> {
   setAccessToken(accessToken);
   markSessionStart();
-  if (config.useMockApi) {
-    useAuthStore.getState().setUser(MOCK_USER);
-    scheduleTokenRefresh();
-    return;
-  }
   try {
-    const ctx = await fetchMeContext();
-    queryClient.setQueryData(meContextQueryKey, ctx);
-    deriveOrgContext(ctx);
-    useAuthStore.getState().setUser(meContextToAuthUser(ctx));
+    await hydrateSessionFromContext();
     scheduleTokenRefresh();
   } catch (error) {
     clearAccessToken();
@@ -273,22 +201,14 @@ export async function establishSession(accessToken: string): Promise<void> {
   }
 }
 
-/**
- * Logout — clear all auth state and redirect.
- */
 export async function logout(): Promise<void> {
-  // REPLACE_WITH_API: POST /api/v1/auth/logout
-  if (config.useMockApi) {
-    forceLogout();
-    return;
-  }
   try {
     await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.LOGOUT}`, {
       method: 'POST',
     });
   } catch {
-    // Best-effort logout — even if backend call fails, clear local state
+    /* best-effort */
   } finally {
-    forceLogout();
+    forceLogout({ reason: 'logout' });
   }
 }

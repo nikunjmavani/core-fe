@@ -1,0 +1,69 @@
+{
+  "appTitle": "Core 管理",
+  "language": {
+    "openAria": "语言和区域设置",
+    "title": "语言与区域",
+    "heading": "语言",
+    "description": "界面文案、日期、数字和货币均遵循以下偏好。",
+    "en": "English",
+    "es": "Español",
+    "zh": "中文",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "pt": "Português",
+    "ar": "العربية",
+    "hi": "हिन्दी",
+    "ko": "한국어",
+    "it": "Italiano"
+  },
+  "formatLocale": {
+    "heading": "区域格式",
+    "description": "Intl 日期、数字和货币格式，独立于界面语言。"
+  },
+  "dateFormat": {
+    "heading": "日期与时间格式",
+    "auto": "语言默认（数字）",
+    "short": "短",
+    "medium": "中",
+    "long": "长",
+    "full": "完整",
+    "iso": "ISO 风格（YYYY-MM-DD）",
+    "date": "仅日期",
+    "time": "仅时间",
+    "datetime": "日期 + 时间",
+    "previewDate": "日期与时间：{{value}}",
+    "previewNumber": "数字：{{value}}",
+    "previewRelative": "相对：{{value}}",
+    "previewTime": "仅时间：{{value}}"
+  },
+  "hourCycle": {
+    "heading": "时钟格式",
+    "auto": "语言默认",
+    "h12": "12 小时制（上午/下午）",
+    "h23": "24 小时制"
+  },
+  "numberStyle": {
+    "heading": "数字格式",
+    "auto": "语言默认",
+    "standard": "分组",
+    "compact": "紧凑（1.2M）",
+    "engineering": "工程计数法",
+    "scientific": "科学计数法"
+  },
+  "currencyDisplay": {
+    "heading": "货币显示",
+    "auto": "语言默认",
+    "symbol": "符号",
+    "narrowSymbol": "窄符号",
+    "code": "ISO 代码",
+    "name": "货币名称"
+  },
+  "currencyCode": {
+    "heading": "预览货币"
+  },
+  "localePreview": {
+    "heading": "实时预览",
+    "currency": "货币：{{value}}"
+  }
+}

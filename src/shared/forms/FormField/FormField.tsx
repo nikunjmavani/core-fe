@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { type Control, Controller, type FieldValues, type Path } from 'react-hook-form';
 
+import { translateFormMessage } from '@/lib/i18n/translate-form-message.ts';
 import { cn } from '@/lib/utils.ts';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
@@ -79,7 +80,7 @@ export function FormField<T extends FieldValues>({
 
           {error && (
             <p id={`${name}-error`} className="text-destructive text-xs" role="alert">
-              {error.message}
+              {translateFormMessage(error.message)}
             </p>
           )}
         </div>

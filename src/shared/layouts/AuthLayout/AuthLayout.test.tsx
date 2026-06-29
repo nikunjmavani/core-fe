@@ -1,3 +1,4 @@
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
 
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
@@ -6,6 +7,10 @@ import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 import { AuthLayout } from './AuthLayout.tsx';
 
 describe('AuthLayout', () => {
+  beforeAll(async () => {
+    await import('./variants/AuthLayoutSplit.tsx');
+  });
+
   beforeEach(() => {
     // Default to the split variant; the shuffle-driven previews are opt-in below.
     useThemeStore.setState({ authVariant: 0 });
@@ -45,7 +50,6 @@ describe('AuthLayout', () => {
     );
     expect(await findByTestId('auth-layout')).toBeInTheDocument();
     expect(await findByTestId('auth-form-container')).toBeInTheDocument();
-    expect(await findByTestId('auth-switch-link')).toBeInTheDocument();
   });
 
   it('renders the minimal preview variant (2)', async () => {
@@ -57,7 +61,6 @@ describe('AuthLayout', () => {
     );
     expect(await findByTestId('auth-layout')).toBeInTheDocument();
     expect(await findByTestId('auth-form-container')).toBeInTheDocument();
-    expect(await findByTestId('auth-switch-link')).toBeInTheDocument();
   });
 
   it('has no accessibility violations', async () => {

@@ -35,7 +35,8 @@ export function DataTablePagination<TData>({
           <p className="text-sm font-medium">Rows per page</p>
           <select
             aria-label="Rows per page"
-            className="border-input bg-background focus:ring-ring h-8 rounded-md border px-2 text-sm focus:ring-2 focus:ring-offset-2 focus:outline-none"
+            data-slot="select-trigger"
+            className="border-input bg-background h-8 border px-2 text-sm focus-visible:outline-hidden"
             value={table.getState().pagination.pageSize}
             onChange={(e) => table.setPageSize(Number(e.target.value))}
           >

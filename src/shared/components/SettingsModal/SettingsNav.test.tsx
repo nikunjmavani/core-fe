@@ -24,9 +24,9 @@ describe('SettingsNav', () => {
     expect(screen.getByTestId('settings-nav-account-profile')).toBeInTheDocument();
     expect(screen.getByTestId('settings-nav-account-security')).toBeInTheDocument();
     expect(screen.getByTestId('settings-nav-account-sessions')).toBeInTheDocument();
+    expect(screen.getByTestId('settings-nav-account-billing')).toBeInTheDocument();
     expect(screen.getByTestId('settings-nav-organization-general')).toBeInTheDocument();
     expect(screen.getByTestId('settings-nav-organization-members')).toBeInTheDocument();
-    expect(screen.getByTestId('settings-nav-organization-billing')).toBeInTheDocument();
   });
 
   it('marks the active section with aria-current="page"', () => {

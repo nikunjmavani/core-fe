@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-import { notify } from '@/shared/notify/index.ts';
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import {
   updateOrganization,
@@ -13,17 +13,15 @@ import {
  * success we invalidate that list and the switcher + panel re-render with it.
  */
 export function useUpdateOrganization() {
-  const queryClient = useQueryClient();
   const organizationId = useOrganizationStore((s) => s.organizationId);
-  return useMutation({
+  return useAppMutation({
     mutationFn: (input: UpdateOrganizationInput) => {
       if (!organizationId) throw new Error('No active organization');
       return updateOrganization(organizationId, input);
     },
-    onSuccess: () => {
-      notify.success('Organization updated');
-      return queryClient.invalidateQueries({ queryKey: ['organizations'] });
-    },
-    onError: () => notify.error('Could not update organization'),
+    invalidateKeys: [['organizations']],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.organization.updateSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }

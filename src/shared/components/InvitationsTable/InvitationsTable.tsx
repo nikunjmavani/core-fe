@@ -9,29 +9,25 @@ import {
 } from '@tanstack/react-table';
 import { useMemo, useState } from 'react';
 
+import { closeControlClassName } from '@/lib/icon-surface.ts';
+import { cn } from '@/lib/utils.ts';
 import type { Invitation } from '@/shared/api/organization-contracts.ts';
 import { DataTable } from '@/shared/components/data-table/DataTable.tsx';
 import { DataTableColumnHeader } from '@/shared/components/data-table/DataTableColumnHeader.tsx';
 import { DataTableToolbar } from '@/shared/components/data-table/DataTableToolbar.tsx';
+import { FormattedDate } from '@/shared/components/FormattedDate/index.ts';
 import {
   InvitationStatusBadge,
   RoleBadge,
 } from '@/shared/components/OrganizationBadges/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
+import { Card } from '@/shared/components/ui/card.tsx';
 import {
   useResendInvitation,
   useRevokeInvitation,
 } from '@/shared/hooks/useInvitations/index.ts';
 import { useHasPermission } from '@/shared/hooks/useRBAC/index.ts';
 import { RotateCw, X } from '@/shared/icons/index.ts';
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
 
 function InvitationActions({
   invitation,
@@ -56,16 +52,21 @@ function InvitationActions({
         Resend
       </Button>
       {invitation.status === 'pending' ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8"
+        <button
+          type="button"
+          data-slot="button"
+          aria-label={`Revoke invitation for ${invitation.email}`}
+          title="Revoke"
           onClick={() => onRevoke(invitation.id)}
           data-testid={`invitation-revoke-${invitation.id}`}
+          className={cn(
+            closeControlClassName,
+            'inline-flex h-8 items-center px-2 text-xs font-medium',
+          )}
         >
           <X className="mr-1 h-4 w-4" />
           Revoke
-        </Button>
+        </button>
       ) : null}
     </div>
   );
@@ -108,7 +109,7 @@ function buildColumns(
       header: ({ column }) => <DataTableColumnHeader column={column} title="Expires" />,
       cell: ({ row }) => (
         <span className="text-muted-foreground text-sm">
-          {formatDate(row.original.expiresAt)}
+          <FormattedDate value={row.original.expiresAt} />
         </span>
       ),
     },
@@ -169,9 +170,9 @@ export function InvitationsTable({ invitations }: { invitations: Invitation[] })
         searchColumnId="email"
         searchPlaceholder="Search invitations…"
       />
-      <div className="rounded-md border">
+      <Card className="gap-0 overflow-hidden py-0">
         <DataTable table={table} emptyMessage="No invitations." />
-      </div>
+      </Card>
     </div>
   );
 }

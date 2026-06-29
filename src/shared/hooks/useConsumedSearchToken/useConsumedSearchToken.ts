@@ -2,7 +2,7 @@ import { useSearch } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 /**
- * Read a single-use secret (`?token=` on reset-password / verify-email)
+ * Read a single-use secret from the URL (`?token=` on invite or legacy email links)
  * from the URL exactly once, then scrub it from the address bar.
  *
  * @remarks

@@ -1,0 +1,69 @@
+{
+  "appTitle": "Core Admin",
+  "language": {
+    "openAria": "Language & regional settings",
+    "title": "Language & region",
+    "heading": "Language",
+    "description": "UI copy, dates, numbers, and currency follow these preferences.",
+    "en": "English",
+    "es": "Español",
+    "zh": "中文",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "pt": "Português",
+    "ar": "العربية",
+    "hi": "हिन्दी",
+    "ko": "한국어",
+    "it": "Italiano"
+  },
+  "formatLocale": {
+    "heading": "Regional format locale",
+    "description": "Intl date, number, and currency output — independent of UI language."
+  },
+  "dateFormat": {
+    "heading": "Date & time format",
+    "auto": "Locale default (numeric)",
+    "short": "Short",
+    "medium": "Medium",
+    "long": "Long",
+    "full": "Full",
+    "iso": "ISO-style (YYYY-MM-DD)",
+    "date": "Date only",
+    "time": "Time only",
+    "datetime": "Date + time",
+    "previewDate": "Date & time: {{value}}",
+    "previewNumber": "Number: {{value}}",
+    "previewRelative": "Relative: {{value}}",
+    "previewTime": "Time only: {{value}}"
+  },
+  "hourCycle": {
+    "heading": "Clock format",
+    "auto": "Locale default",
+    "h12": "12-hour (AM/PM)",
+    "h23": "24-hour"
+  },
+  "numberStyle": {
+    "heading": "Number format",
+    "auto": "Locale default",
+    "standard": "Grouped",
+    "compact": "Compact (1.2M)",
+    "engineering": "Engineering",
+    "scientific": "Scientific"
+  },
+  "currencyDisplay": {
+    "heading": "Currency display",
+    "auto": "Locale default",
+    "symbol": "Symbol",
+    "narrowSymbol": "Narrow symbol",
+    "code": "ISO code",
+    "name": "Currency name"
+  },
+  "currencyCode": {
+    "heading": "Preview currency"
+  },
+  "localePreview": {
+    "heading": "Live preview",
+    "currency": "Currency: {{value}}"
+  }
+}

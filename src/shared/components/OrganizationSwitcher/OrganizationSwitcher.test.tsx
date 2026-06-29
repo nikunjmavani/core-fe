@@ -7,13 +7,29 @@ import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 
 import { OrganizationSwitcher } from './OrganizationSwitcher.tsx';
 
-const { useMeContextMock, switchToPersonalMock } = vi.hoisted(() => ({
-  useMeContextMock: vi.fn(),
-  switchToPersonalMock: vi.fn(),
-}));
+const { useMeContextMock, switchToPersonalMock, deploymentFlagsMock } = vi.hoisted(
+  () => ({
+    useMeContextMock: vi.fn(),
+    switchToPersonalMock: vi.fn(),
+    deploymentFlagsMock: {
+      personalOrganizations: true,
+      teamOrganizations: true,
+    },
+  }),
+);
+
 vi.mock('@/shared/hooks/useMeContext/index.ts', () => ({
   useMeContext: useMeContextMock,
   meContextQueryKey: ['auth', 'me-context'],
+}));
+vi.mock('@/shared/hooks/useDeploymentFlags/index.ts', () => ({
+  useDeploymentFlags: () => deploymentFlagsMock,
+  useDeploymentMode: () => {
+    const { personalOrganizations, teamOrganizations } = deploymentFlagsMock;
+    if (personalOrganizations && !teamOrganizations) return 'personal-only';
+    if (!personalOrganizations && teamOrganizations) return 'team-only';
+    return 'personal-and-team';
+  },
 }));
 vi.mock('@/shared/tenancy/switch.ts', () => ({
   switchToPersonal: switchToPersonalMock,
@@ -41,10 +57,14 @@ const CTX = {
     { ...ACME, isActive: true },
     { ...PERSONAL, isActive: false },
   ],
+  deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+  personalOrganizationId: PERSONAL.id,
 } as unknown as MeContext;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  deploymentFlagsMock.personalOrganizations = true;
+  deploymentFlagsMock.teamOrganizations = true;
   switchToPersonalMock.mockResolvedValue(undefined);
   useMeContextMock.mockReturnValue({ data: CTX, isLoading: false });
 });
@@ -62,6 +82,20 @@ describe('OrganizationSwitcher', () => {
     expect(
       await screen.findByTestId('organization-switcher-option-personal'),
     ).toBeInTheDocument();
+    expect(screen.getByTestId('organization-switcher-create')).toBeInTheDocument();
+  });
+
+  it('lists team organizations without a personal section in team-only mode', async () => {
+    deploymentFlagsMock.personalOrganizations = false;
+    deploymentFlagsMock.teamOrganizations = true;
+
+    const user = userEvent.setup();
+    renderWithProviders(<OrganizationSwitcher />);
+    await user.click(await screen.findByTestId('organization-switcher-trigger'));
+    expect(
+      screen.queryByTestId('organization-switcher-option-personal'),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId('organization-switcher-option-acme')).toBeInTheDocument();
     expect(screen.getByTestId('organization-switcher-create')).toBeInTheDocument();
   });
 

@@ -7,11 +7,16 @@ export interface ThemePreset {
  * Built-in accent presets. `default` uses the base `@theme` palette (no
  * `data-theme`); the others apply accent overrides via the `[data-theme='<id>']`
  * blocks in `src/index.css`, composed with `.dark`.
+ *
+ * Product-design floors for every axis (type scale, density, motion, WCAG):
+ * docs/reference/preset-product-design-rules.md
  */
 export const THEME_PRESETS: readonly ThemePreset[] = [
   { id: 'default', label: 'Default' },
   { id: 'violet', label: 'Violet' },
   { id: 'emerald', label: 'Emerald' },
+  { id: 'rose', label: 'Rose' },
+  { id: 'ocean', label: 'Ocean' },
 ] as const;
 
 export const DEFAULT_PRESET = 'default';
@@ -80,6 +85,8 @@ export const BASE_COLORS = [
   { id: 'stone', label: 'Stone' },
   { id: 'slate', label: 'Slate' },
   { id: 'olive', label: 'Olive' },
+  { id: 'zinc', label: 'Zinc' },
+  { id: 'warm', label: 'Warm' },
 ] as const;
 export const DEFAULT_BASE = 'neutral';
 
@@ -87,6 +94,7 @@ export const DEFAULT_BASE = 'neutral';
 export const MENU_STYLES = [
   { id: 'default', label: 'Default' },
   { id: 'translucent', label: 'Translucent' },
+  { id: 'glass', label: 'Glass' },
 ] as const;
 export const DEFAULT_MENU = 'default';
 
@@ -98,6 +106,17 @@ export const ICON_WEIGHTS = [
 ] as const;
 export const DEFAULT_ICON_WEIGHT = 'regular';
 
+/** Icon stroke colour — semantic token mapping via `data-icon-color` on `<html>`. */
+export const ICON_COLORS = [
+  { id: 'default', label: 'Auto' },
+  { id: 'foreground', label: 'Text' },
+  { id: 'muted', label: 'Muted' },
+  { id: 'primary', label: 'Primary' },
+  { id: 'accent', label: 'Accent' },
+  { id: 'destructive', label: 'Destructive' },
+] as const;
+export const DEFAULT_ICON_COLOR = 'default';
+
 /** Icon library — Lucide is the default (bundled); the rest lazy-load on select. */
 export const ICON_LIBRARIES = [
   { id: 'lucide', label: 'Lucide' },
@@ -108,6 +127,7 @@ export const DEFAULT_ICON_LIBRARY = 'lucide';
 
 const RADIUS_IDS = Object.keys(GENERATED_RADII);
 const ICON_WEIGHT_IDS = ICON_WEIGHTS.map((w) => w.id);
+const ICON_COLOR_IDS = ICON_COLORS.map((c) => c.id);
 const ICON_LIBRARY_IDS = ICON_LIBRARIES.map((l) => l.id);
 
 // ── Experience axes (CSS-var presets) ────────────────────────────────────────
@@ -118,13 +138,53 @@ const ICON_LIBRARY_IDS = ICON_LIBRARIES.map((l) => l.id);
 
 /** Spacing density → Tailwind's master `--spacing` unit (default 0.25rem). Every
  *  padding/margin/gap/size utility is `calc(var(--spacing) * n)`, so this one knob
- *  rescales the entire UI at once. */
+ *  rescales the entire UI at once. Does not change font sizes — see preset-product-design-rules.md */
 export const DENSITY_SCALES: Record<string, { label: string; spacing: number }> = {
   compact: { label: 'Compact', spacing: 0.215 },
-  cozy: { label: 'Cozy', spacing: 0.25 },
-  spacious: { label: 'Spacious', spacing: 0.3 },
+  cozy: { label: 'Comfortable', spacing: 0.25 },
+  relaxed: { label: 'Relaxed', spacing: 0.265 },
+  airy: { label: 'Airy', spacing: 0.285 },
 };
 export const DEFAULT_DENSITY = 'cozy';
+
+/** App main content width — orthogonal to theme; persisted in useThemeStore.
+ *  Product rules: docs/reference/preset-product-design-rules.md § Layout */
+export const LAYOUT_WIDTHS = [
+  {
+    id: 'contained',
+    label: 'Standard',
+    description: 'Centered admin workspace (max 1536px). Default for dashboards.',
+  },
+  {
+    id: 'full',
+    label: 'Full width',
+    description: 'Edge-to-edge for wide tables and analytics.',
+  },
+  {
+    id: 'reading',
+    label: 'Reading',
+    description: 'Narrow column (~768px) for focused copy — Claude-style measure.',
+  },
+] as const;
+
+export type LayoutWidthId = (typeof LAYOUT_WIDTHS)[number]['id'];
+
+export const DEFAULT_LAYOUT_WIDTH: LayoutWidthId = 'contained';
+
+const LAYOUT_WIDTH_IDS = new Set<string>(LAYOUT_WIDTHS.map((w) => w.id));
+
+/** Coerce persisted / env values to a known layout width id. */
+export function normalizeLayoutWidthId(id: string | undefined): LayoutWidthId {
+  if (id && LAYOUT_WIDTH_IDS.has(id)) return id as LayoutWidthId;
+  return DEFAULT_LAYOUT_WIDTH;
+}
+
+/** Legacy persisted density ids → current scale keys. */
+export function normalizeDensityId(id: string | undefined): string {
+  if (id === 'spacious') return 'relaxed';
+  if (id && id in DENSITY_SCALES) return id;
+  return DEFAULT_DENSITY;
+}
 
 /** Motion personality → the inheriting `--default-transition-*` theme vars that all
  *  `transition` utilities fall back to, so the app's base tempo + easing change at
@@ -133,6 +193,7 @@ export const MOTION_PRESETS: Record<
   string,
   { label: string; duration: string; ease: string }
 > = {
+  instant: { label: 'Instant', duration: '0ms', ease: 'linear' },
   calm: { label: 'Calm', duration: '300ms', ease: 'cubic-bezier(0.22, 1, 0.36, 1)' },
   smooth: { label: 'Smooth', duration: '150ms', ease: 'cubic-bezier(0.4, 0, 0.2, 1)' },
   snappy: { label: 'Snappy', duration: '80ms', ease: 'cubic-bezier(0.34, 1.1, 0.64, 1)' },
@@ -145,6 +206,7 @@ export const ELEVATION_LEVELS = [
   { id: 'flat', label: 'Flat' },
   { id: 'soft', label: 'Soft' },
   { id: 'lifted', label: 'Lifted' },
+  { id: 'floating', label: 'Floating' },
 ] as const;
 export const DEFAULT_ELEVATION = 'soft';
 
@@ -169,6 +231,7 @@ export const HARMONY_RULES: Record<
   monochromatic: { label: 'Monochromatic', offsets: [0, 0, 0, 0, 0] },
   analogous: { label: 'Analogous', offsets: [-40, -20, 0, 20, 40] },
   complementary: { label: 'Complementary', offsets: [0, 25, 180, 155, 205] },
+  split: { label: 'Split', offsets: [0, 30, 150, 180, 210] },
   triadic: { label: 'Triadic', offsets: [0, 120, 240, 60, 180] },
 };
 export const DEFAULT_HARMONY = 'triadic';
@@ -176,36 +239,49 @@ export const DEFAULT_HARMONY = 'triadic';
 /** Accent intensity — how saturated the brand reads (OKLCH chroma). The readable
  *  foreground is computed per accent (contrast-safe), so any intensity stays legible. */
 export const ACCENT_INTENSITIES: Record<string, { label: string; chroma: number }> = {
+  subtle: { label: 'Subtle', chroma: 0.06 },
   muted: { label: 'Muted', chroma: 0.1 },
   balanced: { label: 'Balanced', chroma: 0.16 },
   vibrant: { label: 'Vibrant', chroma: 0.22 },
+  max: { label: 'Max', chroma: 0.28 },
 };
 export const DEFAULT_INTENSITY = 'balanced';
 
-/** Surface separation — how cards divide from the page: border, shadow (the border
- *  fades, composing with elevation), or tint (a tonal step instead of a line). */
+/** Surface separation — how cards divide from the page: border (default) or shadow
+ *  (the border fades, composing with elevation). */
 export const SEPARATION_STRATEGIES = [
   { id: 'border', label: 'Border' },
+  { id: 'hairline', label: 'Hairline' },
   { id: 'shadow', label: 'Shadow' },
-  { id: 'tint', label: 'Tint' },
 ] as const;
 export const DEFAULT_SEPARATION = 'border';
+
+/** Maps retired separation ids (e.g. removed `tint`) to a supported strategy. */
+export function normalizeSeparationId(id: string | undefined): string {
+  if (id === 'tint') return DEFAULT_SEPARATION;
+  if (id && (SEPARATION_IDS as readonly string[]).includes(id)) return id;
+  return DEFAULT_SEPARATION;
+}
 
 /** Shape language — per-component radius beyond the global radius: uniform, pill
  *  (round buttons/inputs), or sharp (square cards/inputs). */
 export const SHAPE_LANGUAGES = [
   { id: 'uniform', label: 'Uniform' },
+  { id: 'mixed', label: 'Mixed' },
   { id: 'pill', label: 'Pill' },
   { id: 'sharp', label: 'Sharp' },
 ] as const;
 export const DEFAULT_SHAPE = 'uniform';
 
 /** Modular type scale — ratio between adjacent --text-* sizes (default keeps
- *  Tailwind's stock scale untouched). */
+ *  Tailwind's stock scale untouched). Product floors: docs/reference/preset-product-design-rules.md § Type scale */
 export const TYPE_SCALES: Record<string, { label: string; ratio: number }> = {
+  tight: { label: 'Tight', ratio: 1.125 },
   compact: { label: 'Compact', ratio: 1.15 },
   default: { label: 'Default', ratio: 1.2 },
   grand: { label: 'Grand', ratio: 1.333 },
+  // biome-ignore lint/suspicious/noApproximativeNumericConstant: 1.414 is the standard augmented-fourth type-scale ratio, not √2
+  display: { label: 'Display', ratio: 1.414 },
 };
 export const DEFAULT_TYPE_SCALE = 'default';
 
@@ -213,7 +289,9 @@ export const DEFAULT_TYPE_SCALE = 'default';
 export const FOCUS_RINGS = [
   { id: 'ring', label: 'Ring' },
   { id: 'glow', label: 'Glow' },
+  { id: 'offset', label: 'Offset' },
   { id: 'underline', label: 'Underline' },
+  { id: 'inset', label: 'Inset' },
 ] as const;
 export const DEFAULT_FOCUS = 'ring';
 
@@ -335,13 +413,13 @@ export function normalizeLook(
     bodyFontId: l.bodyFontId ?? legacyFont ?? DEFAULT_LOOK.bodyFontId,
     headingFontId: l.headingFontId ?? legacyFont ?? DEFAULT_LOOK.headingFontId,
     radiusId: l.radiusId ?? DEFAULT_LOOK.radiusId,
-    densityId: l.densityId ?? DEFAULT_LOOK.densityId,
+    densityId: normalizeDensityId(l.densityId),
     motionId: l.motionId ?? DEFAULT_LOOK.motionId,
     elevationId: l.elevationId ?? DEFAULT_LOOK.elevationId,
     contrastId: l.contrastId ?? DEFAULT_LOOK.contrastId,
     harmonyId: l.harmonyId ?? DEFAULT_LOOK.harmonyId,
     intensityId: l.intensityId ?? DEFAULT_LOOK.intensityId,
-    separationId: l.separationId ?? DEFAULT_LOOK.separationId,
+    separationId: normalizeSeparationId(l.separationId),
     shapeId: l.shapeId ?? DEFAULT_LOOK.shapeId,
     typeScaleId: l.typeScaleId ?? DEFAULT_LOOK.typeScaleId,
     focusId: l.focusId ?? DEFAULT_LOOK.focusId,
@@ -620,13 +698,15 @@ function chance(probability: number): boolean {
  * weight, ~35% a different library — so a shuffle sometimes restyles the icon
  * weight, sometimes swaps the whole set, sometimes both, sometimes neither.
  */
-export function shuffleIcons(current: { weight: string; library: string }): {
+export function shuffleIcons(current: {
   weight: string;
   library: string;
-} {
+  color: string;
+}): { weight: string; library: string; color: string } {
   return {
     weight: chance(0.5) ? pickId(ICON_WEIGHT_IDS, current.weight) : current.weight,
     library: chance(0.35) ? pickId(ICON_LIBRARY_IDS, current.library) : current.library,
+    color: chance(0.3) ? pickId(ICON_COLOR_IDS, current.color) : current.color,
   };
 }
 
@@ -656,12 +736,32 @@ export function nextAppVariant(current: number): number {
   return v === current ? (v + 1) % APP_VARIANT_COUNT : v;
 }
 
+/** How many PublicLayout preview shells exist (TEMP — see PublicLayout variants). */
+export const PUBLIC_VARIANT_COUNT = 3;
+
+/**
+ * TEMP (public-layout preview): a different shell index in 0..N-1. Remove together
+ * with the `publicVariant` store field + the PublicLayout variants.
+ */
+export function nextPublicVariant(current: number): number {
+  // eslint-disable-next-line sonarjs/pseudo-random -- cosmetic layout preview, not security
+  const v = Math.floor(Math.random() * PUBLIC_VARIANT_COUNT);
+  return v === current ? (v + 1) % PUBLIC_VARIANT_COUNT : v;
+}
+
 /**
  * TEMP (toast design preview): the available custom-toast designs. The store
  * holds the active index; `CustomToast` maps it to one of these. Remove together
  * with the `toastVariant` store field + the CustomToast design map.
  */
-export const TOAST_VARIANTS = ['soft', 'solid', 'outline', 'accent'] as const;
+export const TOAST_VARIANTS = [
+  'tint',
+  'solid',
+  'outline',
+  'accent',
+  'minimal',
+  'glass',
+] as const;
 export type ToastVariant = (typeof TOAST_VARIANTS)[number];
 export const DEFAULT_TOAST_VARIANT = 0;
 
@@ -679,11 +779,23 @@ export function nextToastVariant(current: number): number {
 export const TOAST_POSITIONS = [
   'top-right',
   'top-center',
+  'top-left',
   'bottom-right',
   'bottom-center',
+  'bottom-left',
 ] as const;
 export type ToastPosition = (typeof TOAST_POSITIONS)[number];
 export const DEFAULT_TOAST_POSITION: ToastPosition = 'top-right';
+
+/** Human labels for toast position picker (Appearance panel). */
+export const TOAST_POSITION_LABELS: Record<ToastPosition, string> = {
+  'top-right': 'Top right',
+  'top-center': 'Top center',
+  'top-left': 'Top left',
+  'bottom-right': 'Bottom right',
+  'bottom-center': 'Bottom center',
+  'bottom-left': 'Bottom left',
+};
 
 /** TEMP (toast preview): a different toast position than the current one. */
 export function nextToastPosition(current: string): ToastPosition {
@@ -701,13 +813,15 @@ export function nextToastPosition(current: string): ToastPosition {
  */
 export const SHUFFLE_TEMP = {
   /** Cycle the AuthLayout (login screen) preview design on shuffle. */
-  authLayout: false,
+  authLayout: true,
   /** Cycle the AppLayout (app shell) preview design on shuffle. */
-  appLayout: false,
+  appLayout: true,
+  /** Cycle the PublicLayout preview design on shuffle. */
+  publicLayout: true,
   /** Roll the custom-toast design on shuffle. */
-  toastVariant: false,
+  toastVariant: true,
   /** Roll the toast position on shuffle. */
-  toastPosition: false,
+  toastPosition: true,
 };
 
 /**
@@ -800,7 +914,13 @@ export function applyGeneratedTheme(input: GeneratedTheme): void {
   root.style.setProperty('--spacing', `${spacing}rem`);
 
   // Motion → base transition tempo + easing (inheriting fallback theme vars).
-  const motion = MOTION_PRESETS[theme.motionId];
+  // Honour OS reduced-motion without mutating the stored preference.
+  const motionId =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'instant'
+      : theme.motionId;
+  const motion = MOTION_PRESETS[motionId];
   root.style.setProperty('--default-transition-duration', motion?.duration ?? '150ms');
   root.style.setProperty(
     '--default-transition-timing-function',
@@ -830,8 +950,8 @@ export function applyBaseColor(id: string): void {
 /** Apply a menu surface style via `data-menu` (cleared for `default`/unknown). */
 export function applyMenuStyle(id: string): void {
   const root = document.documentElement;
-  if (id === 'translucent') {
-    root.dataset.menu = 'translucent';
+  if (id === 'translucent' || id === 'glass') {
+    root.dataset.menu = id;
   } else {
     delete root.dataset.menu;
   }
@@ -845,5 +965,15 @@ export function applyIconWeight(id: string): void {
     root.style.removeProperty('--icon-stroke');
   } else {
     root.style.setProperty('--icon-stroke', String(weight.width));
+  }
+}
+
+/** Apply icon colour via `data-icon-color` (cleared for the default). */
+export function applyIconColor(id: string): void {
+  const root = document.documentElement;
+  if (id === DEFAULT_ICON_COLOR || !ICON_COLORS.some((c) => c.id === id)) {
+    delete root.dataset.iconColor;
+  } else {
+    root.dataset.iconColor = id;
   }
 }

@@ -1,13 +1,18 @@
 import './index.css';
+import '@/lib/i18n/i18n.ts';
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { router } from '@/app/routes/routeTree.tsx';
+import { showUpdateAvailableToast } from '@/app/version/show-update-available-toast.ts';
+import { bootstrapResources } from '@/core/resources/index.ts';
 import { startVersionCheck } from '@/core/version/check.ts';
+import { afterPaint, dismissAppSplash, onAppSplashDismissed } from '@/lib/app-splash.ts';
+import { IDLE_PREFETCH_TIMEOUT_MS } from '@/lib/chunk-prefetch.ts';
 import { subscribeToAuthBroadcast } from '@/shared/auth/auth-channel.ts';
-import { handleCrossTabLogout, silentRefresh } from '@/shared/auth/service.ts';
-import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { handleCrossTabLogout, startAuthBootstrap } from '@/shared/auth/service.ts';
+import { initDeferredIconSets } from '@/shared/icons/icon-registry.ts';
 import {
   hasAnalyticsConsent,
   useConsentStore,
@@ -29,7 +34,7 @@ function startAnalytics(): void {
   if (analyticsStarted || !hasAnalyticsConsent()) return;
   analyticsStarted = true;
   import('@/app/analytics/posthog.ts')
-    .then((m) => m.initPostHog())
+    .then((m) => m.initPostHog(router))
     .catch(() => undefined);
   import('@/app/observability/performance.ts')
     .then((m) => m.initPerformanceMonitoring())
@@ -37,9 +42,8 @@ function startAnalytics(): void {
 }
 
 /**
- * Initialize observability lazily and off the critical path. Sentry always;
- * analytics only with consent. A store subscription starts analytics the
- * instant the user accepts the banner, without a reload.
+ * Initialize observability lazily after splash dismiss + idle. Sentry always;
+ * analytics only with consent. Keeps auth funnels off the critical path.
  */
 function initObservabilityWhenIdle(): void {
   useConsentStore.subscribe((state) => {
@@ -53,11 +57,17 @@ function initObservabilityWhenIdle(): void {
     startAnalytics();
   };
 
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(run, { timeout: 3000 });
-  } else {
-    setTimeout(run, 1);
-  }
+  const scheduleAfterSplash = () => {
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(run, { timeout: IDLE_PREFETCH_TIMEOUT_MS });
+    } else {
+      globalThis.setTimeout(run, 2000);
+    }
+  };
+
+  afterPaint(() => {
+    onAppSplashDismissed(scheduleAfterSplash);
+  });
 }
 
 // ── 1. Bootstrap: resolve organization → mount React immediately → silent auth in background ──
@@ -67,6 +77,7 @@ const root = createRoot(document.getElementById('root')!);
 // derived organization store before anything renders; the URL/guards take over
 // once routing starts.
 resolveOrganizationFromSubdomain();
+bootstrapResources();
 
 // Apply a shared theme seed (?theme=<seed>) before render, then strip the param so
 // it never reaches the router's search validation. Reproduces any shared look.
@@ -78,6 +89,39 @@ if (themeSeedParam && /^\d+$/.test(themeSeedParam)) {
   window.history.replaceState(null, '', url.toString());
 }
 
+// Dev-only: Playwright E2E hooks (`navigateInApp`, `establishSession`, Turnstile readiness).
+if (import.meta.env.DEV) {
+  (
+    globalThis as typeof globalThis & {
+      __coreFeRouter?: typeof router;
+      __coreFeEstablishSession?: (accessToken: string) => Promise<void>;
+      __coreFePeekTurnstileToken?: () => string | undefined;
+    }
+  ).__coreFeRouter = router;
+  import('@/shared/auth/service.ts')
+    .then(({ establishSession }) => {
+      (
+        globalThis as typeof globalThis & {
+          __coreFeEstablishSession?: (accessToken: string) => Promise<void>;
+        }
+      ).__coreFeEstablishSession = establishSession;
+    })
+    .catch(() => {
+      /* dev-only E2E hook — best effort */
+    });
+  import('@/shared/auth/captcha/turnstile-token-store.ts')
+    .then(({ peekTurnstileToken }) => {
+      (
+        globalThis as typeof globalThis & {
+          __coreFePeekTurnstileToken?: () => string | undefined;
+        }
+      ).__coreFePeekTurnstileToken = peekTurnstileToken;
+    })
+    .catch(() => {
+      /* dev-only E2E hook — best effort */
+    });
+}
+
 // Mount React immediately so user sees app (spinner or login) instead of blank screen.
 // Silent refresh runs in background; when it fails, clearAuth() updates store and router reacts.
 root.render(
@@ -86,19 +130,23 @@ root.render(
   </StrictMode>,
 );
 
-// Attempt silent refresh in background (no backend = fast fail → login screen)
-silentRefresh().catch(() => {
-  if (import.meta.env.DEV) {
-    console.info('[Bootstrap] No active session');
-  }
-  useAuthStore.getState().clearAuth(); // sets isLoading=false, isAuthenticated=false
-});
+// Ease out the HTML boot splash once React has painted underneath (no hard cut).
+afterPaint(() => dismissAppSplash());
 
-// Initialize observability/analytics off the critical path (idle time).
+// Attempt silent refresh in background (no backend = fast fail → login screen).
+void startAuthBootstrap();
+
+// Initialize observability/analytics after splash dismiss + idle (auth funnels stay lean).
 initObservabilityWhenIdle();
 
-// Start version check — auto-reload when new deployment is detected (production only)
-startVersionCheck();
+// Alt icon libraries (Phosphor/Tabler) load after auth — Lucide covers first paint.
+initDeferredIconSets();
+
+// Start version check — notify + deferred reload when a new deployment ships (prod only)
+startVersionCheck({
+  onUpdateAvailable: ({ buildId, reloadNow, snooze }) =>
+    showUpdateAvailableToast({ buildId, reloadNow, snooze }),
+});
 
 // Cross-tab logout: when any tab's session dies (admin-suspend, logout-all,
 // expiry), every open tab clears its in-memory token and returns to login.

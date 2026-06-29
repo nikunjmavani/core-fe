@@ -1,12 +1,17 @@
 import { notFound } from '@tanstack/react-router';
 
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
+import { isPlatformModuleEnabled } from '@/core/config/platform-config.ts';
+import type { Gate } from '@/core/security/gate.types.ts';
 
-import type { Gate } from '../gate.types.ts';
+const SYNC_MODULE_GATE_CTX = {
+  location: { pathname: '/', search: '', hash: '', href: '/' },
+  params: {},
+} as const;
 
 /** Whether a feature module is enabled for this deployment (for UI gating). */
 export function isModuleEnabled(moduleKey: string): boolean {
-  return !config.disabledModules.has(moduleKey);
+  return isPlatformModuleEnabled(platformConfig, moduleKey);
 }
 
 /**
@@ -17,7 +22,15 @@ export function isModuleEnabled(moduleKey: string): boolean {
  * {@link isModuleEnabled}.
  */
 export function requireModuleGate(moduleKey: string): Gate {
-  return () => {
+  return (_ctx) => {
     if (!isModuleEnabled(moduleKey)) throw notFound();
   };
+}
+
+/**
+ * Synchronous module gate for loaders without full {@link Gate} context.
+ * Prefer {@link gatewayFromManifest} when a page manifest declares `module`.
+ */
+export function requireFeature(moduleKey: string): void {
+  requireModuleGate(moduleKey)(SYNC_MODULE_GATE_CTX);
 }

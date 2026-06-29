@@ -7,7 +7,7 @@ import { useConsentStore } from '@/shared/store/useConsentStore/index.ts';
 import { ConsentBanner } from './ConsentBanner.tsx';
 
 vi.mock('@/core/config/env.ts', () => ({
-  config: { privacyPolicyUrl: undefined },
+  platformConfig: { privacyPolicyUrl: undefined },
 }));
 
 const captureAnalyticsConsentDecision = vi.fn(async () => undefined);

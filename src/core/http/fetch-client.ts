@@ -1,5 +1,5 @@
 import { API_ENDPOINTS, HTTP } from '@/core/config/constants.ts';
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { forceLogout, refreshAccessToken } from '@/shared/auth/service.ts';
 import { getAccessToken } from '@/shared/auth/token.ts';
 import { HttpError } from '@/shared/errors/HttpError.ts';
@@ -23,7 +23,7 @@ export interface HttpClientConfig {
 }
 
 const defaultConfig: HttpClientConfig = {
-  baseURL: config.apiBaseUrl,
+  baseURL: platformConfig.apiBaseUrl,
   timeout: HTTP.TIMEOUT,
   credentials: 'include',
 };

@@ -1,7 +1,6 @@
 import { type DenyMode, requirePermission } from '@/core/rbac/guards.ts';
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
-
-import type { Gate } from '../gate.types.ts';
+import type { Gate } from '@/core/security/gate.types.ts';
 
 /**
  * **L5 — RBAC permission.** Factory: binds a route's required org-scoped
@@ -15,5 +14,7 @@ export function requirePermissionGate(
   permission: OrganizationPermission,
   onDeny?: DenyMode,
 ): Gate {
-  return () => requirePermission(permission, onDeny);
+  return async () => {
+    await requirePermission(permission, onDeny);
+  };
 }

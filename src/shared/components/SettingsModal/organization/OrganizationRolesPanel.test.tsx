@@ -5,13 +5,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
-const { useRolesMock, deleteMutateAsync } = vi.hoisted(() => ({
+const { useRolesMock, deleteMutate } = vi.hoisted(() => ({
   useRolesMock: vi.fn(),
-  deleteMutateAsync: vi.fn(),
+  deleteMutate: vi.fn(),
 }));
 vi.mock('@/shared/hooks/useRoles/index.ts', () => ({
   useRoles: useRolesMock,
-  useDeleteRole: () => ({ mutateAsync: deleteMutateAsync }),
+  useDeleteRole: () => ({ mutate: deleteMutate }),
+}));
+vi.mock('@/shared/notify/notify-deferred.ts', () => ({
+  notifyDeferredCommit: ({ onCommit }: { onCommit: () => void }) => onCommit(),
 }));
 
 import { OrganizationRolesPanel } from './OrganizationRolesPanel.tsx';
@@ -33,6 +36,21 @@ const SYSTEM_ROLE = {
   isSystem: true,
 };
 
+function rolesQueryResult(
+  overrides: Partial<ReturnType<typeof useRolesMock>> & {
+    data?: (typeof CUSTOM_ROLE | typeof SYSTEM_ROLE)[] | undefined;
+  },
+) {
+  return {
+    data: overrides.data,
+    isPending: overrides.isPending ?? false,
+    isError: overrides.isError ?? false,
+    isFetching: false,
+    refetch: vi.fn(),
+    ...overrides,
+  };
+}
+
 function setCanManage(value: boolean) {
   useAuthStore.setState({
     user: { id: 'u', email: 'a@b.test', role: 'user' },
@@ -46,50 +64,35 @@ function setCanManage(value: boolean) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  deleteMutateAsync.mockResolvedValue({ id: 'rol_1' });
   useOrganizationStore.getState().clearOrganization();
 });
 
 describe('OrganizationRolesPanel', () => {
   it('shows an empty state when there are no roles', () => {
-    useRolesMock.mockReturnValue({ data: [], isLoading: false, isError: false });
+    useRolesMock.mockReturnValue(rolesQueryResult({ data: [] }));
     render(<OrganizationRolesPanel />);
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
   it('lists roles; only custom roles are deletable, and only with the permission', () => {
-    useRolesMock.mockReturnValue({
-      data: [CUSTOM_ROLE, SYSTEM_ROLE],
-      isLoading: false,
-      isError: false,
-    });
+    useRolesMock.mockReturnValue(rolesQueryResult({ data: [CUSTOM_ROLE, SYSTEM_ROLE] }));
     setCanManage(true);
     render(<OrganizationRolesPanel />);
     expect(screen.getByText('Billing Manager')).toBeInTheDocument();
     expect(screen.getByText('Owner')).toBeInTheDocument();
-    // custom role deletable
     expect(screen.getByTestId('role-delete-rol_1')).toBeInTheDocument();
-    // system role is not deletable
     expect(screen.queryByTestId('role-delete-rol_owner')).not.toBeInTheDocument();
   });
 
   it('hides delete controls without the manage-roles permission', () => {
-    useRolesMock.mockReturnValue({
-      data: [CUSTOM_ROLE],
-      isLoading: false,
-      isError: false,
-    });
+    useRolesMock.mockReturnValue(rolesQueryResult({ data: [CUSTOM_ROLE] }));
     setCanManage(false);
     render(<OrganizationRolesPanel />);
     expect(screen.queryByTestId('role-delete-rol_1')).not.toBeInTheDocument();
   });
 
   it('confirms and deletes a custom role', async () => {
-    useRolesMock.mockReturnValue({
-      data: [CUSTOM_ROLE],
-      isLoading: false,
-      isError: false,
-    });
+    useRolesMock.mockReturnValue(rolesQueryResult({ data: [CUSTOM_ROLE] }));
     setCanManage(true);
     const user = userEvent.setup();
     render(<OrganizationRolesPanel />);
@@ -97,6 +100,6 @@ describe('OrganizationRolesPanel', () => {
     await user.click(screen.getByTestId('role-delete-rol_1'));
     await user.click(screen.getByTestId('confirm-accept'));
 
-    await waitFor(() => expect(deleteMutateAsync).toHaveBeenCalledWith('rol_1'));
+    await waitFor(() => expect(deleteMutate).toHaveBeenCalledWith('rol_1'));
   });
 });

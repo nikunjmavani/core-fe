@@ -1,4 +1,11 @@
+import i18n from '@/lib/i18n/i18n.ts';
 import type { PageManifest } from '@/lib/routes/page-manifest.ts';
+
+import {
+  ONBOARDING_KEYS,
+  ONBOARDING_NS,
+  ONBOARDING_TEST_IDS,
+} from './onboarding.constants.ts';
 
 /**
  * Onboarding — leaf island (`/onboarding`).
@@ -7,8 +14,8 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'onboarding',
   path: '/onboarding',
-  title: 'Onboarding',
-  testId: 'onboarding-page',
+  title: i18n.t(ONBOARDING_KEYS.manifest.title, { ns: ONBOARDING_NS }),
+  testId: ONBOARDING_TEST_IDS.page,
   permission: null,
   kind: 'leaf',
   children: [],

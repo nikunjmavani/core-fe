@@ -1,4 +1,4 @@
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { useConsentStore } from '@/shared/store/useConsentStore/index.ts';
 
@@ -33,17 +33,18 @@ export function ConsentBanner() {
     <section
       aria-label="Cookie consent"
       data-testid="consent-banner"
-      className="bg-card text-card-foreground fixed inset-x-0 bottom-0 z-50 border-t shadow-lg"
+      data-slot="card"
+      className="bg-card text-card-foreground fixed inset-x-0 bottom-0 z-50 border-t"
     >
       <div className="mx-auto flex max-w-4xl flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground text-sm">
           We use cookies for product analytics to improve Core. Essential functionality
           and error monitoring work without them.
-          {config.privacyPolicyUrl ? (
+          {platformConfig.privacyPolicyUrl ? (
             <>
               {' '}
               <a
-                href={config.privacyPolicyUrl}
+                href={platformConfig.privacyPolicyUrl}
                 target="_blank"
                 rel="noreferrer"
                 className="text-foreground font-medium underline"

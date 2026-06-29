@@ -1,4 +1,5 @@
 import { MfaForm } from './forms/MfaForm/index.ts';
+import { MFA_TEST_IDS } from './mfa.constants.ts';
 
 /**
  * Top-level UI for the `/mfa` route. Thin wrapper that mounts the
@@ -7,7 +8,7 @@ import { MfaForm } from './forms/MfaForm/index.ts';
  */
 export function MfaPage() {
   return (
-    <div data-testid="mfa-page">
+    <div data-testid={MFA_TEST_IDS.page}>
       <MfaForm />
     </div>
   );

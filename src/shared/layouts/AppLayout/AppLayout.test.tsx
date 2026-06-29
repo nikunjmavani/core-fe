@@ -7,15 +7,17 @@ vi.mock('@/core/http/fetch-client.ts', () => ({
   },
 }));
 
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
+import { DEFAULT_DEPLOYMENT_FLAGS } from '@/shared/tenancy/deployment-mode.ts';
 import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 
 import { Component as AppLayout } from './AppLayout.tsx';
 
 describe('AppLayout', () => {
   beforeEach(() => {
-    // Default to the sidebar shell; the shuffle-driven previews are opt-in below.
     useThemeStore.setState({ appVariant: 0 });
+    useOrganizationStore.setState({ deploymentFlags: DEFAULT_DEPLOYMENT_FLAGS });
   });
 
   it('renders the app layout: sidebar, header, main region, mobile nav', async () => {
@@ -37,6 +39,18 @@ describe('AppLayout', () => {
     expect(await findByTestId('search-trigger')).toBeInTheDocument();
   });
 
+  it('renders the focus shell for personal-only deployments', async () => {
+    useOrganizationStore.setState({
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: false },
+    });
+    const { findByTestId, queryByTestId } = renderWithProviders(<AppLayout />);
+
+    expect(await findByTestId('focus-shell')).toBeInTheDocument();
+    expect(await findByTestId('app-context-strip')).toBeInTheDocument();
+    expect(queryByTestId('sidebar')).not.toBeInTheDocument();
+    expect(await findByTestId('main-content')).toBeInTheDocument();
+  });
+
   it('renders the top-nav preview shell (1)', async () => {
     useThemeStore.setState({ appVariant: 1 });
     const { findByTestId, findAllByTestId } = renderWithProviders(<AppLayout />);
@@ -56,6 +70,7 @@ describe('AppLayout', () => {
     expect(await findByTestId('sidebar')).toBeInTheDocument();
     expect(await findByTestId('user-menu-trigger')).toBeInTheDocument();
     expect(await findByTestId('search-trigger')).toBeInTheDocument();
+    expect(await findByTestId('mobile-bottom-bar')).toBeInTheDocument();
   });
 
   it('has no accessibility violations', async () => {

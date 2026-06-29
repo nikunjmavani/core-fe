@@ -1,12 +1,27 @@
+import { useEffect, useState } from 'react';
+
+import { isAppSplashActive, onAppSplashDismissed } from '@/lib/app-splash.ts';
+import { iconChipClassName, iconOnPrimarySurface } from '@/lib/icon-surface.ts';
+import { cn } from '@/lib/utils.ts';
+import { Boxes } from '@/shared/icons/index.ts';
+
 /**
  * Full-page branded loader used during app bootstrap and auth checks. A
  * "breathing" brand tile + wordmark + indeterminate bar — NOT a rotating
- * spinner, so swapping between React loading boundaries during boot doesn't show
- * a visible animation "restart". `fixed inset-0` so it can never introduce a
- * scrollbar. Mirrors the index.html boot splash for a seamless HTML→React
- * handoff. Reduced-motion is honoured by the global rule.
+ * spinner. While the HTML `#app-splash` overlay is still visible, this returns
+ * null so two loaders never stack/blink; after the splash eases out, this
+ * takes over for Suspense boundaries. Reduced-motion is honoured globally.
  */
 export function FullPageSpinner() {
+  const [splashHidden, setSplashHidden] = useState(() => !isAppSplashActive());
+
+  useEffect(() => {
+    if (splashHidden) return;
+    return onAppSplashDismissed(() => setSplashHidden(true));
+  }, [splashHidden]);
+
+  if (!splashHidden) return null;
+
   return (
     <div
       role="status"
@@ -16,9 +31,15 @@ export function FullPageSpinner() {
     >
       <div className="flex flex-col items-center gap-4">
         <span
-          className="bg-primary size-12 animate-[breathe_1.6s_ease-in-out_infinite] rounded-2xl"
+          data-slot="icon-chip"
+          className={cn(
+            'bg-primary text-primary-foreground animate-boot-breathe size-12',
+            iconChipClassName,
+          )}
           aria-hidden="true"
-        />
+        >
+          <Boxes className={cn('size-6', iconOnPrimarySurface)} />
+        </span>
         <span className="text-foreground text-base font-semibold tracking-tight">
           Core Admin
         </span>
@@ -27,7 +48,7 @@ export function FullPageSpinner() {
         className="bg-muted block h-1 w-32 overflow-hidden rounded-full"
         aria-hidden="true"
       >
-        <span className="bg-primary block h-full w-1/2 animate-[route-progress_1.1s_ease-in-out_infinite] rounded-full" />
+        <span className="bg-primary animate-boot-progress block h-full w-1/2 rounded-full" />
       </span>
       <span className="sr-only">Loading…</span>
     </div>

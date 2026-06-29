@@ -1,11 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import {
   listPasskeys,
   registerPasskey,
   removePasskey,
 } from '@/shared/api/passkeys-api.ts';
-import { notify } from '@/shared/notify/index.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
 /** TanStack Query key for the account's passkeys. */
 export const passkeysQueryKey = ['account', 'passkeys'] as const;
@@ -17,26 +19,22 @@ export function usePasskeys() {
 
 /** Register a new passkey, then refresh the list. */
 export function useRegisterPasskey() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (name: string) => registerPasskey(name),
-    onSuccess: () => {
-      notify.success('Passkey added');
-      return queryClient.invalidateQueries({ queryKey: passkeysQueryKey });
-    },
-    onError: () => notify.error('Could not add passkey'),
+    invalidateKeys: [passkeysQueryKey],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.passkeys.addSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }
 
 /** Revoke a passkey, then refresh the list. */
 export function useRemovePasskey() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (id: string) => removePasskey(id),
-    onSuccess: () => {
-      notify.success('Passkey removed');
-      return queryClient.invalidateQueries({ queryKey: passkeysQueryKey });
-    },
-    onError: () => notify.error('Could not remove passkey'),
+    invalidateKeys: [passkeysQueryKey],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.passkeys.removeSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }

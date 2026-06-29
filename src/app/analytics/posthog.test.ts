@@ -4,12 +4,16 @@ vi.mock('posthog-js', () => ({
   default: {
     init: vi.fn(),
     reset: vi.fn(),
+    register: vi.fn(),
+    identify: vi.fn(),
+    group: vi.fn(),
+    capture: vi.fn(),
     __loaded: false,
   },
 }));
 
 vi.mock('@/core/config/env.ts', () => ({
-  config: {
+  platformConfig: {
     posthogKey: 'phc_test_key',
     posthogHost: 'https://us.i.posthog.com',
   },
@@ -41,7 +45,7 @@ const TEST_USER: AuthUser = {
 async function loadFreshPostHog() {
   vi.resetModules();
   vi.doMock('@/core/config/env.ts', () => ({
-    config: { posthogKey: 'phc_test', posthogHost: undefined },
+    platformConfig: { posthogKey: 'phc_test', posthogHost: undefined },
   }));
   // Consent granted — re-mocked here so a lingering doMock from the
   // "no consent" case (doMock persists across resetModules) can't leak in.
@@ -49,7 +53,15 @@ async function loadFreshPostHog() {
     hasAnalyticsConsent: () => true,
   }));
   vi.doMock('posthog-js', () => ({
-    default: { init: vi.fn(), reset: vi.fn(), __loaded: false },
+    default: {
+      init: vi.fn(),
+      reset: vi.fn(),
+      register: vi.fn(),
+      identify: vi.fn(),
+      group: vi.fn(),
+      capture: vi.fn(),
+      __loaded: false,
+    },
   }));
   const { initPostHog } = await import('./posthog.ts');
   const phMock = (await import('posthog-js')).default;
@@ -83,9 +95,18 @@ describe('initPostHog', () => {
       hasAnalyticsConsent: () => false,
     }));
     vi.doMock('@/core/config/env.ts', () => ({
-      config: { posthogKey: 'phc_test', posthogHost: undefined },
+      platformConfig: { posthogKey: 'phc_test', posthogHost: undefined },
     }));
-    vi.doMock('posthog-js', () => ({ default: { init: vi.fn(), __loaded: false } }));
+    vi.doMock('posthog-js', () => ({
+      default: {
+        init: vi.fn(),
+        reset: vi.fn(),
+        register: vi.fn(),
+        identify: vi.fn(),
+        group: vi.fn(),
+        __loaded: false,
+      },
+    }));
 
     const { initPostHog } = await import('./posthog.ts');
     const phMock = (await import('posthog-js')).default;
@@ -97,9 +118,18 @@ describe('initPostHog', () => {
   it('does not call init when key is missing', async () => {
     vi.resetModules();
     vi.doMock('@/core/config/env.ts', () => ({
-      config: { posthogKey: undefined, posthogHost: undefined },
+      platformConfig: { posthogKey: undefined, posthogHost: undefined },
     }));
-    vi.doMock('posthog-js', () => ({ default: { init: vi.fn(), __loaded: false } }));
+    vi.doMock('posthog-js', () => ({
+      default: {
+        init: vi.fn(),
+        reset: vi.fn(),
+        register: vi.fn(),
+        identify: vi.fn(),
+        group: vi.fn(),
+        __loaded: false,
+      },
+    }));
 
     const { initPostHog } = await import('./posthog.ts');
     const phMock = (await import('posthog-js')).default;
@@ -150,7 +180,7 @@ describe('initPostHog', () => {
   it('does not crash when init throws', async () => {
     vi.resetModules();
     vi.doMock('@/core/config/env.ts', () => ({
-      config: { posthogKey: 'phc_test', posthogHost: undefined },
+      platformConfig: { posthogKey: 'phc_test', posthogHost: undefined },
     }));
     vi.doMock('posthog-js', () => ({
       default: {

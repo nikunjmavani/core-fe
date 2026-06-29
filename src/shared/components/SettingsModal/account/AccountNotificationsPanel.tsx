@@ -137,7 +137,7 @@ export function AccountNotificationsPanel() {
           {isLoading ? (
             <div className="space-y-2" data-testid="notifications-prefs-loading">
               {['a', 'b', 'c', 'd'].map((key) => (
-                <Skeleton key={key} className="h-12 w-full rounded-lg" />
+                <Skeleton key={key} className="h-12 w-full" />
               ))}
             </div>
           ) : null}
@@ -148,7 +148,7 @@ export function AccountNotificationsPanel() {
             </p>
           ) : null}
 
-          {!isLoading && !isError ? (
+          {!(isLoading || isError) ? (
             <>
               <div className="divide-y">
                 {CATEGORIES.map((cat) => (

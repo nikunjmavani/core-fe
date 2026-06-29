@@ -1,8 +1,10 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import * as orgApi from '@/shared/api/organization-api.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
-import { notify } from '@/shared/notify/index.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
 /**
  * API keys of the active organization — list query + create/rename/revoke mutations.
@@ -15,37 +17,34 @@ export function useApiKeys() {
 
 /** Create an API key. The full secret is returned to the caller exactly once. */
 export function useCreateApiKey() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (input: { name: string; expiresInDays: '30' | '90' | '365' | 'never' }) =>
       orgApi.createApiKey(input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: orgQueryKeys.apiKeys() }),
-    onError: () => notify.error('Could not create API key'),
+    invalidateKeys: [orgQueryKeys.apiKeys()],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.apiKeys.createSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }
 
 /** Rename an API key, then refresh the list. */
 export function useRenameApiKey() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (input: { id: string; name: string }) => orgApi.renameApiKey(input),
-    onSuccess: () => {
-      notify.success('API key renamed');
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.apiKeys() });
-    },
-    onError: () => notify.error('Could not rename API key'),
+    invalidateKeys: [orgQueryKeys.apiKeys()],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.apiKeys.renameSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }
 
 /** Revoke (delete) an API key, then refresh the list. */
 export function useRevokeApiKey() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (keyId: string) => orgApi.revokeApiKey(keyId),
-    onSuccess: () => {
-      notify.success('API key revoked');
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.apiKeys() });
-    },
-    onError: () => notify.error('Could not revoke API key'),
+    invalidateKeys: [orgQueryKeys.apiKeys()],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.apiKeys.revokeSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }

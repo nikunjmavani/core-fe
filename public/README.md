@@ -1,42 +1,47 @@
 # Public static assets
 
-All files here are copied as-is to the build output (`dist/`). Required and optional assets are listed below. Keep this inventory updated when adding or removing files.
+All files here are copied as-is to the build output (`dist/`). Required and optional assets are listed below.
+
+**Manifest / icon rules:** `docs/reference/pwa-manifest-and-app-icon.md`  
+**Skill:** `agent-os/skills/pwa-manifest/SKILL.md`
 
 ## Required (app or build expects them)
 
-| File                     | Purpose                                                                                            | Auto-updated / maintenance                                                             |
-| ------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| **config.js**            | Runtime config placeholder. Host/entrypoint can overwrite with `window.__CONFIG__` (e.g. API URL). | No — static placeholder; overwritten at deploy if needed.                              |
-| **theme-init.js**        | Prevents theme FOUC: reads `theme-preference` from localStorage and applies `.dark` before React.  | Update if theme key or logic changes (see `stores/useThemeStore`).                     |
-| **vite.svg**             | Default favicon and PWA icon fallback.                                                             | Replace with app icon if desired; update `index.html` and manifest if you change name. |
-| **manifest.webmanifest** | PWA manifest (name, icons, theme_color, start_url).                                                | Update when app name, theme_color, or icons change. Must list existing icon paths.     |
-| **\_headers**            | Netlify/static host headers (e.g. Permissions-Policy). Merged with host config.                    | Update when adding new security or caching headers.                                    |
-| **offline.html**         | PWA offline fallback page (when no cache match).                                                   | Update copy or styles if branding changes.                                             |
-| **robots.txt**           | Crawler rules.                                                                                     | Update if you add a sitemap or need to disallow paths.                                 |
+| File                     | Purpose                                                                                            | Auto-updated / maintenance                                                                  |
+| ------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **config.js**            | Runtime config placeholder. Host/entrypoint can overwrite with `window.__CONFIG__` (e.g. API URL). | No — static placeholder; overwritten at deploy if needed.                                   |
+| **theme-init.js**        | Prevents theme FOUC: reads `theme-preference` from localStorage and applies `.dark` before React.  | Update if theme key or logic changes (see `stores/useThemeStore`).                          |
+| **app-icon.svg**         | App favicon + PWA SVG (Lucide **Boxes** brand mark on `#0a0a0a` tile).                             | Regenerate PNGs: `rsvg-convert -w 192 -h 192 public/app-icon.svg -o public/pwa-192x192.png` |
+| **manifest.webmanifest** | PWA manifest — must match `buildWebManifest()` in `src/core/config/app-manifest.ts`.               | Edit `app-manifest.ts` first; run `app-manifest.test.ts`.                                   |
+| **\_headers**            | Netlify/static host headers (e.g. Permissions-Policy). Merged with host config.                    | Update when adding new security or caching headers.                                         |
+| **offline.html**         | PWA offline fallback page (when no cache match).                                                   | Update copy or styles if branding changes.                                                  |
+| **robots.txt**           | Crawler rules.                                                                                     | Update if you add a sitemap or need to disallow paths.                                      |
 
 ## PWA icons (required for install / no 404s)
 
-The manifest and `index.html` reference these; add them to avoid 404s and for “Add to Home Screen”:
+| File                | Purpose                                 |
+| ------------------- | --------------------------------------- |
+| **pwa-192x192.png** | PWA icon 192×192 (from `app-icon.svg`). |
+| **pwa-512x512.png** | PWA icon 512×512 (and maskable).        |
 
-| File                | Purpose                          |
-| ------------------- | -------------------------------- |
-| **pwa-192x192.png** | PWA icon 192×192.                |
-| **pwa-512x512.png** | PWA icon 512×512 (and maskable). |
-
-Generate from your app icon (e.g. from `vite.svg` or design) and place in `public/`. Vite and the PWA plugin copy them to `dist/`.
+```bash
+rsvg-convert -w 192 -h 192 public/app-icon.svg -o public/pwa-192x192.png
+rsvg-convert -w 512 -h 512 public/app-icon.svg -o public/pwa-512x512.png
+```
 
 ## Not in this folder (generated or elsewhere)
 
 - **version.json** — Generated at build by `plugins/version-json.ts` (dev: middleware; prod: written to `dist/`). Do not add to `public/`.
-- **index.html** — Lives at project root; references `/manifest.webmanifest`, `/config.js`, `/theme-init.js`, `/vite.svg`, `/pwa-192x192.png`.
+- **index.html** — Lives at project root; references `/manifest.webmanifest`, `/config.js`, `/theme-init.js`, `/app-icon.svg`, `/pwa-192x192.png`.
 
 ## Validation
 
-Run **`pnpm run validate:public`** to ensure all required files exist. The script fails if any required asset is missing and warns if PWA icons are missing (see [scripts/validate-public-assets.sh](../scripts/validate-public-assets.sh)). You can add this to CI or run before deploy.
+Run **`pnpm validate:public`** to ensure all required files exist. The script fails if any required asset is missing (see [tooling/validate/public-assets.sh](../tooling/validate/public-assets.sh)).
+
+Also run **`pnpm test:unit src/core/config/app-manifest.test.ts`** after manifest changes.
 
 ## Summary
 
-- **Required:** config.js, theme-init.js, vite.svg, manifest.webmanifest, \_headers, offline.html, robots.txt.
-- **PWA icons:** Add pwa-192x192.png and pwa-512x512.png for full PWA support and no icon 404s.
-- **Maintenance:** When app name or theme changes, update manifest.webmanifest and, if needed, index.html meta theme-color.
-- **Auto-updated by build:** `version.json` is generated by `plugins/version-json.ts` (not in `public/`).
+- **Source of truth:** `src/core/config/app-manifest.ts` → `public/manifest.webmanifest`
+- **Required:** config.js, theme-init.js, app-icon.svg, manifest.webmanifest, \_headers, offline.html, robots.txt, pwa-192x192.png, pwa-512x512.png
+- **Auto-updated by build:** `version.json` is generated by `plugins/version-json.ts` (not in `public/`)

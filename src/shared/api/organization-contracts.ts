@@ -4,8 +4,7 @@ import { z } from 'zod';
  * Organization domain contracts (Zod schemas + inferred types).
  *
  * These mirror the core-be response shapes for memberships, invitations, roles,
- * and API keys so the UI does not change when the mock API layer is swapped for
- * live `apiClient` calls. See `@/shared/api/organization-api.ts`.
+ * and API keys. Wire shapes mirror core-be; see `@/shared/api/organization-api.ts`.
  */
 
 /** Role a member holds within an organization. */
@@ -80,20 +79,6 @@ export const createApiKeyInputSchema = z.object({
   expiresInDays: z.enum(['30', '90', '365', 'never']),
 });
 export type CreateApiKeyInput = z.infer<typeof createApiKeyInputSchema>;
-
-export const planSchema = z.enum(['free', 'starter', 'pro']);
-export type Plan = z.infer<typeof planSchema>;
-
-export const subscriptionSchema = z.object({
-  plan: planSchema,
-  status: z.enum(['active', 'trialing', 'past_due', 'canceled']),
-  seats: z.number().int().positive(),
-  seatsUsed: z.number().int().nonnegative(),
-  renewsAt: z.string(),
-  amountCents: z.number().int().nonnegative(),
-  currency: z.string(),
-});
-export type Subscription = z.infer<typeof subscriptionSchema>;
 
 /** Assignable (non-system) permissions a custom role may grant. */
 export const ASSIGNABLE_ROLE_PERMISSIONS = [

@@ -10,6 +10,7 @@ import {
   type VisibilityState,
 } from '@tanstack/react-table';
 import { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { downloadCsv, toCsv } from '@/lib/csv.ts';
 import type { Member, OrgRole } from '@/shared/api/organization-contracts.ts';
@@ -17,6 +18,7 @@ import { DataTable } from '@/shared/components/data-table/DataTable.tsx';
 import { DataTableColumnHeader } from '@/shared/components/data-table/DataTableColumnHeader.tsx';
 import { DataTablePagination } from '@/shared/components/data-table/DataTablePagination.tsx';
 import { DataTableToolbar } from '@/shared/components/data-table/DataTableToolbar.tsx';
+import { FormattedDate } from '@/shared/components/FormattedDate/index.ts';
 import { InviteMemberDialog } from '@/shared/components/InviteMemberDialog/index.ts';
 import {
   MemberStatusBadge,
@@ -34,6 +36,7 @@ import {
 } from '@/shared/components/ui/alert-dialog.tsx';
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
+import { Card } from '@/shared/components/ui/card.tsx';
 import { Checkbox } from '@/shared/components/ui/checkbox.tsx';
 import {
   DropdownMenu,
@@ -61,6 +64,8 @@ import {
 import { useHasPermission } from '@/shared/hooks/useRBAC/index.ts';
 import { Download, MoreHorizontal } from '@/shared/icons/index.ts';
 
+import { MEMBERS_TABLE_KEYS, MEMBERS_TABLE_NS } from './members-table.constants.ts';
+
 function applyStateUpdate<T>(updater: SetStateAction<T>, prev: T): T {
   return typeof updater === 'function' ? (updater as (p: T) => T)(prev) : updater;
 }
@@ -76,15 +81,8 @@ function initials(name: string): string {
     .join('');
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
 function RowActions({ member, canManage }: { member: Member; canManage: boolean }) {
+  const { t } = useTranslation(MEMBERS_TABLE_NS);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const updateRole = useUpdateMemberRole();
   const updateStatus = useUpdateMemberStatus();
@@ -103,14 +101,14 @@ function RowActions({ member, canManage }: { member: Member; canManage: boolean 
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={`Actions for ${member.name}`}
+            aria-label={t(MEMBERS_TABLE_KEYS.actionsAria, { name: member.name })}
             data-testid={`member-actions-${member.id}`}
           >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>Change role</DropdownMenuLabel>
+          <DropdownMenuLabel>{t(MEMBERS_TABLE_KEYS.changeRole)}</DropdownMenuLabel>
           <DropdownMenuRadioGroup
             value={member.role}
             onValueChange={(role) =>
@@ -133,7 +131,9 @@ function RowActions({ member, canManage }: { member: Member; canManage: boolean 
             }
             data-testid={`member-toggle-status-${member.id}`}
           >
-            {isSuspended ? 'Reactivate member' : 'Suspend member'}
+            {isSuspended
+              ? t(MEMBERS_TABLE_KEYS.reactivate)
+              : t(MEMBERS_TABLE_KEYS.suspend)}
           </DropdownMenuItem>
           <DropdownMenuItem
             variant="destructive"
@@ -142,7 +142,7 @@ function RowActions({ member, canManage }: { member: Member; canManage: boolean 
               setConfirmOpen(true);
             }}
           >
-            Remove from organization
+            {t(MEMBERS_TABLE_KEYS.remove)}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -150,18 +150,20 @@ function RowActions({ member, canManage }: { member: Member; canManage: boolean 
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove {member.name}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t(MEMBERS_TABLE_KEYS.removeTitle, { name: member.name })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              They will lose access to this organization. This action cannot be undone.
+              {t(MEMBERS_TABLE_KEYS.removeDescription)}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t(MEMBERS_TABLE_KEYS.cancel)}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => removeMember.mutate(member.id)}
               data-testid={`member-remove-confirm-${member.id}`}
             >
-              Remove
+              {t(MEMBERS_TABLE_KEYS.confirmRemove)}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -227,7 +229,10 @@ function buildColumns(canManage: boolean): ColumnDef<Member>[] {
       header: ({ column }) => <DataTableColumnHeader column={column} title="Joined" />,
       cell: ({ row }) => (
         <span className="text-muted-foreground text-sm">
-          {formatDate(row.original.joinedAt)}
+          <FormattedDate
+            value={row.original.joinedAt}
+            className="text-muted-foreground text-sm"
+          />
         </span>
       ),
     },
@@ -374,9 +379,9 @@ export function MembersTable({
         {canManage && <InviteMemberDialog />}
       </DataTableToolbar>
 
-      <div className="rounded-md border">
+      <Card className="gap-0 overflow-hidden py-0">
         <DataTable table={table} emptyMessage="No members found." />
-      </div>
+      </Card>
 
       <DataTablePagination table={table} />
     </div>

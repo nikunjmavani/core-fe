@@ -1,14 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const useMockApiRef = vi.hoisted(() => ({ value: false }));
-vi.mock('@/core/config/env.ts', () => ({
-  config: {
-    get useMockApi() {
-      return useMockApiRef.value;
-    },
-  },
-}));
-
 const { getMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   deleteMock: vi.fn(),
@@ -17,7 +8,6 @@ vi.mock('@/core/http/fetch-client.ts', () => ({
   apiClient: { get: getMock, delete: deleteMock },
 }));
 
-import { sessionMockStore } from './session-mock-store.ts';
 import { listSessions, revokeSession } from './sessions-api.ts';
 
 const WIRE = {
@@ -31,13 +21,11 @@ const WIRE = {
 };
 
 beforeEach(() => {
-  useMockApiRef.value = false;
   getMock.mockReset();
   deleteMock.mockReset();
-  sessionMockStore.reset();
 });
 
-describe('sessions-api (live branch)', () => {
+describe('sessions-api', () => {
   it('lists and maps wire → domain', async () => {
     getMock.mockResolvedValue({ data: [WIRE] });
     const res = await listSessions();
@@ -60,35 +48,5 @@ describe('sessions-api (live branch)', () => {
     expect(deleteMock).toHaveBeenCalledWith(
       expect.stringContaining('/auth/me/sessions/ses_x'),
     );
-  });
-});
-
-describe('sessions-api (mock branch)', () => {
-  beforeEach(() => {
-    useMockApiRef.value = true;
-  });
-
-  it('lists seed sessions including exactly one current', async () => {
-    const res = await listSessions();
-    expect(res.length).toBeGreaterThanOrEqual(2);
-    expect(res.filter((s) => s.current)).toHaveLength(1);
-  });
-
-  it('revokes a non-current session', async () => {
-    const before = await listSessions();
-    const target = before.find((s) => !s.current);
-    expect(target).toBeDefined();
-    if (target) await revokeSession(target.id);
-    const after = await listSessions();
-    expect(after.some((s) => s.id === target?.id)).toBe(false);
-  });
-
-  it('never removes the current session', async () => {
-    const before = await listSessions();
-    const current = before.find((s) => s.current);
-    expect(current).toBeDefined();
-    if (current) await revokeSession(current.id);
-    const after = await listSessions();
-    expect(after.some((s) => s.current)).toBe(true);
   });
 });

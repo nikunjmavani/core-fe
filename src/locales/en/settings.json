@@ -1,0 +1,143 @@
+{
+  "nav": {
+    "ariaSections": "Settings sections",
+    "ariaSettings": "Settings",
+    "searchPlaceholder": "Search",
+    "searchAria": "Search settings",
+    "empty": "No matches",
+    "groups": {
+      "account": "Account",
+      "organization": "Organization"
+    },
+    "profile": "Profile",
+    "account": "Account",
+    "security": "Security",
+    "notifications": "Notifications",
+    "sessions": "Sessions",
+    "general": "General",
+    "members": "Members",
+    "roles": "Roles",
+    "branches": "Branches",
+    "billing": "Billing",
+    "integrations": "Integrations"
+  },
+  "security": {
+    "heading": "Security",
+    "description": "Two-factor authentication and passkeys.",
+    "mfa": {
+      "title": "Two-factor authentication",
+      "description": "Require an authenticator code at sign-in.",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "setup": "Set up two-factor",
+      "disable": "Disable two-factor",
+      "disableTitle": "Disable two-factor authentication?",
+      "disableDescription": "Your account will be less protected. You can turn it back on anytime.",
+      "disableConfirm": "Disable",
+      "setupTitle": "Set up two-factor authentication",
+      "setupDescription": "Scan the QR code with your authenticator app, or enter the secret manually.",
+      "recoveryTitle": "Save your recovery codes",
+      "recoveryDescription": "Store these somewhere safe. Each one works once if you lose your device.",
+      "done": "Done",
+      "cancel": "Cancel",
+      "verifyEnable": "Verify & enable",
+      "codeLabel": "Enter the 6-digit code",
+      "codeAria": "Six-digit authenticator code",
+      "secretLabel": "Manual entry key",
+      "copySecret": "Copy secret",
+      "copiedSecret": "Copied",
+      "scanHint": "Open Google Authenticator, 1Password, or another TOTP app and scan this code.",
+      "errors": {
+        "setupFailed": "Could not start setup. Please try again.",
+        "invalidCode": "That code didn’t match. Enter the current 6-digit code."
+      }
+    },
+    "passkeys": {
+      "title": "Passkeys",
+      "description": "Sign in without a password using your device.",
+      "add": "Add passkey",
+      "empty": "No passkeys yet. Add one to sign in without a password.",
+      "removeAria": "Remove {{name}}",
+      "addTitle": "Add a passkey",
+      "addDescription": "Name it so you can recognize it later. Your device will prompt you to create the passkey.",
+      "nameLabel": "Name",
+      "namePlaceholder": "MacBook Touch ID",
+      "cancel": "Cancel",
+      "submit": "Add passkey"
+    },
+    "overview": {
+      "title": "Account protection",
+      "description": "Quick view of what's guarding your sign-in.",
+      "score": "{{score}} of {{total}} active",
+      "mfaOn": "Two-factor authentication is on",
+      "mfaOff": "Two-factor authentication is off",
+      "passkeysOn": "{{count}} passkey registered",
+      "passkeysOn_other": "{{count}} passkeys registered",
+      "passkeysOff": "No passkeys registered",
+      "idleProtection": "Auto sign-out when idle is active"
+    },
+    "recoveryCodes": {
+      "reveal": "Show codes",
+      "hide": "Hide codes",
+      "copyAll": "Copy all",
+      "download": "Download .txt",
+      "copySuccess": "Recovery codes copied — clipboard clears in 1 minute",
+      "copyFailed": "Could not copy to clipboard",
+      "downloadStarted": "Download started",
+      "clipboardNotice": "Copied secrets are cleared from your clipboard after one minute.",
+      "acknowledge": "I have saved these recovery codes in a safe place"
+    }
+  },
+  "discard": {
+    "title": "Discard unsaved changes?",
+    "description": "You have unsaved changes. Leaving this section will discard them.",
+    "stay": "Keep editing",
+    "leave": "Discard changes"
+  },
+  "panels": {
+    "members": {
+      "title": "Members",
+      "description": "People in this organization.",
+      "loadFailed": "Couldn't load members. Please try again.",
+      "emptyTitle": "No members yet",
+      "emptyDescription": "Invite teammates to collaborate in this organization.",
+      "removeAria": "Remove {{name}}",
+      "removeTitle": "Remove {{name}}?",
+      "removeDescription": "They'll lose access to this organization. You can undo for a few seconds after confirming.",
+      "removeConfirm": "Remove",
+      "removePending": "Removing {{name}}…"
+    },
+    "roles": {
+      "title": "Roles",
+      "description": "Permission sets you can assign to members.",
+      "loadFailed": "Couldn't load roles. Please try again.",
+      "emptyTitle": "No roles yet",
+      "emptyDescription": "Create a custom role to grant a tailored set of permissions.",
+      "systemBadge": "System",
+      "memberCount": "{{count}} member",
+      "memberCount_other": "{{count}} members",
+      "deleteAria": "Delete {{name}}",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteDescription": "Members with this role will need a new one assigned. You can undo for a few seconds after confirming.",
+      "deleteConfirm": "Delete",
+      "deletePending": "Deleting {{name}}…"
+    },
+    "profile": {
+      "title": "Profile",
+      "description": "How you appear in the app. Visible to people in your organization.",
+      "completeness": "Profile {{percent}}% complete",
+      "confirmTitle": "Save profile changes?",
+      "confirmDescription": "Are you sure you want to update your profile information?",
+      "confirmSave": "Save changes",
+      "confirmCancel": "Cancel",
+      "saving": "Saving…",
+      "save": "Save changes"
+    },
+    "account": {
+      "deleteTitle": "Delete your account?",
+      "deleteDescription": "This action is permanent and cannot be undone. All your data will be removed.",
+      "deleteConfirm": "Delete account",
+      "deleteCancel": "Cancel"
+    }
+  }
+}

@@ -27,8 +27,29 @@ export function formatCspApiConnectSrcFragment(apiBaseUrl: string | undefined): 
 /**
  * Third-party origins the app must reach (observability + analytics). Kept in
  * lock step with the connect-src list in index.html's meta CSP — the static
- * security test asserts they agree.
+ * security test asserts they agree on shared directives.
+ *
+ * **`upgrade-insecure-requests`** is header-only (`buildContentSecurityPolicy` →
+ * `dist/_headers`). It is omitted from the index.html meta fallback because
+ * Safari/WebKit upgrades `http://localhost` subresources to HTTPS and breaks
+ * local preview; Netlify always serves over HTTPS where the header applies.
  */
+/**
+ * Cloudflare Turnstile origin. The invisible captcha widget loads its script from here and
+ * renders the challenge in a same-origin iframe, so this host is allowlisted in both
+ * `script-src` and `frame-src`. Kept in lock step with the meta CSP in index.html.
+ */
+const TURNSTILE_ORIGIN = 'https://challenges.cloudflare.com';
+
+/** Stripe.js + Payment Element (script, frames, API calls). */
+const STRIPE_ORIGINS = [
+  'https://js.stripe.com',
+  'https://hooks.stripe.com',
+  'https://api.stripe.com',
+  'https://m.stripe.com',
+  'https://m.stripe.network',
+] as const;
+
 const CONNECT_SRC_THIRD_PARTY = [
   'https://*.ingest.sentry.io',
   'https://*.sentry.io',
@@ -38,6 +59,7 @@ const CONNECT_SRC_THIRD_PARTY = [
   // register/reset forms (only a hash prefix is ever sent). See
   // `lib/password-breach.ts`.
   'https://api.pwnedpasswords.com',
+  ...STRIPE_ORIGINS,
 ] as const;
 
 /**
@@ -64,12 +86,15 @@ export function buildContentSecurityPolicy(
 
   const directives = [
     "default-src 'self'",
-    "script-src 'self'",
+    // Cloudflare Turnstile: the challenge script is loaded from challenges.cloudflare.com
+    // and renders inside an iframe from the same origin (frame-src below).
+    `script-src 'self' ${TURNSTILE_ORIGIN} ${STRIPE_ORIGINS[0]}`,
     "style-src 'self' 'unsafe-inline'",
     `connect-src ${connectSrc.join(' ')}`,
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "worker-src 'self'",
+    `frame-src ${TURNSTILE_ORIGIN} ${STRIPE_ORIGINS[0]} ${STRIPE_ORIGINS[1]}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

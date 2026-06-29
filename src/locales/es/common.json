@@ -1,0 +1,69 @@
+{
+  "appTitle": "Core Admin",
+  "language": {
+    "openAria": "Idioma y configuración regional",
+    "title": "Idioma y región",
+    "heading": "Idioma",
+    "description": "Textos, fechas, números y moneda siguen estas preferencias.",
+    "en": "English",
+    "es": "Español",
+    "zh": "中文",
+    "fr": "Français",
+    "de": "Deutsch",
+    "ja": "日本語",
+    "pt": "Português",
+    "ar": "العربية",
+    "hi": "हिन्दी",
+    "ko": "한국어",
+    "it": "Italiano"
+  },
+  "formatLocale": {
+    "heading": "Región de formato",
+    "description": "Formato Intl de fechas, números y moneda, independiente del idioma."
+  },
+  "dateFormat": {
+    "heading": "Formato de fecha y hora",
+    "auto": "Predeterminado del idioma (numérico)",
+    "short": "Corto",
+    "medium": "Medio",
+    "long": "Largo",
+    "full": "Completo",
+    "iso": "Estilo ISO (AAAA-MM-DD)",
+    "date": "Solo fecha",
+    "time": "Solo hora",
+    "datetime": "Fecha + hora",
+    "previewDate": "Fecha y hora: {{value}}",
+    "previewNumber": "Número: {{value}}",
+    "previewRelative": "Relativo: {{value}}",
+    "previewTime": "Solo hora: {{value}}"
+  },
+  "hourCycle": {
+    "heading": "Formato de reloj",
+    "auto": "Predeterminado del idioma",
+    "h12": "12 horas (AM/PM)",
+    "h23": "24 horas"
+  },
+  "numberStyle": {
+    "heading": "Formato numérico",
+    "auto": "Predeterminado del idioma",
+    "standard": "Agrupado",
+    "compact": "Compacto (1,2 M)",
+    "engineering": "Ingeniería",
+    "scientific": "Científico"
+  },
+  "currencyDisplay": {
+    "heading": "Moneda",
+    "auto": "Predeterminado del idioma",
+    "symbol": "Símbolo",
+    "narrowSymbol": "Símbolo estrecho",
+    "code": "Código ISO",
+    "name": "Nombre de la moneda"
+  },
+  "currencyCode": {
+    "heading": "Moneda de vista previa"
+  },
+  "localePreview": {
+    "heading": "Vista previa",
+    "currency": "Moneda: {{value}}"
+  }
+}

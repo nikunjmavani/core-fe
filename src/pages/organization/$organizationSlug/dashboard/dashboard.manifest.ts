@@ -11,6 +11,8 @@ export const manifest = {
   title: 'Dashboard',
   testId: 'dashboard-page',
   permission: 'organization:read',
+  /** Reference L6b module key — disabled via `VITE_DISABLED_MODULES=billing`. */
+  module: 'billing',
   kind: 'leaf',
   children: [],
 } as const satisfies PageManifest;

@@ -19,7 +19,7 @@ describe('CustomToast', () => {
   });
 
   it('reflects the toastVariant from the theme store', () => {
-    useThemeStore.getState().setToastVariant(1); // 'solid'
+    useThemeStore.getState().setToastVariant(1);
     render(<CustomToast id="t2" type="info" title="Info" />);
     expect(screen.getByTestId('app-toast')).toHaveAttribute(
       'data-toast-variant',
@@ -30,8 +30,17 @@ describe('CustomToast', () => {
 
   it('dismisses via the close button', async () => {
     const user = userEvent.setup();
-    render(<CustomToast id="t3" type="error" title="Oops" />);
-    await user.click(screen.getByRole('button', { name: /dismiss/i }));
+    const onDismiss = vi.fn();
+    render(<CustomToast id="t3" type="error" title="Oops" onDismiss={onDismiss} />);
+    await user.click(screen.getByTestId('toast-dismiss'));
+    expect(onDismiss).toHaveBeenCalled();
     expect(dismissMock).toHaveBeenCalledWith('t3');
+  });
+
+  it('renders a loading toast with a spinner', () => {
+    render(<CustomToast id="t4" type="loading" title="Saving…" />);
+    const el = screen.getByTestId('app-toast');
+    expect(el).toHaveTextContent('Saving…');
+    expect(el.querySelector('.animate-spin')).toBeTruthy();
   });
 });

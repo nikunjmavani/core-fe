@@ -1,15 +1,12 @@
 import { Link, useNavigate, useParams } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { organizationDashboard } from '@/lib/routes/index.ts';
+import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
+import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { acceptInvitation } from '@/shared/api/organization-api.ts';
-import {
-  MOCK_ACCESS_TOKEN,
-  MOCK_USER,
-  startMockSession,
-} from '@/shared/auth/mock-auth.ts';
-import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
-import { markSessionStart } from '@/shared/auth/session-lifetime.ts';
-import { setAccessToken } from '@/shared/auth/token.ts';
+import { silentRefresh } from '@/shared/auth/service.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
   Card,
@@ -18,65 +15,95 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
+import { useConsumedSearchToken } from '@/shared/hooks/useConsumedSearchToken/index.ts';
 import { CheckCircle2, Loader2, XCircle } from '@/shared/icons/index.ts';
-import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
-import { persistOrganizationToStorage } from '@/shared/store/useOrganizationStore/index.ts';
+import { switchToOrganization } from '@/shared/tenancy/switch.ts';
+
+import {
+  ACCEPT_INVITE_REDIRECT_MS,
+  ACCEPT_INVITE_TEST_IDS,
+  AUTH_KEYS,
+  AUTH_NS,
+} from './accept-invite.constants.ts';
 
 type Status = 'accepting' | 'success' | 'error';
 
-/**
- * Accepts a membership invitation by token, then auto-logs the user in and lands
- * them on the dashboard. Shows a clear error state for expired/invalid links.
- */
 export function AcceptInvitePage() {
-  const { invitationId } = useParams({ from: '/accept-invite/$invitationId' });
+  const { t } = useTranslation(AUTH_NS);
+  const { invitationId } = useParams({ strict: false });
+  const invitationToken = useConsumedSearchToken();
   const navigate = useNavigate();
   const [status, setStatus] = useState<Status>('accepting');
   const [error, setError] = useState<string | null>(null);
   const startedRef = useRef(false);
 
   useEffect(() => {
+    if (!invitationId) return;
     if (startedRef.current) return;
     startedRef.current = true;
 
     void (async () => {
       try {
-        const accepted = await acceptInvitation(invitationId);
+        if (!invitationToken) {
+          setError(t(AUTH_KEYS.acceptInvite.errors.invalidOrExpired));
+          setStatus('error');
+          return;
+        }
+        const accepted = await acceptInvitation(invitationId, invitationToken);
 
-        // Auto-login the (mock) user and activate the joined organization.
-        setAccessToken(MOCK_ACCESS_TOKEN);
-        markSessionStart(); // start the absolute session-lifetime clock
-        startMockSession();
-        useAuthStore.getState().setUser(MOCK_USER);
-        scheduleTokenRefresh();
-
-        // Persist the joined organization as last-used; the `/` resolver
-        // validates it against memberships and the $organizationSlug guard
-        // syncs context + permissions from the URL.
-        persistOrganizationToStorage(accepted.organizationId, accepted.organizationSlug);
-
-        setStatus('success');
-        setTimeout(() => navigate({ to: '/', replace: true }), 900);
+        try {
+          const ctx = await switchToOrganization(accepted.organizationId);
+          await silentRefresh();
+          setStatus('success');
+          captureAnalyticsEvent(ANALYTICS_EVENTS.inviteAccepted, {
+            invitation_id: invitationId,
+            organization_id: accepted.organizationId,
+          });
+          setTimeout(() => {
+            const slug = ctx?.activeOrganization?.slug ?? accepted.organizationSlug;
+            if (slug) {
+              void navigate({
+                ...organizationDashboard(slug),
+                replace: true,
+              });
+            } else {
+              void navigate({ to: '/', replace: true });
+            }
+          }, ACCEPT_INVITE_REDIRECT_MS);
+        } catch {
+          setStatus('success');
+          setTimeout(
+            () => void navigate({ to: '/login', replace: true }),
+            ACCEPT_INVITE_REDIRECT_MS,
+          );
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Could not accept the invitation.');
+        setError(mapFrontendError(err));
         setStatus('error');
       }
     })();
-  }, [invitationId, navigate]);
+  }, [invitationId, invitationToken, navigate, t]);
+
+  if (!invitationId) {
+    return null;
+  }
 
   return (
     <div
       className="flex min-h-screen items-center justify-center p-4"
-      data-testid="accept-invite-page"
+      data-testid={ACCEPT_INVITE_TEST_IDS.page}
     >
       <Card className="w-full max-w-md text-center">
         <CardHeader>
           <CardTitle>
-            {status === 'error' ? 'Invitation problem' : 'Joining organization'}
+            {status === 'error'
+              ? t(AUTH_KEYS.acceptInvite.problemTitle)
+              : t(AUTH_KEYS.acceptInvite.joiningTitle)}
           </CardTitle>
           <CardDescription>
-            {status === 'accepting' && 'Accepting your invitation…'}
-            {status === 'success' && 'You\u2019re in! Redirecting to your dashboard…'}
+            {status === 'accepting' && t(AUTH_KEYS.acceptInvite.accepting)}
+            {status === 'success' && t(AUTH_KEYS.acceptInvite.success)}
             {status === 'error' && error}
           </CardDescription>
         </CardHeader>
@@ -84,23 +111,23 @@ export function AcceptInvitePage() {
           {status === 'accepting' && (
             <Loader2
               className="text-muted-foreground h-10 w-10 animate-spin"
-              data-testid="accept-invite-loading"
+              data-testid={ACCEPT_INVITE_TEST_IDS.loading}
             />
           )}
           {status === 'success' && (
             <CheckCircle2
               className="text-success h-10 w-10"
-              data-testid="accept-invite-success"
+              data-testid={ACCEPT_INVITE_TEST_IDS.success}
             />
           )}
           {status === 'error' && (
             <>
               <XCircle
                 className="text-destructive h-10 w-10"
-                data-testid="accept-invite-error"
+                data-testid={ACCEPT_INVITE_TEST_IDS.error}
               />
-              <Button asChild data-testid="accept-invite-login">
-                <Link to="/login">Go to sign in</Link>
+              <Button asChild data-testid={ACCEPT_INVITE_TEST_IDS.login}>
+                <Link to="/login">{t(AUTH_KEYS.common.goToSignIn)}</Link>
               </Button>
             </>
           )}

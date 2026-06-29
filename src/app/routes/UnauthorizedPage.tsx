@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router';
 
+import { Button } from '@/shared/components/ui/button.tsx';
+
 export function Component() {
   return (
     <div
@@ -10,12 +12,9 @@ export function Component() {
       <p className="text-muted-foreground max-w-md text-base sm:text-lg">
         You do not have permission to access this page.
       </p>
-      <Link
-        to="/"
-        className="bg-primary text-primary-foreground hover:bg-primary/90 mt-4 rounded-md px-4 py-2 text-sm font-medium"
-      >
-        Go Home
-      </Link>
+      <Button asChild className="mt-4">
+        <Link to="/">Go Home</Link>
+      </Button>
     </div>
   );
 }

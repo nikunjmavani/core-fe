@@ -1,8 +1,10 @@
 import { notFound, redirect } from '@tanstack/react-router';
 
+import { platformConfig } from '@/core/config/env.ts';
 import { queryClient } from '@/core/http/queryClient.ts';
 import { parseOrganizationSlugParam } from '@/lib/routes/params.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+import { mergeDeploymentFlags } from '@/shared/tenancy/deployment-mode.ts';
 import { type MeContext, meContextQueryKey } from '@/shared/tenancy/me-context.ts';
 import type { Organization } from '@/shared/tenancy/my-organizations.ts';
 import { syncOrganizationFromRoute } from '@/shared/tenancy/organization-context.ts';
@@ -10,7 +12,21 @@ import {
   ensurePermissionsFor,
   findMembershipBySlug,
 } from '@/shared/tenancy/organization-membership.ts';
+import type { RootTarget } from '@/shared/tenancy/organization-resolver.ts';
+import {
+  resolveRootTarget,
+  workspaceRedirectForPersonalDashboard,
+  workspaceRedirectForTeamEntry,
+} from '@/shared/tenancy/organization-resolver.ts';
+import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
 import { switchToOrganization } from '@/shared/tenancy/switch.ts';
+
+function throwWorkspaceRedirect(target: RootTarget): never {
+  if (target.to === '/onboarding') throw redirect({ to: '/onboarding' });
+  if (target.to === '/dashboard') throw redirect({ to: '/dashboard' });
+  if (target.to === '/organization') throw redirect({ to: '/organization' });
+  throw redirect({ to: target.to, params: target.params });
+}
 
 /**
  * Organization-scoped route guards — composable `beforeLoad` functions
@@ -19,9 +35,9 @@ import { switchToOrganization } from '@/shared/tenancy/switch.ts';
  * Chain for `/organization/$organizationSlug/*` (GUARDS.OVERVIEW.md):
  *   requireAuth (core/rbac/guards) → requireOrganizationContext →
  *   requireActiveOrganization → requirePermission (core/rbac/guards, from the
- *   page manifest) → requireFeature. Resource scope (does pat_x belong to
- *   org_y?) is NOT a guard — the route loader's fetch is the check, with API
- *   404/403 mapped to the NotFound/Unauthorized islands.
+ *   page manifest) → L6b module via `gatewayFromManifest(manifest).module`.
+ *   Resource scope (does pat_x belong to org_y?) is NOT a guard — the route
+ *   loader's fetch is the check, with API 404/403 mapped to NotFound/Unauthorized.
  *
  * These live in `app/` (not `core/`) because they compose `shared/tenancy`,
  * which the core kernel must not import. Frontend guards are UX only — the
@@ -64,12 +80,10 @@ export async function requireOrganizationContext(
 export function requireActiveOrganization(organizationSlug: string): void {
   const store = useOrganizationStore.getState();
   // Guard: requireOrganizationContext must have run first (it syncs slug+status
-  // from the resolved org). Compare on slug — the URL's canonical key here.
+  // from the resolved org). Fail closed when status cannot be verified for the
+  // URL org — never assume "active" during slug mismatch (FE-52).
   if (store.organizationSlug !== organizationSlug) {
-    // Status not synced for this org yet — treat as active to avoid false
-    // positives during boot / route transitions. The guard re-runs after
-    // requireOrganizationContext completes (preloadStaleTime: 0).
-    return;
+    throw notFound();
   }
   const status = store.organizationStatus ?? 'active';
   if (status !== 'active') {
@@ -81,9 +95,61 @@ export function requireActiveOrganization(organizationSlug: string): void {
 }
 
 /**
- * Plan/feature gate for optional modules. Mock mode enables everything.
+ * Effective deployment flags for the guards — env overrides win over the store's
+ * (possibly still-default) flags, mirroring `useDeploymentFlags` and the
+ * `me-context` parse. Lets the early (pre-network) deployment gate restrict an
+ * env-configured personal-only / team-only deployment instead of passing on the
+ * permissive `DEFAULT_DEPLOYMENT_FLAGS` before `me/context` hydrates the store.
  */
-export function requireFeature(_feature: string): void {
-  // REPLACE_WITH_API: evaluate plan feature flags; throw notFound() (hide) or
-  // redirect to an upsell surface when the module is not in the plan.
+function effectiveDeploymentFlags() {
+  return mergeDeploymentFlags(
+    useOrganizationStore.getState().deploymentFlags,
+    platformConfig.deploymentOverrides,
+  );
+}
+
+/** Personal-only deployments have no team slug space — redirect to root dashboard. */
+export function requireTeamOrganizationsDeployment(): void {
+  if (!effectiveDeploymentFlags().teamOrganizations) {
+    throw redirect({ to: '/dashboard' });
+  }
+}
+
+/** Team-only deployments use slug URLs — root personal dashboard is not a product surface. */
+export function requirePersonalOrganizationsDeployment(): void {
+  if (!effectiveDeploymentFlags().personalOrganizations) {
+    throw redirect({ to: '/' });
+  }
+}
+
+/**
+ * Block `/onboarding` unless the user just signed up via unified auth (`/login`), or when
+ * the session already has a provisioned workspace — symmetric to workspace guards.
+ */
+export async function requireOnboardingWorkspace(): Promise<void> {
+  const ctx = await hydrateSessionContext();
+  const target = resolveRootTarget(ctx);
+  if (target.to !== '/onboarding') throwWorkspaceRedirect(target);
+}
+
+/**
+ * Block `/dashboard` when `me/context` says the user still belongs on onboarding
+ * or a team slug dashboard (same rule as `/` resolver).
+ */
+export async function requireProvisionedPersonalDashboard(): Promise<void> {
+  const ctx = await hydrateSessionContext();
+  const redirectTarget = workspaceRedirectForPersonalDashboard(ctx);
+  if (redirectTarget) throwWorkspaceRedirect(redirectTarget);
+}
+
+/**
+ * Block team slug space when there is no provisioned workspace yet, or when the
+ * active org is personal-only (dual-URL sends those users to `/dashboard`).
+ */
+export async function requireProvisionedTeamWorkspace(options?: {
+  organizationPicker?: boolean;
+}): Promise<void> {
+  const ctx = await hydrateSessionContext();
+  const redirectTarget = workspaceRedirectForTeamEntry(ctx, options);
+  if (redirectTarget) throwWorkspaceRedirect(redirectTarget);
 }

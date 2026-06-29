@@ -7,15 +7,14 @@ interface PageTransitionProps {
 
 /**
  * Wraps the route `<Outlet />` and plays a single, subtle fade + rise whenever
- * the path changes. Keyed by pathname so the CSS animation re-triggers on
- * navigation. Honours `prefers-reduced-motion` via the global guard in
- * `index.css`.
+ * the path changes. Uses transform-only `route-rise` (no opacity fade) so copy
+ * stays visible if animation is skipped or reduced-motion overrides duration.
  */
 export function PageTransition({ children }: PageTransitionProps) {
   const { pathname } = useLocation();
 
   return (
-    <div key={pathname} className="animate-fade-in-up">
+    <div key={pathname} className="text-foreground animate-fade-in-up">
       {children}
     </div>
   );

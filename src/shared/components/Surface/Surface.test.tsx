@@ -1,7 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { axe } from 'vitest-axe';
+
+import { axeForDialog } from '@/tests/utils/axe-for-dialog.ts';
 
 import { Surface } from './Surface.tsx';
 
@@ -37,6 +38,6 @@ describe('Surface', () => {
     const { baseElement } = render(
       <Surface {...base} description="Manage your account" />,
     );
-    expect(await axe(baseElement)).toHaveNoViolations();
+    expect(await axeForDialog(baseElement)).toHaveNoViolations();
   });
 });

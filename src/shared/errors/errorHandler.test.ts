@@ -124,6 +124,7 @@ describe('mapApiError / apiErrorReason (core-be envelope)', () => {
       error: { reason: 'invalid_credentials', detail: 'Bad email or password' },
     });
     expect(apiErrorReason(err)).toBe('invalid_credentials');
+    expect(mapApiError(err)).toBe('Invalid email or password.');
   });
 
   it('returns undefined reason for non-HTTP errors', () => {

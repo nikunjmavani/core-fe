@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "ariaSections": "Secciones de configuración",
+    "ariaSettings": "Configuración",
+    "searchPlaceholder": "Buscar",
+    "searchAria": "Buscar en configuración",
+    "empty": "Sin coincidencias",
+    "groups": {
+      "account": "Cuenta",
+      "organization": "Organización"
+    },
+    "profile": "Perfil",
+    "account": "Cuenta",
+    "security": "Seguridad",
+    "notifications": "Notificaciones",
+    "sessions": "Sesiones",
+    "general": "General",
+    "members": "Miembros",
+    "roles": "Roles",
+    "branches": "Sucursales",
+    "billing": "Facturación",
+    "integrations": "Integraciones"
+  },
+  "security": {
+    "heading": "Seguridad",
+    "description": "Autenticación en dos pasos y llaves de acceso.",
+    "mfa": {
+      "title": "Autenticación en dos pasos",
+      "description": "Requiere un código de autenticador al iniciar sesión.",
+      "enabled": "Activada",
+      "disabled": "Desactivada",
+      "setup": "Configurar 2FA",
+      "disable": "Desactivar 2FA",
+      "disableTitle": "¿Desactivar la autenticación en dos pasos?",
+      "disableDescription": "Tu cuenta estará menos protegida. Puedes volver a activarla cuando quieras.",
+      "disableConfirm": "Desactivar",
+      "setupTitle": "Configurar autenticación en dos pasos",
+      "setupDescription": "Escanea el código QR con tu app autenticadora o ingresa el secreto manualmente.",
+      "recoveryTitle": "Guarda tus códigos de recuperación",
+      "recoveryDescription": "Guárdalos en un lugar seguro. Cada uno funciona una vez si pierdes tu dispositivo.",
+      "done": "Listo",
+      "cancel": "Cancelar",
+      "verifyEnable": "Verificar y activar",
+      "codeLabel": "Ingresa el código de 6 dígitos",
+      "codeAria": "Código autenticador de seis dígitos",
+      "secretLabel": "Clave de entrada manual",
+      "copySecret": "Copiar secreto",
+      "copiedSecret": "Copiado",
+      "scanHint": "Abre Google Authenticator, 1Password u otra app TOTP y escanea este código.",
+      "errors": {
+        "setupFailed": "No se pudo iniciar la configuración. Inténtalo de nuevo.",
+        "invalidCode": "El código no coincide. Ingresa el código actual de 6 dígitos."
+      }
+    },
+    "passkeys": {
+      "title": "Llaves de acceso",
+      "description": "Inicia sesión sin contraseña con tu dispositivo.",
+      "add": "Añadir llave de acceso",
+      "empty": "Aún no hay llaves de acceso. Añade una para iniciar sesión sin contraseña.",
+      "removeAria": "Eliminar {{name}}",
+      "addTitle": "Añadir llave de acceso",
+      "addDescription": "Ponle un nombre para reconocerla después. Tu dispositivo te pedirá crear la llave.",
+      "nameLabel": "Nombre",
+      "namePlaceholder": "Touch ID del MacBook",
+      "cancel": "Cancelar",
+      "submit": "Añadir llave de acceso"
+    },
+    "overview": {
+      "title": "Protección de la cuenta",
+      "description": "Vista rápida de lo que protege tu inicio de sesión.",
+      "score": "{{score}} de {{total}} activas",
+      "mfaOn": "Autenticación en dos pasos activada",
+      "mfaOff": "Autenticación en dos pasos desactivada",
+      "passkeysOn": "{{count}} llave de acceso registrada",
+      "passkeysOn_other": "{{count}} llaves de acceso registradas",
+      "passkeysOff": "Sin llaves de acceso",
+      "idleProtection": "Cierre de sesión por inactividad activo"
+    },
+    "recoveryCodes": {
+      "reveal": "Mostrar códigos",
+      "hide": "Ocultar códigos",
+      "copyAll": "Copiar todo",
+      "download": "Descargar .txt",
+      "copySuccess": "Códigos copiados — el portapapeles se borra en 1 minuto",
+      "copyFailed": "No se pudo copiar",
+      "downloadStarted": "Descarga iniciada",
+      "clipboardNotice": "Los secretos copiados se borran del portapapeles después de un minuto.",
+      "acknowledge": "He guardado estos códigos de recuperación en un lugar seguro"
+    }
+  },
+  "discard": {
+    "title": "¿Descartar cambios sin guardar?",
+    "description": "Tienes cambios sin guardar. Si sales, se perderán.",
+    "stay": "Seguir editando",
+    "leave": "Descartar cambios"
+  }
+}

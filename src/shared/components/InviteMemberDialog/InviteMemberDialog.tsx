@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
+import { translateFormMessage } from '@/lib/i18n/translate-form-message.ts';
 import { orgRoleSchema } from '@/shared/api/organization-contracts.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -98,7 +99,7 @@ export function InviteMemberDialog() {
                 className="text-destructive text-xs"
                 role="alert"
               >
-                {errors.email.message}
+                {translateFormMessage(errors.email.message)}
               </p>
             )}
           </div>

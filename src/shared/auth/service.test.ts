@@ -72,9 +72,11 @@ const SAMPLE_CTX: MeContext = {
   myPermissions: ['organization:read'],
   globalRole: null,
   organizations: [],
+  deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+  personalOrganizationId: null,
 };
 
-function mockResponse(body: unknown, status = 200): Response {
+function mockFetchResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
@@ -135,21 +137,23 @@ describe('auth/service', () => {
 
   describe('silentRefresh', () => {
     it('sets token and user on success', async () => {
-      (fetchMock as Mock)
-        .mockResolvedValueOnce(mockResponse({ accessToken: VALID_TOKEN }))
-        .mockResolvedValueOnce(mockResponse(MOCK_USER));
+      fetchMeContextMock.mockResolvedValueOnce(SAMPLE_CTX);
+      (fetchMock as Mock).mockResolvedValueOnce(
+        mockFetchResponse({ data: { access_token: VALID_TOKEN } }),
+      );
 
       await silentRefresh();
 
       expect(getAccessToken()).toBe(VALID_TOKEN);
       expect(useAuthStore.getState().isAuthenticated).toBe(true);
-      expect(useAuthStore.getState().user?.email).toBe('test@example.com');
+      expect(useAuthStore.getState().user?.email).toBe('ada@acme.test');
     });
 
-    it('rolls back token if user fetch fails', async () => {
-      (fetchMock as Mock)
-        .mockResolvedValueOnce(mockResponse({ accessToken: VALID_TOKEN }))
-        .mockRejectedValueOnce(new Error('Network error'));
+    it('rolls back token if context fetch fails', async () => {
+      (fetchMock as Mock).mockResolvedValueOnce(
+        mockFetchResponse({ data: { access_token: VALID_TOKEN } }),
+      );
+      fetchMeContextMock.mockRejectedValueOnce(new Error('Network error'));
 
       await expect(silentRefresh()).rejects.toThrow('Network error');
       expect(getAccessToken()).toBeNull();
@@ -163,23 +167,23 @@ describe('auth/service', () => {
     });
 
     it('deduplicates concurrent calls (mutex)', async () => {
-      (fetchMock as Mock)
-        .mockResolvedValueOnce(mockResponse({ accessToken: VALID_TOKEN }))
-        .mockResolvedValueOnce(mockResponse(MOCK_USER));
+      fetchMeContextMock.mockResolvedValue(SAMPLE_CTX);
+      (fetchMock as Mock).mockResolvedValue(
+        mockFetchResponse({ data: { access_token: VALID_TOKEN } }),
+      );
 
       const [r1, r2] = await Promise.all([silentRefresh(), silentRefresh()]);
 
       expect(r1).toBeUndefined();
       expect(r2).toBeUndefined();
-      // refresh + me (shared promise so only one doSilentRefresh run)
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('refreshAccessToken (the ONE single-flight)', () => {
     it('concurrent calls share ONE /auth/refresh request', async () => {
       (fetchMock as Mock).mockResolvedValueOnce(
-        mockResponse({ accessToken: VALID_TOKEN }),
+        mockFetchResponse({ data: { access_token: VALID_TOKEN } }),
       );
 
       // jsdom has no navigator.locks, so this also covers the fallback path.
@@ -192,8 +196,10 @@ describe('auth/service', () => {
 
     it('a failed refresh clears the in-flight slot so the next call retries', async () => {
       (fetchMock as Mock)
-        .mockResolvedValueOnce(mockResponse({ message: 'session revoked' }, 401))
-        .mockResolvedValueOnce(mockResponse({ accessToken: VALID_TOKEN }));
+        .mockResolvedValueOnce(mockFetchResponse({ message: 'session revoked' }, 401))
+        .mockResolvedValueOnce(
+          mockFetchResponse({ data: { access_token: VALID_TOKEN } }),
+        );
 
       await expect(refreshAccessToken()).rejects.toThrow('session revoked');
       await refreshAccessToken();
@@ -212,7 +218,7 @@ describe('auth/service', () => {
       });
       try {
         (fetchMock as Mock).mockResolvedValueOnce(
-          mockResponse({ accessToken: VALID_TOKEN }),
+          mockFetchResponse({ accessToken: VALID_TOKEN }),
         );
 
         await refreshAccessToken();
@@ -228,7 +234,7 @@ describe('auth/service', () => {
 
   describe('logout', () => {
     it('calls logout endpoint and then forceLogout', async () => {
-      (fetchMock as Mock).mockResolvedValueOnce(mockResponse({}));
+      (fetchMock as Mock).mockResolvedValueOnce(mockFetchResponse({}));
       setAccessToken(VALID_TOKEN);
       useAuthStore.getState().setUser(MOCK_USER);
 

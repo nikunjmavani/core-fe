@@ -1,6 +1,8 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import { RetryError } from '@/shared/components/RetryError/index.ts';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
 
@@ -31,14 +33,16 @@ function DefaultSkeleton() {
 export function QueryBoundary<T>({
   query,
   children,
-  errorMessage = 'Could not load data.',
+  errorMessage,
   loading,
 }: QueryBoundaryProps<T>) {
+  const { t } = useTranslation(ERRORS_NS);
+  const resolvedErrorMessage = errorMessage ?? t(ERRORS_KEYS.frontend.query.loadFailed);
   if (query.isPending) return <>{loading ?? <DefaultSkeleton />}</>;
   if (query.isError) {
     return (
       <RetryError
-        message={errorMessage}
+        message={resolvedErrorMessage}
         onRetry={() => {
           query.refetch().catch(() => undefined);
         }}

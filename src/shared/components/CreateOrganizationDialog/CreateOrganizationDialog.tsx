@@ -4,6 +4,8 @@ import { useNavigate } from '@tanstack/react-router';
 import { type ReactNode, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import { organizationDashboard } from '@/lib/routes/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -24,6 +26,8 @@ import {
   type CreateOrganizationInput,
   createOrganizationSchema,
 } from '@/shared/tenancy/my-organizations.ts';
+import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
+import { switchToOrganization } from '@/shared/tenancy/switch.ts';
 
 interface CreateOrganizationDialogProps {
   /** Custom trigger element; defaults to a "New organization" button. Omit when controlled. */
@@ -67,16 +71,31 @@ export function CreateOrganizationDialog({
   });
 
   const onSubmit = async (data: CreateOrganizationInput) => {
-    const requestedSlug = data.slug?.trim();
-    const org = await createOrganization({
-      name: data.name,
-      slug: requestedSlug === '' ? undefined : requestedSlug,
-    });
-    await queryClient.invalidateQueries({ queryKey: ['organizations'] });
-    notify.success(`Created ${org.name}`);
-    reset();
-    setOpen(false);
-    void navigate({ ...organizationDashboard(org.slug), replace: true });
+    try {
+      const requestedSlug = data.slug?.trim();
+      const org = await createOrganization({
+        name: data.name,
+        slug: requestedSlug === '' ? undefined : requestedSlug,
+      });
+
+      await hydrateSessionContext();
+      await switchToOrganization(org.id);
+      await queryClient.invalidateQueries({ queryKey: ['organizations'] });
+
+      notify.success(
+        i18n.t(ERRORS_KEYS.frontend.organization.createSuccess, {
+          ns: ERRORS_NS,
+          name: org.name,
+        }),
+      );
+      reset();
+      setOpen(false);
+      await navigate({ ...organizationDashboard(org.slug), replace: true });
+    } catch {
+      notify.error(
+        i18n.t(ERRORS_KEYS.frontend.organization.formCheck, { ns: ERRORS_NS }),
+      );
+    }
   };
 
   return (

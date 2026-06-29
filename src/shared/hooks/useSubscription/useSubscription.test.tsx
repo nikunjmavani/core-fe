@@ -5,10 +5,10 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { useSubscription } from './useSubscription.ts';
 
-const DATA = { plan: 'pro' };
+const DATA = { id: 'sub_test', planId: 'pln_test', status: 'active' as const };
 
-vi.mock('@/shared/api/organization-api.ts', () => ({
-  getSubscription: vi.fn().mockImplementation(() => Promise.resolve(DATA)),
+vi.mock('@/shared/api/billing-api.ts', () => ({
+  getActiveSubscription: vi.fn().mockImplementation(() => Promise.resolve(DATA)),
 }));
 
 function wrapper({ children }: { children: ReactNode }) {
@@ -19,7 +19,7 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 describe('useSubscription', () => {
-  it('loads getSubscription data under the organization query key', async () => {
+  it('loads getActiveSubscription data under the billing query key', async () => {
     const { result } = renderHook(() => useSubscription(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual(DATA);

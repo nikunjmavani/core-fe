@@ -15,6 +15,14 @@
  * Users get fresh code after a release without a jarring mid-task reload.
  */
 
+import { readInjectedAppBuildId } from '@/lib/i18n/build-env.ts';
+
+import {
+  VERSION_CHECK_INITIAL_DELAY_MS,
+  VERSION_CHECK_RELOADED_FOR_KEY,
+} from './version-check.constants.ts';
+import { isVersionUpdateSnoozed, snoozeVersionUpdate } from './version-update-snooze.ts';
+
 const POLL_INTERVAL_MS = 60_000; // 1 minute
 const IDLE_AFTER_MS = 60_000; // consider the user idle after 60s with no input
 const SAFE_RECHECK_MS = 10_000; // while a reload is pending, re-test safety this often
@@ -31,8 +39,25 @@ function getVersionUrl(): string {
 
 type VersionPayload = { buildId: string; builtAt: string };
 
+export interface VersionCheckUpdateContext {
+  buildId: string;
+  /** Reload now (marks loop guard + clears pending state). */
+  reloadNow: () => void;
+  /** Snooze the update toast for this buildId (dismiss / Later). */
+  snooze: () => void;
+}
+
+export interface VersionCheckOptions {
+  /**
+   * Called once per newly detected buildId while the tab is visible enough to
+   * notify. Use for a "Refresh now" toast; silent reload on hidden tab / idle
+   * still runs when a reload is pending.
+   */
+  onUpdateAvailable?: (ctx: VersionCheckUpdateContext) => void;
+}
+
 function getCurrentBuildId(): string | undefined {
-  return (import.meta.env.VITE_APP_BUILD_ID as string | undefined) ?? undefined;
+  return readInjectedAppBuildId();
 }
 
 async function fetchVersion(): Promise<VersionPayload | null> {
@@ -73,7 +98,7 @@ function isEditableElementFocused(): boolean {
  * buildId. sessionStorage access can throw (privacy modes); failing open
  * means at worst one extra reload, never a loop.
  */
-const RELOADED_FOR_KEY = 'core:version-check:reloaded-for';
+const RELOADED_FOR_KEY = VERSION_CHECK_RELOADED_FOR_KEY;
 
 function alreadyReloadedFor(buildId: string): boolean {
   try {
@@ -98,7 +123,9 @@ function markReloadedFor(buildId: string): void {
  * Returns a cleanup function that removes listeners and stops polling, or
  * undefined if version checking was not started.
  */
-export function startVersionCheck(): (() => void) | undefined {
+export function startVersionCheck(
+  options?: VersionCheckOptions,
+): (() => void) | undefined {
   if (initialized || import.meta.env.DEV || import.meta.env.MODE === 'test') return;
 
   const currentBuildId = getCurrentBuildId();
@@ -109,6 +136,7 @@ export function startVersionCheck(): (() => void) | undefined {
   let pollTimer: ReturnType<typeof setInterval> | null = null;
   let safetyTimer: ReturnType<typeof setInterval> | null = null;
   let pendingBuildId: string | null = null;
+  let toastShownForBuildId: string | null = null;
   let lastActivityAt = Date.now();
 
   const markActivity = () => {
@@ -125,6 +153,7 @@ export function startVersionCheck(): (() => void) | undefined {
   function applyReload(buildId: string): void {
     markReloadedFor(buildId);
     pendingBuildId = null;
+    toastShownForBuildId = null;
     stopSafetyWatch();
     if (import.meta.env.DEV) {
       console.info('[VersionCheck] Applying deferred reload for', buildId);
@@ -165,6 +194,21 @@ export function startVersionCheck(): (() => void) | undefined {
 
     // New deployment detected — defer the reload until it's safe (idle / hidden).
     pendingBuildId = latest.buildId;
+
+    if (isVersionUpdateSnoozed(latest.buildId)) {
+      toastShownForBuildId = null;
+    } else if (toastShownForBuildId !== latest.buildId) {
+      toastShownForBuildId = latest.buildId;
+      options?.onUpdateAvailable?.({
+        buildId: latest.buildId,
+        reloadNow: () => applyReload(latest.buildId),
+        snooze: () => {
+          snoozeVersionUpdate(latest.buildId);
+          toastShownForBuildId = null;
+        },
+      });
+    }
+
     if (import.meta.env.DEV) {
       console.info('[VersionCheck] New deployment detected; will reload when idle…');
     }
@@ -185,7 +229,7 @@ export function startVersionCheck(): (() => void) | undefined {
   }
 
   // Initial check after a short delay (avoid blocking bootstrap).
-  const initialCheck = setTimeout(checkForUpdate, 5_000);
+  const initialCheck = setTimeout(checkForUpdate, VERSION_CHECK_INITIAL_DELAY_MS);
 
   // Poll while the tab is visible.
   schedulePoll();

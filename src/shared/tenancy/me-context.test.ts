@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { type MeContextWire, meContextWire, toMeContext } from './me-context.ts';
+import {
+  type MeContextWire,
+  meContextWire,
+  needsOnboarding,
+  toMeContext,
+} from './me-context.ts';
 
-const ORG_ID = 'org_abcdefghij0123456789x'; // 21-char lowercase suffix
+const ORG_ID = 'org_abcdefghij0123456789x';
 const PERSONAL_ID = 'org_personalij0123456789x';
 const USER_ID = 'usr_abcdefghij0123456789x';
 
@@ -18,6 +23,8 @@ const WIRE: MeContextWire = {
     status: 'ACTIVE',
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-02T00:00:00.000Z',
+    capabilities: { personal_organizations: true, team_organizations: true },
+    personal_organization_id: PERSONAL_ID,
   },
   active_organization: {
     id: ORG_ID,
@@ -29,7 +36,6 @@ const WIRE: MeContextWire = {
     created_at: '2026-01-01T00:00:00.000Z',
     updated_at: '2026-01-01T00:00:00.000Z',
   },
-  // core-be #795: no capabilities object — gating uses these permissions + org type.
   my_permissions: ['organization:read', 'membership:manage', 'subscription:manage'],
   global_role: null,
   organizations: [
@@ -69,6 +75,20 @@ describe('meContextWire', () => {
     );
   });
 
+  it('parses live core-be singular personal_organization capability flag', () => {
+    const live = {
+      ...WIRE,
+      user: {
+        ...WIRE.user,
+        capabilities: { personal_organization: true, team_organizations: true },
+      },
+    };
+    expect(meContextWire.safeParse(live).success).toBe(true);
+    expect(
+      toMeContext(meContextWire.parse(live)).deploymentFlags.personalOrganizations,
+    ).toBe(true);
+  });
+
   it('rejects a malformed org id', () => {
     const bad = {
       ...WIRE,
@@ -93,6 +113,9 @@ describe('toMeContext', () => {
     expect(ctx.activeOrganization?.type).toBe('TEAM');
     expect(ctx.myPermissions).toContain('organization:read');
     expect(ctx.globalRole).toBeNull();
+    expect(ctx.deploymentFlags.personalOrganizations).toBe(true);
+    expect(ctx.deploymentFlags.teamOrganizations).toBe(true);
+    expect(ctx.personalOrganizationId).toBe(PERSONAL_ID);
   });
 
   it('flags the active org; personal orgs keep a null slug', () => {
@@ -109,5 +132,28 @@ describe('toMeContext', () => {
     expect(
       toMeContext({ ...WIRE, active_organization: null }).activeOrganization,
     ).toBeNull();
+  });
+});
+
+describe('needsOnboarding', () => {
+  it('is true when there is no active org and no memberships', () => {
+    const ctx = toMeContext({
+      ...WIRE,
+      active_organization: null,
+      organizations: [],
+    });
+    expect(needsOnboarding(ctx)).toBe(true);
+  });
+
+  it('is false when the user has an active organization', () => {
+    expect(needsOnboarding(toMeContext(WIRE))).toBe(false);
+  });
+
+  it('is false when orgs exist but none is active yet', () => {
+    const ctx = toMeContext({
+      ...WIRE,
+      active_organization: null,
+    });
+    expect(needsOnboarding(ctx)).toBe(false);
   });
 });

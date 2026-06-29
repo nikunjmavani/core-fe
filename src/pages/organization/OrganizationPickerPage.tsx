@@ -27,7 +27,7 @@ export function OrganizationPickerPage() {
     queryFn: listMyOrganizations,
   });
 
-  const isEmpty = !isLoading && !isError && organizations.length === 0;
+  const isEmpty = !(isLoading || isError) && organizations.length === 0;
 
   return (
     <main
@@ -79,18 +79,20 @@ export function OrganizationPickerPage() {
             </Card>
           )}
 
-          {!isLoading &&
-            !isError &&
+          {!(isLoading || isError) &&
             organizations.map((organization) => (
               <Link
                 key={organization.id}
                 {...organizationDashboard(organization.slug)}
-                className="block rounded-xl"
+                className="block"
                 data-testid={`organization-picker-option-${organization.slug}`}
               >
                 <Card className="hover:bg-muted/50 hover:border-primary/30 cursor-pointer py-0 transition-colors">
                   <CardContent className="flex items-center gap-3 p-4">
-                    <div className="bg-primary/10 text-primary flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                    <div
+                      data-slot="icon-chip"
+                      className="bg-primary/10 text-primary flex size-9 shrink-0 items-center justify-center"
+                    >
                       <Building2 className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1 text-left">

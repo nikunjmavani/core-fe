@@ -1,4 +1,6 @@
-import { config } from '@/core/config/env.ts';
+import { platformConfig } from '@/core/config/env.ts';
+import { iconOnBrandSurface, iconOnSidebarSurface } from '@/lib/icon-surface.ts';
+import { cn } from '@/lib/utils.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
   DropdownMenu,
@@ -21,7 +23,17 @@ import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
  * the Appearance panel's shuffle and is hidden when the theme is locked. Remove
  * the shuffle item once testing is done — the canonical home is the panel.
  */
-export function ThemeModeToggle() {
+export function ThemeModeToggle({
+  surface = 'default',
+  menuSide,
+  menuAlign = 'end',
+}: {
+  /** Tinted shell the trigger sits on — adjusts icon/button contrast. */
+  surface?: 'default' | 'brand' | 'sidebar';
+  /** Menu placement — `right` keeps the panel inside the viewport on a narrow rail. */
+  menuSide?: 'top' | 'right' | 'bottom' | 'left';
+  menuAlign?: 'start' | 'center' | 'end';
+}) {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
   const shuffleTheme = useThemeStore((s) => s.shuffleTheme);
@@ -30,19 +42,36 @@ export function ThemeModeToggle() {
   if (theme === 'dark') ThemeIcon = Moon;
   else if (theme === 'light') ThemeIcon = Sun;
 
+  let surfaceTriggerClass: string | undefined;
+  if (surface === 'brand') {
+    surfaceTriggerClass =
+      'text-brand-foreground/80 hover:bg-brand-foreground/10 hover:text-brand-foreground';
+  } else if (surface === 'sidebar') {
+    surfaceTriggerClass =
+      'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground';
+  }
+
+  let surfaceIconClass: string | undefined;
+  if (surface === 'brand') {
+    surfaceIconClass = iconOnBrandSurface;
+  } else if (surface === 'sidebar') {
+    surfaceIconClass = iconOnSidebarSurface;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
+          className={surfaceTriggerClass}
           aria-label="Toggle theme"
           data-testid="theme-toggle"
         >
-          <ThemeIcon className="h-4 w-4" />
+          <ThemeIcon className={cn('h-4 w-4', surfaceIconClass)} />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align={menuAlign} side={menuSide}>
         <DropdownMenuItem onClick={() => setTheme('light')} data-testid="theme-light">
           <Sun className="mr-2 h-4 w-4" /> Light
         </DropdownMenuItem>
@@ -52,15 +81,15 @@ export function ThemeModeToggle() {
         <DropdownMenuItem onClick={() => setTheme('system')} data-testid="theme-system">
           <Monitor className="mr-2 h-4 w-4" /> System
         </DropdownMenuItem>
-        {/* TEMP testing shortcut — canonical shuffle lives in Settings → Appearance. */}
-        {config.themeLock ? null : (
+        {/* DEV-only testing shortcut — canonical shuffle lives in Settings → Appearance. */}
+        {import.meta.env.DEV && !platformConfig.themeLock ? (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={shuffleTheme} data-testid="theme-shuffle-menu">
               <Sparkles className="mr-2 h-4 w-4" /> Shuffle theme
             </DropdownMenuItem>
           </>
-        )}
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,9 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import * as orgApi from '@/shared/api/organization-api.ts';
 import type { RoleInput } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
-import { notify } from '@/shared/notify/index.ts';
+import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
 /**
  * Roles of the active organization — list query + create/update/delete mutations.
@@ -16,39 +18,37 @@ export function useRoles() {
 
 /** Create a custom role, then refresh the roles list. */
 export function useCreateRole() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (input: RoleInput) => orgApi.createRole(input),
-    onSuccess: (role) => {
-      notify.success(`Role "${role.name}" created`);
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.roles() });
-    },
-    onError: () => notify.error('Could not create role'),
+    invalidateKeys: [orgQueryKeys.roles()],
+    successMessage: (role) =>
+      i18n.t(ERRORS_KEYS.frontend.hooks.roles.createSuccess, {
+        ns: ERRORS_NS,
+        name: role.name,
+      }),
   });
 }
 
 /** Update a custom role, then refresh the roles list. */
 export function useUpdateRole() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (input: RoleInput & { id: string }) => orgApi.updateRole(input),
-    onSuccess: (role) => {
-      notify.success(`Role "${role.name}" updated`);
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.roles() });
-    },
-    onError: () => notify.error('Could not update role'),
+    invalidateKeys: [orgQueryKeys.roles()],
+    successMessage: (role) =>
+      i18n.t(ERRORS_KEYS.frontend.hooks.roles.updateSuccess, {
+        ns: ERRORS_NS,
+        name: role.name,
+      }),
   });
 }
 
 /** Delete a custom role, then refresh the roles list. */
 export function useDeleteRole() {
-  const queryClient = useQueryClient();
-  return useMutation({
+  return useAppMutation({
     mutationFn: (roleId: string) => orgApi.deleteRole(roleId),
-    onSuccess: () => {
-      notify.success('Role deleted');
-      return queryClient.invalidateQueries({ queryKey: orgQueryKeys.roles() });
-    },
-    onError: () => notify.error('Could not delete role'),
+    invalidateKeys: [orgQueryKeys.roles()],
+    successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.roles.deleteSuccess, {
+      ns: ERRORS_NS,
+    }),
   });
 }

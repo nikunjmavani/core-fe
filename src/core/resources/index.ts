@@ -1,3 +1,5 @@
+export { __resetBootstrapForTests, bootstrapResources } from './bootstrap.ts';
+export { membersResource } from './members.resource.ts';
 export {
   __clearRegistry,
   getResource,

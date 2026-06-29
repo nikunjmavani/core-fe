@@ -1,7 +1,11 @@
 import { useNavigate } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
+import i18n from '@/lib/i18n/i18n.ts';
 import { organizationDashboard } from '@/lib/routes/index.ts';
+import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
+import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { createInvitation } from '@/shared/api/organization-api.ts';
 import { getAccessToken } from '@/shared/auth/token.ts';
@@ -13,14 +17,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import { useDeploymentFlags } from '@/shared/hooks/useDeploymentFlags/index.ts';
+import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
+import { useUnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesGuard/index.ts';
 import { Loader2 } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 import {
-  ONBOARDING_STEPS,
-  useOnboardingStore,
-} from '@/shared/store/useOnboardingStore/index.ts';
-import { createOrganization } from '@/shared/tenancy/my-organizations.ts';
+  createOrganization,
+  listMyOrganizations,
+} from '@/shared/tenancy/my-organizations.ts';
+import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
+import { switchToOrganization, switchToPersonal } from '@/shared/tenancy/switch.ts';
 
 import { DoneStep } from './components/DoneStep/index.ts';
 import { InviteStep } from './components/InviteStep/index.ts';
@@ -29,6 +38,39 @@ import { QuestionsStep } from './components/QuestionsStep/index.ts';
 import { StepIndicator } from './components/StepIndicator/index.ts';
 import { WelcomeStep } from './components/WelcomeStep/index.ts';
 import { WorkspaceStep } from './components/WorkspaceStep/index.ts';
+import { useOnboardingStepMotion } from './hooks/useOnboardingStepMotion/index.ts';
+import {
+  ONBOARDING_INVITE_ROLE,
+  ONBOARDING_KEYS,
+  ONBOARDING_NS,
+  ONBOARDING_TEST_IDS,
+} from './onboarding.constants.ts';
+import {
+  deriveOnboardingSteps,
+  type OnboardingStep,
+  shouldCreateOrganizationOnFinish,
+  stepAtIndex,
+} from './onboarding-flow.ts';
+
+function getStepMetaKeys(step: OnboardingStep): {
+  title: string;
+  description: string;
+} {
+  switch (step) {
+    case 'profile':
+      return ONBOARDING_KEYS.steps.profile;
+    case 'questions':
+      return ONBOARDING_KEYS.steps.questions;
+    case 'workspace':
+      return ONBOARDING_KEYS.steps.workspace;
+    case 'invite':
+      return ONBOARDING_KEYS.steps.invite;
+    case 'done':
+      return ONBOARDING_KEYS.steps.done;
+    default:
+      return ONBOARDING_KEYS.steps.welcome;
+  }
+}
 
 /**
  * Persist the collected profile + fire a segmentation event. Best-effort by
@@ -60,46 +102,92 @@ async function persistOnboardingResult(input: {
     }
   }
 
-  try {
-    const { default: posthog } = await import('posthog-js');
-    if (posthog.__loaded) {
-      posthog.capture('onboarding_completed', {
-        team_size: input.teamSize || undefined,
-        primary_use_case: input.primaryUseCase || undefined,
-        referral_source: input.referralSource || undefined,
-        invited_count: input.invitedCount,
-      });
+  captureAnalyticsEvent(ANALYTICS_EVENTS.onboardingCompleted, {
+    team_size: input.teamSize || undefined,
+    primary_use_case: input.primaryUseCase || undefined,
+    referral_source: input.referralSource || undefined,
+    invited_count: input.invitedCount,
+  });
+}
+
+async function resolveOrganizationForFinish(input: {
+  needsCreate: boolean;
+  createdOrganizationId: string | null;
+  createdOrganizationSlug: string | null;
+  organizationName: string;
+  organizationSlugField: string;
+  setCreatedOrganizationId: (id: string | null) => void;
+  setCreatedOrganizationSlug: (slug: string | null) => void;
+}): Promise<{ organizationId: string | null; organizationSlug: string | null }> {
+  let organizationSlug = input.createdOrganizationSlug;
+  let organizationId = input.createdOrganizationId;
+
+  if (organizationId) {
+    const organizations = await listMyOrganizations();
+    const existing = organizations.find((o) => o.id === organizationId);
+    if (!existing) {
+      organizationId = null;
+      organizationSlug = null;
+      input.setCreatedOrganizationId(null);
+      input.setCreatedOrganizationSlug(null);
+    } else {
+      organizationSlug = existing.slug;
     }
-  } catch {
-    /* analytics must never break onboarding */
+  }
+
+  if (input.needsCreate && !organizationId) {
+    const org = await createOrganization({
+      name:
+        input.organizationName.trim() ||
+        i18n.t(ONBOARDING_KEYS.defaults.organizationName, { ns: ONBOARDING_NS }),
+      slug: input.organizationSlugField.trim() || undefined,
+    });
+    organizationSlug = org.slug;
+    organizationId = org.id;
+    input.setCreatedOrganizationId(org.id);
+    input.setCreatedOrganizationSlug(org.slug);
+  }
+
+  return { organizationId, organizationSlug };
+}
+
+async function refreshSessionAfterOnboardingFinish(): Promise<void> {
+  await hydrateSessionContext();
+}
+
+function isOnboardingDirty(input: {
+  completed: boolean;
+  stepIndex: number;
+  data: {
+    fullName: string;
+    jobTitle: string;
+    organizationName: string;
+    invites: string[];
+  };
+}): boolean {
+  if (input.completed) return false;
+  if (input.stepIndex > 0) return true;
+  const d = input.data;
+  return Boolean(
+    d.fullName.trim() ||
+    d.jobTitle.trim() ||
+    d.organizationName.trim() ||
+    d.invites.length > 0,
+  );
+}
+
+async function activateWorkspaceAfterOnboardingFinish(input: {
+  organizationId: string | null;
+  personalOrganizations: boolean;
+}): Promise<void> {
+  if (input.organizationId) {
+    await switchToOrganization(input.organizationId);
+  } else if (input.personalOrganizations) {
+    await switchToPersonal();
   }
 }
 
-const STEP_META: Record<
-  (typeof ONBOARDING_STEPS)[number],
-  { title: string; description: string }
-> = {
-  welcome: {
-    title: 'Welcome aboard',
-    description: "Let's set up your account in a few quick steps.",
-  },
-  profile: { title: 'About you', description: 'Tell us a little about yourself.' },
-  questions: {
-    title: 'A few quick questions',
-    description: 'Optional — this helps us tailor your workspace.',
-  },
-  workspace: {
-    title: 'Your workspace',
-    description: 'Name the organization you want to create.',
-  },
-  invite: {
-    title: 'Invite your team',
-    description: 'Add teammates now or skip and do it later.',
-  },
-  done: { title: "You're all set", description: 'Review and jump into your dashboard.' },
-};
-
-function renderStep(step: (typeof ONBOARDING_STEPS)[number]) {
+function renderStep(step: ReturnType<typeof stepAtIndex>) {
   switch (step) {
     case 'profile':
       return <ProfileStep />;
@@ -124,23 +212,55 @@ function renderStep(step: (typeof ONBOARDING_STEPS)[number]) {
  * Step UIs live in `components/` (folder-per-unit).
  */
 export function OnboardingPage() {
+  const { t } = useTranslation(ONBOARDING_NS);
   const navigate = useNavigate();
   const {
     stepIndex,
     data,
-    next,
-    back,
     complete,
+    completed,
     createdOrganizationId,
     setCreatedOrganizationId,
     createdOrganizationSlug,
     setCreatedOrganizationSlug,
+    setStepIndex,
   } = useOnboardingStore();
+  const { data: meContext } = useMeContext();
+  const deploymentFlags = useDeploymentFlags();
+  const effectiveSteps = deriveOnboardingSteps(deploymentFlags, meContext ?? null);
   const [submitting, setSubmitting] = useState(false);
-  // eslint-disable-next-line security/detect-object-injection -- stepIndex is clamped store state
-  const step = ONBOARDING_STEPS[stepIndex] ?? 'welcome';
-  // eslint-disable-next-line security/detect-object-injection -- step is a constrained union
-  const meta = STEP_META[step];
+  const step = stepAtIndex(stepIndex, effectiveSteps);
+  const metaKeys = getStepMetaKeys(step);
+  const { cardRef, headerRef, stepBodyRef } = useOnboardingStepMotion(stepIndex, step);
+  const dirty = isOnboardingDirty({ completed, stepIndex, data });
+  const { guardDialog } = useUnsavedChangesGuard({
+    when: dirty && !submitting,
+    title: t(ONBOARDING_KEYS.guard.title),
+    description: t(ONBOARDING_KEYS.guard.description),
+    confirmLabel: t(ONBOARDING_KEYS.guard.discard),
+    cancelLabel: t(ONBOARDING_KEYS.guard.stay),
+  });
+
+  // Persisted wizard state can carry a created-org id from a prior session while
+  // fresh signup with an empty membership list skips duplicate org creation
+  // and navigates to a slug the user no longer belongs to → 404.
+  useEffect(() => {
+    if (!createdOrganizationId) return;
+    let cancelled = false;
+    listMyOrganizations()
+      .then((organizations) => {
+        if (cancelled) return;
+        if (organizations.some((o) => o.id === createdOrganizationId)) return;
+        setCreatedOrganizationId(null);
+        setCreatedOrganizationSlug(null);
+      })
+      .catch(() => {
+        /* membership check is best-effort */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [createdOrganizationId, setCreatedOrganizationId, setCreatedOrganizationSlug]);
 
   const canProceed =
     (step !== 'workspace' || data.organizationName.trim().length > 0) &&
@@ -149,20 +269,20 @@ export function OnboardingPage() {
   const finish = async () => {
     setSubmitting(true);
     try {
-      // Idempotent: if a prior attempt already created the org (and then an
-      // invite failed), reuse it instead of creating a DUPLICATE on retry.
-      let organizationSlug = createdOrganizationSlug;
-      if (!createdOrganizationId) {
-        const org = await createOrganization({
-          name: data.organizationName.trim() || 'My organization',
-          slug: data.organizationSlug.trim() || undefined,
-        });
-        organizationSlug = org.slug;
-        setCreatedOrganizationId(org.id);
-        setCreatedOrganizationSlug(org.slug);
-      }
+      const needsCreate = shouldCreateOrganizationOnFinish(
+        deploymentFlags,
+        meContext ?? null,
+      );
+      const { organizationId, organizationSlug } = await resolveOrganizationForFinish({
+        needsCreate,
+        createdOrganizationId,
+        createdOrganizationSlug,
+        organizationName: data.organizationName,
+        organizationSlugField: data.organizationSlug,
+        setCreatedOrganizationId,
+        setCreatedOrganizationSlug,
+      });
 
-      // Profile + segmentation are fire-and-forget: never block dashboard entry.
       void persistOnboardingResult({
         fullName: data.fullName,
         jobTitle: data.jobTitle,
@@ -172,83 +292,114 @@ export function OnboardingPage() {
         invitedCount: data.invites.length,
       });
 
-      // Invites are best-effort: one bad address must not strand the user with
-      // an already-created org they can't get past.
       const results = await Promise.allSettled(
-        data.invites.map((email) => createInvitation({ email, role: 'member' })),
+        effectiveSteps.includes('invite')
+          ? data.invites.map((email) =>
+              createInvitation({ email, role: ONBOARDING_INVITE_ROLE }),
+            )
+          : [],
       );
       const failed = results.filter((r) => r.status === 'rejected').length;
+
+      await refreshSessionAfterOnboardingFinish();
+      await activateWorkspaceAfterOnboardingFinish({
+        organizationId,
+        personalOrganizations: deploymentFlags.personalOrganizations,
+      });
 
       complete();
       if (failed > 0) {
         notify.warning(
-          `Workspace ready — ${failed} invite${failed > 1 ? 's' : ''} couldn't be sent. You can resend from Members.`,
+          i18n.t(ONBOARDING_KEYS.toast.invitePartialFailure, {
+            ns: ONBOARDING_NS,
+            count: failed,
+          }),
         );
       } else {
-        notify.success('Welcome! Your workspace is ready.');
+        notify.success(
+          i18n.t(ONBOARDING_KEYS.toast.finishSuccess, { ns: ONBOARDING_NS }),
+        );
       }
-      // The $organizationSlug guard syncs context, persists, and loads permissions.
       if (organizationSlug) {
         void navigate({ ...organizationDashboard(organizationSlug), replace: true });
       } else {
         void navigate({ to: '/', replace: true });
       }
     } catch {
-      notify.error('Something went wrong finishing setup. Please try again.');
+      notify.error(i18n.t(ONBOARDING_KEYS.toast.finishError, { ns: ONBOARDING_NS }));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div
-      className="bg-muted/30 flex min-h-screen items-center justify-center p-4"
-      data-testid="onboarding-page"
-    >
-      <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-4">
-          <StepIndicator current={stepIndex} />
-          <div>
-            <CardTitle data-testid="onboarding-step-title">{meta.title}</CardTitle>
-            <CardDescription>{meta.description}</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {renderStep(step)}
-
-          <div className="flex items-center justify-between">
-            <Button
-              variant="ghost"
-              onClick={back}
-              disabled={stepIndex === 0 || submitting}
-              data-testid="onboarding-back"
-            >
-              Back
-            </Button>
-
-            {step === 'done' ? (
-              <Button
-                onClick={finish}
-                disabled={submitting}
-                data-testid="onboarding-finish"
+    <>
+      {guardDialog}
+      <div
+        className="bg-muted/30 flex min-h-screen items-center justify-center p-4"
+        data-testid={ONBOARDING_TEST_IDS.page}
+      >
+        <div ref={cardRef} className="w-full max-w-lg transform-gpu">
+          <Card className="w-full">
+            <CardHeader className="space-y-4">
+              <StepIndicator current={stepIndex} steps={effectiveSteps} />
+              <div ref={headerRef} className="transform-gpu">
+                <CardTitle data-testid={ONBOARDING_TEST_IDS.stepTitle}>
+                  {t(metaKeys.title)}
+                </CardTitle>
+                <CardDescription>{t(metaKeys.description)}</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6 overflow-hidden">
+              <div
+                ref={stepBodyRef}
+                className="transform-gpu"
+                data-testid={ONBOARDING_TEST_IDS.stepMotion}
               >
-                {submitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting up…
-                  </>
+                {renderStep(step)}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="ghost"
+                  onClick={() => setStepIndex(Math.max(stepIndex - 1, 0))}
+                  disabled={stepIndex === 0 || submitting}
+                  data-testid={ONBOARDING_TEST_IDS.back}
+                >
+                  {t(ONBOARDING_KEYS.actions.back)}
+                </Button>
+
+                {step === 'done' ? (
+                  <Button
+                    onClick={finish}
+                    disabled={submitting}
+                    data-testid={ONBOARDING_TEST_IDS.finish}
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {t(ONBOARDING_KEYS.actions.settingUp)}
+                      </>
+                    ) : (
+                      t(ONBOARDING_KEYS.actions.enterDashboard)
+                    )}
+                  </Button>
                 ) : (
-                  'Enter dashboard'
+                  <Button
+                    onClick={() =>
+                      setStepIndex(Math.min(stepIndex + 1, effectiveSteps.length - 1))
+                    }
+                    disabled={!canProceed}
+                    data-testid={ONBOARDING_TEST_IDS.next}
+                  >
+                    {t(ONBOARDING_KEYS.actions.continue)}
+                  </Button>
                 )}
-              </Button>
-            ) : (
-              <Button onClick={next} disabled={!canProceed} data-testid="onboarding-next">
-                Continue
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import type { AccessContext, OrganizationPermission } from '@/core/rbac/policies.ts';
 import { hasPermission } from '@/core/rbac/policies.ts';
 
+import { isSettingsModuleEnabled } from './settings-modules.ts';
 import type {
   OrganizationSettingsSection,
   SettingsSectionRef,
@@ -19,9 +20,6 @@ const ORGANIZATION_SECTION_PERMISSION: Record<
   members: 'membership:read',
   roles: 'role:read',
   branches: 'organization:read',
-  // Any member can SEE billing (personal orgs included — see sectionsForOrgType);
-  // managing a subscription is permission-gated inside the panel.
-  billing: 'organization:read',
   integrations: 'webhook:read',
 };
 
@@ -29,7 +27,14 @@ export function canViewSettingsSection(
   ref: SettingsSectionRef,
   ctx: AccessContext,
 ): boolean {
-  if (ref.scope === 'account') return true;
+  if (!isSettingsModuleEnabled(ref)) return false;
+
+  if (ref.scope === 'account') {
+    if (ref.section === 'billing') {
+      return hasPermission(ctx, 'organization:read');
+    }
+    return true;
+  }
   return hasPermission(
     ctx,
     ORGANIZATION_SECTION_PERMISSION[ref.section as OrganizationSettingsSection],

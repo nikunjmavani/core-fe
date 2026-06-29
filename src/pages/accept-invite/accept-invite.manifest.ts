@@ -1,15 +1,13 @@
+import i18n from '@/lib/i18n/i18n.ts';
 import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
-/**
- * Accept-invite — leaf island (`/accept-invite/$invitationId`).
- * Public entry point reached from an invitation email link. Accepts the
- * invite, auto-logs the user in, persists the joined organization, and redirects.
- */
+import { ACCEPT_INVITE_MANIFEST, AUTH_NS } from './accept-invite.constants.ts';
+
 export const manifest = {
   segment: 'accept-invite',
   path: '/accept-invite/$invitationId',
-  title: 'Accept invitation',
-  testId: 'accept-invite-page',
+  title: i18n.t(ACCEPT_INVITE_MANIFEST.titleKey, { ns: AUTH_NS }),
+  testId: ACCEPT_INVITE_MANIFEST.testId,
   permission: null,
   kind: 'leaf',
   children: [],

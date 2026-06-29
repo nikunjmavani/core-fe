@@ -1,26 +1,30 @@
 import { API_BASE_PATH, API_ENDPOINTS, HTTP } from '@/core/config/constants.ts';
-import { config } from '@/core/config/env.ts';
-import { mockResponse } from '@/core/http/mock.ts';
-import {
-  MOCK_ACCESS_TOKEN,
-  MOCK_USER,
-  startMockSession,
-} from '@/shared/auth/mock-auth.ts';
-import { isMockLoginValid } from '@/shared/auth/mock-credentials.ts';
+import { platformConfig } from '@/core/config/env.ts';
+import { authCaptchaHeaders } from '@/shared/auth/captcha/auth-captcha-headers.ts';
 import type { AuthTokenResponse, AuthUser } from '@/shared/auth/types.ts';
 import { authUserSchema } from '@/shared/auth/types.ts';
+import { AppError } from '@/shared/errors/AppError.ts';
+import { FRONTEND_ERROR_CODES } from '@/shared/errors/frontend-error-codes.ts';
 
 import type {
-  ForgotPasswordInput,
+  EmailVerificationCodeInput,
   LoginInput,
-  MagicLinkVerifyInput,
   MfaVerifyInput,
-  RegisterInput,
-  ResetPasswordInput,
-  VerifyEmailInput,
 } from './auth-contracts.ts';
 
-const authBase = () => `${config.apiBaseUrl}${API_BASE_PATH}`;
+const authBase = () => `${platformConfig.apiBaseUrl}${API_BASE_PATH}`;
+
+function mergeAuthHeaders(
+  init: RequestInit,
+  captchaToken?: string,
+): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+    ...(authCaptchaHeaders(captchaToken) ?? {}),
+    ...(init.headers as Record<string, string> | undefined),
+  };
+}
 
 /**
  * Raw fetch with timeout and credentials for auth endpoints.
@@ -28,9 +32,9 @@ const authBase = () => `${config.apiBaseUrl}${API_BASE_PATH}`;
  */
 async function authFetch(
   url: string,
-  init: RequestInit & { timeout?: number } = {},
+  init: RequestInit & { timeout?: number; captchaToken?: string } = {},
 ): Promise<Response> {
-  const { timeout = HTTP.TIMEOUT, ...rest } = init;
+  const { timeout = HTTP.TIMEOUT, captchaToken, ...rest } = init;
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
   try {
@@ -38,24 +42,13 @@ async function authFetch(
       ...rest,
       credentials: 'include',
       signal: controller.signal,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        ...(rest.headers as Record<string, string>),
-      },
+      headers: mergeAuthHeaders(rest, captchaToken),
     });
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-/**
- * Auth API functions.
- *
- * Uses raw `fetch` (NOT apiClient) to avoid interceptor recursion.
- * Auth endpoints need special handling since they manage the very
- * tokens that the interceptor injects.
- */
 /** Unwrap the core-be `{ data, meta }` envelope; pass a bare body through. */
 function unwrapEnvelope(json: unknown): unknown {
   if (json && typeof json === 'object' && 'data' in json) {
@@ -88,19 +81,17 @@ function extractAccessToken(json: unknown, fallback: string): AuthTokenResponse 
     | null
     | undefined;
   if (payload?.mfa_required) {
-    throw new Error('Multi-factor authentication is required (not yet supported here).');
+    throw new AppError(
+      FRONTEND_ERROR_CODES.AUTH_MFA_UNSUPPORTED,
+      401,
+      FRONTEND_ERROR_CODES.AUTH_MFA_UNSUPPORTED,
+    );
   }
   const token = payload?.access_token ?? payload?.accessToken;
   if (typeof token !== 'string' || token.length === 0) {
     throw new Error(fallback);
   }
   return { accessToken: token };
-}
-
-/** Resolve a mock token + start a mock session (shared by mock auth methods). */
-function mockToken(): Promise<AuthTokenResponse> {
-  startMockSession();
-  return mockResponse({ accessToken: MOCK_ACCESS_TOKEN });
 }
 
 /**
@@ -117,87 +108,28 @@ export class MfaRequiredError extends Error {
   }
 }
 
+function parseMfaRequired(json: unknown): MfaRequiredError | null {
+  const payload = unwrapEnvelope(json) as {
+    mfa_required?: boolean;
+    mfa_session_token?: string;
+  } | null;
+  if (payload?.mfa_required && typeof payload.mfa_session_token === 'string') {
+    return new MfaRequiredError(payload.mfa_session_token);
+  }
+  return null;
+}
+
 export const authApi = {
-  login: async (data: LoginInput): Promise<AuthTokenResponse> => {
-    // REPLACE_WITH_API: POST /api/v1/auth/login
-    if (config.useMockApi) {
-      if (!isMockLoginValid(data)) {
-        throw new Error('Invalid email or password');
-      }
-      return mockToken();
-    }
+  login: async (data: LoginInput, captchaToken?: string): Promise<AuthTokenResponse> => {
     const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.LOGIN}`, {
       method: 'POST',
       body: JSON.stringify(data),
+      captchaToken,
     });
     const json = (await response.json()) as unknown;
     if (!response.ok) throwOnNotOk(response, json, `Login failed (${response.status})`);
-    const payload = unwrapEnvelope(json) as {
-      mfa_required?: boolean;
-      mfa_session_token?: string;
-    } | null;
-    if (payload?.mfa_required && typeof payload.mfa_session_token === 'string') {
-      throw new MfaRequiredError(payload.mfa_session_token);
-    }
-    return extractAccessToken(json, `Authentication failed (${response.status})`);
-  },
-
-  register: async (data: RegisterInput): Promise<AuthTokenResponse> => {
-    // core-be has no /auth/register — signup IS the registration endpoint
-    // (auto-provisions the user + their personal organization).
-    if (config.useMockApi) return mockToken();
-    const response = await authFetch(`${authBase()}/auth/signup`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    const json = (await response.json()) as unknown;
-    if (!response.ok)
-      throwOnNotOk(response, json, `Register failed (${response.status})`);
-    return extractAccessToken(json, `Authentication failed (${response.status})`);
-  },
-
-  forgotPassword: async (data: ForgotPasswordInput): Promise<void> => {
-    const response = await authFetch(
-      `${authBase()}${API_ENDPOINTS.AUTH.FORGOT_PASSWORD}`,
-      {
-        method: 'POST',
-        body: JSON.stringify(data),
-      },
-    );
-    const json = (await response.json()) as unknown;
-    if (!response.ok)
-      throwOnNotOk(response, json, `Forgot password failed (${response.status})`);
-  },
-
-  /**
-   * Reset the password with a token. core-be #795 auto-logs-in on success
-   * (returns `{ access_token }`, or `{ mfa_required }` for MFA users), but the
-   * FE keeps an explicit sign-in step afterwards — simpler, and it avoids
-   * handling a second factor mid-reset. Any 2xx means the reset succeeded.
-   */
-  resetPassword: async (data: ResetPasswordInput): Promise<void> => {
-    const response = await authFetch(
-      `${authBase()}${API_ENDPOINTS.AUTH.RESET_PASSWORD}`,
-      {
-        method: 'POST',
-        body: JSON.stringify(data),
-      },
-    );
-    const json = (await response.json()) as unknown;
-    if (!response.ok)
-      throwOnNotOk(response, json, `Reset password failed (${response.status})`);
-  },
-
-  verifyEmail: async (data: VerifyEmailInput): Promise<AuthTokenResponse> => {
-    // REPLACE_WITH_API: POST /api/v1/auth/email/verify
-    if (config.useMockApi) return mockToken();
-    const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.VERIFY_EMAIL}`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-    const json = (await response.json()) as unknown;
-    if (!response.ok)
-      throwOnNotOk(response, json, `Verify email failed (${response.status})`);
+    const mfa = parseMfaRequired(json);
+    if (mfa) throw mfa;
     return extractAccessToken(json, `Authentication failed (${response.status})`);
   },
 
@@ -205,11 +137,6 @@ export const authApi = {
     data: MfaVerifyInput,
     mfaSessionToken: string,
   ): Promise<AuthTokenResponse> => {
-    // Completes the login second factor. /auth/mfa/login is PUBLIC and reads the
-    // short-lived mfa_session_token from the body (NOT a Bearer access token).
-    // The factor is `totp_code` for an authenticator code, or `recovery_code`
-    // when the user falls back to a one-time recovery code.
-    if (config.useMockApi) return mockToken();
     const secondFactor = data.useRecoveryCode
       ? { recovery_code: data.code }
       : { totp_code: data.code };
@@ -224,8 +151,6 @@ export const authApi = {
   },
 
   me: async (token: string): Promise<AuthUser> => {
-    // REPLACE_WITH_API: GET /api/v1/users/me
-    if (config.useMockApi) return mockResponse(MOCK_USER);
     const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.ME}`, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
@@ -234,9 +159,6 @@ export const authApi = {
     if (!response.ok)
       throwOnNotOk(response, json, `Failed to load profile (${response.status})`);
     const u = unwrapEnvelope(json) as Record<string, unknown>;
-    // Tolerate the real core-be UserOutput (snake_case, nullable fields) and a
-    // bare AuthUser (camelCase, used by unit tests). authUserSchema's optional
-    // fields are string|undefined, so coerce the backend's nulls to undefined.
     const joined = [u.first_name, u.last_name].filter(Boolean).join(' ');
     return authUserSchema.parse({
       id: u.id,
@@ -244,28 +166,16 @@ export const authApi = {
       role: (u.role as string | undefined) ?? 'user',
       name: (u.name as string | undefined) ?? (joined.length > 0 ? joined : undefined),
       avatarUrl: (u.avatarUrl ?? u.avatar_url ?? undefined) as string | undefined,
-      // core-be #795: /users/me carries `personal_organization` (singular object,
-      // nullable) + `team_organizations` (plural). Use the personal org's id.
       organizationId: (u.organizationId ??
         (u.personal_organization as { id?: string } | null | undefined)?.id ??
         undefined) as string | undefined,
     });
   },
 
-  /**
-   * Persist profile fields collected during onboarding (name, job title).
-   * Best-effort by contract: the caller must not block the user on it — a
-   * failure here should never trap someone on the onboarding screen.
-   */
   updateProfile: async (
     input: { name?: string; jobTitle?: string },
     token: string,
   ): Promise<void> => {
-    // REPLACE_WITH_API: PATCH /api/v1/users/me
-    if (config.useMockApi) {
-      await mockResponse(null);
-      return;
-    }
     const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.ME}`, {
       method: 'PATCH',
       body: JSON.stringify(input),
@@ -277,40 +187,12 @@ export const authApi = {
     }
   },
 
-  /** List configured social providers (e.g. `['google','github']`); `[]` on failure. */
-  listOAuthProviders: async (): Promise<string[]> => {
-    // Best-effort discovery: GET /api/v1/auth/oauth/providers. Never throws — a
-    // failure just means no social buttons render (the form still works).
-    if (config.useMockApi) return mockResponse(['google']);
-    try {
-      const response = await authFetch(
-        `${authBase()}${API_ENDPOINTS.AUTH.OAUTH_PROVIDERS}`,
-        { method: 'GET' },
-      );
-      if (!response.ok) return [];
-      const data = unwrapEnvelope((await response.json()) as unknown) as {
-        providers?: unknown;
-      } | null;
-      const providers = data?.providers;
-      return Array.isArray(providers)
-        ? providers.filter((p): p is string => typeof p === 'string')
-        : [];
-    } catch {
-      return [];
-    }
-  },
+  /** List configured social providers — removed; login UI is env-only. */
 
-  /**
-   * Begin an OAuth flow. `GET /auth/oauth/:provider` returns `{ url }` (the
-   * provider's authorize URL); the caller redirects the browser to it. The
-   * provider returns to the backend, which sets the refresh cookie and bounces
-   * the browser to `/callback`.
-   */
-  oauthStart: async (provider: string): Promise<string> => {
-    if (config.useMockApi) return mockResponse('/callback');
+  oauthStart: async (provider: string, captchaToken?: string): Promise<string> => {
     const response = await authFetch(
       `${authBase()}/auth/oauth/${encodeURIComponent(provider)}`,
-      { method: 'GET' },
+      { method: 'GET', captchaToken },
     );
     const json = (await response.json()) as unknown;
     if (!response.ok)
@@ -319,66 +201,60 @@ export const authApi = {
         json,
         `Could not start ${provider} sign-in (${response.status})`,
       );
-    const data = unwrapEnvelope(json) as { url?: string } | null;
-    if (typeof data?.url !== 'string' || data.url.length === 0) {
-      throw new Error(`Could not start ${provider} sign-in (no redirect URL).`);
+    const data = unwrapEnvelope(json) as { redirect_url?: string; url?: string } | null;
+    const redirectUrl = data?.redirect_url ?? data?.url;
+    if (typeof redirectUrl !== 'string' || redirectUrl.length === 0) {
+      throw new AppError(
+        FRONTEND_ERROR_CODES.AUTH_OAUTH_NO_REDIRECT,
+        502,
+        FRONTEND_ERROR_CODES.AUTH_OAUTH_NO_REDIRECT,
+      );
     }
-    return data.url;
+    return redirectUrl;
   },
 
-  /**
-   * Request a passwordless sign-in link/code. The response is uniform whether or
-   * not the account exists (no enumeration) — callers should never branch on it.
-   */
-  magicLinkSend: async (email: string): Promise<void> => {
-    if (config.useMockApi) {
-      await mockResponse(null);
-      return;
-    }
+  emailVerificationCodeSend: async (
+    email: string,
+    captchaToken?: string,
+  ): Promise<void> => {
     const response = await authFetch(
-      `${authBase()}${API_ENDPOINTS.AUTH.MAGIC_LINK_SEND}`,
-      { method: 'POST', body: JSON.stringify({ email }) },
+      `${authBase()}${API_ENDPOINTS.AUTH.EMAIL_CODE_SEND}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+        captchaToken,
+      },
     );
     if (!response.ok) {
       const json = (await response.json().catch(() => null)) as unknown;
       throwOnNotOk(
         response,
         json,
-        `Could not send the sign-in link (${response.status})`,
+        `Could not send the verification code (${response.status})`,
       );
     }
   },
 
-  /**
-   * Verify a magic-link 6-digit code (emailed after {@link magicLinkSend}) for a
-   * session. The backend auto-signs-up unknown emails, so this doubles as a
-   * passwordless register. Posts `{ email, code }` — never a URL token.
-   */
-  magicLinkVerify: async (data: MagicLinkVerifyInput): Promise<AuthTokenResponse> => {
-    if (config.useMockApi) return mockToken();
+  emailLogin: async (
+    data: EmailVerificationCodeInput,
+    captchaToken?: string,
+  ): Promise<AuthTokenResponse> => {
     const response = await authFetch(
-      `${authBase()}${API_ENDPOINTS.AUTH.MAGIC_LINK_VERIFY}`,
-      { method: 'POST', body: JSON.stringify({ email: data.email, code: data.code }) },
+      `${authBase()}${API_ENDPOINTS.AUTH.EMAIL_CODE_LOGIN}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          email: data.email,
+          code: data.code,
+        }),
+        captchaToken,
+      },
     );
     const json = (await response.json()) as unknown;
     if (!response.ok)
-      throwOnNotOk(response, json, `Magic-link sign-in failed (${response.status})`);
+      throwOnNotOk(response, json, `Email verification failed (${response.status})`);
+    const mfa = parseMfaRequired(json);
+    if (mfa) throw mfa;
     return extractAccessToken(json, `Authentication failed (${response.status})`);
-  },
-
-  /** Re-send the email-verification message for the signed-in user. */
-  resendVerification: async (token: string): Promise<void> => {
-    if (config.useMockApi) {
-      await mockResponse(null);
-      return;
-    }
-    const response = await authFetch(
-      `${authBase()}${API_ENDPOINTS.AUTH.RESEND_VERIFICATION}`,
-      { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
-    );
-    if (!response.ok) {
-      const json = (await response.json().catch(() => null)) as unknown;
-      throwOnNotOk(response, json, `Could not resend verification (${response.status})`);
-    }
   },
 };

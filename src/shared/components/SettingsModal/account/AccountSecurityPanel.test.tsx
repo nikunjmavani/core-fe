@@ -63,6 +63,7 @@ describe('AccountSecurityPanel', () => {
   it('renders MFA status + setup + passkeys (sessions moved to their own panel)', () => {
     render(<AccountSecurityPanel />);
     expect(screen.getByTestId('settings-section-security')).toBeInTheDocument();
+    expect(screen.getByTestId('security-overview')).toBeInTheDocument();
     expect(screen.getByTestId('mfa-status')).toHaveTextContent('Disabled');
     expect(screen.getByTestId('mfa-setup')).toBeInTheDocument();
     expect(screen.getByTestId('add-passkey')).toBeInTheDocument();
@@ -70,16 +71,18 @@ describe('AccountSecurityPanel', () => {
     expect(screen.queryByTestId('session-s1')).not.toBeInTheDocument();
   });
 
-  it('runs the enrollment flow: secret → code → recovery codes', async () => {
+  it('runs the enrollment flow: QR → code → recovery codes', async () => {
     const user = userEvent.setup();
     render(<AccountSecurityPanel />);
     await user.click(screen.getByTestId('mfa-setup'));
     expect(beginMutateAsync).toHaveBeenCalledTimes(1);
     expect(await screen.findByTestId('mfa-secret')).toHaveTextContent('JBSWY3DPEHPK3PXP');
+    expect(await screen.findByTestId('mfa-qr')).toBeInTheDocument();
     await user.type(screen.getByTestId('mfa-code'), '123456');
-    await user.click(screen.getByTestId('mfa-verify'));
-    expect(confirmMutateAsync).toHaveBeenCalledWith('123456');
+    await waitFor(() => expect(confirmMutateAsync).toHaveBeenCalledWith('123456'));
     expect(await screen.findByTestId('mfa-recovery-codes')).toBeInTheDocument();
+    await user.click(screen.getByTestId('recovery-codes-panel-ack'));
+    await user.click(screen.getByTestId('mfa-done'));
   });
 
   it('shows Disable when enabled and confirms disabling', async () => {

@@ -13,7 +13,7 @@ import { useConsumedSearchToken } from './useConsumedSearchToken.ts';
 describe('useConsumedSearchToken', () => {
   beforeEach(() => {
     mockSearch = {};
-    window.history.replaceState(null, '', '/reset-password');
+    window.history.replaceState(null, '', '/accept-invite/inv_test');
   });
 
   afterEach(() => {
@@ -22,7 +22,11 @@ describe('useConsumedSearchToken', () => {
 
   it('returns the token and strips it from the address bar', async () => {
     mockSearch = { token: 'sec-123' };
-    window.history.replaceState({ key: 'k1' }, '', '/reset-password?token=sec-123&x=1');
+    window.history.replaceState(
+      { key: 'k1' },
+      '',
+      '/accept-invite/inv_test?token=sec-123&x=1',
+    );
 
     const { result } = renderHook(() => useConsumedSearchToken());
 
@@ -35,7 +39,7 @@ describe('useConsumedSearchToken', () => {
   });
 
   it('returns "" and leaves the URL alone when there is no token', () => {
-    window.history.replaceState(null, '', '/reset-password?x=1');
+    window.history.replaceState(null, '', '/accept-invite/inv_test?x=1');
 
     const { result } = renderHook(() => useConsumedSearchToken());
 
@@ -45,7 +49,7 @@ describe('useConsumedSearchToken', () => {
 
   it('keeps returning the consumed token after the URL was scrubbed', async () => {
     mockSearch = { token: 'sec-456' };
-    window.history.replaceState(null, '', '/verify-email?token=sec-456');
+    window.history.replaceState(null, '', '/accept-invite/inv_test?token=sec-456');
 
     const { result, rerender } = renderHook(() => useConsumedSearchToken());
     await waitFor(() => expect(window.location.search).toBe(''));

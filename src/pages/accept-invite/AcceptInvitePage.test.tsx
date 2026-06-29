@@ -7,7 +7,11 @@ import { AcceptInvitePage } from './AcceptInvitePage.tsx';
 
 vi.mock('@tanstack/react-router', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
-  return { ...actual, useParams: () => ({ invitationId: 'inv_test' }) };
+  return {
+    ...actual,
+    useParams: () => ({ invitationId: 'inv_test' }),
+    useSearch: () => ({ token: 'test-token' }),
+  };
 });
 
 describe('AcceptInvitePage', () => {

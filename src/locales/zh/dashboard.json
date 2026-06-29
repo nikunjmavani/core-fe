@@ -1,0 +1,93 @@
+{
+  "greeting": "欢迎回来，{{name}}",
+  "greetingFallback": "您好",
+  "heroSubtitle": "以下是您工作区今日的动态。",
+  "heroSubtitleSolo": "以下是今日的动态。",
+  "title": "仪表盘",
+  "errorLoad": "无法加载您的工作区。请刷新页面后重试。",
+  "workspaceFallback": "您的工作区",
+  "workspaceNameFallback": "您的工作区",
+  "orgType": {
+    "team": "团队",
+    "personal": "个人"
+  },
+  "status": {
+    "active": "活跃",
+    "suspended": "已暂停",
+    "archived": "已归档"
+  },
+  "overview": {
+    "ariaLabel": "概览"
+  },
+  "stats": {
+    "workspaces": "工作区",
+    "workspacesHintOne": "仅此一个",
+    "workspacesHintMany": "您已是成员",
+    "permissions": "您的权限",
+    "permissionsHint": "在此工作区",
+    "type": "工作区类型",
+    "typeHintTeam": "与团队共享",
+    "typeHintPersonal": "仅您可见",
+    "billing": "账单",
+    "billingManaged": "已管理",
+    "billingNone": "—",
+    "billingHintTeam": "团队套餐",
+    "billingHintPersonal": "个人 — 无"
+  },
+  "nextSteps": {
+    "ariaLabel": "建议的后续步骤",
+    "heading": "建议的后续步骤"
+  },
+  "quickActions": {
+    "ariaLabel": "快捷操作",
+    "heading": "快捷操作",
+    "inviteTitle": "邀请成员",
+    "inviteDescription": "将队友添加到 {{orgName}}",
+    "rolesTitle": "管理角色",
+    "rolesDescription": "定义谁可以做什么",
+    "billingTitle": "账单与套餐",
+    "billingDescription": "订阅与发票",
+    "orgSettingsTitle": "组织设置",
+    "orgSettingsDescription": "名称、品牌等",
+    "accountTitle": "您的账户",
+    "accountDescription": "个人资料、安全、会话"
+  },
+  "organizations": {
+    "ariaLabel": "您的组织",
+    "heading": "您的组织",
+    "current": "当前",
+    "openWorkspace": "打开工作区 →"
+  },
+  "highlights": {
+    "ariaLabel": "工作区亮点",
+    "heading": "亮点",
+    "description": "精选建议，帮你更好地使用工作区",
+    "tabsLabel": "亮点主题",
+    "slideAnnouncement": "第 {{current}} 条，共 {{total}} 条：{{title}}",
+    "previousSlide": "上一条亮点",
+    "nextSlide": "下一条亮点",
+    "goToSlide": "跳转到{{title}}亮点",
+    "tabs": {
+      "appearance": "外观",
+      "invite": "团队",
+      "security": "安全"
+    },
+    "slides": {
+      "appearance": {
+        "title": "打造专属风格",
+        "description": "调整主题、密度和强调色，让工作区贴合团队的工作方式。",
+        "action": "打开外观设置"
+      },
+      "invite": {
+        "title": "壮大团队",
+        "description": "邀请队友并分配角色，让每个人从第一天起就拥有合适的权限。",
+        "action": "邀请成员"
+      },
+      "security": {
+        "title": "加强安全",
+        "description": "检查 MFA、活跃会话和登录方式，保障账户安全。",
+        "action": "查看安全设置"
+      }
+    }
+  }
+}

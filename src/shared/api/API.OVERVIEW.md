@@ -2,16 +2,18 @@
 
 Cross-page API helpers and domain schemas. Files here are imported by both `src/pages/*` and `src/shared/components/*`, so they must live outside both layers.
 
+All fetchers call **core-be over HTTP** via `apiClient` (or raw `authFetch` for auth). Local dev proxies `/api` to `VITE_DEV_API_URL` (default `http://localhost:3000`). Test fixtures live under `tests/fixtures/` only.
+
 ## Files
 
-| File                                   | What it holds                                                                                                                                           |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `auth-contracts.ts`                    | Zod schemas for the auth screens — `loginSchema`, `registerSchema`, MFA/reset/verify inputs — shared by `pages/login`, `pages/register`, `pages/mfa`, … |
-| `auth-api.ts` (+ .test)                | Auth fetchers (login, register, forgot/reset password, verify email, MFA). Raw `fetch`, not `apiClient`, to avoid interceptor recursion                 |
-| `organization-contracts.ts`            | Zod schemas for org-domain entities — `Member`, `Invitation`, `OrgRole`, `RoleSummary`, `ApiKey`, `Plan`, `Subscription`                                |
-| `organization-api.ts`                  | Fetcher functions for org-domain resources (members, invitations, roles, api-keys, billing) — will shrink as resource pages adopt `useList<T>()` etc.   |
-| `organization-mock-store.ts` (+ .test) | In-memory mock state for dev/tests                                                                                                                      |
-| `organization-fixtures.ts`             | Seed data used by the mock store                                                                                                                        |
+| File                        | What it holds                                                                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auth-contracts.ts`         | Zod schemas for auth — MFA/reset/verify inputs, shared by `pages/mfa`, `auth-api`, …                                                                  |
+| `auth-api.ts` (+ .test)     | Auth fetchers (login, register, forgot/reset password, verify email, MFA). Raw `fetch`, not `apiClient`, to avoid interceptor recursion               |
+| `organization-contracts.ts` | Zod schemas for org-domain entities — `Member`, `Invitation`, `OrgRole`, `RoleSummary`, `ApiKey`, `Plan`, `Subscription`                              |
+| `organization-api.ts`       | Fetcher functions for org-domain resources (members, invitations, roles, api-keys, billing) — will shrink as resource pages adopt `useList<T>()` etc. |
+| `notifications-api.ts`      | Notification inbox + preference fetchers                                                                                                              |
+| `notification-contracts.ts` | Zod schemas for notifications                                                                                                                         |
 
 Organization/tenancy infrastructure (`my-organizations.ts`, `tenancy-service.ts`,
 organization context/membership/resolver) lives in **`src/shared/tenancy/`** — see

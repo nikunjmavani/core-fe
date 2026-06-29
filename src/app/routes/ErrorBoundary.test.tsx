@@ -38,7 +38,7 @@ describe('ErrorBoundary', () => {
     expect(boundary).toBeInTheDocument();
     expect(screen.getByText('Something went wrong')).toBeInTheDocument();
     expect(
-      screen.getByText(/An unexpected error occurred. Please try refreshing/i),
+      screen.getByText(/An unexpected error occurred. Please try reloading/i),
     ).toBeInTheDocument();
   });
 

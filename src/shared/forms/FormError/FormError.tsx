@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils.ts';
+import { Card, CardContent } from '@/shared/components/ui/card.tsx';
 import { AlertCircle } from '@/shared/icons/index.ts';
 
 interface FormErrorProps {
@@ -18,16 +19,18 @@ export function FormError({
   if (!message) return null;
 
   return (
-    <div
+    <Card
       data-testid={dataTestId ?? 'form-error'}
       className={cn(
-        'border-destructive/20 bg-destructive/10 text-destructive flex items-center gap-2 rounded-md border px-4 py-3 text-sm',
+        'border-destructive/20 bg-destructive/10 text-destructive gap-0 py-0 shadow-none',
         className,
       )}
       role="alert"
     >
-      <AlertCircle className="h-4 w-4 shrink-0" />
-      <span>{message}</span>
-    </div>
+      <CardContent className="flex items-center gap-2 px-4 py-3 text-sm">
+        <AlertCircle className="h-4 w-4 shrink-0" />
+        <span>{message}</span>
+      </CardContent>
+    </Card>
   );
 }

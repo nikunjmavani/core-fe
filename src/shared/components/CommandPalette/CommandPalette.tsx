@@ -1,10 +1,11 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
 import { useCallback, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import { cn } from '@/lib/utils.ts';
 import { logout } from '@/shared/auth/service.ts';
 import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
+import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import {
   Building2,
   LayoutDashboard,
@@ -15,25 +16,28 @@ import {
   Settings,
   Sun,
 } from '@/shared/icons/index.ts';
+import { LAYOUT_KEYS, LAYOUT_NS } from '@/shared/layouts/layout.constants.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
+
+import { CommandItem } from './CommandPaletteItem.tsx';
+import { CommandPaletteOrgGroup } from './CommandPaletteOrgGroup.tsx';
 
 /**
  * Global command palette powered by cmdk.
  * Activated via Cmd+K (Mac) or Ctrl+K (Windows/Linux).
- * Includes focus trap, proper ARIA dialog semantics, and platform-aware hints.
  */
 export function CommandPalette() {
+  const { t } = useTranslation(LAYOUT_NS);
   const open = useUIStore((s) => s.commandPaletteOpen);
   const setOpen = useUIStore((s) => s.setCommandPaletteOpen);
   const navigate = useNavigate();
   const setTheme = useThemeStore((s) => s.setTheme);
+  const { data: meContext } = useMeContext();
+  const setShortcutsOpen = useUIStore((s) => s.setShortcutsOpen);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
-  // Note: Keyboard shortcut (Cmd+K) is handled by CommandPaletteLazy for lazy-load optimization
-
-  // Focus trap: save previous focus and restore on close
   useEffect(() => {
     if (open) {
       previousFocusRef.current = document.activeElement as HTMLElement;
@@ -43,7 +47,6 @@ export function CommandPalette() {
     }
   }, [open]);
 
-  // Trap Tab focus within dialog
   useEffect(() => {
     if (!open) return;
 
@@ -81,35 +84,37 @@ export function CommandPalette() {
 
   if (!open) return null;
 
+  const cp = LAYOUT_KEYS.app.commandPalette;
+
   return (
     <div
       className="fixed inset-0 z-50"
       role="dialog"
       aria-modal="true"
-      aria-label="Command palette"
+      aria-label={t(cp.ariaLabel)}
       ref={dialogRef}
     >
-      {/* Overlay */}
       <div
         className="bg-overlay/50 fixed inset-0 backdrop-blur-sm"
         aria-hidden="true"
         onClick={() => setOpen(false)}
       />
 
-      {/* Palette */}
       <div className="fixed top-[20%] left-1/2 w-full max-w-lg -translate-x-1/2">
         <Command
-          className="bg-popover rounded-xl border shadow-2xl"
+          data-slot="popover-content"
+          className="bg-popover overflow-hidden rounded-md border"
           onKeyDown={(e) => {
             if (e.key === 'Escape') setOpen(false);
           }}
         >
           <div className="flex items-center border-b px-3">
             <Search className="text-muted-foreground mr-2 h-4 w-4 shrink-0" />
-            {/* eslint-disable jsx-a11y/no-autofocus -- Intentional: command palette must focus the input immediately on open for keyboard-driven UX */}
+            {/* eslint-disable jsx-a11y/no-autofocus -- command palette focuses input on open */}
             <Command.Input
-              placeholder="Type a command or search..."
-              className="placeholder:text-muted-foreground flex h-12 w-full rounded-md bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              data-slot="input"
+              placeholder={t(cp.placeholder)}
+              className="placeholder:text-muted-foreground flex h-12 w-full bg-transparent py-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
               autoFocus
             />
             {/* eslint-enable jsx-a11y/no-autofocus */}
@@ -117,18 +122,18 @@ export function CommandPalette() {
 
           <Command.List className="max-h-[300px] overflow-y-auto p-2">
             <Command.Empty className="text-muted-foreground py-6 text-center text-sm">
-              No results found.
+              {t(cp.empty)}
             </Command.Empty>
 
             <Command.Group
-              heading="Navigation"
+              heading={t(cp.groups.navigation)}
               className="text-muted-foreground px-1 py-1.5 text-xs font-medium"
             >
               <CommandItem
                 onSelect={() => runCommand(() => navigate({ to: '/' }))}
                 icon={LayoutDashboard}
               >
-                Dashboard
+                {t(cp.dashboard)}
               </CommandItem>
               <CommandItem
                 onSelect={() =>
@@ -138,7 +143,7 @@ export function CommandPalette() {
                 }
                 icon={Settings}
               >
-                User settings
+                {t(cp.userSettings)}
               </CommandItem>
               <CommandItem
                 onSelect={() =>
@@ -148,40 +153,65 @@ export function CommandPalette() {
                 }
                 icon={Building2}
               >
-                Organization settings
+                {t(cp.organizationSettings)}
+              </CommandItem>
+            </Command.Group>
+
+            {meContext ? (
+              <CommandPaletteOrgGroup
+                meContext={meContext}
+                heading={t(cp.groups.organizations)}
+                currentOrganizationLabel={(name) => t(cp.currentOrganization, { name })}
+                switchOrganizationLabel={(name) => t(cp.switchOrganization, { name })}
+                runCommand={runCommand}
+                navigate={navigate}
+              />
+            ) : null}
+
+            <Command.Separator className="bg-border my-1 h-px" />
+
+            <Command.Group
+              heading={t(cp.groups.shortcuts)}
+              className="text-muted-foreground px-1 py-1.5 text-xs font-medium"
+            >
+              <CommandItem
+                onSelect={() => runCommand(() => setShortcutsOpen(true))}
+                icon={Settings}
+              >
+                {t(cp.openShortcuts)}
               </CommandItem>
             </Command.Group>
 
             <Command.Separator className="bg-border my-1 h-px" />
 
             <Command.Group
-              heading="Theme"
+              heading={t(cp.groups.theme)}
               className="text-muted-foreground px-1 py-1.5 text-xs font-medium"
             >
               <CommandItem
                 onSelect={() => runCommand(() => setTheme('light'))}
                 icon={Sun}
               >
-                Light Mode
+                {t(cp.lightMode)}
               </CommandItem>
               <CommandItem
                 onSelect={() => runCommand(() => setTheme('dark'))}
                 icon={Moon}
               >
-                Dark Mode
+                {t(cp.darkMode)}
               </CommandItem>
               <CommandItem
                 onSelect={() => runCommand(() => setTheme('system'))}
                 icon={Monitor}
               >
-                System Theme
+                {t(cp.systemTheme)}
               </CommandItem>
             </Command.Group>
 
             <Command.Separator className="bg-border my-1 h-px" />
 
             <Command.Group
-              heading="Account"
+              heading={t(cp.groups.account)}
               className="text-muted-foreground px-1 py-1.5 text-xs font-medium"
             >
               <CommandItem
@@ -192,7 +222,7 @@ export function CommandPalette() {
                 }
                 icon={Settings}
               >
-                Settings
+                {t(cp.settings)}
               </CommandItem>
               <CommandItem
                 onSelect={() =>
@@ -203,38 +233,12 @@ export function CommandPalette() {
                 icon={LogOut}
                 destructive
               >
-                Log out
+                {t(cp.logOut)}
               </CommandItem>
             </Command.Group>
           </Command.List>
         </Command>
       </div>
     </div>
-  );
-}
-
-function CommandItem({
-  children,
-  icon: Icon,
-  onSelect,
-  destructive = false,
-}: {
-  children: React.ReactNode;
-  icon: React.ComponentType<{ className?: string }>;
-  onSelect: () => void;
-  destructive?: boolean;
-}) {
-  return (
-    <Command.Item
-      onSelect={onSelect}
-      className={cn(
-        'flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors',
-        'aria-selected:bg-accent aria-selected:text-accent-foreground',
-        destructive && 'text-destructive aria-selected:text-destructive',
-      )}
-    >
-      <Icon className="h-4 w-4" />
-      {children}
-    </Command.Item>
   );
 }

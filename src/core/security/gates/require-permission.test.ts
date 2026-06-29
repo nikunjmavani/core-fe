@@ -1,20 +1,14 @@
 import { isNotFound, isRedirect } from '@tanstack/react-router';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/shared/auth/service.ts', () => ({
+  awaitAuthBootstrap: vi.fn().mockResolvedValue(undefined),
+}));
 
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { requirePermissionGate } from './require-permission.ts';
-
-/** Capture a synchronous throw for assertion. */
-function thrownBy(fn: () => void): unknown {
-  try {
-    fn();
-  } catch (error) {
-    return error;
-  }
-  return undefined;
-}
 
 beforeEach(() => {
   useAuthStore.setState({
@@ -25,22 +19,22 @@ beforeEach(() => {
 });
 
 describe('requirePermissionGate (L5)', () => {
-  it('passes when the active org grants the permission', () => {
+  it('passes when the active org grants the permission', async () => {
     useOrganizationStore.setState({ permissions: ['membership:read'] });
-    expect(() => requirePermissionGate('membership:read')()).not.toThrow();
+    await expect(requirePermissionGate('membership:read')()).resolves.toBeUndefined();
   });
 
-  it('throws (redirect) when the permission is missing', () => {
+  it('throws (redirect) when the permission is missing', async () => {
     useOrganizationStore.setState({ permissions: [] });
-    expect(isRedirect(thrownBy(() => requirePermissionGate('membership:read')()))).toBe(
-      true,
+    await expect(requirePermissionGate('membership:read')()).rejects.toSatisfy((error) =>
+      isRedirect(error),
     );
   });
 
-  it('hides the surface as a 404 when onDeny is "notFound" (FE-52)', () => {
+  it('hides the surface as a 404 when onDeny is "notFound" (FE-52)', async () => {
     useOrganizationStore.setState({ permissions: [] });
-    expect(
-      isNotFound(thrownBy(() => requirePermissionGate('membership:read', 'notFound')())),
-    ).toBe(true);
+    await expect(
+      requirePermissionGate('membership:read', 'notFound')(),
+    ).rejects.toSatisfy((error) => isNotFound(error));
   });
 });

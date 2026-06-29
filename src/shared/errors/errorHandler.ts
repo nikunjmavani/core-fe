@@ -1,5 +1,8 @@
+import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
+import i18n from '@/lib/i18n/i18n.ts';
 import { AppError } from '@/shared/errors/AppError.ts';
 import { isHttpError } from '@/shared/errors/HttpError.ts';
+import { resolveKnownFrontendError } from '@/shared/errors/map-frontend-error.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
@@ -52,18 +55,29 @@ export function reportError(error: unknown, context?: Record<string, unknown>): 
     });
 }
 
-const HTTP_STATUS_MESSAGES: Record<number, string> = {
-  400: 'The request was invalid. Please check your input and try again.',
-  401: 'Your session has expired. Please sign in again.',
-  403: 'You do not have permission to perform this action.',
-  404: 'The requested resource was not found.',
-  409: 'A conflict occurred. The resource may have been modified by someone else.',
-  422: 'The submitted data is invalid. Please review and try again.',
-  429: 'Too many requests. Please wait a moment and try again.',
-  500: 'An internal server error occurred. Please try again later.',
-  502: 'The server is temporarily unavailable. Please try again later.',
-  503: 'The service is temporarily unavailable. Please try again later.',
+const HTTP_STATUS_KEYS: Record<number, string> = {
+  400: ERRORS_KEYS.api.http400,
+  401: ERRORS_KEYS.api.http401,
+  403: ERRORS_KEYS.api.http403,
+  404: ERRORS_KEYS.api.http404,
+  409: ERRORS_KEYS.api.http409,
+  422: ERRORS_KEYS.api.http422,
+  429: ERRORS_KEYS.api.http429,
+  500: ERRORS_KEYS.api.http500,
+  502: ERRORS_KEYS.api.http502,
+  503: ERRORS_KEYS.api.http503,
 };
+
+function tError(key: string): string {
+  return i18n.t(key, { ns: ERRORS_NS });
+}
+
+function statusFallbackMessage(status: number): string {
+  /* eslint-disable security/detect-object-injection -- status is validated HTTP status code */
+  const key = HTTP_STATUS_KEYS[status];
+  /* eslint-enable security/detect-object-injection */
+  return key ? tError(key) : tError(ERRORS_KEYS.api.fallback);
+}
 
 const SQL_RE = /\b(select|insert|update|delete|drop|union|where)\b/i;
 const PATH_RE = /[/\\]{2,}/;
@@ -74,10 +88,8 @@ const STACK_RE = /\.\w{2,4}:\d+/;
  * Rejects messages that look like leaked internals (SQL, stack traces, file paths).
  */
 function sanitizeServerMessage(message: string, status: number): string {
-  /* eslint-disable security/detect-object-injection -- status is validated HTTP status code */
-  const fallback =
-    HTTP_STATUS_MESSAGES[status] ?? 'Something went wrong. Please try again.';
-  /* eslint-enable security/detect-object-injection */
+  const fallback = statusFallbackMessage(status);
+
   if (message.length > 200) return fallback;
   if (SQL_RE.test(message) || PATH_RE.test(message) || STACK_RE.test(message))
     return fallback;
@@ -124,6 +136,9 @@ export function apiErrorReason(error: unknown): string | undefined {
  * strings are sanitized so internals (SQL / stack / paths) never leak.
  */
 export function mapApiError(error: unknown): string {
+  const known = resolveKnownFrontendError(error);
+  if (known) return known;
+
   if (error instanceof AppError) return error.message;
 
   if (isHttpError(error)) {
@@ -132,14 +147,12 @@ export function mapApiError(error: unknown): string {
     if (typeof serverMessage === 'string') {
       return sanitizeServerMessage(serverMessage, error.status);
     }
-    return (
-      HTTP_STATUS_MESSAGES[error.status] ?? 'Something went wrong. Please try again.'
-    );
+    return statusFallbackMessage(error.status);
   }
 
   if (error instanceof Error) return error.message;
 
-  return 'An unexpected error occurred';
+  return tError(ERRORS_KEYS.api.unexpected);
 }
 
 /** @deprecated Prefer {@link mapApiError}; kept as an alias for back-compat. */

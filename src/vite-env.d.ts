@@ -5,10 +5,27 @@ interface ImportMetaEnv {
   readonly VITE_SENTRY_DSN: string;
   readonly VITE_POSTHOG_KEY: string;
   readonly VITE_POSTHOG_HOST: string;
+  readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
   readonly VITE_DEV_API_URL: string;
   readonly VITE_APP_BUILD_ID: string;
+  readonly VITE_APP_VERSION: string;
+  /** Injected from BUILD_I18N_MODE — `single` (default) or `multi`. */
+  readonly VITE_I18N_BUILD_MODE: string;
+  /** Injected from BUILD_I18N_LOCALE — BCP 47 tag (default en-US). */
+  readonly VITE_I18N_BUILD_BCP47: string;
+  readonly VITE_I18N_BUILD_UI_LOCALE: string;
   /** Optional: privacy-policy URL linked from the cookie-consent banner. */
   readonly VITE_PRIVACY_POLICY_URL: string;
+  readonly VITE_DISABLED_MODULES: string;
+  readonly VITE_AUTH_EMAIL: string;
+  readonly VITE_AUTH_EMAIL_PASSWORD: string;
+  readonly VITE_AUTH_OAUTH_GOOGLE: string;
+  readonly VITE_AUTH_OAUTH_GITHUB: string;
+  readonly VITE_AUTH_OAUTH_APPLE: string;
+  readonly VITE_AUTH_OAUTH_AUTO_GOOGLE: string;
+  readonly VITE_AUTH_PASSKEY: string;
+  readonly VITE_TURNSTILE_SITE_KEY: string;
+  readonly VITE_CAPTCHA_DISABLED: string;
 }
 
 interface ImportMeta {

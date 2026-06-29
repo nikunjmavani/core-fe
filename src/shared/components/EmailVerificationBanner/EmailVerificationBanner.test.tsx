@@ -4,20 +4,23 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { EmailVerificationBanner } from './EmailVerificationBanner.tsx';
 
-const { useMeContextMock, resendMock, getTokenMock } = vi.hoisted(() => ({
+const { useMeContextMock, sendCodeMock } = vi.hoisted(() => ({
   useMeContextMock: vi.fn(),
-  resendMock: vi.fn(),
-  getTokenMock: vi.fn(),
+  sendCodeMock: vi.fn(),
+}));
+vi.mock('@/shared/auth/captcha/useTurnstileReady/index.ts', () => ({
+  useTurnstileReady: () => true,
 }));
 vi.mock('@/shared/hooks/useMeContext/index.ts', () => ({
   useMeContext: useMeContextMock,
 }));
 vi.mock('@/shared/api/auth-api.ts', () => ({
-  authApi: { resendVerification: resendMock },
+  authApi: { emailVerificationCodeSend: sendCodeMock },
 }));
-vi.mock('@/shared/auth/token.ts', () => ({ getAccessToken: getTokenMock }));
 
-const ctx = (isEmailVerified: boolean) => ({ data: { user: { isEmailVerified } } });
+const ctx = (isEmailVerified: boolean, email = 'user@example.com') => ({
+  data: { user: { isEmailVerified, email } },
+});
 
 afterEach(() => vi.clearAllMocks());
 
@@ -34,16 +37,15 @@ describe('EmailVerificationBanner', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('shows a resend control when unverified and resends with the token', async () => {
-    useMeContextMock.mockReturnValue(ctx(false));
-    getTokenMock.mockReturnValue('acc-token');
-    resendMock.mockResolvedValue(undefined);
+  it('shows a resend control when unverified and sends a sign-in code', async () => {
+    useMeContextMock.mockReturnValue(ctx(false, 'user@example.com'));
+    sendCodeMock.mockResolvedValue(undefined);
     const user = userEvent.setup();
 
     render(<EmailVerificationBanner />);
     expect(screen.getByTestId('email-verify-banner')).toBeInTheDocument();
 
     await user.click(screen.getByTestId('email-verify-resend'));
-    await waitFor(() => expect(resendMock).toHaveBeenCalledWith('acc-token'));
+    await waitFor(() => expect(sendCodeMock).toHaveBeenCalledWith('user@example.com'));
   });
 });

@@ -38,6 +38,8 @@ const TEAM_CTX: MeContext = {
   myPermissions: ['organization:read', 'definitely-not-a-real-permission'],
   globalRole: null,
   organizations: [],
+  deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+  personalOrganizationId: null,
 };
 
 describe('organization context (URL → derived store)', () => {
@@ -83,6 +85,11 @@ describe('deriveOrgContext (me/context → derived store)', () => {
     expect(s.organizationStatus).toBe('active');
     // Unknown permission codes are dropped (RBAC matches known codes only).
     expect(s.permissions).toEqual(['organization:read']);
+    expect(s.deploymentFlags).toEqual({
+      personalOrganizations: true,
+      teamOrganizations: true,
+    });
+    expect(s.personalOrganizationId).toBeNull();
   });
 
   it('clears the active-org context when there is no active org', () => {

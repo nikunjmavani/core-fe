@@ -1,0 +1,131 @@
+{
+  "greeting": "Welcome back, {{name}}",
+  "greetingFallback": "there",
+  "heroSubtitle": "Here's what's happening in your workspace today.",
+  "heroSubtitleSolo": "Here's what's happening today.",
+  "title": "Dashboard",
+  "errorLoad": "We couldn't load your workspace. Please refresh to try again.",
+  "workspaceFallback": "Your workspace",
+  "workspaceNameFallback": "your workspace",
+  "orgType": {
+    "team": "Team",
+    "personal": "Personal"
+  },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "archived": "Archived"
+  },
+  "overview": {
+    "ariaLabel": "Overview"
+  },
+  "stats": {
+    "workspaces": "Workspaces",
+    "workspacesHintOne": "Just this one",
+    "workspacesHintMany": "You're a member",
+    "permissions": "Your permissions",
+    "permissionsHint": "In this workspace",
+    "type": "Workspace type",
+    "typeHintTeam": "Shared with your team",
+    "typeHintPersonal": "Private to you",
+    "billing": "Billing",
+    "billingManaged": "Managed",
+    "billingNone": "—",
+    "billingHintTeam": "Team plan",
+    "billingHintPersonal": "Personal — none"
+  },
+  "nextSteps": {
+    "ariaLabel": "Suggested next steps",
+    "heading": "Suggested next steps"
+  },
+  "quickActions": {
+    "ariaLabel": "Quick actions",
+    "heading": "Quick actions",
+    "inviteTitle": "Invite members",
+    "inviteDescription": "Add teammates to {{orgName}}",
+    "rolesTitle": "Manage roles",
+    "rolesDescription": "Define who can do what",
+    "billingTitle": "Billing & plan",
+    "billingDescription": "Subscription and invoices",
+    "orgSettingsTitle": "Organization settings",
+    "orgSettingsDescription": "Name, branding, and more",
+    "accountTitle": "Your account",
+    "accountDescription": "Profile, security, sessions"
+  },
+  "organizations": {
+    "ariaLabel": "Your organizations",
+    "heading": "Your organizations",
+    "current": "Current",
+    "openWorkspace": "Open workspace →"
+  },
+  "insights": {
+    "ariaLabel": "Workspace insights",
+    "heading": "Workspace insights"
+  },
+  "highlights": {
+    "ariaLabel": "Workspace highlights",
+    "heading": "Highlights",
+    "description": "Curated ways to get more from your workspace",
+    "tabsLabel": "Highlight topics",
+    "slideAnnouncement": "Slide {{current}} of {{total}}: {{title}}",
+    "previousSlide": "Previous highlight",
+    "nextSlide": "Next highlight",
+    "goToSlide": "Go to {{title}} highlight",
+    "tabs": {
+      "appearance": "Appearance",
+      "invite": "Team",
+      "security": "Security"
+    },
+    "slides": {
+      "appearance": {
+        "title": "Make it yours",
+        "description": "Tune theme, density, and accent so the workspace matches how your team works.",
+        "action": "Open Appearance Settings"
+      },
+      "invite": {
+        "title": "Grow your team",
+        "description": "Invite teammates and assign roles so everyone has the right access from day one.",
+        "action": "Invite Members"
+      },
+      "security": {
+        "title": "Lock it down",
+        "description": "Review MFA, active sessions, and sign-in methods to keep your account secure.",
+        "action": "Review Security Settings"
+      }
+    }
+  },
+  "analytics": {
+    "heading": "Workspace activity",
+    "description": "Sessions and API calls over time",
+    "rangeLabel": "Select time range",
+    "seriesSessions": "Sessions",
+    "seriesApiCalls": "API calls",
+    "range": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "90d": "Last 90 days"
+    }
+  },
+  "members": {
+    "ariaLabel": "Team members",
+    "heading": "Team members",
+    "description": "{{count}} people in this workspace",
+    "columnMember": "Member",
+    "columnRole": "Role",
+    "columnStatus": "Status",
+    "columnJoined": "Joined",
+    "status": {
+      "active": "Active",
+      "invited": "Invited",
+      "suspended": "Suspended"
+    }
+  },
+  "schedule": {
+    "ariaLabel": "Schedule",
+    "heading": "Schedule",
+    "description": "Renewals, reviews, and team events",
+    "upcoming": "Upcoming",
+    "legendEvent": "Event day",
+    "empty": "Nothing scheduled"
+  }
+}

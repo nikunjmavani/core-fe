@@ -1,0 +1,72 @@
+import { describe, expect, it, vi } from 'vitest';
+
+const disabledModulesRef = vi.hoisted(() => ({ value: new Set<string>() }));
+vi.mock('@/core/config/env.ts', () => ({
+  platformConfig: {
+    get disabledModules() {
+      return disabledModulesRef.value;
+    },
+  },
+}));
+
+import {
+  firstVisibleSettingsSection,
+  visibleSettingsNavGroups,
+} from './settings-nav-visibility.ts';
+import { DEFAULT_SETTINGS } from './settings-sections.ts';
+
+const teamCtx = {
+  hasOrganizationContext: true,
+  orgType: 'TEAM' as const,
+  teamOrganizations: true,
+  role: 'user' as const,
+  permissions: [
+    'organization:read',
+    'membership:read',
+    'role:read',
+    'webhook:read',
+  ] as const,
+};
+
+const personalOnlyCtx = {
+  hasOrganizationContext: true,
+  orgType: 'PERSONAL' as const,
+  teamOrganizations: false,
+  role: 'user' as const,
+  permissions: ['organization:read'] as const,
+};
+
+describe('visibleSettingsNavGroups', () => {
+  beforeEach(() => {
+    disabledModulesRef.value = new Set();
+  });
+
+  it('includes organization sections for team deployments', () => {
+    const groups = visibleSettingsNavGroups(teamCtx);
+    const org = groups.find((g) => g.scope === 'organization');
+    expect(org?.items.map((i) => i.section)).toContain('members');
+  });
+
+  it('omits the organization group in personal-only deployments', () => {
+    const groups = visibleSettingsNavGroups(personalOnlyCtx);
+    expect(groups.some((g) => g.scope === 'organization')).toBe(false);
+    expect(groups.some((g) => g.items.some((i) => i.section === 'billing'))).toBe(true);
+  });
+
+  it('hides module-gated sections when L6b disables them', () => {
+    disabledModulesRef.value = new Set(['members', 'billing']);
+    const groups = visibleSettingsNavGroups(teamCtx);
+    const org = groups.find((g) => g.scope === 'organization');
+    expect(org?.items.map((i) => i.section)).not.toContain('members');
+    const account = groups.find((g) => g.scope === 'account');
+    expect(account?.items.map((i) => i.section)).not.toContain('billing');
+  });
+});
+
+describe('firstVisibleSettingsSection', () => {
+  it('returns profile when account nav is present', () => {
+    expect(
+      firstVisibleSettingsSection(visibleSettingsNavGroups(personalOnlyCtx)),
+    ).toEqual(DEFAULT_SETTINGS);
+  });
+});

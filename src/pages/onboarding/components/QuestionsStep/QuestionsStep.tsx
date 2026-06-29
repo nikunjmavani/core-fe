@@ -1,21 +1,17 @@
+import { useTranslation } from 'react-i18next';
+
 import { cn } from '@/lib/utils.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 
-const TEAM_SIZES = ['Just me', '2–10', '11–50', '51–200', '200+'] as const;
-const USE_CASES = [
-  'Customer management',
-  'Team collaboration',
-  'Analytics & reporting',
-  'Internal tools',
-  'Something else',
-] as const;
-const REFERRAL_SOURCES = [
-  'Search',
-  'Social media',
-  'Friend or colleague',
-  'Blog or article',
-  'Other',
-] as const;
+import { ONBOARDING_NS } from '../../onboarding.constants.ts';
+import {
+  QUESTIONS_STEP_KEYS,
+  REFERRAL_OPTION_KEYS,
+  TEAM_SIZE_OPTION_KEYS,
+  USE_CASE_OPTION_KEYS,
+} from './QuestionsStep.constants.ts';
+
+type ChoiceField = 'teamSize' | 'primaryUseCase' | 'referralSource';
 
 /**
  * Single-select chip group built as toggle buttons (`aria-pressed`) inside a
@@ -25,29 +21,33 @@ const REFERRAL_SOURCES = [
  */
 function ChoiceGroup({
   label,
-  options,
+  optionKeys,
   value,
   onSelect,
   testId,
 }: {
   label: string;
-  options: readonly string[];
+  optionKeys: readonly string[];
   value: string;
   onSelect: (value: string) => void;
   testId: string;
 }) {
+  const { t } = useTranslation(ONBOARDING_NS);
+
   return (
     <fieldset className="space-y-2">
       <legend className="mb-2 text-sm leading-none font-medium">{label}</legend>
       <div className="flex flex-wrap gap-2" data-testid={testId}>
-        {options.map((option) => {
-          const selected = value === option;
+        {optionKeys.map((optionKey) => {
+          const optionLabel = t(optionKey);
+          const selected = value === optionLabel;
           return (
             <button
-              key={option}
+              key={optionKey}
               type="button"
+              data-slot="button"
               aria-pressed={selected}
-              onClick={() => onSelect(selected ? '' : option)}
+              onClick={() => onSelect(selected ? '' : optionLabel)}
               className={cn(
                 'rounded-full border px-3 py-1.5 text-sm transition-colors',
                 selected
@@ -55,7 +55,7 @@ function ChoiceGroup({
                   : 'border-input text-foreground hover:bg-muted',
               )}
             >
-              {option}
+              {optionLabel}
             </button>
           );
         })}
@@ -70,29 +70,35 @@ function ChoiceGroup({
  * flow. Answers are captured for analytics on finish (not stored server-side).
  */
 export function QuestionsStep() {
+  const { t } = useTranslation(ONBOARDING_NS);
   const { data, patch } = useOnboardingStore();
+
+  const patchField = (field: ChoiceField, translatedValue: string) => {
+    patch({ [field]: translatedValue });
+  };
+
   return (
     <div className="space-y-5">
       <ChoiceGroup
-        label="How big is your team?"
-        options={TEAM_SIZES}
+        label={t(QUESTIONS_STEP_KEYS.teamSize.label)}
+        optionKeys={TEAM_SIZE_OPTION_KEYS}
         value={data.teamSize}
-        onSelect={(teamSize) => patch({ teamSize })}
-        testId="onboarding-team-size"
+        onSelect={(teamSize) => patchField('teamSize', teamSize)}
+        testId={QUESTIONS_STEP_KEYS.teamSize.testId}
       />
       <ChoiceGroup
-        label="What will you mainly use Core for?"
-        options={USE_CASES}
+        label={t(QUESTIONS_STEP_KEYS.useCase.label)}
+        optionKeys={USE_CASE_OPTION_KEYS}
         value={data.primaryUseCase}
-        onSelect={(primaryUseCase) => patch({ primaryUseCase })}
-        testId="onboarding-use-case"
+        onSelect={(primaryUseCase) => patchField('primaryUseCase', primaryUseCase)}
+        testId={QUESTIONS_STEP_KEYS.useCase.testId}
       />
       <ChoiceGroup
-        label="How did you hear about us?"
-        options={REFERRAL_SOURCES}
+        label={t(QUESTIONS_STEP_KEYS.referral.label)}
+        optionKeys={REFERRAL_OPTION_KEYS}
         value={data.referralSource}
-        onSelect={(referralSource) => patch({ referralSource })}
-        testId="onboarding-referral"
+        onSelect={(referralSource) => patchField('referralSource', referralSource)}
+        testId={QUESTIONS_STEP_KEYS.referral.testId}
       />
     </div>
   );

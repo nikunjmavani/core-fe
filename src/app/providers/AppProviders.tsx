@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 
+import { I18nProvider } from './I18nProvider.tsx';
 import { QueryProvider } from './QueryProvider.tsx';
 
 interface AppProvidersProps {
@@ -14,5 +15,9 @@ interface AppProvidersProps {
  * Components consume organization state via `useOrganizationStore()` directly.
  */
 export function AppProviders({ children }: AppProvidersProps) {
-  return <QueryProvider>{children}</QueryProvider>;
+  return (
+    <I18nProvider>
+      <QueryProvider>{children}</QueryProvider>
+    </I18nProvider>
+  );
 }
