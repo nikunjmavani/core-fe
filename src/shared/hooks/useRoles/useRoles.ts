@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import i18n from '@/lib/i18n/i18n.ts';
 import * as orgApi from '@/shared/api/organization-api.ts';
-import type { RoleInput } from '@/shared/api/organization-contracts.ts';
+import type { RoleInput, RoleSummary } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
@@ -29,11 +29,18 @@ export function useCreateRole() {
   });
 }
 
-/** Update a custom role, then refresh the roles list. */
+/** Update a custom role — optimistically patches the renamed row. */
 export function useUpdateRole() {
   return useAppMutation({
     mutationFn: (input: RoleInput & { id: string }) => orgApi.updateRole(input),
     invalidateKeys: [orgQueryKeys.roles()],
+    optimistic: {
+      queryKey: orgQueryKeys.roles(),
+      update: (previous: RoleSummary[] | undefined, input) =>
+        previous?.map((role) =>
+          role.id === input.id ? { ...role, name: input.name } : role,
+        ),
+    },
     successMessage: (role) =>
       i18n.t(ERRORS_KEYS.frontend.hooks.roles.updateSuccess, {
         ns: ERRORS_NS,
@@ -42,11 +49,16 @@ export function useUpdateRole() {
   });
 }
 
-/** Delete a custom role, then refresh the roles list. */
+/** Delete a custom role — optimistically drops it from the list. */
 export function useDeleteRole() {
   return useAppMutation({
     mutationFn: (roleId: string) => orgApi.deleteRole(roleId),
     invalidateKeys: [orgQueryKeys.roles()],
+    optimistic: {
+      queryKey: orgQueryKeys.roles(),
+      update: (previous: RoleSummary[] | undefined, roleId) =>
+        previous?.filter((role) => role.id !== roleId),
+    },
     successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.roles.deleteSuccess, {
       ns: ERRORS_NS,
     }),

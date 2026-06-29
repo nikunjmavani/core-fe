@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import i18n from '@/lib/i18n/i18n.ts';
 import * as orgApi from '@/shared/api/organization-api.ts';
-import type { OrgRole } from '@/shared/api/organization-contracts.ts';
+import type { Invitation, OrgRole } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 
@@ -33,11 +33,16 @@ export function useCreateInvitation() {
   });
 }
 
-/** Revoke a pending invitation, then refresh the list. */
+/** Revoke a pending invitation — optimistically drops it from the list. */
 export function useRevokeInvitation() {
   return useAppMutation({
     mutationFn: (invitationId: string) => orgApi.revokeInvitation(invitationId),
     invalidateKeys: [orgQueryKeys.invitations()],
+    optimistic: {
+      queryKey: orgQueryKeys.invitations(),
+      update: (previous: Invitation[] | undefined, invitationId) =>
+        previous?.filter((invitation) => invitation.id !== invitationId),
+    },
     successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.invitations.revokeSuccess, {
       ns: ERRORS_NS,
     }),
