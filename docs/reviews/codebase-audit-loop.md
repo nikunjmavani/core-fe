@@ -459,3 +459,46 @@ Webhooks/Notifications`). One bad record no longer blanks a whole table.
   (returns all, not cursor-paged).
 
 ---
+
+## Iteration 6 — Tenancy cache isolation & concurrency (high-signal) (2026-06-29)
+
+### 6.1 Org-scoped query keys omit the org id → cross-tenant cache collision on switch
+
+- **Area:** Robustness / multi-tenant data integrity
+- **Severity:** High (arguably Critical — another tenant's data renders in the UI)
+- **Current:** `src/shared/api/organization-query-keys.ts:12` —
+  `members: () => ['organization', 'members']` (same for `invitations`, `roles`,
+  `apiKeys`); `useWebhooks.ts:9` — `['org', 'webhooks']`; `billing-query-keys.ts:6`
+  — `['billing']`. **None include the active organization id.** Meanwhile
+  `switchToOrganization` (`src/shared/tenancy/switch.ts:64`) swaps the active-org
+  token + store but does **not** clear these caches, the global default
+  `staleTime` is **5 minutes** (`constants.ts:42`), and the only `queryClient.clear()`
+  is on **logout** (`shared/auth/service.ts:50`). Org-scoped data queries are
+  invalidated **only by their own mutations**, never on switch.
+- **Effect:** After switching from org A → org B (URL nav → `switchToOrganization`),
+  org B's members/roles/api-keys/webhooks tables read the cache key
+  `['organization','members']`, find **org A's rows still marked fresh**
+  (staleTime not elapsed), and render them with **no refetch** — showing one
+  tenant's data under another for up to 5 minutes.
+- **Suggestion:** Make the keys org-scoped — `members(orgId)` →
+  `['organization', orgId, 'members']` (thread the active org id from
+  `useOrganizationStore`); OR, minimally, `queryClient.removeQueries({ queryKey:
+['organization'] })` (+ `['org']`, `['billing']`) inside `switchToOrganization`.
+- **+** Eliminates cross-tenant leakage; org-keyed caches also make switching
+  _back_ to org A instant (its own fresh entry) instead of a refetch.
+- **−** Org-keyed keys touch every call site + invalidation; the `removeQueries`
+  shortcut is one line but drops all org cache on every switch (extra refetches).
+- **Edge case / scale trigger:** Any user who belongs to ≥2 orgs and switches
+  between them within the 5-minute stale window — the more orgs/tenants per user,
+  the more often it bites. Most dangerous for members/api-keys (sensitive rows).
+
+### Verified OK (this pass)
+
+- **Logout** fully clears the cache (`queryClient.clear()`), so cross-tenant
+  bleed cannot survive a re-login.
+- **Within a single org**, mutations correctly invalidate their list
+  (`useMembers` `onSettled` → `invalidateQueries(orgQueryKeys.members())`).
+- **User-scoped** lists (`sessions`, `passkeys`, notifications) are not org-keyed
+  and are correctly unaffected by org switching.
+
+---
