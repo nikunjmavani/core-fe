@@ -212,15 +212,16 @@ Run `pnpm run setup:infra:github-secrets` after `gh auth login`. This reads `con
 
 **Env validation: commit**
 
-| When                    | What runs                                                                                                                                             |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Commit (pre-commit)** | **`.env.example` check** — every required var name in `scripts/required-env.txt` must appear in `.env.example`. Run: `pnpm run validate:env-example`. |
+| When                    | What runs                                                                                                                   |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Commit (pre-commit)** | **`.env.example` check** — schema ↔ template parity via `pnpm tool:sync-env-example`. Run: `pnpm run validate:env-example`. |
 
-Required var names live in **`scripts/required-env.txt`** (one per line). When you add a new required env var:
+When you add a new env var, follow **`agent-os/skills/env-schema-add/SKILL.md`**:
 
-1. Add its name to **`scripts/required-env.txt`**.
-2. Add it to **`.env.example`** (with a placeholder or comment) so the commit-time check passes.
-3. Set its value in **GitHub Secrets** (Settings → Secrets and variables → Actions).
+1. Add the field to **`src/core/config/env-schema.ts`**.
+2. Add it to **`.env.example`** under the correct Secrets/Variables half.
+3. Run **`pnpm tool:sync-env-example`**.
+4. Set its value in **GitHub Secrets** (Settings → Secrets and variables → Actions).
 
 ### One-time setup (CLI or script)
 

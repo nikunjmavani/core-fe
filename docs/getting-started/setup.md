@@ -4,19 +4,45 @@ Single reference for local development setup. For deploy and CI/CD, see [netlify
 
 ```mermaid
 flowchart LR
-  A[Clone repo] --> B[pnpm install]
-  B --> C[cp .env.example .env]
-  C --> D[Set VITE_API_BASE_URL]
-  D --> E[pnpm dev]
-  E --> F["App at http://localhost:5173"]
+  A[Clone repo] --> B[pnpm setup:local]
+  B --> C[Edit .env.local + Context7 key optional]
+  C --> D[pnpm dev]
+  D --> E["App at http://localhost:5173"]
 ```
+
+Or step-by-step: `pnpm install` → `pnpm setup:local --only-env` → `pnpm dev`.
+
+---
+
+## Quick start (one command)
+
+```bash
+git clone <repo-url>
+cd core-fe
+pnpm setup:local
+```
+
+`pnpm setup:local` is idempotent: checks Node/pnpm, installs deps when `node_modules/` is missing, copies `.env.local` from `.env.example`, scaffolds the full MCP set from `.mcp.example.json`, indexes CodeGraph, then starts `pnpm dev`.
+
+Useful flags:
+
+| Flag                | Effect                                        |
+| ------------------- | --------------------------------------------- |
+| `--no-start`        | Bootstrap only — skip starting the dev server |
+| `--check`           | Preflight / dry-run — no file writes          |
+| `--skip-deps`       | Skip `pnpm install`                           |
+| `--skip-mcp`        | Skip CodeGraph + MCP scaffold                 |
+| `--only-env`        | Copy `.env.example` → `.env.local` and exit   |
+| `--force-env-local` | Rewrite `.env.local` from `.env.example`      |
+
+`pnpm setup:local` also scaffolds the **full MCP template set** into `.mcp.json` (context7, shadcn, tailwindcss, core-be-api, semgrep, sonarqube, codegraph, headroom). Set `CONTEXT7_API_KEY` in `.env.local` and reload Cursor.
 
 ---
 
 ## Prerequisites
 
 - **Node.js 24+** (Active LTS line; see `.nvmrc`) and **pnpm** (e.g. `corepack enable && corepack prepare pnpm@latest --activate`)
-- A running backend (optional for UI-only work; required for API calls). See backend repo for its setup.
+- **[core-be](https://github.com/nikunjmavani/core-be)** on `:3000` for auth, org, and E2E — the FE proxies `/api` there in dev. Pure UI shell work (no login/API) can run without it; anything past `/login` needs core-be up (`GET /readyz`).
 
 ---
 
@@ -32,10 +58,11 @@ pnpm install
 
 ## 2. Environment variables
 
-Env files live at **project root**. Copy the example and edit locally:
+Env files live at **project root**. `pnpm setup:local` copies the example to **`.env.local`** (gitignored, same pattern as core-be):
 
 ```bash
-cp .env.example .env
+pnpm setup:local --only-env
+# or: cp .env.example .env.local
 ```
 
 Set at least:
@@ -46,7 +73,7 @@ Set at least:
 
 For local dev with a backend on another port, you can use `VITE_DEV_API_URL` (e.g. `http://localhost:3000`) if your Vite config proxies API requests. See `.env.example` for the full list.
 
-**Where to get credentials:** [credentials-and-env.md](../integrations/credentials-and-env.md).
+**Where to get credentials:** [credentials-and-env.md](../integrations/credentials-and-env.md). **Full env runbook:** [environment-variables.md](../deployment/runbooks/environment-variables.md).
 
 ---
 
@@ -56,20 +83,27 @@ For local dev with a backend on another port, you can use `VITE_DEV_API_URL` (e.
 pnpm dev
 ```
 
-The app runs at **http://localhost:5173**.
+The app runs at **http://localhost:5173**. API calls go to **core-be** on `:3000` via the Vite proxy — start core-be before exercising auth, onboarding, or org flows.
 
 ---
 
-## 4. Cursor MCP (local setup required)
+## 4. Cursor MCP (local setup)
 
-If you use **Cursor** for this project, set up the MCP servers **locally** so the AI can use up-to-date docs, shadcn, Tailwind, and the backend API:
+MCP servers are **local only** (not CI). Two tiers — same model as core-be:
 
-1. Copy the example config: `cp agent-os/mcp/mcp.example.json agent-os/mcp/mcp.json`
-2. Edit `agent-os/mcp/mcp.json` and add your [Context7 API key](https://context7.com/dashboard) (replace `YOUR_CONTEXT7_API_KEY`).
-3. (Optional) Start the backend with `ENABLE_MCP_SERVER=true` for the **core-be-api** MCP.
+| Tier                          | Template            | Command                                    |
+| ----------------------------- | ------------------- | ------------------------------------------ |
+| **Default pair** (auto-start) | `.mcp.default.json` | `pnpm mcp:setup:default` only              |
+| **Full set**                  | `.mcp.example.json` | **`pnpm setup:local`** or `pnpm mcp:setup` |
+
+The gitignored live config is `.mcp.json` (symlink → `agent-os/mcp/mcp.json`). Merges are non-destructive.
+
+1. Run `pnpm setup:local --no-start` — scaffolds `.env.local` + full MCP set + CodeGraph index.
+2. Set `CONTEXT7_API_KEY` in `.env.local`.
+3. (Optional) Start the backend with `ENABLE_MCP_SERVER=true` for **core-be-api**.
 4. Reload Cursor.
 
-Full steps and MCP list: [cursor-mcp-setup.md](../integrations/cursor-mcp-setup.md).
+Full steps and MCP list: [cursor-mcp-setup.md](../../agent-os/docs/cursor-mcp-setup.md).
 
 ---
 

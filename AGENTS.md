@@ -16,7 +16,8 @@ agent-os/
 ├── hooks/         # Hook scripts + hooks.json manifest (single source)
 ├── mcp/
 │   ├── mcp.example.json   # Template — tracked
-│   ├── mcp.default.json   # Default stdio MCP pair for Codex TOML generation
+│   ├── mcp.example.json   # Mirror of root .mcp.example.json
+│   ├── mcp.default.json   # Mirror of root .mcp.default.json (default pair + Codex TOML source)
 │   └── mcp.json           # Machine-local live config — gitignored
 ├── platforms/     # Per-agent derived wiring (generated from hooks.json)
 │   ├── targets.json       # Capability registry (Cursor / Claude / Codex)
@@ -62,4 +63,4 @@ There is intentionally **no** `.claude/rules` symlink — Claude Code follows `C
 
 ## Adding a new AI coding agent
 
-Add a row to [agent-os/platforms/targets.json](agent-os/platforms/targets.json), extend `agent-os/hooks/hooks.json` with compatible hook entries, add a recipe under `agent-os/platforms/<agent>/` if needed, and extend [scripts/agent-os/generate.mjs](scripts/agent-os/generate.mjs). Symlink the new tool's entrypoint directory into `agent-os/platforms/`.
+Add a row to [agent-os/platforms/targets.json](agent-os/platforms/targets.json), extend `agent-os/hooks/hooks.json` with compatible hook entries, add a recipe under `agent-os/platforms/<agent>/` if needed, and extend [tooling/agent-os/generate.mjs](tooling/agent-os/generate.mjs). Symlink the new tool's entrypoint directory into `agent-os/platforms/`.

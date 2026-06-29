@@ -13,7 +13,7 @@ These branches represent environments and use simple, standard names.
 | **main** | `production`       | Production-ready code             | Stable, fully tested code  |
 | **dev**  | `development`      | Integration branch for developers | Latest development changes |
 
-Canonical mapping lives in [`scripts/setup/setup.config.json`](../../scripts/setup/setup.config.json).
+Canonical mapping lives in [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
 
 ---
 

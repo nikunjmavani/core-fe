@@ -12,7 +12,7 @@ when requirements land. `agent-os/rules/file-structure.mdc` and CLAUDE.md reflec
 | Context                                    | Term                                                                                                                                                                      |
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | URLs, folders, components, prose           | `organization` (never `org`, `tenant`, `workspace`, `clinic`)                                                                                                             |
-| Route param                                | `$organizationSlug` / `params.organizationId` (never `orgId`)                                                                                                             |
+| Route param                                | `$organizationSlug` / `params.organizationSlug` (never `orgId`)                                                                                                           |
 | Public ID prefix (wire data, Stripe-style) | `org_` — compact prefixes are data format, not names (`org_8fK2x`, `pat_x9Q2m`, `apt_…`, `inv_…`, `usr_…`)                                                                |
 | Infra layer term                           | `tenancy` is allowed **only** as the infrastructure module name (`shared/tenancy/`) — it is the industry term for the mechanism; everything user-facing says organization |
 
@@ -42,7 +42,7 @@ volume — a real concern for a clinic app). Internal DB ids never appear in URL
   PERSONAL → root `/dashboard`, TEAM → `/organization/$organizationSlug/dashboard`, else
   `/onboarding`. Dual-URL: the personal org lives on root URLs (no org param), the team org on
   its `$organizationSlug/` space. The shared `<Dashboard/>` renders in both; `/` keeps no UI.
-- Auth islands (`/login`, `/register`, `/callback`, …), `/onboarding`, `/accept-invite/$invitationId`
+- Auth islands (`/login`, `/mfa`, `/callback`, …), `/onboarding`, `/accept-invite/$invitationId`
   stay top-level, unchanged.
 
 ## 3. Pages tree (mirrors URLs, direct nesting)
@@ -53,7 +53,7 @@ belongs to the parent" still holds.
 
 ```text
 src/pages/
-├── login/ … register/ … callback/ … mfa/ …      (unchanged auth islands)
+├── login/ … mfa/ … callback/ …      (auth-shell islands)
 ├── onboarding/        accept-invite/
 └── organization/
     ├── ORGANIZATION.OVERVIEW.md
@@ -124,8 +124,8 @@ src/pages/
 
 ## 4. Organization context — URL is the single source of truth
 
-- Inside `/organization/$organizationSlug/*`, **`params.organizationId` is canonical**.
-- `useOrganizationStore` (today `useTenantStore`) is a **derived cache synced from the route** —
+- Inside `/organization/$organizationSlug/*`, **`params.organizationSlug` is canonical**.
+- `useOrganizationStore` is a **derived cache synced from the route** —
   never the other way around. localStorage / subdomain resolution are used only by the `/`
   resolver to pick a redirect target.
 - Multi-tab correctness follows automatically: each tab's URL carries its own organization.
@@ -211,7 +211,7 @@ reproduces page + modal, refresh survives, back/Esc closes.
 src/lib/routes/
 ├── paths.ts        path constants (absorbs lib/routes/paths.ts — one path module only)
 ├── params.ts       Zod param schemas + parsers
-├── builders.ts     organizationDashboard(organizationId), patientDetail(organizationId, patientId), …
+├── builders.ts     organizationDashboard(organizationSlug), patientDetail(organizationSlug, patientId), …
 └── index.ts
 ```
 

@@ -1,8 +1,7 @@
 # Production readiness — go / no-go
 
-**Status (2026-06-13): NOT production-ready.** One structural blocker dominates:
-the app runs in **mock mode** — there is no real backend wired. Everything else
-is either ready or a short, tracked list below.
+**Status (2026-06):** The frontend **always calls HTTP** (Vite proxies `/api` → **core-be** on `:3000`).
+There is **no alternate API path** — one backend, one contract.
 
 This is the single source of truth for "can we ship?". It complements the
 step-by-step [pre-launch checklist](deployment-and-pre-launch.md#pre-launch-checklist)
@@ -10,7 +9,7 @@ and the [path-to-production gate](path-to-production.md).
 
 ## What's already production-grade
 
-The frontend **shell** is solid and does not block launch:
+The frontend **shell** is solid:
 
 - Reactive auth layer (in-memory token, single-flight refresh + Web Locks,
   refresh-rotation safety, cross-tab logout, idle + absolute session caps).
@@ -18,67 +17,56 @@ The frontend **shell** is solid and does not block launch:
   redirect safety, password breach/strength checks, telemetry URL scrubbing,
   reset/verify token containment. See [security-model.md](../reference/security-model.md).
 - Quality gates: biome, eslint, tsc, knip, tsdoc budget, token validator,
-  structure validator, **SonarQube clean**, ~560 unit tests + coverage ratchet,
-  e2e (Chromium), patch-coverage, contract-drift, SBOM, gitleaks/semgrep/CodeQL.
+  structure validator, **SonarQube clean**, colocated unit tests + coverage ratchet,
+  E2E (Chromium), patch-coverage, contract-drift, SBOM, gitleaks/semgrep/CodeQL.
 - Accessibility: skip links, route announcer, form-error association, focus via
   Radix. Per-route error boundaries, offline support, new-deployment reload.
-- Cookie consent gating for analytics (this wave).
+- Cookie consent gating for analytics.
 
 ## Blockers — work to do before launch
 
 ### A. Backend & infrastructure (owned by your team — not fixable in this repo)
 
-- [ ] **Wire the real API.** Replace every `REPLACE_WITH_API` stub (~28, across
-      `shared/api`, `shared/tenancy`, `shared/auth`, `app/guards`, the settings
-      panels, profile, callback) with calls to deployed **core-be** endpoints.
-      `pnpm contracts:drift` currently checks a _committed_ route catalog, not a
-      live API — re-verify against the running backend.
-- [ ] **Deploy core-be** and confirm the contract the frontend assumes: HttpOnly
-      refresh cookie (`SameSite=Lax`+), refresh-session rotation with
-      reuse-detection, `X-Requested-With` rejection, CORS for the frontend origin.
+- [ ] **Deploy core-be** (or API with the same contract) and finish wiring remaining
+      `REPLACE_WITH_API` surfaces (profile, plan flags, some settings panels, passkey login).
+      `pnpm contracts:drift` checks the committed route catalog — re-verify against the
+      running server.
+- [ ] **Confirm the auth contract:** HttpOnly refresh cookie (`SameSite=Lax`+), refresh-session
+      rotation with reuse-detection, `X-Requested-With` rejection, CORS for the frontend origin.
 - [ ] **Set production env / secrets** — `VITE_API_BASE_URL` (HTTPS),
       `VITE_SENTRY_DSN`, `VITE_POSTHOG_KEY`/`HOST`, `VITE_CSP_REPORT_URI`,
-      `VITE_PRIVACY_POLICY_URL`, and `config.js` runtime injection per
-      environment. Confirm `VITE_USE_MOCK_API` is **unset/false** (prod builds
-      already reject `=true`).
-- [ ] **Create the git remote + push.** All work is local; pushing activates the
-      dormant CI/CD, CodeQL, Dependabot, and branch-protection rulesets
-      (`pnpm gh:rulesets:sync`).
+      `VITE_PRIVACY_POLICY_URL`, and `config.js` runtime injection per environment.
+- [ ] **Create the git remote + push** if not done — activates CI/CD, CodeQL, Dependabot,
+      branch-protection rulesets (`pnpm gh:rulesets:sync`).
 - [ ] **DNS / TLS / host.** Netlify config exists (`netlify.toml`, `_headers`);
-      nothing is deployed yet. Confirm HTTPS, the security headers land, and
-      multi-tenant subdomains (if used) resolve.
-- [ ] **SRI for `config.js`** — the deploy entrypoint must hash the generated
-      file and inject `integrity` (see security-model.md accepted-risk #3).
+      confirm HTTPS, security headers, and multi-tenant subdomains (if used).
+- [ ] **SRI for `config.js`** — deploy entrypoint must hash the generated file and inject
+      `integrity` (see security-model.md accepted-risk #3).
 
-### B. Verify against a real environment (impossible in mock mode)
+### B. Verify against a real environment
 
-- [ ] Staging smoke (the deploy workflow hook has never run live).
-- [ ] Lighthouse budgets and k6 load against real endpoints (currently mock-only).
-- [ ] Cross-browser E2E — the suite is Chromium-only; validate Safari/Firefox.
-- [ ] Real-failure observability: confirm Sentry receives errors (and PII stays
-      scrubbed) and PostHog events flow **only after consent**.
+- [ ] Staging smoke against deployed core-be + Netlify preview/production.
+- [ ] Lighthouse budgets against real endpoints.
+- [ ] Cross-browser E2E — suite is Chromium-only; validate Safari/Firefox if required.
+- [ ] Real-failure observability: Sentry errors (PII scrubbed) and PostHog **after consent**.
 
-### C. Legal / compliance / product (mostly your call)
+### C. Legal / compliance / product
 
-- [ ] **Privacy policy + terms** content and links (set `VITE_PRIVACY_POLICY_URL`;
-      the consent banner links it when present).
-- [ ] Confirm the consent model fits your jurisdiction (opt-in is implemented;
-      some orgs use legitimate-interest for first-party analytics).
-- [ ] **Dashboard is a placeholder** — ship real product surface before launch.
+- [ ] **Privacy policy + terms** (`VITE_PRIVACY_POLICY_URL`; consent banner links when set).
+- [ ] Confirm consent model fits your jurisdiction.
+- [ ] **Dashboard placeholder** — replace `dashboard.placeholder-data.ts` widgets with real APIs before launch if dashboard is in scope.
 
-### D. In-repo gaps closed in this readiness wave
+### D. In-repo gaps closed in prior waves
 
-- [x] **Cookie consent** — PostHog no longer sets cookies / captures until the
-      user accepts (`ConsentBanner` + `useConsentStore`; `main.tsx` gates it).
-      Accept emits a single PostHog `analytics_consent_decision` event for audit;
-      decline is persisted locally only (no third-party capture).
-- [x] **robots.txt** — now `Disallow: /` (auth-gated admin app; no public index).
+- [x] **Cookie consent** — PostHog gated behind `ConsentBanner` + `useConsentStore`.
+- [x] **robots.txt** — `Disallow: /` (auth-gated admin app).
+- [x] **HTTP-only frontend** — always `apiClient` / `authFetch` → core-be.
 - [x] This document.
 
 ## Go / no-go
 
 **No-go** until **Section A** is complete and **Section B** has been run green
-against a real backend. Sections C/D are launch-quality items; C is your
+against a deployed API. Sections C/D are launch-quality items; C is your
 product/legal call.
 
 When A + B are green, run the [path-to-production gate](path-to-production.md):

@@ -1,5 +1,5 @@
 {
-  "_note": "Real positive-path responses captured from a running core-be on 2026-06-24 via a throwaway signup (LOCAL dev). Access tokens/session ids redacted. This is the source-of-truth for the snake_case WIRE contract the FE's live API branches map into FE-domain (camelCase) shapes. The FE mock fixtures are controlled FE-domain doubles, deliberately NOT raw wire — re-verify these shapes with: pnpm exec playwright test tests/e2e/*.integration.test.ts",
+  "_note": "Real positive-path responses captured from a running core-be on 2026-06-24 via a throwaway signup (LOCAL dev). Access tokens/session ids redacted. This is the source-of-truth for the snake_case WIRE contract the FE maps into FE-domain (camelCase) shapes. Re-verify with core-be on :3000: pnpm test:e2e -- tests/e2e/*-api.e2e.test.ts",
   "POST /auth/signup": {
     "data": {
       "access_token": "<redacted>",

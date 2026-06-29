@@ -125,17 +125,26 @@ If you prefer to do it yourself or verify after AI:
 2. Register the route in `src/app/routes/routeTree.tsx` (lazy import) and add a row in `docs/reference/routes-and-ui.md`.
 3. Add permissions in `src/core/rbac/policies.ts` if the route is protected.
 4. Add colocated tests — every component and hook ships a `*.test.ts(x)` (validator-enforced).
-5. Use `data-testid` per the convention in testing-requirements, then run `pnpm validate:structure`.
+5. Use `data-testid` per the convention in testing-requirements, then run `pnpm validate:testids` and `pnpm validate:structure`.
 
 ---
 
 ## Testing
 
-- **Unit/integration:** `pnpm test` (Vitest). Tests are colocated (e.g. `Button.test.tsx` next to `Button.tsx`); strict colocation is validator-enforced.
-- **E2E:** `pnpm test:e2e` (Playwright, Chromium).
-- **Coverage:** `pnpm test:ci`. Thresholds in `vitest.config.ts` are a **ratchet** — raise them as coverage rises, never lower them.
+Full matrix: **[docs/reference/testing.md](docs/reference/testing.md)** and **[tests/README.md](tests/README.md)**.
 
-Component tests must include **vitest-axe** accessibility checks. See **agent-os/skills/test-generation/SKILL.md** for templates.
+| Kind                               | Command                 |
+| ---------------------------------- | ----------------------- |
+| Unit + security (Vitest)           | `pnpm test`             |
+| E2E (Playwright, core-be required) | `pnpm test:e2e`         |
+| Visual regression                  | `pnpm test:visual`      |
+| Patch coverage (PR)                | `pnpm coverage:patch`   |
+| Test ID contracts                  | `pnpm validate:testids` |
+
+- Tests are **colocated** under `src/` (`*.test.ts(x)`); strict colocation is `pnpm validate:structure`.
+- **E2E** uses hybrid selectors — `data-testid` for actions, `getByRole`/`getByLabel` for a11y guards (`agent-os/skills/playwright-e2e/SKILL.md`, `tests/utils/e2e-hybrid.ts`).
+- Component tests must include **vitest-axe**; dialog tests use **`axeForDialog`** (`tests/utils/axe-for-dialog.ts`).
+- Templates: **agent-os/skills/test-generation/SKILL.md**.
 
 ---
 

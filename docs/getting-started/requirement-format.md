@@ -84,6 +84,8 @@ Copy the block below, fill in the sections, and paste into your request (e.g. in
 
 See a full filled example: **[sample-requirement.md](requirements/sample-requirement.md)**.
 
+Cross-repo auth example (unified login/signup, email + phone OTP): **[unified-auth-otp-requirement.md](requirements/unified-auth-otp-requirement.md)**.
+
 ---
 
 ## What the AI will do

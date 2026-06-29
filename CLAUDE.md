@@ -22,16 +22,16 @@ Docker and is enforced by `.husky/pre-push` on deployed-surface changes (`pnpm s
 `SKIP_SONAR=1 git push` to bypass once) — see docs/reference/quality/sonarqube-local.md.
 Coverage thresholds in `vitest.config.ts` are a **ratchet**: pinned just under measured
 coverage, raised as coverage rises, never lowered; the same raise-never philosophy applies to
-the **TSDoc budget** (`pnpm tsdoc:check`, `scripts/tsdoc/budget.json`) and to **patch
+the **TSDoc budget** (`pnpm tsdoc:check`, `tooling/tsdoc-coverage/budget.json`) and to **patch
 coverage** (`pnpm coverage:patch` — changed lines ≥ 80% in PR CI). Vitest is split into
 `unit` (colocated src suites) and `security` (tests/security — token storage, redirect
-safety, mock-mode rejection, header tripwires) projects. Markdown is linted
+safety, header tripwires) projects. Markdown is linted
 (`pnpm docs:lint`; emphasis style follows Prettier). CI (`.github/workflows/pr-ci.yml`) runs
 path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest+patch-coverage/docs-lint/
 structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint/e2e —
 behind a single aggregate `quality-gate` required check (branch protection as code:
 `.github/rulesets/`, `pnpm gh:rulesets:sync`). CodeQL, Stryker mutation tests, Lighthouse
-budgets, k6 load, cache cleanup, and Dependabot CI triage run as scheduled/event workflows.
+budgets, cache cleanup, and Dependabot CI triage run as scheduled/event workflows.
 
 ## Documentation
 
@@ -42,12 +42,12 @@ budgets, k6 load, cache cleanup, and Dependabot CI triage run as scheduled/event
 - **Deploy / runbook:** docs/deployment/runbook-dev-to-production.md, docs/deployment/cicd-and-netlify.md, docs/deployment/deployment-and-pre-launch.md
 - **Path to production (gate):** docs/deployment/path-to-production.md
 - **Netlify CLI setup:** docs/deployment/netlify-cli-setup.md
-- **Credentials / env:** docs/integrations/credentials-and-env.md; Sentry: docs/integrations/sentry-sourcemaps.md
+- **Credentials / env:** docs/integrations/credentials-and-env.md; **env runbook:** docs/deployment/runbooks/environment-variables.md; Sentry: docs/integrations/sentry-sourcemaps.md
 - **Cursor ↔ backend API (MCP):** agent-os/docs/cursor-backend-mcp.md
 - **Git workflow:** docs/process/git-workflow.md
 - **Routing & tenancy (implemented spec):** docs/reference/routing-and-tenancy.md
 - **SonarQube local quality gate:** docs/reference/quality/sonarqube-local.md
-- **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/design.md (design language), docs/reference/theming.md, docs/reference/dependency-upgrades.md, docs/reference/internationalization.md
+- **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/frontend-platform.md (platform kernel), docs/reference/pwa-manifest-and-app-icon.md (PWA install surface), docs/reference/local-production-perf.md (build + preview perf), docs/reference/cross-browser-support.md (Chrome/Firefox/Safari), docs/reference/design.md (design language), docs/reference/theming.md, docs/reference/theme-axis-audit-playbook.md (axis audit procedure), docs/reference/dependency-upgrades.md, docs/reference/internationalization.md
 
 ## Architecture Overview
 
@@ -61,9 +61,10 @@ src/core/      HTTP, RBAC, config, data-provider, resources,             ~30
 src/pages/     Route islands (feature code) — custom + resource shapes    ~100
 src/shared/    shadcn UI (flat), components/forms/hooks/layouts          ~100
                (folder-per-unit), global Zustand store, standard CRUD,
-               cross-page api helpers, auth runtime, errors
+               cross-page api helpers, auth + tenancy runtime, errors,
+               icons, analytics, billing, notifications/notify, theme
 src/lib/       Pure utilities (cn, animations, route-island helpers)      ~15
-tests/         E2E (Playwright), load (k6), shared test utils             ~15
+tests/         E2E (Playwright), shared test utils                         ~15
 
 agent-os/      Agents, skills, rules, hooks, MCP, platforms, docs           ~50+
                (.cursor/, .claude/, .codex/ symlink into this)
@@ -82,7 +83,7 @@ src/
 └── index.css       # Tailwind CSS v4 entry with @theme tokens
 ```
 
-All Zustand stores live in **`src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useOrganizationStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`. Cross-page API helpers (auth-screen schemas + fetchers `auth-api.ts`/`auth-contracts.ts`, organization-domain schemas + fetchers) live in **`src/shared/api/`**. Organization/tenancy runtime (URL-driven context, membership, `/` resolver, my-organizations) lives in **`src/shared/tenancy/`** — the URL is the single source of truth for organization context. Auth infrastructure (token, refresh-timer, idle-timeout, login/logout service, mocks) lives in **`src/shared/auth/`**.
+All Zustand stores live in **`src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useOrganizationStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`, `useConsentStore`, `useLocaleStore`. Cross-page API helpers (auth-screen schemas + fetchers `auth-api.ts`/`auth-contracts.ts`, organization-domain schemas + fetchers) live in **`src/shared/api/`**. Organization/tenancy runtime (URL-driven context, membership, `/` resolver, my-organizations) lives in **`src/shared/tenancy/`** — the URL is the single source of truth for organization context. Auth infrastructure (token, refresh-timer, idle-timeout, login/logout service) lives in **`src/shared/auth/`**.
 
 **Dependency rule (one-way):** `ui → lib → core → shared → pages → app`. Pages never import from other pages. One documented exception: the core kernel (`core/http`, `core/rbac`) may import the shared runtime trio — `shared/auth`, `shared/errors`, `useAuthStore`/`useOrganizationStore` (see `agent-os/rules/file-structure.mdc` → Import Rules; enforced in `eslint.config.mjs`).
 
@@ -92,7 +93,7 @@ Every directory under `src/pages/` that corresponds to a frontend URL path **mus
 
 **The rule in five lines (read this first):**
 
-1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/acme/dashboard` → `pages/organization/$organizationSlug/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. One exception: `/` is a pure resolver route (redirect only, no island).
+1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/acme/dashboard` → `pages/organization/$organizationSlug/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. Exceptions: `/` is a pure resolver route (redirect only, no island); app-shell routes with no feature island — `/unauthorized`, the `$` 404 splat (`UnauthorizedPage`/`NotFoundPage`), and the personal-mode `/dashboard` shell (deployment-mode split, reuses the org dashboard island) — live in `src/app/routes/`, not `src/pages/`.
 2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationSlug/` → `organization-slug.route.tsx`, `ORGANIZATION_SLUG.OVERVIEW.md`).
 3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppLayout via the `pages/organization/$organizationSlug/` layout island (the org guard boundary). No grouping directories under `pages/`.
 4. **Code used by 2+ page islands lives in `shared/`** (e.g. `shared/api/auth-api.ts`, `shared/tenancy/`).
@@ -108,7 +109,7 @@ src/pages/
 │   ├── LoginPage.tsx                ← top-level UI
 │   ├── LOGIN.OVERVIEW.md
 │   └── forms/LoginForm/             (folder-per-unit)
-├── register/  forgot-password/  reset-password/  verify-email/  mfa/
+├── mfa/                             ← /mfa (AuthLayout via auth-shell)
 ├── callback/
 │   └── callback.route.tsx           ← /callback (one URL for every OAuth provider)
 ├── onboarding/   accept-invite/
@@ -135,7 +136,7 @@ src/pages/<page>/                          ← folder = URL segment
 │
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
-├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.route.tsx                       lazy boundary — `Component` only; RBAC in routeTree `beforeLoad`
 ├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
@@ -143,7 +144,7 @@ src/pages/<page>/                          ← folder = URL segment
 ├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
 ├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
 │                                          even from its children — sharing goes via shared/)
-├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.fixtures.ts                     optional placeholder data (REPLACE_WITH_API)
 ├── <page>.search.ts                       URL search-param schema (validateSearch)
 ├── <page>.constants.ts                    page-scoped constants
 ├── <page>.resource.ts                     resource manifest (resource pages only)
@@ -170,20 +171,24 @@ src/pages/<page>/                          ← folder = URL segment
 
 ```tsx
 // Every <page>.route.tsx must export Component (required).
-// Optional exports: loader, action, ErrorBoundary.
-import { requirePermission } from '@/core/rbac/guards.ts';
+// Optional exports: ErrorBoundary (only if wired in routeTree — rare).
+// Do NOT export loader() for RBAC — routeTree beforeLoad + gatewayFromManifest
+// are the single enforcement point (lazyRouteComponent loads Component only).
 
 import { DashboardPage } from './DashboardPage.tsx';
-import { manifest } from './dashboard.manifest.ts';
 
 export function Component() {
   return <DashboardPage />;
 }
+```
 
-export function loader() {
-  if (manifest.permission) requirePermission(manifest.permission);
-  return null;
-}
+Protected routes register access in `routeTree.tsx`:
+
+```tsx
+beforeLoad: async ({ location, params, preload }) => {
+  if (preload) return;
+  await gatewayFromManifest(dashboardManifest)(toGateContext(location, params));
+},
 ```
 
 ### Dialog vs Full Page Decision
@@ -214,11 +219,21 @@ src/shared/
 ├── hooks/
 │   ├── use<X>/                      # cross-page custom hooks — folder-per-unit
 │   └── useList/, useOne/, useCreate/, useUpdate/, useDelete/   # standard CRUD hooks
-├── layouts/<Name>/                  # AuthLayout, AppLayout — folder-per-unit
+├── layouts/<Name>/                  # AuthLayout, AppLayout, PublicLayout, LayoutVariantFallback
+├── api/                             # cross-page API helpers (auth, organization, billing, mfa,
+│                                    #   passkeys, sessions, webhooks, notifications) — plain modules
+├── auth/                            # auth runtime (token, refresh-timer, idle-timeout, service, captcha)
+├── tenancy/                         # URL-driven org context, membership, resolver, deployment-mode
+├── icons/                           # icon registry (import from @/shared/icons, never lucide-react)
+├── analytics/  billing/  notifications/  notify/  theme/  errors/   # cross-page feature areas
 └── store/                           # global Zustand
+    ├── useAuthStore/
+    ├── useOrganizationStore/
     ├── useThemeStore/
     ├── useUIStore/
-    └── useOnboardingStore/
+    ├── useOnboardingStore/
+    ├── useConsentStore/
+    └── useLocaleStore/
 ```
 
 ### Promotion ladder
@@ -341,7 +356,7 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 - All routes are lazy loaded via `route.tsx` files.
 - Route config lives in `src/app/routes/routeTree.tsx`.
 - Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationSlug` chain (auth → membership/context sync from the URL → status) plus `requirePermission`; see `src/app/guards/GUARDS.OVERVIEW.md`.
-- RBAC enforcement in route loaders: `requirePermission('domain.action')`.
+- RBAC enforcement in `routeTree.tsx` `beforeLoad` via `gatewayFromManifest(manifest)` (+ tenancy guards).
 - Every route sets `head: manifestHead(manifest)` (`lib/routes/page-head.ts`) — the document
   title comes from `manifest.title` as `"<title> · Core Admin"`; the root-mounted
   `RouteAnnouncer` announces it to screen readers on SPA navigations.
@@ -349,27 +364,26 @@ Env files live at **project root** for clear paths. Vite loads them automaticall
 ## New-deployment detection
 
 - **Plugin** `plugins/version-json.ts`: at build time sets `VITE_APP_BUILD_ID` and writes/serves `version.json` (dev: middleware; prod: `dist/version.json`). `builtAt` is UTC (ISO 8601).
-- **Runtime** `src/core/version/check.ts`: polls `/version.json` (+ on tab refocus); if `buildId` differs from the app’s build, it **defers** `location.reload()` until it won’t lose work — never while a field is focused, immediately when the tab is hidden, otherwise once the user is idle (~60s) — so users get the latest deployment without a mid-task reload, at most **once per advertised buildId** (sessionStorage marker) so a stale-served `index.html` can never reload-loop.
+- **Runtime** `src/core/version/check.ts`: polls `/version.json` (+ on tab refocus); if `buildId` differs from the app’s build, shows a persistent **“Update available”** toast with **Refresh now** (`app/version/show-update-available-toast.ts`) and **defers** `location.reload()` until it won’t lose work — never while a field is focused, immediately when the tab is hidden, otherwise once the user is idle (~60s) — at most **once per advertised buildId** (sessionStorage marker).
+
+## PWA manifest and icons
+
+- **Source of truth:** `src/core/config/app-manifest.ts` → `public/manifest.webmanifest` (drift test: `app-manifest.test.ts`).
+- **Icons:** `public/app-icon.svg` (Lucide Boxes on `#0a0a0a`); PNGs via `rsvg-convert`. Skill: `agent-os/skills/pwa-manifest/SKILL.md`.
+- **Local perf audit:** `pnpm build && pnpm preview` — see `docs/reference/local-production-perf.md` (never Lighthouse on dev server).
 
 ## Testing
 
-- **Global tests, helpers:** **`tests/`** at project root (see `tests/README.md`)
-  - **Helpers:** `tests/utils/` — renderWithProviders, mocks, setup (test-app / test-api style); import as `@/tests/utils/...`
-  - **Factories:** `tests/factories/` (optional) — shared test data builders when needed
-  - **Security:** `tests/security/` (optional) — E2E for auth boundaries, CSP
+**Full matrix:** [docs/reference/testing.md](docs/reference/testing.md) · [tests/README.md](tests/README.md)
+
+- **Global tests, helpers:** **`tests/`** at project root
+  - **Helpers:** `tests/utils/` — `renderWithProviders`, `e2e-hybrid`, `e2e-auth`, `axe-for-dialog`; import as `@/tests/utils/...`
+  - **Security:** `tests/security/` — Vitest security project (`*.security.test.ts`)
   - **Performance:** `tests/performance/` (optional) — Lighthouse, bundle-size
-- **Domain tests:** Colocated in `src/` — `src/pages/<name>/*.test.tsx`, `src/shared/**/*.test.tsx`, `src/core/**/*.test.ts` (no `src/domains/` or `__tests__` dirs)
-- **E2E + integration:** `tests/e2e/` (Playwright). File names mirror core-be's `<name>.<kind>.test.ts`: **`<name>.e2e.test.ts`** = full-stack UI flow (mock backend); **`<name>.integration.test.ts`** = contract against the running core-be (:3000), self-contained + auto-skips when down. `playwright.config.ts` matches `/\.(e2e|integration)\.test\.ts$/`; never `.spec.ts` nor the words "real"/"live" in test names.
-- **Load (k6):** `tests/load/` (e.g. `tests/load/k6/scenarios/` when multiple scenarios)
-- Unit/integration run with Vitest (colocated `*.test.ts(x)`, excludes `tests/e2e`); E2E/integration with Playwright; load with k6
-- **Strict test colocation (validator-enforced):** every component (incl. each island's `<Page>Page/Layout.tsx` and flat-group files) and every hook ships a colocated `*.test.ts(x)` — `pnpm validate:structure` fails without it. Exemptions: route/manifest/contracts/search/fixtures/constants, barrels, OVERVIEW docs.
+- **Colocated unit tests:** `src/**/*.test.{ts,tsx}` (+ `pages/**/__tests__/integration/` for cross-component flows)
+- **E2E:** `tests/e2e/*.e2e.test.ts` (Playwright) — requires **core-be** on `:3000` (`global-setup.ts` fails if down). Never `.spec.ts`.
+- **Hybrid E2E selectors:** `data-testid` for actions, `getByRole`/`getByLabel` for a11y guards — `agent-os/skills/playwright-e2e/SKILL.md`, `tests/utils/e2e-hybrid.ts`
+- **Gates:** `pnpm validate:structure` (colocation), `pnpm validate:testids` (page/form/shell testids), `pnpm validate:theme-axis`, `pnpm coverage:patch` (PR changed-lines ≥ 80%)
+- Unit/security: Vitest; E2E: Playwright (Chromium). Component tests require `vitest-axe`; portaled dialogs use `axeForDialog`.
 
-**Mock map** (every mock is tagged `REPLACE_WITH_API`; dev-only — production builds reject mock mode):
-
-| Location                                                            | What it mocks                                                           |
-| ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `core/http/mock.ts`                                                 | `mockResponse()` helper — wraps fixtures with realistic latency         |
-| `shared/auth/mock-auth.ts`, `mock-credentials.ts`                   | Mock session/user + the demo login credentials                          |
-| `shared/api/organization-mock-store.ts`, `organization-fixtures.ts` | In-memory org-domain state (members, invitations, roles, …) + seed data |
-| `pages/<page>/<page>.fixtures.ts`                                   | Page-local mock data, colocated with the island that owns it            |
-| `tests/utils/apiMocks.ts`, `mockApiClient.ts`                       | Unit-test API doubles (never imported by app code)                      |
+**Dev API:** In development, Vite proxies `/api` to `VITE_DEV_API_URL` (default `http://localhost:3000`). The FE always uses `apiClient` / `authFetch` against **core-be**. Unit tests stub modules with `vi.mock()` — no HTTP server.

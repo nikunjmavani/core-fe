@@ -2,80 +2,83 @@
 
 Single reference table for every dependency: whether it's used and where.
 
-| Package                            | Used?           | Where / what for                                                                                                                                                                       |
-| ---------------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Dependencies**                   |                 |                                                                                                                                                                                        |
-| `@formkit/auto-animate`            | Yes (available) | Re-exported in `lib/animations/useAutoAnimate.ts`; no component uses it yet (ready for list animations).                                                                               |
-| `@hookform/resolvers`              | Yes             | `zodResolver` in LoginForm, FormField tests; bridges react-hook-form and Zod.                                                                                                          |
-| `@sentry/react`                    | Yes             | Route wrapper (`wrapCreateBrowserRouterV7`), `reportError()` in errorHandler, Sentry.init in observability/sentry.                                                                     |
-| `@sentry/vite-plugin`              | Yes             | `vite.config.ts` — source map upload to Sentry in production builds.                                                                                                                   |
-| `@tanstack/react-query`            | Yes             | Server state: QueryClient, useQuery, useMutation; QueryProvider, queryClient; useDashboard, tests.                                                                                     |
-| `@tanstack/react-table`            | Yes             | DataTable, DataTablePagination, DataTableColumnHeader, DataTableToolbar (flexRender, Table types).                                                                                     |
-| `axios`                            | Yes             | `apiClient` (core/http), auth service (raw axios for refresh/me), retry config; tests.                                                                                                 |
-| `axios-retry`                      | Yes             | `core/http/retry.ts` — exponential backoff for 429 and idempotent 5xx/network errors.                                                                                                  |
-| `class-variance-authority`         | Yes             | `cva()` and `VariantProps` in button, badge (and other UI components that use variants).                                                                                               |
-| `clsx`                             | Yes             | `lib/utils.ts` — `cn()` (with tailwind-merge) for conditional class names.                                                                                                             |
-| `cmdk`                             | Yes             | `shared/components/command-palette.tsx` — global Command palette (Cmd+K).                                                                                                              |
-| `fuse.js`                          | No              | In package.json; no import or usage in `src/`.                                                                                                                                         |
-| `input-otp`                        | No              | Removed; MFA route can be re-added with an OTP UI when needed.                                                                                                                         |
-| `lucide-react`                     | Yes             | Icons across app: button, command palette, layouts, forms, data-table, RetryError, FullPageSpinner, etc.                                                                               |
-| `posthog-js`                       | Yes             | `core/analytics/posthog.ts` init; FeatureFlagProvider uses `posthog.isFeatureEnabled`, `onFeatureFlags`.                                                                               |
-| `radix-ui`                         | Yes             | UI primitives: AlertDialog, DropdownMenu, Dialog, Tooltip, Checkbox, Separator, Label, Button (Slot), Badge, Avatar.                                                                   |
-| `react`                            | Yes             | Core framework.                                                                                                                                                                        |
-| `react-dom`                        | Yes             | Core framework (createRoot in main.tsx).                                                                                                                                               |
-| `react-error-boundary`             | Yes             | `App.tsx` — ErrorBoundary with FallbackComponent and onReset.                                                                                                                          |
-| `react-hook-form`                  | Yes             | LoginForm, FormField; useForm, FormProvider, Controller, etc.                                                                                                                          |
-| `@tanstack/react-router`           | Yes             | Typed routes, `beforeLoad` guards, search params, lazy route modules (`route.tsx`).                                                                                                    |
-| `recharts`                         | Yes             | `pages/dashboard/components/DashboardCharts.tsx` — charts (AreaChart, BarChart, XAxis, YAxis, etc.).                                                                                   |
-| `sonner`                           | Yes             | `app/routes/routeTree.tsx` — `<Toaster />` at the root shell for toast notifications.                                                                                                  |
-| `tailwind-merge`                   | Yes             | `lib/utils.ts` — `twMerge` inside `cn()` for Tailwind class merging.                                                                                                                   |
-| `tw-animate-css`                   | Yes             | `index.css` `@import` — activates `animate-in`/`animate-out` enter/exit utilities for shadcn overlays (dialog, dropdown, popover, tooltip, select). Pure CSS; no JS animation library. |
-| `web-vitals`                       | Yes             | `core/observability/performance.ts` — onCLS, onINP, onLCP, onFCP, onTTFB reported to PostHog/Sentry.                                                                                   |
-| `zod`                              | Yes             | contracts (auth, dashboard), env schema, auth types; validation for API and forms.                                                                                                     |
-| `zustand`                          | Yes             | useAuthStore, useThemeStore (with persist), useUIStore, useOrganizationStore; create + getState.                                                                                       |
-| **DevDependencies**                |                 |                                                                                                                                                                                        |
-| `@axe-core/playwright`             | Yes             | E2E accessibility scanning (e.g. accessibility.e2e.test.ts).                                                                                                                           |
-| `@commitlint/cli`                  | Yes             | Commit message lint (with config-conventional).                                                                                                                                        |
-| `@commitlint/config-conventional`  | Yes             | Commitlint rules.                                                                                                                                                                      |
-| `@eslint/js`                       | Yes             | ESLint base config.                                                                                                                                                                    |
-| `@biomejs/biome`                   | Yes             | Second linter lane (`biome:check` / `biome:fix`) — lint-only, formatter disabled (Prettier owns formatting because of `prettier-plugin-tailwindcss`). Config: `biome.json`.            |
-| `@playwright/test`                 | Yes             | E2E tests (auth, dashboard, navigation, visual, accessibility).                                                                                                                        |
-| `@size-limit/file`                 | Yes             | `size` / `size:check` scripts — bundle size limits.                                                                                                                                    |
-| `@size-limit/preset-app`           | Yes             | Size-limit app preset.                                                                                                                                                                 |
-| `@tailwindcss/vite`                | Yes             | Vite integration for Tailwind v4.                                                                                                                                                      |
-| `@tanstack/react-query-devtools`   | Yes             | `QueryProvider` — ReactQueryDevtools in development.                                                                                                                                   |
-| `@testing-library/jest-dom`        | Yes             | Test matchers (e.g. toHaveNoViolations, DOM assertions).                                                                                                                               |
-| `@testing-library/react`           | Yes             | render, screen, etc. in unit/integration tests.                                                                                                                                        |
-| `@testing-library/user-event`      | Yes             | User interaction simulation in tests.                                                                                                                                                  |
-| `@types/node`                      | Yes             | Node types for build/tooling.                                                                                                                                                          |
-| `@types/react`                     | Yes             | React type definitions.                                                                                                                                                                |
-| `@types/react-dom`                 | Yes             | React DOM type definitions.                                                                                                                                                            |
-| `@vitejs/plugin-react`             | Yes             | Vite config — React fast refresh.                                                                                                                                                      |
-| `@vitest/coverage-v8`              | Yes             | Coverage (test:coverage, test:ci).                                                                                                                                                     |
-| `eslint`                           | Yes             | Linting.                                                                                                                                                                               |
-| `eslint-plugin-jsx-a11y`           | Yes             | A11y rules in ESLint.                                                                                                                                                                  |
-| `eslint-plugin-react-hooks`        | Yes             | React hooks rules.                                                                                                                                                                     |
-| `eslint-plugin-react-refresh`      | Yes             | Vite/React refresh rules.                                                                                                                                                              |
-| `eslint-plugin-security`           | Yes             | Security-focused rules.                                                                                                                                                                |
-| `eslint-plugin-simple-import-sort` | Yes             | Import sorting.                                                                                                                                                                        |
-| `eslint-plugin-sonarjs`            | Yes             | Code quality rules.                                                                                                                                                                    |
-| `eslint-plugin-unused-imports`     | Yes             | Unused import detection.                                                                                                                                                               |
-| `globals`                          | Yes             | ESLint env globals.                                                                                                                                                                    |
-| `husky`                            | Yes             | Git hooks (prepare script).                                                                                                                                                            |
-| `jsdom`                            | Yes             | Vitest DOM environment.                                                                                                                                                                |
-| `lint-staged`                      | Yes             | Pre-commit: biome check, eslint --fix, prettier on staged files.                                                                                                                       |
-| `markdownlint-cli2`                | Yes             | Markdown lint lane (`docs:lint*`); config `.markdownlint-cli2.jsonc` + `.markdownlint.json`.                                                                                           |
-| `prettier`                         | Yes             | Formatting (format, format:check).                                                                                                                                                     |
-| `prettier-plugin-tailwindcss`      | Yes             | Prettier Tailwind class sorting.                                                                                                                                                       |
-| `rollup-plugin-visualizer`         | Yes             | Build analyzer (build:analyze).                                                                                                                                                        |
-| `tailwindcss`                      | Yes             | Tailwind v4 (index.css, @theme).                                                                                                                                                       |
-| `typescript`                       | Yes             | type-check script, TS compilation.                                                                                                                                                     |
-| `typescript-eslint`                | Yes             | ESLint TypeScript rules.                                                                                                                                                               |
-| `vite`                             | Yes             | Dev server and production build.                                                                                                                                                       |
-| `vite-plugin-pwa`                  | Yes             | PWA support (sw.ts, workbox).                                                                                                                                                          |
-| `vitest`                           | Yes             | Unit/integration test runner.                                                                                                                                                          |
-| `vitest-axe`                       | Yes             | a11y assertions (toHaveNoViolations) in tests.                                                                                                                                         |
-| `workbox-*`                        | Yes             | PWA (precaching, routing, strategies, expiration).                                                                                                                                     |
+| Package                            | Used?           | Where / what for                                                                                                                                                                                         |
+| ---------------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dependencies**                   |                 |                                                                                                                                                                                                          |
+| `@formkit/auto-animate`            | Yes (available) | Re-exported in `lib/animations/useAutoAnimate.ts`; no component uses it yet (ready for list animations).                                                                                                 |
+| `animejs`                          | Yes             | Anime.js v4 — dashboard stat count-up (`useAnimeCountUp`); only motion on the dashboard surface.                                                                                                         |
+| `@hookform/resolvers`              | Yes             | `zodResolver` in LoginForm, FormField tests; bridges react-hook-form and Zod.                                                                                                                            |
+| `@sentry/react`                    | Yes             | Route wrapper (`wrapCreateBrowserRouterV7`), `reportError()` in errorHandler, Sentry.init in observability/sentry.                                                                                       |
+| `@sentry/vite-plugin`              | Yes             | `vite.config.ts` — source map upload to Sentry in production builds.                                                                                                                                     |
+| `@tanstack/react-query`            | Yes             | Server state: QueryClient, useQuery, useMutation; QueryProvider, queryClient; useDashboard, tests.                                                                                                       |
+| `@tanstack/react-table`            | Yes             | DataTable, DataTablePagination, DataTableColumnHeader, DataTableToolbar (flexRender, Table types).                                                                                                       |
+| `axios`                            | Yes             | `apiClient` (core/http), auth service (raw axios for refresh/me), retry config; tests.                                                                                                                   |
+| `axios-retry`                      | Yes             | `core/http/retry.ts` — exponential backoff for 429 and idempotent 5xx/network errors.                                                                                                                    |
+| `class-variance-authority`         | Yes             | `cva()` and `VariantProps` in button, badge (and other UI components that use variants).                                                                                                                 |
+| `clsx`                             | Yes             | `lib/utils.ts` — `cn()` (with tailwind-merge) for conditional class names.                                                                                                                               |
+| `cmdk`                             | Yes             | `shared/components/command-palette.tsx` — global Command palette (Cmd+K).                                                                                                                                |
+| `fuse.js`                          | No              | In package.json; no import or usage in `src/`.                                                                                                                                                           |
+| `input-otp`                        | No              | Removed; MFA route can be re-added with an OTP UI when needed.                                                                                                                                           |
+| `lucide-react`                     | Yes             | Icons across app: button, command palette, layouts, forms, data-table, RetryError, FullPageSpinner, etc.                                                                                                 |
+| `posthog-js`                       | Yes             | `core/analytics/posthog.ts` init; FeatureFlagProvider uses `posthog.isFeatureEnabled`, `onFeatureFlags`.                                                                                                 |
+| `radix-ui`                         | Yes             | UI primitives: AlertDialog, DropdownMenu, Dialog, Tooltip, Checkbox, Separator, Label, Button (Slot), Badge, Avatar.                                                                                     |
+| `react`                            | Yes             | Core framework.                                                                                                                                                                                          |
+| `react-dom`                        | Yes             | Core framework (createRoot in main.tsx).                                                                                                                                                                 |
+| `react-error-boundary`             | Yes             | `App.tsx` — ErrorBoundary with FallbackComponent and onReset.                                                                                                                                            |
+| `react-hook-form`                  | Yes             | LoginForm, FormField; useForm, FormProvider, Controller, etc.                                                                                                                                            |
+| `react-i18next`                    | Yes             | Client UI copy — `useTranslation`, `Trans`; bootstrap in `lib/i18n/i18n.ts`, locales in `src/locales/en/`.                                                                                               |
+| `i18next`                          | Yes             | Core i18n engine (pairs with react-i18next; aligned with core-be).                                                                                                                                       |
+| `@tanstack/react-router`           | Yes             | Typed routes, `beforeLoad` guards, search params, lazy route modules (`route.tsx`).                                                                                                                      |
+| `recharts`                         | Yes             | `shared/components/Dashboard/AnalyticsChart` — interactive area chart (AreaChart, XAxis, etc.). Dynamically reached via the lazy dashboard route; not manually chunked (see vite.config `manualChunks`). |
+| `sonner`                           | Yes             | `app/routes/routeTree.tsx` — `<Toaster />` at the root shell for toast notifications.                                                                                                                    |
+| `tailwind-merge`                   | Yes             | `lib/utils.ts` — `twMerge` inside `cn()` for Tailwind class merging.                                                                                                                                     |
+| `tw-animate-css`                   | Yes             | `index.css` `@import` — activates `animate-in`/`animate-out` enter/exit utilities for shadcn overlays (dialog, dropdown, popover, tooltip, select). Pure CSS; no JS animation library.                   |
+| `web-vitals`                       | Yes             | `core/observability/performance.ts` — onCLS, onINP, onLCP, onFCP, onTTFB reported to PostHog/Sentry.                                                                                                     |
+| `zod`                              | Yes             | contracts (auth, dashboard), env schema, auth types; validation for API and forms.                                                                                                                       |
+| `zustand`                          | Yes             | useAuthStore, useThemeStore (with persist), useUIStore, useOrganizationStore; create + getState.                                                                                                         |
+| **DevDependencies**                |                 |                                                                                                                                                                                                          |
+| `@axe-core/playwright`             | Yes             | E2E accessibility scanning (e.g. accessibility.e2e.test.ts).                                                                                                                                             |
+| `@commitlint/cli`                  | Yes             | Commit message lint (with config-conventional).                                                                                                                                                          |
+| `@commitlint/config-conventional`  | Yes             | Commitlint rules.                                                                                                                                                                                        |
+| `@eslint/js`                       | Yes             | ESLint base config.                                                                                                                                                                                      |
+| `@biomejs/biome`                   | Yes             | Second linter lane (`biome:check` / `biome:fix`) — lint-only, formatter disabled (Prettier owns formatting because of `prettier-plugin-tailwindcss`). Config: `biome.json`.                              |
+| `@playwright/test`                 | Yes             | E2E tests (auth, dashboard, navigation, visual, accessibility).                                                                                                                                          |
+| `@size-limit/file`                 | Yes             | `size` / `size:check` scripts — bundle size limits.                                                                                                                                                      |
+| `@size-limit/preset-app`           | Yes             | Size-limit app preset.                                                                                                                                                                                   |
+| `@tailwindcss/vite`                | Yes             | Vite integration for Tailwind v4.                                                                                                                                                                        |
+| `@tanstack/react-query-devtools`   | Yes             | `QueryProvider` — ReactQueryDevtools in development.                                                                                                                                                     |
+| `@testing-library/jest-dom`        | Yes             | Test matchers (e.g. toHaveNoViolations, DOM assertions).                                                                                                                                                 |
+| `@testing-library/react`           | Yes             | render, screen, etc. in unit/integration tests.                                                                                                                                                          |
+| `@testing-library/user-event`      | Yes             | User interaction simulation in tests.                                                                                                                                                                    |
+| `@types/node`                      | Yes             | Node types for build/tooling.                                                                                                                                                                            |
+| `@types/react`                     | Yes             | React type definitions.                                                                                                                                                                                  |
+| `@types/react-dom`                 | Yes             | React DOM type definitions.                                                                                                                                                                              |
+| `@vitejs/plugin-react`             | Yes             | Vite config — React fast refresh.                                                                                                                                                                        |
+| `@vitest/coverage-v8`              | Yes             | Coverage (test:coverage, test:ci).                                                                                                                                                                       |
+| `eslint`                           | Yes             | Linting.                                                                                                                                                                                                 |
+| `eslint-plugin-jsx-a11y`           | Yes             | A11y rules in ESLint.                                                                                                                                                                                    |
+| `eslint-plugin-react-hooks`        | Yes             | React hooks rules.                                                                                                                                                                                       |
+| `eslint-plugin-react-refresh`      | Yes             | Vite/React refresh rules.                                                                                                                                                                                |
+| `eslint-plugin-security`           | Yes             | Security-focused rules.                                                                                                                                                                                  |
+| `eslint-plugin-simple-import-sort` | Yes             | Import sorting.                                                                                                                                                                                          |
+| `eslint-plugin-sonarjs`            | Yes             | Code quality rules.                                                                                                                                                                                      |
+| `eslint-plugin-unused-imports`     | Yes             | Unused import detection.                                                                                                                                                                                 |
+| `globals`                          | Yes             | ESLint env globals.                                                                                                                                                                                      |
+| `husky`                            | Yes             | Git hooks (prepare script).                                                                                                                                                                              |
+| `jsdom`                            | Yes             | Vitest DOM environment.                                                                                                                                                                                  |
+| `lint-staged`                      | Yes             | Pre-commit: biome check, eslint --fix, prettier on staged files.                                                                                                                                         |
+| `markdownlint-cli2`                | Yes             | Markdown lint lane (`docs:lint*`); config `.markdownlint-cli2.jsonc` + `.markdownlint.json`.                                                                                                             |
+| `prettier`                         | Yes             | Formatting (format, format:check).                                                                                                                                                                       |
+| `prettier-plugin-tailwindcss`      | Yes             | Prettier Tailwind class sorting.                                                                                                                                                                         |
+| `rollup-plugin-visualizer`         | Yes             | Build analyzer (build:analyze).                                                                                                                                                                          |
+| `tailwindcss`                      | Yes             | Tailwind v4 (index.css, @theme).                                                                                                                                                                         |
+| `typescript`                       | Yes             | type-check script, TS compilation.                                                                                                                                                                       |
+| `typescript-eslint`                | Yes             | ESLint TypeScript rules.                                                                                                                                                                                 |
+| `vite`                             | Yes             | Dev server and production build.                                                                                                                                                                         |
+| `vite-plugin-pwa`                  | Yes             | PWA support (sw.ts, workbox).                                                                                                                                                                            |
+| `vitest`                           | Yes             | Unit/integration test runner.                                                                                                                                                                            |
+| `vitest-axe`                       | Yes             | a11y assertions (toHaveNoViolations) in tests.                                                                                                                                                           |
+| `workbox-*`                        | Yes             | PWA (precaching, routing, strategies, expiration).                                                                                                                                                       |
 
 ---
 
@@ -97,12 +100,12 @@ Further gates, all mirroring core-be:
 - **Markdownlint** (`pnpm docs:lint`, `docs:lint:fix`, `docs:lint:changed`) — `.markdownlint-cli2.jsonc`
   owns globs/ignores; rule set in `.markdownlint.json` (emphasis = underscore to match Prettier,
   which formats markdown in lint-staged). Runs in pre-push (changed files) and the Docs lint CI lane.
-- **Patch coverage** (`pnpm coverage:patch`) — `scripts/ci/check-patch-coverage.mjs` measures the
+- **Patch coverage** (`pnpm coverage:patch`) — `tooling/ci/check-patch-coverage.mjs` measures the
   coverage of _changed executable lines_ against `coverage/coverage-final.json`; the CI unit lane
   enforces ≥ 80% on PRs. Complements the global ratchet: the ratchet stops regressions, this stops
   under-tested new code.
-- **TSDoc budget** (`pnpm tsdoc:check`, `:report`, `:refresh-budget`) — `scripts/tsdoc/check-coverage.mjs`
-  counts public exports missing TSDoc against the locked budget in `scripts/tsdoc/budget.json`
+- **TSDoc budget** (`pnpm tsdoc:check`, `:report`, `:refresh-budget`) — `tooling/tsdoc-coverage/check-coverage.mjs`
+  counts public exports missing TSDoc against the locked budget in `tooling/tsdoc-coverage/budget.json`
   (raise-never, lower-and-refresh). Runs in `pnpm health` and the CI structure lane.
 - **CodeQL** (`.github/workflows/codeql.yml`) — weekly + per-PR taint-tracking analysis scoped by
   `.github/codeql/codeql-config.yml` to the deployed surface; complements Semgrep.
@@ -118,6 +121,9 @@ Further gates, all mirroring core-be:
   (`background`, `success`, `brand`, `overlay`, …); raw Tailwind palette classes are forbidden
   outside vendored `components/ui/`. This single gate is what keeps "a theme = a CSS file of
   token values" true. Status/brand/overlay tokens live in `src/index.css`.
+- **Test ID contracts** (`pnpm validate:testids`) — page `manifest.testId`, form roots/submit
+  (or primary CTA), and shell surfaces (`app-layout`, `auth-layout`, `settings-modal`) must carry
+  `data-testid`; not every DOM node. See `docs/reference/e2e-testids-inventory.md`.
 - **Preload graph** (`pnpm build:check`, after `pnpm build`) — deferred chunks
   (sentry/posthog/cmdk/rhf/charts) must never re-enter `dist/index.html`'s modulepreload list;
   one static import anywhere in the entry graph silently drags them onto the first-paint path.
@@ -126,7 +132,7 @@ Further gates, all mirroring core-be:
 - **Contract drift** (`pnpm contracts:drift`) — every backend endpoint this app references
   (API_ENDPOINTS + `apiClient` calls) must exist in core-be's committed route catalog
   (`../core-be/docs/routes.txt`); intentional fe-ahead endpoints live in
-  `scripts/ci/contract-drift-allowlist.json` with reasons, and stale entries fail the gate.
+  `tooling/ci/contract-drift-allowlist.json` with reasons, and stale entries fail the gate.
   Local-only (needs the sibling checkout); runs in pre-push.
 - **Knip** (`pnpm knip`, `knip.jsonc`) — dead-code gate: unused files, exports, types,
   dependencies, and binaries. Validator-mandated unit barrels are entries (a unit's barrel is its
@@ -135,7 +141,10 @@ Further gates, all mirroring core-be:
 - **Mutation testing** (`stryker.config.json`) — scheduled weekly over the pure runtime logic
   (rbac, auth, tenancy, route helpers); report artifact in the Actions run.
 - **Lighthouse budgets** (`.lighthouserc.cjs`) — scheduled weekly against the built app
-  (perf ≥ 0.9 warn, a11y = 1.0 error, best-practices ≥ 0.95 warn).
+  (perf ≥ 0.9 warn, a11y = 1.0 error, best-practices ≥ 0.95 warn). Locally:
+  `pnpm build && pnpm preview --port 5173 --strictPort` then `npx @lhci/cli autorun`
+  — see **`docs/reference/local-production-perf.md`** (never Lighthouse on `pnpm dev`).
+- **Bundle size** (`pnpm size`) — gzip limits on `dist/` via `tooling/ci/run-size-limit.mjs`.
 
 ---
 
@@ -181,18 +190,18 @@ Run `npx skills check` / `npx skills update` to update them; re-append the local
 
 ## Public static assets (frontend)
 
-All files in **`public/`** are served from the root of the built site. See **[public/README.md](../../public/README.md)** for the full inventory and maintenance notes.
+All files in **`public/`** are served from the root of the built site. See **[public/README.md](../../public/README.md)** and **`docs/reference/pwa-manifest-and-app-icon.md`** for manifest/icon rules. Skill: **`agent-os/skills/pwa-manifest/SKILL.md`**.
 
 | Asset                                    | Purpose                                                                                              |
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | **robots.txt**                           | Crawler rules (allow/disallow). Present in `public/`; update if you add a sitemap or restrict paths. |
-| **manifest.webmanifest**                 | PWA manifest (name, theme_color, icons, start_url). Update when app name or icons change.            |
+| **manifest.webmanifest**                 | PWA manifest — must match `buildWebManifest()` in `src/core/config/app-manifest.ts` (drift test).    |
+| **app-icon.svg**                         | Favicon + PWA SVG (Lucide Boxes on `#0a0a0a`). Regenerate PNGs with `rsvg-convert`.                  |
 | **\_headers**                            | Security/response headers (e.g. Permissions-Policy). Applied by Netlify or static host.              |
 | **config.js**                            | Runtime config placeholder (`window.__CONFIG__`); overwritten by host if needed.                     |
 | **theme-init.js**                        | Prevents theme FOUC; applies `.dark` from localStorage before React.                                 |
 | **offline.html**                         | PWA offline fallback.                                                                                |
-| **vite.svg**                             | Default favicon; replace with app icon if desired.                                                   |
-| **pwa-192x192.png**, **pwa-512x512.png** | Required by manifest for PWA install; add to `public/` (generate from app icon).                     |
+| **pwa-192x192.png**, **pwa-512x512.png** | Generated from `app-icon.svg`; listed in manifest and VitePWA `includeAssets`.                       |
 
 ---
 
@@ -201,7 +210,7 @@ All files in **`public/`** are served from the root of the built site. See **[pu
 The app detects when a new build has been deployed and reloads the page so users don’t run stale cached code — at a moment that won’t interrupt their work (idle / hidden tab / refocus, never mid-edit).
 
 - **Plugin:** `plugins/version-json.ts` — At build time generates a unique `buildId` and sets `import.meta.env.VITE_APP_BUILD_ID`. In dev it serves `/version.json` via middleware; in prod it writes `dist/version.json` with `buildId` and `builtAt` (UTC, ISO 8601).
-- **Runtime:** `src/core/version/check.ts` — Periodically fetches `/version.json` (with cache-busting) and on tab refocus. If the response `buildId` differs from the app’s built-in `VITE_APP_BUILD_ID`, it **defers** the `location.reload()` until it’s safe — never while an input/textarea/select is focused, immediately when the tab is hidden (the reload is invisible), otherwise once the user has been idle ~60s. A per-tab sessionStorage marker reloads at most once per advertised `buildId` (no reload-loop on a stale-served `index.html`).
+- **Runtime:** `src/core/version/check.ts` — Periodically fetches `/version.json` (with cache-busting) and on tab refocus. If the response `buildId` differs from the app’s built-in `VITE_APP_BUILD_ID`, it calls **`onUpdateAvailable`** (wired in `main.tsx` to a persistent **“Update available — Refresh now”** info toast) and **defers** `location.reload()` until it’s safe — never while an input/textarea/select is focused, immediately when the tab is hidden (the reload is invisible), otherwise once the user has been idle ~60s. A per-tab sessionStorage marker reloads at most once per advertised `buildId` (no reload-loop on a stale-served `index.html`).
 
 ---
 

@@ -58,6 +58,21 @@ flowchart LR
 
 ---
 
+## Platform auth & modules (env-only)
+
+Login UI auth surface is **env-only** — no backend config API. Set per-method booleans on core-fe and matching credentials on core-be.
+
+| Variable                                        | Purpose                                                   |
+| ----------------------------------------------- | --------------------------------------------------------- |
+| `VITE_AUTH_EMAIL`                               | Email OTP panel                                           |
+| `VITE_AUTH_OAUTH_GOOGLE` / `_GITHUB` / `_APPLE` | OAuth provider buttons                                    |
+| `VITE_AUTH_PASSKEY`                             | Passkey button                                            |
+| `VITE_DISABLED_MODULES`                         | Comma-separated product module keys to disable (not auth) |
+
+Full reference: [environment-variables runbook](../deployment/runbooks/environment-variables.md).
+
+---
+
 ## Optional: GitHub Secrets (CI/CD)
 
 For deploy via GitHub Actions, set `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID` in GitHub → Settings → Secrets and variables → Actions. Run `pnpm run setup:infra:github-secrets` to push vars from `config.setup.env`. See [cicd-and-netlify.md](../deployment/cicd-and-netlify.md).
@@ -66,5 +81,30 @@ For deploy via GitHub Actions, set `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY
 
 ## Local development
 
-- Use **`.env`** or **`.env.local`** at project root. `.env.example` lists all variables; copy it to `.env` and fill values. `.env.local` is gitignored for secrets.
-- For local backend: `VITE_DEV_API_URL` (e.g. `http://localhost:3000`) if your Vite config proxies API requests.
+- Use **`.env.local`** at project root (gitignored). **`pnpm setup:local`** copies from `.env.example` and injects localhost defaults — same pattern as core-be.
+- Vite also loads committed **`.env.development`**; `.env.local` overrides for machine-specific values.
+- For local backend: `VITE_DEV_API_URL` (default `http://localhost:3000`) — Vite proxies `/api` in development.
+- **MCP:** set `CONTEXT7_API_KEY` in `.env.local` for the Context7 MCP (`${CONTEXT7_API_KEY}` in `.mcp.json`).
+
+### Auth method toggles (build-time, env-only)
+
+Auth surface is **never** fetched from core-be at boot — set `VITE_AUTH_*` on core-fe and matching OAuth credentials on core-be. See [environment-variables runbook](../deployment/runbooks/environment-variables.md).
+
+| Variable                      | Values                                   | Purpose                                                                                                                     |
+| ----------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_AUTH_EMAIL_PASSWORD`    | `true` / `false` (default on when unset) | Legacy flag — no separate password login UI; reserved for future MFA/password flows.                                        |
+| `VITE_AUTH_EMAIL`             | `true` / `false`                         | Hide email OTP sign-in when `false`.                                                                                        |
+| `VITE_AUTH_OAUTH_GOOGLE`      | `true` / `false` (default on)            | Show/hide Google OAuth button. Requires `oauth.google` + core-be `OAUTH_GOOGLE_*` for click to succeed.                     |
+| `VITE_AUTH_OAUTH_GITHUB`      | `true` / `false` (default on)            | Show/hide GitHub OAuth button.                                                                                              |
+| `VITE_AUTH_OAUTH_APPLE`       | `true` / `false` (default off)           | Show/hide Apple OAuth button (FE may ship before core-be `OAUTH_APPLE_*`).                                                  |
+| `VITE_AUTH_OAUTH_AUTO_GOOGLE` | `true` / `false` (default off)           | When `true` (and Google OAuth on), `/login` auto-starts Google sign-in after ~800ms; user can choose **Use email instead**. |
+| `VITE_AUTH_PASSKEY`           | `true` / `false`                         | Hide passkey sign-in when `false`.                                                                                          |
+
+### Deployment mode overrides (optional)
+
+| Variable                      | Purpose                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| `VITE_PERSONAL_ORGANIZATIONS` | Tri-state override for personal workspace mode (`true` / `false` / unset) |
+| `VITE_TEAM_ORGANIZATIONS`     | Tri-state override for team org mode (`true` / `false` / unset)           |
+
+When unset, org deployment flags come from **`GET /auth/me/context`**. When set, env wins for shell gating (Storybook / white-label builds). See [organization-deployment-modes.md](../process/organization-deployment-modes.md).

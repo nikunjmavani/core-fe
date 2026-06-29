@@ -446,7 +446,7 @@ The app works without a backend:
 - Silent auth refresh fails gracefully (logged as "No active session")
 - Redirects to `/login` automatically
 - All UI, animations, and theme toggling work
-- API-dependent features show fallback/mock data
+- API-dependent features error or show empty states until core-be is running on `:3000`
 
 ---
 

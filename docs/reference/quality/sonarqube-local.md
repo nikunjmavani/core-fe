@@ -40,11 +40,11 @@ so it reaches whichever server owns it.
 ## How the pre-push gate works
 
 The `.husky/pre-push` hook runs the gate **only when the pushed commits include deployed-surface
-code** — `src/**/*.{ts,tsx}` excluding tests, fixtures, and `mock-*` modules. Pushes that touch
+code** — `src/**/*.{ts,tsx}` excluding tests, fixtures, and `*.placeholder-data.ts` modules. Pushes that touch
 only tests, scripts, docs, or config skip the scan (Sonar excludes those anyway — see
 [Scope](#what-sonarqube-analyzes)).
 
-The gate ([`scripts/sonar/sonar-gate.mjs`](../../../scripts/sonar/sonar-gate.mjs), a plain-Node
+The gate ([`tooling/sonar/sonar-gate.mjs`](../../../tooling/sonar/sonar-gate.mjs), a plain-Node
 port of core-be's `tooling/sonar/sonar-gate.ts`):
 
 1. **Auto-starts** the SonarQube container if it is not already up, and waits for it to be ready.
@@ -68,10 +68,8 @@ Analysis is scoped to the **deployed-application surface** (`src/` runtime). Exc
 analysis (see [`sonar-project.properties`](../../../sonar-project.properties)):
 
 - **Tests** — `*.test.ts(x)`, `*.spec.ts(x)`, `__tests__/`, plus the root `tests/` tree
-  (Playwright e2e, k6 load, vitest utils — dev tooling with trusted inputs).
-- **Mocks & fixtures** — `src/**/mock-*.ts`, `src/**/*.fixtures.ts` (REPLACE_WITH_API dev-only
-  code carrying demo credentials and `Math.random()` seed data by design; production builds
-  reject mock mode).
+  (Playwright e2e, vitest utils — dev tooling with trusted inputs).
+- **Placeholder UI data** — `src/**/*.placeholder-data.ts`, `src/**/*.fixtures.ts` (REPLACE_WITH_API static stubs).
 - **Generated and build artifacts** — `dist/`, `coverage/`, `*.d.ts`.
 
 Coverage comes from vitest's lcov output (`pnpm test:ci` → `coverage/lcov.info`).

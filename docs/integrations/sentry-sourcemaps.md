@@ -1,5 +1,8 @@
 # Sentry Source Map Upload (Vite Plugin)
 
+**Client SDK (errors, replay, performance):** see **[sentry-frontend.md](./sentry-frontend.md)** for
+what is wired in the React app and how to verify events locally.
+
 The app uses **@sentry/vite-plugin** to upload source maps on **production builds** so Sentry can show original source locations in stack traces. The plugin is already configured in `vite.config.ts`; you only need to provide credentials.
 
 ```mermaid

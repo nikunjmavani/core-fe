@@ -2,42 +2,29 @@
 
 Living catalog of stable Playwright selectors. **When you add or rename a testid, update this file** (see `agent-os/skills/e2e-testids/SKILL.md`).
 
+**Gate:** `pnpm validate:testids` checks page manifests, forms, and shell surfaces against this contract (not every DOM node).
+
 Convention: `page.getByTestId('…')` in `tests/e2e/`.
 
 ---
 
-## Auth (`AuthLayout` + forms)
+## Auth (`AuthLayout` + unified form)
 
-| Test ID                                                    | Element                           | File                                        |
-| ---------------------------------------------------------- | --------------------------------- | ------------------------------------------- |
-| `auth-layout`                                              | Auth shell                        | `shared/layouts/AuthLayout/AuthLayout.tsx`  |
-| `auth-form-container`                                      | Form column                       | `shared/layouts/AuthLayout/AuthLayout.tsx`  |
-| `auth-switch-link`                                         | Create account / Sign in (header) | `shared/layouts/AuthLayout/AuthLayout.tsx`  |
-| `auth-mobile-logo`                                         | Mobile logo link                  | `shared/layouts/AuthLayout/AuthLayout.tsx`  |
-| `login-form`                                               | Login form                        | `pages/login/forms/LoginForm/LoginForm.tsx` |
-| `login-email`                                              | Email input                       | LoginForm                                   |
-| `login-password`                                           | Password input                    | LoginForm                                   |
-| `login-password-toggle`                                    | Show/hide password                | LoginForm                                   |
-| `login-submit`                                             | Sign in button                    | LoginForm                                   |
-| `login-error`                                              | API error                         | LoginForm                                   |
-| _(mock dev login)_                                         | `demo@acme.test` / `Password1!`   | `core/auth/mock-credentials.ts`             |
-| `login-email-error`                                        | Email validation                  | LoginForm                                   |
-| `login-password-error`                                     | Password validation               | LoginForm                                   |
-| `login-link-forgot-password`                               | Forgot password                   | LoginForm                                   |
-| `login-link-sign-up`                                       | Sign up                           | LoginForm                                   |
-| `login-google`                                             | Google sign-in                    | `PasswordlessOptions.tsx`                   |
-| `login-passkey`                                            | Passkey                           | PasswordlessOptions                         |
-| `login-magic-link`                                         | Magic link                        | PasswordlessOptions                         |
-| `register-form`                                            | Register form                     | `RegisterForm.tsx`                          |
-| `register-email` / `register-password` / `register-submit` | Fields                            | RegisterForm                                |
-| `register-password-toggle`                                 | Show/hide                         | RegisterForm                                |
-| `form-error`                                               | Register API error                | RegisterForm                                |
-| `register-link-sign-in`                                    | Back to login                     | RegisterForm                                |
-| `forgot-password-form`                                     | Forgot password                   | `ForgotPasswordForm.tsx`                    |
-| `forgot-password-email` / `forgot-password-submit`         | Fields                            | ForgotPasswordForm                          |
-| `reset-password-form`                                      | Reset password                    | `ResetPasswordForm.tsx`                     |
-| `mfa-form` / `mfa-code` / `mfa-submit`                     | MFA                               | `MfaForm.tsx`                               |
-| `verify-email-form`                                        | Verify email                      | `VerifyEmailForm.tsx`                       |
+| Test ID                                                                      | Element                          | File                                              |
+| ---------------------------------------------------------------------------- | -------------------------------- | ------------------------------------------------- |
+| `auth-layout`                                                                | Auth shell                       | `shared/layouts/AuthLayout/AuthLayout.tsx`        |
+| `auth-form-container`                                                        | Form column                      | `shared/layouts/AuthLayout/AuthLayout.shared.tsx` |
+| `auth-mobile-logo`                                                           | Mobile logo link                 | `shared/layouts/AuthLayout/AuthLayout.shared.tsx` |
+| `login-page`                                                                 | Unified auth page root           | `pages/login/LoginPage.tsx`                       |
+| `auth-form`                                                                  | Unified auth root                | `shared/forms/AuthForm/AuthForm.tsx`              |
+| `auth-continue-google` / `auth-continue-github`                              | OAuth                            | AuthForm                                          |
+| `auth-continue-passkey`                                                      | Passkey                          | AuthForm                                          |
+| `auth-email-panel`                                                           | Email OTP panel                  | `AuthEmailPanel.tsx`                              |
+| `auth-email` / `auth-email-submit` / `auth-email-code` / `auth-email-verify` | Email OTP flow                   | AuthEmailPanel                                    |
+| `auth-email-resend` / `auth-email-resend-countdown` / `auth-email-change`    | Resend link, timer, change email | AuthEmailPanel                                    |
+| `mfa-form` / `mfa-code` / `mfa-submit`                                       | MFA                              | `MfaForm.tsx`                                     |
+
+**Hybrid helpers:** `tests/utils/e2e-hybrid.ts` — `expectAuthScreenReady`, `expectLoginFormReady`, `fillTestId`, `clickTestId`, label constants.
 
 ---
 
@@ -106,16 +93,26 @@ See grep in `src/` or sections above for: `onboarding-*`, `accept-invite-*`, `or
 
 ## E2E specs (existing)
 
-| Spec                                  | Test IDs used                                                                                      |
-| ------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `tests/e2e/auth.e2e.test.ts`          | `login-form`, `login-email`, `login-password`, `login-submit`, `login-error`, `dashboard-page`     |
-| `tests/e2e/dashboard.e2e.test.ts`     | `dashboard-page`, `dashboard-greeting`, `header`, `search-trigger`, `user-menu-trigger`, `sidebar` |
-| `tests/e2e/settings.e2e.test.ts`      | `settings-modal`, `settings-section-security`, `settings-nav-organization-general`, `user-menu-*`  |
-| `tests/e2e/navigation.e2e.test.ts`    | URLs + login redirect                                                                              |
-| `tests/e2e/accessibility.e2e.test.ts` | login + dashboard pages                                                                            |
-| `tests/e2e/visual.e2e.test.ts`        | Screenshots                                                                                        |
+| Spec                                       | Test IDs used                                                                                 |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `tests/e2e/auth.e2e.test.ts`               | Unified auth + `dashboard-page`                                                               |
+| `tests/e2e/organization.e2e.test.ts`       | `organization-page`, `organization-picker-option-acme`                                        |
+| `tests/e2e/dashboard.e2e.test.ts`          | `dashboard-page`, `dashboard-greeting`, header hybrid (`search-trigger`, `user-menu-trigger`) |
+| `tests/e2e/settings.e2e.test.ts`           | `settings-modal` + `role=dialog`, nav sections, `user-menu-*`                                 |
+| `tests/e2e/edge-cases.e2e.test.ts`         | Hash fallbacks, legacy billing remap, Stripe return cleanup, auth validation edges            |
+| `tests/e2e/navigation.e2e.test.ts`         | Hybrid login guard + `not-found-page`                                                         |
+| `tests/e2e/notifications.e2e.test.ts`      | `notification-bell` hybrid + list/mark-all                                                    |
+| `tests/e2e/network-resilience.e2e.test.ts` | Hybrid login fill + `offline-indicator`                                                       |
+| `tests/e2e/accessibility.e2e.test.ts`      | login + dashboard pages (axe)                                                                 |
+| `tests/e2e/visual.e2e.test.ts`             | Screenshots                                                                                   |
+| `tests/e2e/responsive.e2e.test.ts`         | Mobile overflow + settings                                                                    |
+| `tests/e2e/org-switching.e2e.test.ts`      | Dual-URL org switcher                                                                         |
+| `tests/e2e/routes-integration.e2e.test.ts` | Full live route matrix — public shells, guards, authenticated journey, logout                 |
+| `tests/e2e/deployment-modes.e2e.test.ts`   | Deployment mode matrix                                                                        |
+| `tests/e2e/accept-invite.e2e.test.ts`      | `accept-invite-*` (expired token → error + login)                                             |
+| `tests/e2e/onboarding.e2e.test.ts`         | `onboarding-page`, `onboarding-step-title`, `onboarding-next`                                 |
 
-**Planned E2E (testids ready):** onboarding flow, org tabs, settings tabs, team URL `?team=`, passwordless buttons, accept-invite states.
+**Planned E2E (testids ready):** org tabs, settings tabs, team URL `?team=`, passwordless buttons, full onboarding wizard steps.
 
 ## Organization routing (added 2026-06-11)
 
@@ -128,4 +125,3 @@ See grep in `src/` or sections above for: `onboarding-*`, `accept-invite-*`, `or
 | `suspended-switch-organization`     | Switch-organization button                                    | `pages/organization/$organizationSlug/suspended/SuspendedPage.tsx` |
 | `settings-modal`                    | Global settings modal (hash-driven)                           | `shared/components/SettingsModal/SettingsModal.tsx`                |
 | `settings-nav-<scope>-<section>`    | Settings nav items (e.g. `settings-nav-organization-members`) | `shared/components/SettingsModal/SettingsNav.tsx`                  |
-| `settings-select-organization`      | "Select organization first" fallback                          | `shared/components/SettingsModal/SettingsModal.tsx`                |

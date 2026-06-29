@@ -61,7 +61,6 @@ The app runs at **http://localhost:5173**.
 | **Unit tests (watch)**                  | `pnpm test:watch`                     | Vitest watch mode                                                                                                                                                                  |
 | **Unit tests + coverage**               | `pnpm test:coverage`                  | Vitest with coverage report                                                                                                                                                        |
 | **E2E tests**                           | `pnpm test:e2e`                       | Playwright E2E tests                                                                                                                                                               |
-| **Load tests**                          | `pnpm test:load`                      | k6 smoke/load (see `tests/load/`)                                                                                                                                                  |
 | **Full validation**                     | `pnpm validate`                       | Lint + type-check + unit tests                                                                                                                                                     |
 | **Full health check**                   | `pnpm health`                         | Format, lint, types, tests, build, size, env, public, route-island structure. Use after major changes.                                                                             |
 | **Structure validation**                | `pnpm validate:structure`             | Route-island shape + <PAGE>.OVERVIEW.md references resolve (agent-accuracy guard).                                                                                                 |
@@ -72,7 +71,7 @@ The app runs at **http://localhost:5173**.
 | **Bundle analysis**                     | `pnpm build:analyze`                  | Build with `ANALYZE=true` and open stats                                                                                                                                           |
 | **Setup Netlify (link + env + deploy)** | `pnpm run setup:infra:netlify`        | One-shot: link site, set production env, deploy. See [netlify-cli-setup.md](docs/deployment/netlify-cli-setup.md).                                                                 |
 | **Push GitHub secrets from config**     | `pnpm run setup:infra:github-secrets` | Requires `gh auth login`. Reads `config.setup.env` and sets `VITE_API_BASE_URL`, `NODE_VERSION` in GitHub Secrets. See [cicd-and-netlify.md](docs/deployment/cicd-and-netlify.md). |
-| **Validate .env.example (commit / CI)** | `pnpm run validate:env-example`       | Ensures every name in `scripts/required-env.txt` is documented in `.env.example`. Runs in pre-commit and CI.                                                                       |
+| **Validate .env.example (commit / CI)** | `pnpm run validate:env-example`       | Ensures `.env.example` documents every key in `src/core/config/env-schema.ts` (`pnpm tool:sync-env-example`). Runs in pre-commit and CI.                                           |
 | **Deploy to Netlify (draft)**           | `pnpm run deploy:netlify`             | Build + deploy preview                                                                                                                                                             |
 | **Deploy to Netlify (production)**      | `pnpm run deploy:netlify:prod`        | Build + deploy to production                                                                                                                                                       |
 
@@ -95,7 +94,7 @@ core-fe/
 │   ├── shared/              # Reusable components, layouts, forms, hooks
 │   ├── lib/                 # Pure utilities
 │   ├── stores/              # Zustand client stores
-│   ├── tests/               # Unit, integration, E2E
+│   ├── tests/               # E2E, security, unit helpers (unit tests colocated in src/)
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css
@@ -159,7 +158,7 @@ flowchart TB
     B[App.tsx + Providers]
     C[TanStack Router]
     D[Root shell - routeTree.tsx]
-    E[Public: login, register, unauthorized]
+    E[Auth shell: login, mfa · Public: callback, onboarding, accept-invite]
     F[Auth guards - beforeLoad]
     G[AppLayout]
     H[Pages: dashboard, onboarding, accept-invite, settings]
@@ -251,7 +250,7 @@ Sentry first → tenant (for `X-Tenant-ID`) → auth refresh → then render.
 | **Observability**            | @sentry/react, posthog-js, web-vitals                                              | Errors, replay, analytics, Core Web Vitals                                                                                                                                                                           |
 | **PWA**                      | vite-plugin-pwa, workbox-\*                                                        | Service worker, offline                                                                                                                                                                                              |
 | **New-deployment detection** | `plugins/version-json.ts`, `src/core/version/check.ts`                             | Polls `/version.json`; reloads when a new build is deployed so users don’t run stale cache                                                                                                                           |
-| **Testing**                  | vitest, @testing-library/react, @playwright/test, vitest-axe, @axe-core/playwright | Unit, integration, E2E, a11y                                                                                                                                                                                         |
+| **Testing**                  | vitest, @testing-library/react, @playwright/test, vitest-axe, @axe-core/playwright | Unit (colocated), security, E2E, a11y                                                                                                                                                                                |
 | **Quality**                  | eslint, prettier, husky, lint-staged                                               | Lint, format, pre-commit                                                                                                                                                                                             |
 | **Security**                 | gitleaks, semgrep                                                                  | Secret detection, SAST (CI/local)                                                                                                                                                                                    |
 
@@ -432,16 +431,16 @@ For a full scaffold (including tests and route registration), ask for the **page
 
 ## Testing
 
-**Entry point:** See **[tests/README.md](tests/README.md)** for layout and commands. All test code lives under **`tests/`** at project root.
+**Entry points:** [tests/README.md](tests/README.md) · [docs/reference/testing.md](docs/reference/testing.md) (full matrix)
 
-| Type        | Tool         | Location                           | Command          |
-| ----------- | ------------ | ---------------------------------- | ---------------- |
-| Unit        | Vitest       | Colocated `*.test.ts(x)` in `src/` | `pnpm test`      |
-| Integration | Vitest + RTL | Colocated in `src/`                | `pnpm test`      |
-| E2E         | Playwright   | `tests/e2e/`                       | `pnpm test:e2e`  |
-| Load        | k6           | `tests/load/`                      | `pnpm test:load` |
+| Type             | Tool       | Location                            | Command              |
+| ---------------- | ---------- | ----------------------------------- | -------------------- |
+| Unit / component | Vitest     | Colocated `src/**/*.test.{ts,tsx}`  | `pnpm test:unit`     |
+| Security         | Vitest     | `tests/security/*.security.test.ts` | `pnpm test:security` |
+| E2E              | Playwright | `tests/e2e/*.e2e.test.ts`           | `pnpm test:e2e`      |
+| Visual           | Playwright | `visual.e2e.test.ts`                | `pnpm test:visual`   |
 
-Utilities (e.g. `renderWithProviders`) live in **`tests/utils/`**; import with `@/tests/utils/...`. Use **test-generation** skill to add or extend tests.
+E2E uses **hybrid selectors** (`data-testid` actions + role/label guards) — `agent-os/skills/playwright-e2e/SKILL.md`. Gates: `pnpm validate:testids`, `pnpm validate:structure`. Utilities in `tests/utils/` (`e2e-hybrid`, `axe-for-dialog`, `renderWithProviders`).
 
 ---
 

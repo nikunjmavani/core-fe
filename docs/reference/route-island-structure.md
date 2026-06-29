@@ -15,7 +15,7 @@ src/pages/<page>/                          ← folder = URL segment
 │
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
-├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.route.tsx                       lazy boundary — `Component` only; RBAC in routeTree `beforeLoad`
 ├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
@@ -23,7 +23,7 @@ src/pages/<page>/                          ← folder = URL segment
 ├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
 ├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
 │                                          even from its children — sharing goes via shared/)
-├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.fixtures.ts                     placeholder data (REPLACE_WITH_API, optional)
 ├── <page>.search.ts                       URL search-param schema (validateSearch)
 ├── <page>.constants.ts                    page-scoped constants
 ├── <page>.resource.ts                     resource manifest (resource pages only)
@@ -64,14 +64,14 @@ src/pages/<page>/                          ← folder = URL segment
 
 ## `<page>.manifest.ts` (layout + leaf manifest)
 
-| Field        | Role                                                              |
-| ------------ | ----------------------------------------------------------------- |
-| `segment`    | URL segment; equals the island's folder name                      |
-| `path`       | Full URL                                                          |
-| `testId`     | Root `data-testid` for the page container                         |
-| `permission` | RBAC for the route's loader; `null` if just auth-gated            |
-| `kind`       | `'layout'` (renders `<Outlet />` + has child folders) or `'leaf'` |
-| `children`   | Child URL segments — disk: `<segment>/` directly                  |
+| Field        | Role                                                                   |
+| ------------ | ---------------------------------------------------------------------- |
+| `segment`    | URL segment; equals the island's folder name                           |
+| `path`       | Full URL                                                               |
+| `testId`     | Root `data-testid` for the page container                              |
+| `permission` | RBAC for `gatewayFromManifest` in routeTree; `null` if auth-gated only |
+| `kind`       | `'layout'` (renders `<Outlet />` + has child folders) or `'leaf'`      |
+| `children`   | Child URL segments — disk: `<segment>/` directly                       |
 
 ```ts
 import type { PageManifest } from '@/lib/routes/page-manifest.ts';

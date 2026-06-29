@@ -9,7 +9,7 @@ src/pages/<page>/                          ← folder = URL segment
 │
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
-├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.route.tsx                       lazy boundary — `Component` only; RBAC in routeTree
 ├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
@@ -17,7 +17,7 @@ src/pages/<page>/                          ← folder = URL segment
 ├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
 ├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
 │                                          even from its children — sharing goes via shared/)
-├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.fixtures.ts                     optional placeholder data (REPLACE_WITH_API)
 ├── <page>.search.ts                       URL search-param schema (validateSearch)
 ├── <page>.constants.ts                    page-scoped constants
 ├── <page>.resource.ts                     resource manifest (resource pages only)
@@ -59,20 +59,16 @@ export const manifest = {
 ## `route.tsx`
 
 ```tsx
-import { requirePermission } from '@/core/rbac/guards.ts';
+import { ExamplePage } from './ExamplePage.tsx';
 
-import { ExamplePage } from './components/ExamplePage.tsx';
-import { manifest } from './page.ts';
-
+/** Lazy boundary — access control is registered in routeTree `beforeLoad`. */
 export function Component() {
   return <ExamplePage />;
 }
-
-export function loader() {
-  if (manifest.permission) requirePermission(manifest.permission);
-  return null;
-}
 ```
+
+Register `gatewayFromManifest(manifest)` (and org guards when applicable) on the
+route in `src/app/routes/routeTree.tsx` — see `agent-os/skills/routing-tenancy/SKILL.md`.
 
 ## `components/ExamplePage.tsx`
 

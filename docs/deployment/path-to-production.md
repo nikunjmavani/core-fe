@@ -11,8 +11,8 @@ flowchart LR
 ```
 
 0. **Check go / no-go** — [production-readiness.md](production-readiness.md) is the
-   categorized blocker list and current verdict. As of this writing the app is
-   **mock-mode only** (no backend wired) — start there.
+   categorized blocker list and current verdict. The FE is **HTTP-only** (proxies to
+   core-be on `:3000` in dev); launch requires a **deployed API** and staging verification.
 1. **Run the runbook** — Follow [runbook-dev-to-production.md](runbook-dev-to-production.md): local dev → validate → build → deploy.
 2. **Complete the pre-launch checklist** — See [deployment-and-pre-launch.md](deployment-and-pre-launch.md#pre-launch-checklist): API URL, auth, CORS, optional Sentry/PostHog, HTTPS.
 

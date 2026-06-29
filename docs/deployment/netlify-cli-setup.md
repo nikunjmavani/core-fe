@@ -57,7 +57,7 @@ After this, the repo is linked to the Netlify site. You can run the setup script
 pnpm run setup:infra:netlify
 ```
 
-Or from repo root: `./scripts/setup/netlify.sh`
+Or from repo root: `./tooling/setup/netlify.sh`
 
 The script will:
 
@@ -103,7 +103,7 @@ After this, **you don't need to run anything**: push to `main` → Netlify build
 
 **GitHub secrets:** For CI/CD deploy, add `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID` in GitHub → Settings → Secrets and variables → Actions. Run **`pnpm run setup:infra:github-secrets`** to push `VITE_API_BASE_URL` and `NODE_VERSION` from `config.setup.env` via `gh secret set`. See [cicd-and-netlify.md](cicd-and-netlify.md).
 
-**New required env var:** Required names are in **`scripts/required-env.txt`**. When you add a new required var: (1) add its name there, (2) add it to **`.env.example`** (so commit passes), (3) set its value in GitHub Secrets.
+**New env var:** Follow **`agent-os/skills/env-schema-add/SKILL.md`**. Add the key to `src/core/config/env-schema.ts` and **`.env.example`**, then run `pnpm tool:sync-env-example`. Set values in GitHub Secrets/Variables via `pnpm github:sync`.
 
 **Tokens (optional):**
 
@@ -120,6 +120,6 @@ On a new machine or in CI:
 
 1. Clone repo, `pnpm install`.
 2. Set env: `NETLIFY_AUTH_TOKEN`, and optionally `NETLIFY_SITE_ID=e158779a-5efb-4f3b-9b0f-8399d3335066`.
-3. Run `./scripts/setup/netlify.sh` or `pnpm run setup:infra:netlify` (it will link using `NETLIFY_SITE_ID` if `.netlify` is missing, then set env and deploy).
+3. Run `./tooling/setup/netlify.sh` or `pnpm run setup:infra:netlify` (it will link using `NETLIFY_SITE_ID` if `.netlify` is missing, then set env and deploy).
 
 To only deploy (env already set): `pnpm run deploy:netlify:prod`.

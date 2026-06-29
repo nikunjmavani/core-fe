@@ -73,3 +73,4 @@ No need to ask "add tests?" or "register route?" — the skills do that by defau
 
 - **Template and field guide:** [requirement-format.md](requirement-format.md)
 - **Filled example:** [requirements/sample-requirement.md](requirements/sample-requirement.md)
+- **Unified auth (login + signup, email/phone OTP):** [requirements/unified-auth-otp-requirement.md](requirements/unified-auth-otp-requirement.md) · [reference/unified-auth-flows.md](../reference/unified-auth-flows.md)

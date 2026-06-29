@@ -105,12 +105,16 @@ off — routes still 404 via the gateway if linked directly.
 
 ## HTTP errors
 
-| Concern             | Location                                                    |
-| ------------------- | ----------------------------------------------------------- |
-| User-facing message | `shared/errors/errorHandler.ts` → `mapApiError`             |
-| 422 → form fields   | `lib/forms/map-validation-errors.ts` → RHF `setError`       |
-| 429 rate limit      | `shared/errors/rate-limit.ts` + `RateLimitNotice` component |
-| Global toast        | `notifyError()` via query/mutation `meta.notifyOnError`     |
+| Concern             | Location                                                              |
+| ------------------- | --------------------------------------------------------------------- |
+| User-facing message | `shared/errors/errorHandler.ts` → `mapApiError`                       |
+| 422 → form fields   | `lib/forms/map-validation-errors.ts` → RHF `setError`                 |
+| 429 rate limit      | `shared/errors/rate-limit.ts` + `RateLimitNotice` component           |
+| Global toast        | `notifyError()` / `notify.ts` via query/mutation `meta.notifyOnError` |
+
+**Custom toasts (`notify.ts`):** never pass `id: undefined` to `toast.custom()` — Sonner
+[#679](https://github.com/emilkowalski/sonner/issues/679) overwrites the generated id and
+breaks dismiss. Only spread `{ id }` when defined.
 
 **422 mapping:** pass mutation errors through `mapValidationErrors(error, setError)`
 before falling back to `notifyError`.
@@ -134,7 +138,48 @@ Do not silently drop failed writes — show error + retry affordance.
 
 ---
 
-## QueryBoundary policy
+## New-deployment reload
+
+Production only (`startVersionCheck()` in `main.tsx`):
+
+- Polls `/version.json` every 60s + on tab refocus (`src/core/version/check.ts`).
+- First poll ~**2s** after bootstrap (`VERSION_CHECK_INITIAL_DELAY_MS`).
+- When `buildId` differs from `VITE_APP_BUILD_ID`, shows a **persistent info toast**
+  (“Update available” + **Refresh now**) via `app/version/show-update-available-toast.ts`.
+- **Dismiss (×)** snoozes re-notification for **15 minutes** per buildId
+  (`version-update-snooze.ts`); idle / hidden-tab reload still applies as backstop.
+- Reload is **deferred** until safe: not mid-edit; **immediately when the tab is
+  hidden**; otherwise after ~60s idle.
+- User can tap **Refresh now** anytime — same reload path as the automatic one.
+- At most one reload per advertised `buildId` (sessionStorage loop guard).
+
+See **`docs/reference/cross-browser-support.md`** and **`docs/reference/tools-and-usage.md`**.
+
+---
+
+## Observability (Sentry)
+
+Production error monitoring is wired whenever **`VITE_SENTRY_DSN` is set**
+(`.env.development` for local QA, Netlify/GitHub for deploys). **Not** consent-gated
+(unlike PostHog). Sentry env: **`development`** in `pnpm dev`, **`production`** on deploy.
+
+| Layer                      | Location                                       | Sentry product                 |
+| -------------------------- | ---------------------------------------------- | ------------------------------ |
+| Init (idle, post-splash)   | `app/observability/sentry.ts`                  | SDK bootstrap                  |
+| React root boundary        | `App.tsx` → `reportReactError`                 | Issues + component stack       |
+| Route boundary             | `app/routes/ErrorBoundary.tsx` → `reportError` | Issues                         |
+| Query/mutation failures    | `core/http/queryClient.ts`                     | Issues + query/mutation extras |
+| Router + fetch tracing     | TanStack + `httpClientIntegration`             | Performance                    |
+| Session replay + profiling | prod integrations only                         | Replays, Profiles              |
+| Web Vitals (poor only)     | `app/observability/performance.ts`             | Issues (warning)               |
+| Source maps                | `vite.config.ts` + CI secrets                  | Releases                       |
+
+Full data catalog, env vars, local verification, and Sentry project checklist:
+**[`docs/integrations/sentry-frontend.md`](../integrations/sentry-frontend.md)**.
+PostHog + web-vitals analytics remain consent-gated; Sentry is not. Full PostHog
+event catalog: **[`docs/integrations/posthog-frontend.md`](../integrations/posthog-frontend.md)**.
+
+---
 
 Use `shared/components/QueryBoundary` for **server-state panels** (settings
 sections, dashboard widgets) that depend on TanStack Query:
@@ -169,6 +214,8 @@ Full resource pages register in `<resource>.resource.ts` and call
 
 ## Related
 
+- [`pwa-manifest-and-app-icon.md`](./pwa-manifest-and-app-icon.md) — install surface + icon sync
+- [`local-production-perf.md`](./local-production-perf.md) — Lighthouse / bundle on production build
 - [`route-island-structure.md`](./route-island-structure.md) — manifest `module` field
 - [`internationalization.md`](./internationalization.md) — i18n CI (`pnpm validate:i18n`)
 - [`../deployment/runbooks/environment-variables.md`](../deployment/runbooks/environment-variables.md) — env schema, auth switches, deploy overrides

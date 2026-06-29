@@ -16,9 +16,9 @@ Verdict summary for major libraries used in this repo. Full stack list: [tools-a
 
 ## Error tracking
 
-| Current                                   | Alternatives                            | Verdict                                                                                                               |
-| ----------------------------------------- | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **@sentry/react** (idle + dynamic import) | Rollbar, Bugsnag, OpenTelemetry browser | **KEEP** — defer init in `main.tsx`; replay/profiling only in production; separate `sentry` chunk via `manualChunks`. |
+| Current                                   | Alternatives                            | Verdict                                                                                                                                                    |
+| ----------------------------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **@sentry/react** (idle + dynamic import) | Rollbar, Bugsnag, OpenTelemetry browser | **KEEP** — defer init in `main.tsx`; active when `VITE_SENTRY_DSN` is set (dev + prod); replay/profiling on all DSN environments; separate `sentry` chunk. |
 
 ## Analytics
 
@@ -43,15 +43,15 @@ Verdict summary for major libraries used in this repo. Full stack list: [tools-a
 
 ## Skipped (not needed today)
 
-| Library                 | Why skip                                                       |
-| ----------------------- | -------------------------------------------------------------- |
-| MSW                     | Tagged `REPLACE_WITH_API` mock layer + backend MCP for shapes. |
-| nuqs                    | Router search params cover URL-synced tables.                  |
-| axios / ky              | Intentional `fetch` client + 401 refresh queue.                |
-| react-i18n              | English-in-code until product requires UI localization.        |
-| Storybook               | Heavy; optional for design system later.                       |
-| @tanstack/react-virtual | Add when tables exceed ~1k visible rows.                       |
+| Library                 | Why skip                                                        |
+| ----------------------- | --------------------------------------------------------------- |
+| MSW                     | Not used — **core-be** for dev/E2E; unit tests use `vi.mock()`. |
+| nuqs                    | Router search params cover URL-synced tables.                   |
+| axios / ky              | Intentional `fetch` client + 401 refresh queue.                 |
+| react-i18n              | English-in-code until product requires UI localization.         |
+| Storybook               | Heavy; optional for design system later.                        |
+| @tanstack/react-virtual | Add when tables exceed ~1k visible rows.                        |
 
-## Mock API strategy
+## API in dev and tests
 
-Static fixtures in `api.ts` with `// REPLACE_WITH_API: <METHOD> <path>` — swap to `apiClient` without UI changes. Contracts mirror **core-be** `/api/v1` responses.
+The FE always calls **core-be** over HTTP. Local dev: Vite proxies `/api` → `VITE_DEV_API_URL` (default `:3000`). E2E and manual QA require core-be (`/readyz`). Unit tests stub modules with `vi.mock()` — no HTTP server, no MSW.

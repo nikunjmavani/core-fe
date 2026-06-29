@@ -36,7 +36,7 @@ Hotfixes merge **`hotfix/* → main`** first; post-merge CI opens a back-merge P
 | `dev`  | `development`      | Netlify (dev site secrets in `development` env) |
 | `main` | `production`       | Netlify (prod site secrets in `production` env) |
 
-Canonical manifest: [`scripts/setup/setup.config.json`](../../scripts/setup/setup.config.json).
+Canonical manifest: [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
 
 ---
 
