@@ -90,3 +90,80 @@ All four findings from this pass are fixed, each with a regression test:
   `rel="noopener noreferrer"`. Test: `ConsentBanner.test.tsx`.
 
 ---
+
+## Iteration 2 — RBAC & tenancy authorization (2026-06-29)
+
+### 2.1 `requirePermission` reads store permissions without asserting the org matches the route
+
+- **Area:** RBAC / tenancy isolation (latent coupling)
+- **Severity:** Medium
+- **Current:** `src/core/rbac/guards.ts:48` — `requirePermission` does
+  `const { permissions } = useOrganizationStore.getState()` and checks
+  `hasPermission({ role, permissions }, …)`. It does **not** assert that
+  `store.organizationId` matches the org in the route. Correctness depends
+  entirely on an earlier guard (`requireOrganizationContext` →
+  `ensurePermissionsFor`) having synced the right org's permissions first.
+- **Suggestion:** Pass the expected org id into the permission gate (or read it
+  from gate context) and fail closed when `store.organizationId` differs —
+  mirroring the FE-52 slug check already in `requireActiveOrganization`.
+- **+** Removes a silent cross-tenant authorization risk if guards are ever
+  reordered/omitted; makes the gate self-contained and unit-testable in isolation.
+- **−** Slightly more plumbing (org id into the gate); duplicates a check the
+  chain already guarantees today.
+
+### 2.2 `ensurePermissionsFor` keeps stale permissions on a failed cross-org refetch
+
+- **Area:** Tenancy / fail-closed
+- **Severity:** Low–Medium
+- **Current:** `src/shared/tenancy/organization-membership.ts:72` —
+  `if (permissionsLoadedFor === organizationId && store.permissions.length > 0) return; store.setPermissions(await getMyPermissions()); permissionsLoadedFor = organizationId;`.
+  On a cross-org navigation the previous org's `permissions` stay in the store
+  until the `await` resolves; if `getMyPermissions()` **throws**, the store still
+  holds the prior org's permissions and `permissionsLoadedFor` still points at it.
+  (Happy path is safe — the chain awaits this before `requirePermission`.)
+- **Suggestion:** When `organizationId` differs, clear `permissions` +
+  `permissionsLoadedFor` _before_ the fetch, and only set `permissionsLoadedFor`
+  after a successful `setPermissions` (already true) — so a failure leaves an
+  empty (deny-all) set rather than another org's grants.
+- **+** Guarantees fail-closed on a permission-fetch error; no cross-tenant grant
+  survives a failed switch.
+- **−** A transient empty-permissions flash could 403 a legitimate user mid-load
+  (mitigated since the fetch error already surfaces an error boundary).
+
+### 2.3 `super_admin` god-mode trusts the in-memory role
+
+- **Area:** RBAC / client trust boundary (defense-in-depth)
+- **Severity:** Low
+- **Current:** `src/core/rbac/policies.ts:36` — `if (ctx.role === 'super_admin') return true;`.
+  `role` comes from the in-memory auth store (set from the backend token). A
+  tampered in-memory role would pass every **client-side** permission check.
+- **Suggestion:** Keep it (UI gating is UX only; the backend re-checks), but
+  document it as an explicit accepted risk in `security-model.md` and ensure no
+  _destructive_ action relies on this client check alone without a server 403 path.
+- **+** Confirms the client RBAC is non-authoritative by design; cheap to document.
+- **−** None; purely a clarity/assurance note.
+
+### 2.4 Empty-list asymmetry in `hasAllPermissions` / `hasAnyPermission`
+
+- **Area:** RBAC API footgun
+- **Severity:** Info
+- **Current:** `src/core/rbac/policies.ts:46,59` — `hasAllPermissions([])` is
+  vacuously `true`; `hasAnyPermission([])` is `false`. A component/route that
+  computes a permission list dynamically and lands on `[]` could accidentally
+  authorize via the `All` variant.
+- **Suggestion:** Document the asymmetry at the call sites, or add a dev-time
+  warning when an empty list is passed to `hasAllPermissions`.
+- **+** Prevents an accidental "allow when no permissions required" path.
+- **−** Marginal; no current caller passes a dynamic empty list.
+
+### Verified OK (this pass)
+
+- **Guard ordering is correct** — the `$organizationSlug` layout's `beforeLoad`
+  runs `requireOrganizationContext` (which `await`s `ensurePermissionsFor`)
+  before the child route's `requirePermission`, so the happy path has no stale
+  permission window.
+- **Default-deny gateway** — `gatewayFromPolicy` always pushes `requireSession`;
+  a route that forgets a permission still fails closed (authenticated, not open).
+- **`requireActiveOrganization` fails closed** on slug mismatch (FE-52).
+
+---
