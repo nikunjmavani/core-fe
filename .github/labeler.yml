@@ -14,15 +14,12 @@ area:auth:
   - changed-files:
       - any-glob-to-any-file:
           - 'src/pages/login/**'
-          - 'src/pages/register/**'
-          - 'src/pages/forgot-password/**'
-          - 'src/pages/reset-password/**'
-          - 'src/pages/verify-email/**'
           - 'src/pages/mfa/**'
           - 'src/pages/callback/**'
           - 'src/pages/accept-invite/**'
           - 'src/shared/auth/**'
           - 'src/shared/api/auth-*.ts'
+          - 'src/shared/forms/AuthForm/**'
 
 # area:onboarding — Post-signup onboarding flow
 area:onboarding:
@@ -71,7 +68,7 @@ ci:
   - changed-files:
       - any-glob-to-any-file: '.github/**'
 
-# tests — Vitest colocated suites, Playwright e2e, k6 load, test utils
+# tests — Vitest colocated suites, Playwright e2e, test utils
 tests:
   - changed-files:
       - any-glob-to-any-file:
@@ -100,7 +97,7 @@ dependencies:
 tooling:
   - changed-files:
       - any-glob-to-any-file:
-          - 'scripts/**'
+          - 'tooling/**'
           - 'plugins/**'
           - 'biome.json'
           - 'sonar-project.properties'

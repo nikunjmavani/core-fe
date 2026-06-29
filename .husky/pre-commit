@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
 # ── Before-commit guard (env, public assets, lint-staged, type-check) ──
-./scripts/validate/before-commit-guard.sh
+./tooling/validate/before-commit-guard.sh
 
 # ── Gitleaks secret scan on staged files (if installed) ──
 if command -v gitleaks >/dev/null 2>&1; then

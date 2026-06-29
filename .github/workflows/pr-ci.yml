@@ -49,7 +49,7 @@ jobs:
               - 'plugins/**'
               - 'public/**'
               - 'tests/**'
-              - 'scripts/**'
+              - 'tooling/**'
               - 'index.html'
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -178,21 +178,36 @@ jobs:
           fetch-depth: 1
 
       - name: Route-island structure
-        run: ./scripts/validate/route-islands.sh
+        run: ./tooling/validate/route-islands.sh
 
       - name: .env.example required vars
-        run: ./scripts/validate/env-example.sh
+        run: ./tooling/validate/env-example.sh
+
+      - name: Vite env read allowlist
+        run: pnpm validate:vite-env
 
       - name: Public assets
-        run: ./scripts/validate/public-assets.sh
+        run: ./tooling/validate/public-assets.sh
 
       - name: Design tokens (no raw palette in app code)
-        run: ./scripts/validate/design-tokens.sh
+        run: ./tooling/validate/design-tokens.sh
 
-      - name: TSDoc coverage budget
-        run: node scripts/tsdoc/check-coverage.mjs
+      - name: Theme axis compliance
+        run: ./tooling/validate/theme-axis.sh
 
       - uses: ./.github/actions/setup-node-pnpm
+
+      - name: Test ID contracts
+        run: pnpm validate:testids
+
+      - name: i18n key contracts
+        run: pnpm validate:i18n
+
+      - name: Theme catalog docs
+        run: pnpm validate:theme-catalog
+
+      - name: TSDoc coverage budget
+        run: node tooling/tsdoc-coverage/check-coverage.mjs
 
       - name: Agent-os platform wiring
         run: pnpm agent-os:generate:check

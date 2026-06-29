@@ -8,6 +8,7 @@ package-lock.json
 # Build output
 dist
 dist-ssr
+.size-limit.generated.json
 
 # Env files — only .env.example is committed (template for required vars)
 .env
@@ -33,6 +34,7 @@ lerna-debug.log*
 # Test artifacts (E2E: artifacts + HTML report under test-results/)
 coverage
 test-results
+tests/e2e/.e2e-auth-headers.json
 playwright-report
 blob-report
 .stryker-tmp
@@ -70,8 +72,10 @@ dist/stats.html
 # Sentry
 .sentryclirc
 
-# agent-os — machine-local MCP config (contains API keys; use agent-os/mcp/mcp.example.json as template)
-# .cursor/mcp.json and .mcp.json are symlinks into this file — keep them tracked so the layout survives clones.
+# Scaffold `.mcp.json` with `pnpm mcp:setup` (full) / `pnpm mcp:setup:default` (pair),
+# or let `pnpm setup:local` declare the default pair for you.
+.cursor/mcp.json
+.mcp.json
 agent-os/mcp/mcp.json
 
 # Claude Code — machine-local permission overrides (merges with agent-os/platforms/claude/settings.json)

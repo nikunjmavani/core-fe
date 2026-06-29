@@ -1,44 +1,50 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const E2E_PORT = 5180;
+const E2E_BASE_URL = `http://localhost:${E2E_PORT}`;
+
 export default defineConfig({
   testDir: './tests/e2e',
-  // tests/e2e holds two kinds, both backend-convention named:
-  //   *.e2e.test.ts         — full-stack UI flows (mock FE)
-  //   *.integration.test.ts — contracts against the running core-be (:3000)
-  testMatch: /\.(e2e|integration)\.test\.ts$/,
+  globalSetup: './tests/e2e/global-setup.ts',
+  testMatch: /\.e2e\.test\.ts$/,
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 2 : 1,
+  // Parallel local runs share one core-be on loopback; default to 1 worker (override with PLAYWRIGHT_WORKERS).
+  workers: process.env.CI ? 1 : Number(process.env.PLAYWRIGHT_WORKERS ?? 1),
+  timeout: 60_000,
   outputDir: './test-results/artifacts',
   reporter: [['html', { outputFolder: 'test-results/report', open: 'never' }]],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: E2E_BASE_URL,
+    storageState: 'tests/e2e/storage/e2e-init.json',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   projects: [
-    // Use Playwright's bundled Chromium (no dependency on system Google Chrome).
-    // Install with: pnpm exec playwright install chromium
-    // Chromium is the single maintained project: visual baselines exist only for
-    // it, and CI installs only this browser. Adding firefox/webkit back is a
-    // deliberate step — install the browser, regenerate per-project baselines,
-    // and extend the CI e2e lane in the same change.
+    {
+      name: 'api-contract',
+      testMatch: /-api\.e2e\.test\.ts$/,
+      fullyParallel: false,
+      use: { ...devices['Desktop Chrome'] },
+    },
     {
       name: 'chromium',
+      testIgnore: /-api\.e2e\.test\.ts$/,
       use: { ...devices['Desktop Chrome'] },
     },
   ],
   webServer: process.env.CI
     ? {
-        command: 'pnpm preview --port 5173 --strictPort',
-        url: 'http://localhost:5173',
+        command: `pnpm preview --port ${E2E_PORT} --strictPort`,
+        url: E2E_BASE_URL,
         reuseExistingServer: false,
       }
     : {
-        command: 'pnpm dev',
-        url: 'http://localhost:5173',
+        command: `pnpm dev --port ${E2E_PORT} --strictPort`,
+        url: E2E_BASE_URL,
         reuseExistingServer: true,
+        timeout: 120_000,
       },
 });

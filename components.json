@@ -10,12 +10,15 @@
     "cssVariables": true,
     "prefix": ""
   },
+  "iconLibrary": "lucide",
   "aliases": {
-    "components": "@/shared/components/ui",
-    "utils": "@/lib/utils",
-    "ui": "@/shared/components/ui",
-    "hooks": "@/shared/hooks",
-    "lib": "@/lib"
+    "components": "src/shared/components/ui",
+    "utils": "src/lib/utils",
+    "ui": "src/shared/components/ui",
+    "lib": "src/lib",
+    "hooks": "src/shared/hooks"
   },
-  "iconLibrary": "lucide"
+  "registries": {
+    "@kibo-ui": "https://www.kibo-ui.com/r/{name}.json"
+  }
 }

@@ -23,8 +23,8 @@
 # CI/CD and repo automation
 /.github/                @nikunjmavani
 
-# Scripts, plugins, docs
-/scripts/                @nikunjmavani
+# Tooling, plugins, docs
+/tooling/                @nikunjmavani
 /plugins/                @nikunjmavani
 /docs/                   @nikunjmavani
 

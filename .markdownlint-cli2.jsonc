@@ -27,5 +27,6 @@
     // .cursor/ symlinks into agent-os/, so both spellings must be ignored.
     "agent-os/**",
     ".cursor/**",
+    ".agents/**",
   ],
 }

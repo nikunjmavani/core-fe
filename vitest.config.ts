@@ -2,12 +2,14 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import { defineConfig } from 'vitest/config';
 
+import { i18nBuild } from './plugins/i18n-build.ts';
+
 export default defineConfig({
   // Deliberately NO react-compiler here (vite.config.ts has it): coverage must
   // measure SOURCE branches, not the compiler's synthetic memo-cache checks
   // (which tripled the branch denominator and made the ratchet meaningless).
   // Compiled output is exercised by the e2e suite and the production build.
-  plugins: [react()],
+  plugins: [react(), i18nBuild({ modeFlag: 'multi', localeFlag: 'en-US' })],
   resolve: {
     alias: {
       '@/tests': path.resolve(__dirname, './tests'),
@@ -22,7 +24,7 @@ export default defineConfig({
     css: true,
     // Projects (core-be pattern): `unit` = colocated src suites; `security` =
     // cross-cutting invariants under tests/security (token storage, redirect
-    // safety, mock-mode rejection, header tripwires). `pnpm test` runs all;
+    // safety, header tripwires). `pnpm test` runs all;
     // `pnpm test:unit` / `pnpm test:security` target one project.
     projects: [
       {

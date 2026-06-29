@@ -24,18 +24,18 @@
     // Vite build plugins (imported by vite.config.ts) and CLI/dev scripts run
     // via `node`/`pnpm` directly.
     "plugins/**/*.ts",
-    "scripts/**/*.mjs",
+    "tooling/**/*.{mjs,ts}",
     "tests/security/**/*.test.ts",
     "tests/utils/**/*.{ts,tsx}",
   ],
-  "project": ["src/**/*.{ts,tsx}", "plugins/**/*.ts", "scripts/**/*.mjs"],
+  "project": ["src/**/*.{ts,tsx}", "plugins/**/*.ts", "tooling/**/*.{mjs,ts}"],
   // Nothing suppressed — every prior ignore (vendored ui/**, staged
   // organization-contracts, recharts-via-chart) is now genuinely used or
   // reachable, so knip stays clean without them. Keep it that way.
   "ignore": [],
   // Dependencies knip cannot see (no CSS parsing; shell-script / MCP invocation):
   //  - tailwindcss + tw-animate-css: imported in src/index.css (Tailwind v4 CSS-first)
-  //  - lint-staged: invoked by scripts/validate/before-commit-guard.sh (pre-commit)
+  //  - lint-staged: invoked by tooling/validate/before-commit-guard.sh (pre-commit)
   //  - MCP server binaries: launched via `pnpm exec` in agent-os/mcp/mcp.json
   //    (symlinked as .mcp.json), never imported — @upstash/context7-mcp →
   //    context7, shadcn → shadcn, tailwindcss-mcp-server → tailwindcss,
@@ -49,8 +49,8 @@
     "tailwindcss-mcp-server",
     "@colbymchenry/codegraph",
   ],
-  // External CLIs invoked from scripts/workflows but not npm dependencies:
-  // gh (GitHub CLI), gitleaks/semgrep (security scanners), k6 (load testing),
+  // External CLIs invoked from tooling/workflows but not npm dependencies:
+  // gh (GitHub CLI), gitleaks/semgrep (security scanners),
   // stryker (installed ad-hoc by mutation-test.yml).
-  "ignoreBinaries": ["gh", "gitleaks", "k6", "semgrep", "stryker"],
+  "ignoreBinaries": ["gh", "gitleaks", "semgrep", "stryker"],
 }

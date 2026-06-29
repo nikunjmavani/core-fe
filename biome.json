@@ -1,7 +1,7 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
   "files": {
-    "includes": ["src/**", "tests/**", "plugins/**", "scripts/**/*.mjs", "!**/*.css"]
+    "includes": ["src/**", "tests/**", "plugins/**", "tooling/**/*.mjs", "!**/*.css"]
   },
   "vcs": {
     "enabled": true,
@@ -19,7 +19,8 @@
     "rules": {
       "recommended": true,
       "correctness": {
-        "noUnusedVariables": "error"
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "warn"
       },
       "style": {
         "useConst": "error",
@@ -85,11 +86,12 @@
       }
     },
     {
-      "includes": ["scripts/**/*.mjs", "plugins/**"],
+      "includes": ["tooling/**/*.mjs", "plugins/**"],
       "linter": {
         "rules": {
           "suspicious": {
-            "noConsole": "off"
+            "noConsole": "off",
+            "noAssignInExpressions": "off"
           },
           "complexity": {
             "noExcessiveCognitiveComplexity": "off"
@@ -106,6 +108,10 @@
         "rules": {
           "security": {
             "noDangerouslySetInnerHtml": "off"
+          },
+          "a11y": {
+            "useFocusableInteractive": "off",
+            "useAriaPropsForRole": "off"
           }
         }
       }

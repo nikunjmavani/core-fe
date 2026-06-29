@@ -21,9 +21,8 @@ paths-ignore:
   - '**/__tests__/**'
   - '**/*.test.ts'
   - '**/*.test.tsx'
-  # REPLACE_WITH_API dev-only mocks: demo credentials and Math.random() seed
-  # data by design; production builds reject mock mode (CLAUDE.md mock map).
-  - src/**/mock-*.ts
+  // REPLACE_WITH_API placeholder UI data (e.g. dashboard.placeholder-data.ts).
+  - src/**/*.placeholder-data.ts
   - src/**/*.fixtures.ts
   # Local agent worktrees checked out under .claude/ are gitignored stale
   # copies of the repo; never analyze them.
@@ -31,7 +30,7 @@ paths-ignore:
   # Dev/CI command-line utilities and Vite build plugins. These run locally or
   # in CI with trusted inputs (a developer's own argv, local .env files, local
   # `git` output), never untrusted request data.
-  - scripts/**
+  - tooling/**
   - plugins/**
 
 # No query-filters yet: core-be suppresses three verified architectural false

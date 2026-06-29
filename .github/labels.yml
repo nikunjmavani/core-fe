@@ -52,7 +52,7 @@
 
 - name: 'tests'
   color: 'B2DFDB'
-  description: 'Vitest colocated suites, Playwright e2e, k6 load, test utils'
+  description: 'Vitest colocated suites, Playwright e2e, test utils'
 
 - name: 'docs'
   color: 'FFECB3'

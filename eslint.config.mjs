@@ -155,7 +155,7 @@ export default defineConfig([
 
   // API/route path constants (strings like /auth/reset-password), not credentials
   {
-    files: ['**/core/config/constants.ts'],
+    files: ['**/core/config/constants.ts', '**/*.constants.ts'],
     rules: {
       'sonarjs/no-hardcoded-passwords': 'off',
     },

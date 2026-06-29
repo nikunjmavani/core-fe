@@ -14,8 +14,7 @@
     "reports",
     ".netlify",
     ".pnpm-store",
-    "tests/e2e",
-    "tests/load"
+    "tests/e2e"
   ],
   "mutate": [
     "src/core/rbac/**/*.ts",
@@ -29,7 +28,7 @@
     "src/lib/utils.ts",
     "!src/**/*.test.ts",
     "!src/**/*.test.tsx",
-    "!src/**/mock-*.ts",
+    "!src/**/*.placeholder-data.ts",
     "!src/**/*.fixtures.ts",
     "!src/**/index.ts"
   ],

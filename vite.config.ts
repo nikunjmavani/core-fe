@@ -7,6 +7,7 @@ import { defineConfig, loadEnv, type PluginOption } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 import { cspApiOrigin } from './plugins/csp-api-origin.ts';
+import { i18nBuild } from './plugins/i18n-build.ts';
 import { versionJson } from './plugins/version-json.ts';
 
 export default defineConfig(({ mode }) => {
@@ -21,6 +22,10 @@ export default defineConfig(({ mode }) => {
       // The eslint react-hooks rules already lint for compiler compatibility.
       react({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } }),
       tailwindcss(),
+      i18nBuild({
+        modeFlag: env.BUILD_I18N_MODE,
+        localeFlag: env.BUILD_I18N_LOCALE,
+      }),
       versionJson(),
       cspApiOrigin(env.VITE_API_BASE_URL, env.VITE_CSP_REPORT_URI),
 
@@ -30,11 +35,22 @@ export default defineConfig(({ mode }) => {
         srcDir: 'src',
         filename: 'sw.ts',
         registerType: 'autoUpdate',
-        includeAssets: ['vite.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
+        includeAssets: ['app-icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: false, // Use public/manifest.webmanifest directly
         disable: mode !== 'production',
         injectManifest: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+          globIgnores: [
+            '**/sentry-*.js',
+            '**/posthog-*.js',
+            '**/SettingsModal-*.js',
+            '**/dashboard.route-*.js',
+            '**/iconset-phosphor-*.js',
+            '**/iconset-tabler-*.js',
+            '**/CommandPalette-*.js',
+            '**/AppearanceDialog-*.js',
+            '**/LanguageDialog-*.js',
+          ],
         },
       }),
 
@@ -112,7 +128,6 @@ export default defineConfig(({ mode }) => {
           manualChunks(id) {
             if (id.includes('node_modules/@sentry')) return 'sentry';
             if (id.includes('node_modules/posthog-js')) return 'posthog';
-            if (id.includes('node_modules/recharts')) return 'charts';
             if (id.includes('node_modules/zod')) return 'zod';
             if (id.includes('node_modules/react-hook-form')) return 'rhf';
             if (
@@ -123,10 +138,13 @@ export default defineConfig(({ mode }) => {
               return 'vendor';
             }
             if (id.includes('node_modules/@tanstack/react-query')) return 'query';
-            // NO manual chunk for cmdk: it is only ever dynamically imported
-            // (CommandPaletteLazy), so natural splitting already isolates it.
-            // Forcing it into a named chunk made rollup hoist a shared radix
-            // helper there, statically chaining the whole chunk to the entry.
+            // NO manual chunk for cmdk or recharts (command palette + charts):
+            // they are only ever reached via dynamic imports (CommandPaletteLazy,
+            // the lazy dashboard route), so natural splitting already isolates them.
+            // Forcing such a lib into a named chunk makes rollup hoist a shared
+            // helper there, statically chaining the whole chunk to the entry (this
+            // regressed first-paint when `recharts` was a 'charts' chunk — see
+            // tooling/ci/check-preload-graph.mjs).
           },
         },
       },

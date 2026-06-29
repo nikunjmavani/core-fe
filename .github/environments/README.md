@@ -13,7 +13,7 @@ path).
 | `dev`  | `development`      | `.env.development` |
 | `main` | `production`       | `.env.production`  |
 
-Canonical manifest: [`scripts/setup/setup.config.json`](../../scripts/setup/setup.config.json).
+Canonical manifest: [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
 
 ## Required deploy secrets
 

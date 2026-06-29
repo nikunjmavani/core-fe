@@ -1,14 +1,19 @@
-name: Reusable — Playwright E2E
+name: Scheduled FE ↔ BE integration
 
-# Full E2E against core-be on :3000 — no skip path. Job provides postgres + redis,
-# boots core-be, builds FE preview, runs pnpm test:e2e.
+# Nightly: core-be + contract drift + full Playwright E2E (`*.e2e.test.ts`).
+# PR CI uses the same E2E reusable workflow (core-be required — no skip path).
 
 on:
-  workflow_call:
+  schedule:
+    - cron: '0 4 * * 2' # Tuesday 04:00 UTC
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: fe-be-integration
+  cancel-in-progress: false
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: ${{ vars.FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 || 'true' }}
@@ -19,11 +24,12 @@ env:
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/core
   REDIS_URL: redis://localhost:6379
   CORE_BE_DIR: ${{ github.workspace }}/core-be
+  CONTRACT_DRIFT_REQUIRED: '1'
   CI: true
 
 jobs:
-  run:
-    name: Playwright E2E
+  integration:
+    name: core-be contracts + Playwright E2E
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -58,11 +64,14 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Setup Node and pnpm
+      - name: Setup Node and pnpm (core-fe)
         uses: ./.github/actions/setup-node-pnpm
 
       - name: Start core-be
         uses: ./.github/actions/setup-core-be
+
+      - name: API contract drift (path-level)
+        run: pnpm contracts:drift
 
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
@@ -70,13 +79,19 @@ jobs:
       - name: Build core-fe
         run: pnpm build
 
-      - name: Run E2E tests
+      - name: Playwright E2E
         run: pnpm test:e2e
+
+      - name: Install Playwright browsers (integration cross-browser)
+        run: pnpm exec playwright install --with-deps chromium firefox webkit
+
+      - name: Playwright routes integration (Chromium + Firefox + WebKit)
+        run: pnpm test:e2e:integration:cross-browser
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: playwright-report
+          name: playwright-integration-report
           path: test-results/
-          retention-days: 7
+          retention-days: 14
