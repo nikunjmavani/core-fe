@@ -2,7 +2,12 @@ import { z } from 'zod';
 
 import type { Resource } from './types.ts';
 
-/** Reference member record shape — REPLACE_WITH_API when members island lands. */
+/**
+ * Reference member record shape for the L7 resource registry. The live members
+ * UI ships via `MembersTable` + `useMembers` (org-scoped hooks); this manifest
+ * stays as the canonical CRUD/RBAC reference until a members resource *page*
+ * adopts the shared `useList`/`useCreate` hooks.
+ */
 export const memberSchema = z.object({
   id: z.string(),
   email: z.string().email(),

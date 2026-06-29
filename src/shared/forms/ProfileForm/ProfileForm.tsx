@@ -89,7 +89,11 @@ function toDefaults(values?: Partial<ProfileInput>): ProfileInput {
  * "About you" profile form: name, job title, bio, location, and timezone.
  * Validates with {@link profileSchema}; saving is confirmed via a dialog.
  *
- * REPLACE_WITH_API: PATCH /api/v1/users/me
+ * NOT YET PERSISTED — deferred to the FE↔BE integration epic. core-be
+ * `PATCH /users/me` currently accepts only `name` (+ avatar); `jobTitle`, `bio`,
+ * `location`, and `timezone` have no backend column. Wiring requires (a) those
+ * fields added to the user model + PATCH payload, then (b) a `useUpdateProfile`
+ * mutation here. Until then the confirm dialog resets the form locally only.
  */
 export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFormProps) {
   const { t } = useTranslation(SETTINGS_NS);

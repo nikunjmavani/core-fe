@@ -4,7 +4,9 @@ import { z } from 'zod';
  * Editable profile fields. The source of truth for the "About you" form; the TS
  * type is inferred so the form, API payload, and completeness meter stay aligned.
  *
- * REPLACE_WITH_API: PATCH /api/v1/users/me — align field names with the backend.
+ * Deferred to the FE↔BE integration epic: of these, only `name` maps to a
+ * core-be column today (`PATCH /users/me`). When the backend adds jobTitle/bio/
+ * location/timezone, align field names (snake_case wire) before wiring the save.
  */
 export const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Name is too long'),

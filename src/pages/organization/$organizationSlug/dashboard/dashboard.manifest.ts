@@ -2,8 +2,9 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 
 /**
  * Dashboard route island manifest (`/organization/$organizationSlug/dashboard`).
- * React boundary: `route.tsx` · UI: `DashboardPage.tsx` (placeholder —
- * REPLACE_WITH_MODULE after auth is finalized).
+ * React boundary: `route.tsx` · UI: `DashboardPage.tsx`. The page renders the
+ * shell + summary widgets today; the per-product dashboard module (keyed by
+ * `module` below) is the integration point that replaces the placeholder body.
  */
 export const manifest = {
   segment: 'dashboard',

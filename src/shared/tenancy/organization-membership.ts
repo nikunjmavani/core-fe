@@ -31,9 +31,10 @@ function organizationFromMeContext(ctx: MeContext, slug: string): Organization |
 /**
  * The organization, if the signed-in user is a member; otherwise `null`.
  *
- * REPLACE_WITH_API note: this runs on EVERY org-route navigation (guard
- * chain). When the real API lands, put `listMyOrganizations()` behind the
- * query cache (staleTime) so navigation does not refetch the membership list.
+ * Perf note: `listMyOrganizations()` is the live tenancy API, but this runs on
+ * EVERY org-route navigation (guard chain). A future optimization is to put it
+ * behind the query cache (staleTime) so per-nav guard checks reuse the list
+ * instead of refetching it.
  */
 export async function findMembership(
   organizationId: string,
@@ -79,8 +80,10 @@ export async function ensurePermissionsFor(organizationId: string): Promise<void
     permissionsLoadedFor = null;
     store.setPermissions([]);
   }
-  // REPLACE_WITH_API: permissions come from the membership response for THIS
-  // organization (org-scoped endpoints carry the organization id in the path).
+  // Permissions come live from the me-context (`getMyPermissions` filters the
+  // active org's grants, which the token already scopes to this organization).
+  // A future dedicated org-scoped endpoint (org id in the path) could replace
+  // the me-context read without changing this call site.
   store.setPermissions(await getMyPermissions());
   permissionsLoadedFor = organizationId;
 }

@@ -46,8 +46,10 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
  * zone" for deactivating or deleting the account, each gated behind a confirm
  * dialog.
  *
- * REPLACE_WITH_API: GET /api/v1/users/me, POST /api/v1/users/me/deactivate,
- * DELETE /api/v1/users/me
+ * Deferred to the FE↔BE integration epic. core-be exposes `GET /users/me` and
+ * `DELETE /users/me`, but there is NO `deactivate` endpoint — the danger-zone
+ * actions need either a real deactivate route or a decision to map "deactivate"
+ * onto delete before they can be wired to a mutation here.
  */
 export function AccountPanel() {
   const { t } = useTranslation(SETTINGS_NS);

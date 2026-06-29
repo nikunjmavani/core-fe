@@ -1,7 +1,9 @@
 import { SectionHeader } from '../SettingsPanelShell.tsx';
 
 /**
- * Branches — placeholder panel (REPLACE_WITH_API).
+ * Branches — placeholder panel. Deferred to the FE↔BE integration epic: core-be
+ * exposes no organization-branches resource yet, so there is nothing to list or
+ * mutate. Wiring needs a `/tenancy/organization/branches` CRUD surface first.
  * Escape hatch: promote to a real page under pages/organization/\$organizationSlug/
  * when it becomes a heavy admin surface; keep a hash → path redirect shim.
  */
