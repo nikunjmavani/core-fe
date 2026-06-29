@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 import { API_BASE_PATH } from '@/core/config/constants.ts';
 import { apiClient } from '@/core/http/fetch-client.ts';
-import { parseListTolerant } from '@/lib/parse-list-tolerant.ts';
 
+import { fetchAllPages } from './fetch-all-pages.ts';
 import {
   type Notification,
   type NotificationPreference,
@@ -19,8 +19,7 @@ const NOTIF_API = `${API_BASE_PATH}/notify/notifications`;
 const PREFS_API = `${API_BASE_PATH}/users/me/notification-preferences`;
 
 export async function listNotifications(): Promise<Notification[]> {
-  const res = await apiClient.get<unknown>(NOTIF_API);
-  return parseListTolerant(notificationWireSchema, res.data, 'notifications').map(
+  return (await fetchAllPages(NOTIF_API, notificationWireSchema, 'notifications')).map(
     toNotification,
   );
 }

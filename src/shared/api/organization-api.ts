@@ -20,6 +20,8 @@ import { AppError } from '@/shared/errors/AppError.ts';
 import { FRONTEND_ERROR_CODES } from '@/shared/errors/frontend-error-codes.ts';
 import { fetchMeContext } from '@/shared/tenancy/me-context.ts';
 
+import { fetchAllPages } from './fetch-all-pages.ts';
+
 /** Active-org scoped tenancy base (active org comes from the token, not the URL). */
 const ORG_API = `${API_BASE_PATH}/tenancy/organization`;
 const INVITATIONS_API = `${API_BASE_PATH}/tenancy/invitations`;
@@ -111,8 +113,9 @@ function toMember(w: MembershipWire): Member {
 }
 
 export async function listMembers(): Promise<Member[]> {
-  const res = await apiClient.get<unknown>(`${ORG_API}/memberships`);
-  return parseListTolerant(membershipWire, res.data, 'memberships').map(toMember);
+  return (
+    await fetchAllPages(`${ORG_API}/memberships`, membershipWire, 'memberships')
+  ).map(toMember);
 }
 
 export async function updateMemberRole(input: {
@@ -238,8 +241,7 @@ function toRoleSummary(w: RoleWire): RoleSummary {
 }
 
 export async function listRoles(): Promise<RoleSummary[]> {
-  const res = await apiClient.get<unknown>(`${ORG_API}/roles`);
-  return parseListTolerant(roleWire, res.data, 'roles').map(toRoleSummary);
+  return (await fetchAllPages(`${ORG_API}/roles`, roleWire, 'roles')).map(toRoleSummary);
 }
 
 export async function createRole(input: {
@@ -294,8 +296,9 @@ function toApiKey(w: ApiKeyWire): ApiKey {
 }
 
 export async function listApiKeys(): Promise<ApiKey[]> {
-  const res = await apiClient.get<unknown>(`${ORG_API}/api-keys`);
-  return parseListTolerant(apiKeyWire, res.data, 'api-keys').map(toApiKey);
+  return (await fetchAllPages(`${ORG_API}/api-keys`, apiKeyWire, 'api-keys')).map(
+    toApiKey,
+  );
 }
 
 export async function createApiKey(input: {

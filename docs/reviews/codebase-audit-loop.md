@@ -442,10 +442,20 @@ manualFiltering`. The URL state plumbing already exists — wire it through.
   into all 7 list fetchers (`listMembers/Invitations/Roles/ApiKeys/Sessions/
 Webhooks/Notifications`). One bad record no longer blanks a whole table.
   Test: `parse-list-tolerant.test.ts`.
-- **5.1 — BLOCKED on backend contract.** The strong fix (server-driven
-  pagination/sort/filter) requires the backend list **request** contract
-  (cursor/limit/sort/filter param names), which is not in this repo and only
-  discoverable via the core-be MCP. Awaiting the contract before implementing —
-  guessing the params would break the live lists.
+- **5.1 — FIXED (cursor-follow), with a documented ceiling.** Read the backend
+  contract from `../core-be`: every org list uses `cursorPaginationSchema`
+  (`?after=<opaque cursor>&limit=<=100`, **default 25**) and is `.strict()` with
+  **no server-side sort/filter**. So the FE was **silently truncating to the
+  first 25 rows** (a real correctness bug, not just scale). New
+  `shared/api/fetch-all-pages.ts` follows `meta.pagination.next` until
+  `has_more` is false (limit=100, 50-page safety cap, tolerant parse). Wired into
+  `listMembers/Roles/ApiKeys` (organization-api), `listWebhooks`,
+  `listNotifications`. Test: `fetch-all-pages.test.ts`. The client tables stay
+  exactly as-is (the backend can't take over sort/filter), so the O(n)-in-browser
+  ceiling remains a **backend limitation** (no server sort/filter) — true
+  windowed pagination would require adding those server-side. **Not changed:**
+  `listInvitations` (no list route/DTO found in core-be — needs verification
+  before paging), `listMyOrganizations` (different mapper, small N), `sessions`
+  (returns all, not cursor-paged).
 
 ---
