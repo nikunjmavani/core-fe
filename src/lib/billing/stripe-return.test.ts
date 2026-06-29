@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
 import {
-  clearStripeBillingReturnParams,
+  omitStripeReturnParams,
   readStripeBillingReturnParams,
 } from './stripe-return.ts';
 
@@ -15,24 +15,24 @@ describe('stripe-return', () => {
     expect(params.setupIntentClientSecret).toBeNull();
   });
 
-  it('clears Stripe return params from the URL', () => {
-    const replaceState = vi.fn();
-    const original = window.history.replaceState;
-    window.history.replaceState = replaceState;
-    Object.defineProperty(window, 'location', {
-      configurable: true,
-      value: new URL(
-        'http://localhost:5173/organization/acme/dashboard?payment_intent_client_secret=pi_secret&redirect_status=succeeded#settings/account/billing',
-      ),
+  it('strips every Stripe return param from a router search object', () => {
+    const next = omitStripeReturnParams({
+      tab: 'billing',
+      payment_intent: 'pi_1',
+      payment_intent_client_secret: 'pi_secret',
+      setup_intent: 'si_1',
+      setup_intent_client_secret: 'si_secret',
+      redirect_status: 'succeeded',
     });
 
-    clearStripeBillingReturnParams();
+    expect(next).toEqual({ tab: 'billing' });
+  });
 
-    expect(replaceState).toHaveBeenCalled();
-    const nextUrl = String(replaceState.mock.calls[0]?.[2]);
-    expect(nextUrl).not.toContain('payment_intent_client_secret');
-    expect(nextUrl).toContain('#settings/account/billing');
-
-    window.history.replaceState = original;
+  it('does not mutate the input search object', () => {
+    const input = { redirect_status: 'succeeded', q: 'x' };
+    const next = omitStripeReturnParams(input);
+    expect(input).toEqual({ redirect_status: 'succeeded', q: 'x' });
+    expect(next).not.toBe(input);
+    expect(next).toEqual({ q: 'x' });
   });
 });

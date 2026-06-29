@@ -24,14 +24,19 @@ export function readStripeBillingReturnParams(
   };
 }
 
-/** Removes Stripe return params from the URL without a full navigation. */
-export function clearStripeBillingReturnParams(): void {
-  if (typeof window === 'undefined') return;
-  const url = new URL(window.location.href);
+/**
+ * Returns a copy of the current route search with every Stripe return param
+ * removed. Feed this to TanStack Router's `navigate({ search })` so the router
+ * stays the source of truth — a raw `history.replaceState` here would strip the
+ * params from the address bar but leave the router's cached location holding
+ * them, and the next router navigation would reintroduce them.
+ */
+export function omitStripeReturnParams<T extends Record<string, unknown>>(search: T): T {
+  const next = { ...search };
   for (const key of STRIPE_RETURN_PARAMS) {
-    url.searchParams.delete(key);
+    delete next[key];
   }
-  window.history.replaceState({}, '', url.toString());
+  return next;
 }
 
 export function stripeBillingReturnUrl(): string {

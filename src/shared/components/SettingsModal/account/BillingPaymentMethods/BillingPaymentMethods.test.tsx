@@ -1,7 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
+
+const { navigateMock } = vi.hoisted(() => ({ navigateMock: vi.fn() }));
+
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => navigateMock,
+}));
 
 vi.mock('@/shared/billing/stripe-config.ts', () => ({
   isStripeEnabled: () => true,
@@ -38,6 +44,11 @@ function renderMethods() {
   );
 }
 
+afterEach(() => {
+  navigateMock.mockClear();
+  window.history.replaceState({}, '', '/');
+});
+
 describe('BillingPaymentMethods', () => {
   it('has no accessibility violations', async () => {
     const { container } = renderMethods();
@@ -48,5 +59,24 @@ describe('BillingPaymentMethods', () => {
     renderMethods();
     expect(screen.getByTestId('billing-payment-method-pm_1')).toBeInTheDocument();
     expect(screen.getByTestId('billing-add-payment-method')).toBeInTheDocument();
+  });
+
+  it('strips Stripe setup-intent return params through the router', () => {
+    window.history.replaceState(
+      {},
+      '',
+      '/organization/acme/dashboard?setup_intent_client_secret=si_secret&redirect_status=succeeded#settings/account/billing',
+    );
+    renderMethods();
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: '.', replace: true }),
+    );
+    const updater = navigateMock.mock.calls.at(-1)?.[0]?.search as (
+      prev: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    expect(
+      updater({ setup_intent_client_secret: 'si_secret', redirect_status: 'succeeded' }),
+    ).toEqual({});
   });
 });

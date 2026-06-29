@@ -11,11 +11,17 @@ const {
   useBillingPlansMock,
   selectPlanMutateAsync,
   useSelectBillingPlanMock,
+  navigateMock,
 } = vi.hoisted(() => ({
   useSubscriptionMock: vi.fn(),
   useBillingPlansMock: vi.fn(),
   selectPlanMutateAsync: vi.fn(),
   useSelectBillingPlanMock: vi.fn(),
+  navigateMock: vi.fn(),
+}));
+
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => navigateMock,
 }));
 
 vi.mock('@/shared/billing/stripe-config.ts', () => ({
@@ -193,5 +199,35 @@ describe('AccountBillingPanel', () => {
     renderPanel();
     expect(screen.getByTestId('billing-summary')).toBeInTheDocument();
     expect(screen.queryByTestId('plan-pln_pro')).not.toBeInTheDocument();
+  });
+
+  it('strips Stripe return params through the router after a succeeded redirect', () => {
+    window.history.replaceState(
+      {},
+      '',
+      '/organization/acme/dashboard?payment_intent_client_secret=pi_secret&redirect_status=succeeded#settings/account/billing',
+    );
+    useSubscriptionMock.mockReturnValue({
+      data: SUB,
+      isPending: false,
+      isLoading: false,
+      isError: false,
+    });
+    setCanManage(true);
+    renderPanel();
+
+    // Cleared via the router (not raw history.replaceState) so its location
+    // stays in sync and a later navigation cannot reintroduce the params.
+    expect(navigateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: '.', replace: true }),
+    );
+    const updater = navigateMock.mock.calls.at(-1)?.[0]?.search as (
+      prev: Record<string, unknown>,
+    ) => Record<string, unknown>;
+    expect(
+      updater({ payment_intent_client_secret: 'pi_secret', tab: 'billing' }),
+    ).toEqual({ tab: 'billing' });
+
+    window.history.replaceState({}, '', '/');
   });
 });

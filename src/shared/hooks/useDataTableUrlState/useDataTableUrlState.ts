@@ -36,6 +36,20 @@ export function sortingToSearch(sorting: SortingState): string | undefined {
   return `${first.id}:${first.desc ? 'desc' : 'asc'}`;
 }
 
+/** Maps URL search params to TanStack Table column-filter state. */
+export function filtersFromSearch(
+  search: Pick<DataTableSearch, 'q' | 'role'>,
+  enabled: boolean,
+): ColumnFiltersState {
+  if (!enabled) return [];
+  const filters: ColumnFiltersState = [];
+  if (search.q) filters.push({ id: 'name', value: search.q });
+  if (search.role && search.role !== 'all') {
+    filters.push({ id: 'role', value: search.role });
+  }
+  return filters;
+}
+
 /**
  * Bidirectional sync between TanStack Table state and the current route's URL
  * search params.
@@ -58,14 +72,16 @@ export function useDataTableUrlState(enabled: boolean) {
     [enabled],
   );
 
-  const initialFilters = useMemo((): ColumnFiltersState => {
-    if (!enabled) return [];
-    const filters: ColumnFiltersState = [];
-    if (search.q) filters.push({ id: 'name', value: search.q });
-    if (search.role && search.role !== 'all')
-      filters.push({ id: 'role', value: search.role });
-    return filters;
-  }, [enabled, search.q, search.role]);
+  // Seeds the table's initial column filters from the URL once on mount, exactly
+  // like `initialSorting` above. Consumers feed this to `useState(...)`, which
+  // reads its argument only on first render — so depending on `search.q`/`role`
+  // here would recompute on every URL change for a value nothing ever reads.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: URL filters seed initial state once; later changes flow through onFiltersChange
+  const initialFilters = useMemo(
+    () => filtersFromSearch(search, enabled),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [enabled],
+  );
 
   const initialPageIndex = enabled && search.page ? search.page - 1 : 0;
   const initialPageSize = enabled && search.size ? search.size : 10;

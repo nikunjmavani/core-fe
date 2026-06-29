@@ -1,8 +1,9 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 
 import {
-  clearStripeBillingReturnParams,
+  omitStripeReturnParams,
   readStripeBillingReturnParams,
 } from '@/lib/billing/stripe-return.ts';
 import * as billingApi from '@/shared/api/billing-api.ts';
@@ -59,6 +60,7 @@ export function BillingPaymentMethods({
   canManage = false,
 }: BillingPaymentMethodsProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const query = useBillingPaymentMethods(enabled && isStripeEnabled());
   const [setupSecret, setSetupSecret] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -66,7 +68,14 @@ export function BillingPaymentMethods({
   useEffect(() => {
     const { setupIntentClientSecret, redirectStatus } = readStripeBillingReturnParams();
     if (setupIntentClientSecret && redirectStatus === 'succeeded') {
-      clearStripeBillingReturnParams();
+      // Clear the return params through the router so its cached location stays
+      // in sync (a raw replaceState would desync it).
+      void navigate({
+        to: '.',
+        search: ((prev: Record<string, unknown>) =>
+          omitStripeReturnParams(prev)) as never,
+        replace: true,
+      });
       queryClient
         .invalidateQueries({ queryKey: billingQueryKeys.paymentMethods() })
         .catch(() => {
@@ -76,7 +85,7 @@ export function BillingPaymentMethods({
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from Stripe redirect params
       setSetupSecret(setupIntentClientSecret);
     }
-  }, [queryClient]);
+  }, [queryClient, navigate]);
 
   async function handleAddPaymentMethod() {
     setIsAdding(true);

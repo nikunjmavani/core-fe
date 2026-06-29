@@ -1,9 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 
 import {
-  clearStripeBillingReturnParams,
+  omitStripeReturnParams,
   readStripeBillingReturnParams,
 } from '@/lib/billing/stripe-return.ts';
 import { cn } from '@/lib/utils.ts';
@@ -66,6 +67,7 @@ interface BillingContentProps {
 
 function BillingContent({ sub, plans }: BillingContentProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { formatCurrency, formatDate } = useLocaleFormat();
   const canManage = useCan({
     permission: 'subscription:manage',
@@ -91,7 +93,15 @@ function BillingContent({ sub, plans }: BillingContentProps) {
   useEffect(() => {
     const { paymentIntentClientSecret, redirectStatus } = readStripeBillingReturnParams();
     if (redirectStatus === 'succeeded') {
-      clearStripeBillingReturnParams();
+      // Strip the Stripe return params through the router (not raw replaceState)
+      // so its cached location stays in sync and a later navigation can't bring
+      // them back.
+      void navigate({
+        to: '.',
+        search: ((prev: Record<string, unknown>) =>
+          omitStripeReturnParams(prev)) as never,
+        replace: true,
+      });
       void refreshBilling();
       return;
     }
@@ -99,6 +109,8 @@ function BillingContent({ sub, plans }: BillingContentProps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from Stripe redirect params
       setPaymentClientSecret(paymentIntentClientSecret);
     }
+    // navigate is a stable router handle; this is a one-time redirect-return read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
