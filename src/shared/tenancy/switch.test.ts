@@ -144,18 +144,46 @@ describe('tenancy/switch', () => {
     );
   });
 
-  it('drops the previous org-scoped query cache on switch — no cross-tenant bleed (6.1)', async () => {
-    // Seed caches belonging to the org being left (keys omit the org id).
-    queryClient.setQueryData(orgQueryKeys.members(), [{ id: 'm_prev_org' }]);
-    queryClient.setQueryData(orgQueryKeys.apiKeys(), [{ id: 'key_prev_org' }]);
-    queryClient.setQueryData(['org', 'webhooks'], [{ id: 'wh_prev_org' }]);
-    queryClient.setQueryData([...billingQueryKeys.all, 'subscription'], {
-      id: 'sub_prev',
+  it('keeps each org cache isolated and intact across a switch (#4 — instant switch-back)', async () => {
+    // Seed the org we are leaving. Keys carry the org id, so they belong to it
+    // alone and must SURVIVE the switch — that is what makes switching back
+    // instant. The new org reads a different (here empty) key.
+    queryClient.setQueryData(orgQueryKeys.members(TEAM_ID), [{ id: 'm_team' }]);
+    queryClient.setQueryData(billingQueryKeys.activeSubscription(TEAM_ID), {
+      id: 'sub_team',
     });
 
     postMock.mockResolvedValue({
       data: {
         access_token: 't3',
+        active_organization: PERSONAL_WIRE,
+        my_permissions: [],
+        global_role: null,
+      },
+    });
+
+    await switchToPersonal();
+
+    // The left org's data is NOT purged — switching back serves it from cache.
+    expect(queryClient.getQueryData(orgQueryKeys.members(TEAM_ID))).toEqual([
+      { id: 'm_team' },
+    ]);
+    expect(
+      queryClient.getQueryData(billingQueryKeys.activeSubscription(TEAM_ID)),
+    ).toEqual({ id: 'sub_team' });
+    // The new scope is a structurally distinct key — no cross-tenant bleed.
+    expect(queryClient.getQueryData(orgQueryKeys.members(PERSONAL_ID))).toBeUndefined();
+    // me-context is still updated by the switch.
+    expect(queryClient.getQueryData(meContextQueryKey)).toBeDefined();
+  });
+
+  it('never lets two tenants share a cache entry (structural key isolation)', async () => {
+    queryClient.setQueryData(orgQueryKeys.members('org_a'), [{ id: 'a' }]);
+    queryClient.setQueryData(orgQueryKeys.members('org_b'), [{ id: 'b' }]);
+
+    postMock.mockResolvedValue({
+      data: {
+        access_token: 't4',
         active_organization: { ...PERSONAL_WIRE, id: TEAM_ID },
         my_permissions: [],
         global_role: null,
@@ -164,30 +192,12 @@ describe('tenancy/switch', () => {
 
     await switchToOrganization(TEAM_ID);
 
-    // Previous tenant's org-scoped data must be gone (removed, not just stale).
-    expect(queryClient.getQueryData(orgQueryKeys.members())).toBeUndefined();
-    expect(queryClient.getQueryData(orgQueryKeys.apiKeys())).toBeUndefined();
-    expect(queryClient.getQueryData(['org', 'webhooks'])).toBeUndefined();
-    expect(
-      queryClient.getQueryData([...billingQueryKeys.all, 'subscription']),
-    ).toBeUndefined();
-    // me-context is updated by the switch, not wiped by the org-cache clear.
-    expect(queryClient.getQueryData(meContextQueryKey)).toBeDefined();
-  });
-
-  it('also clears the org-scoped cache when switching to personal (6.1)', async () => {
-    queryClient.setQueryData(orgQueryKeys.members(), [{ id: 'm_prev_org' }]);
-    postMock.mockResolvedValue({
-      data: {
-        access_token: 't4',
-        active_organization: PERSONAL_WIRE,
-        my_permissions: ['organization:read'],
-        global_role: null,
-      },
-    });
-
-    await switchToPersonal();
-
-    expect(queryClient.getQueryData(orgQueryKeys.members())).toBeUndefined();
+    // Each org keeps its own rows regardless of the active org.
+    expect(queryClient.getQueryData(orgQueryKeys.members('org_a'))).toEqual([
+      { id: 'a' },
+    ]);
+    expect(queryClient.getQueryData(orgQueryKeys.members('org_b'))).toEqual([
+      { id: 'b' },
+    ]);
   });
 });

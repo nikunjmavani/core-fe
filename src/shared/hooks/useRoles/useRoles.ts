@@ -6,6 +6,7 @@ import * as orgApi from '@/shared/api/organization-api.ts';
 import type { RoleInput, RoleSummary } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
  * Roles of the active organization — list query + create/update/delete mutations.
@@ -13,14 +14,16 @@ import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
  */
 /** Roles defined in the active organization. */
 export function useRoles() {
-  return useQuery({ queryKey: orgQueryKeys.roles(), queryFn: orgApi.listRoles });
+  const orgId = useOrganizationStore((s) => s.organizationId);
+  return useQuery({ queryKey: orgQueryKeys.roles(orgId), queryFn: orgApi.listRoles });
 }
 
 /** Create a custom role, then refresh the roles list. */
 export function useCreateRole() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (input: RoleInput) => orgApi.createRole(input),
-    invalidateKeys: [orgQueryKeys.roles()],
+    invalidateKeys: [orgQueryKeys.roles(orgId)],
     successMessage: (role) =>
       i18n.t(ERRORS_KEYS.frontend.hooks.roles.createSuccess, {
         ns: ERRORS_NS,
@@ -31,11 +34,12 @@ export function useCreateRole() {
 
 /** Update a custom role — optimistically patches the renamed row. */
 export function useUpdateRole() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (input: RoleInput & { id: string }) => orgApi.updateRole(input),
-    invalidateKeys: [orgQueryKeys.roles()],
+    invalidateKeys: [orgQueryKeys.roles(orgId)],
     optimistic: {
-      queryKey: orgQueryKeys.roles(),
+      queryKey: orgQueryKeys.roles(orgId),
       update: (previous: RoleSummary[] | undefined, input) =>
         previous?.map((role) =>
           role.id === input.id ? { ...role, name: input.name } : role,
@@ -51,11 +55,12 @@ export function useUpdateRole() {
 
 /** Delete a custom role — optimistically drops it from the list. */
 export function useDeleteRole() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (roleId: string) => orgApi.deleteRole(roleId),
-    invalidateKeys: [orgQueryKeys.roles()],
+    invalidateKeys: [orgQueryKeys.roles(orgId)],
     optimistic: {
-      queryKey: orgQueryKeys.roles(),
+      queryKey: orgQueryKeys.roles(orgId),
       update: (previous: RoleSummary[] | undefined, roleId) =>
         previous?.filter((role) => role.id !== roleId),
     },

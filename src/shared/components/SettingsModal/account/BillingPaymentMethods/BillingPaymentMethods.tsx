@@ -23,6 +23,7 @@ import {
 } from '@/shared/components/ui/card.tsx';
 import { useBillingPaymentMethods } from '@/shared/hooks/useBillingPaymentMethods/index.ts';
 import { CreditCard } from '@/shared/icons/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 function formatCardLabel(method: BillingPaymentMethod) {
   const brand = method.brand ? method.brand.toUpperCase() : 'Card';
@@ -61,6 +62,7 @@ export function BillingPaymentMethods({
 }: BillingPaymentMethodsProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const orgId = useOrganizationStore((s) => s.organizationId);
   const query = useBillingPaymentMethods(enabled && isStripeEnabled());
   const [setupSecret, setSetupSecret] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
@@ -77,7 +79,7 @@ export function BillingPaymentMethods({
         replace: true,
       });
       queryClient
-        .invalidateQueries({ queryKey: billingQueryKeys.paymentMethods() })
+        .invalidateQueries({ queryKey: billingQueryKeys.paymentMethods(orgId) })
         .catch(() => {
           /* best effort — list refetches on next focus */
         });
@@ -101,7 +103,9 @@ export function BillingPaymentMethods({
 
   async function refreshPaymentMethods() {
     setSetupSecret(null);
-    await queryClient.invalidateQueries({ queryKey: billingQueryKeys.paymentMethods() });
+    await queryClient.invalidateQueries({
+      queryKey: billingQueryKeys.paymentMethods(orgId),
+    });
   }
 
   if (!isStripeEnabled()) {

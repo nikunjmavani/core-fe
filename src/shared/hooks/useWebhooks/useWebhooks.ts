@@ -5,19 +5,24 @@ import i18n from '@/lib/i18n/i18n.ts';
 import type { CreateWebhookInput, Webhook } from '@/shared/api/webhook-contracts.ts';
 import * as api from '@/shared/api/webhooks-api.ts';
 import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
-const webhooksQueryKey = ['org', 'webhooks'] as const;
+/** Org-scoped so two tenants never share a webhooks cache entry. */
+const webhooksQueryKey = (organizationId: string | null) =>
+  ['org', organizationId, 'webhooks'] as const;
 
 /** The active org's outbound webhooks. Server state only. */
 export function useWebhooks() {
-  return useQuery({ queryKey: webhooksQueryKey, queryFn: api.listWebhooks });
+  const orgId = useOrganizationStore((s) => s.organizationId);
+  return useQuery({ queryKey: webhooksQueryKey(orgId), queryFn: api.listWebhooks });
 }
 
 /** Create a webhook, then refresh the list. */
 export function useCreateWebhook() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (input: CreateWebhookInput) => api.createWebhook(input),
-    invalidateKeys: [webhooksQueryKey],
+    invalidateKeys: [webhooksQueryKey(orgId)],
     successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.webhooks.createSuccess, {
       ns: ERRORS_NS,
     }),
@@ -26,11 +31,12 @@ export function useCreateWebhook() {
 
 /** Delete a webhook, then refresh the list. */
 export function useDeleteWebhook() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (id: string) => api.deleteWebhook(id),
-    invalidateKeys: [webhooksQueryKey],
+    invalidateKeys: [webhooksQueryKey(orgId)],
     optimistic: {
-      queryKey: webhooksQueryKey,
+      queryKey: webhooksQueryKey(orgId),
       update: (previous: Webhook[] | undefined, id) =>
         previous?.filter((webhook) => webhook.id !== id),
     },

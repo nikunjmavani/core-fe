@@ -6,6 +6,7 @@ import * as orgApi from '@/shared/api/organization-api.ts';
 import type { ApiKey } from '@/shared/api/organization-contracts.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
  * API keys of the active organization — list query + create/rename/revoke mutations.
@@ -13,15 +14,17 @@ import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
  */
 /** API keys for the active organization. */
 export function useApiKeys() {
-  return useQuery({ queryKey: orgQueryKeys.apiKeys(), queryFn: orgApi.listApiKeys });
+  const orgId = useOrganizationStore((s) => s.organizationId);
+  return useQuery({ queryKey: orgQueryKeys.apiKeys(orgId), queryFn: orgApi.listApiKeys });
 }
 
 /** Create an API key. The full secret is returned to the caller exactly once. */
 export function useCreateApiKey() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (input: { name: string; expiresInDays: '30' | '90' | '365' | 'never' }) =>
       orgApi.createApiKey(input),
-    invalidateKeys: [orgQueryKeys.apiKeys()],
+    invalidateKeys: [orgQueryKeys.apiKeys(orgId)],
     successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.apiKeys.createSuccess, {
       ns: ERRORS_NS,
     }),
@@ -30,11 +33,12 @@ export function useCreateApiKey() {
 
 /** Rename an API key — optimistically patches the renamed row. */
 export function useRenameApiKey() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (input: { id: string; name: string }) => orgApi.renameApiKey(input),
-    invalidateKeys: [orgQueryKeys.apiKeys()],
+    invalidateKeys: [orgQueryKeys.apiKeys(orgId)],
     optimistic: {
-      queryKey: orgQueryKeys.apiKeys(),
+      queryKey: orgQueryKeys.apiKeys(orgId),
       update: (previous: ApiKey[] | undefined, input) =>
         previous?.map((key) =>
           key.id === input.id ? { ...key, name: input.name } : key,
@@ -48,11 +52,12 @@ export function useRenameApiKey() {
 
 /** Revoke (delete) an API key — optimistically drops it from the list. */
 export function useRevokeApiKey() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (keyId: string) => orgApi.revokeApiKey(keyId),
-    invalidateKeys: [orgQueryKeys.apiKeys()],
+    invalidateKeys: [orgQueryKeys.apiKeys(orgId)],
     optimistic: {
-      queryKey: orgQueryKeys.apiKeys(),
+      queryKey: orgQueryKeys.apiKeys(orgId),
       update: (previous: ApiKey[] | undefined, keyId) =>
         previous?.filter((key) => key.id !== keyId),
     },

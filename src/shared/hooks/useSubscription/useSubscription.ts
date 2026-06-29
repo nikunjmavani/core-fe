@@ -6,14 +6,16 @@ import * as billingApi from '@/shared/api/billing-api.ts';
 import type { BillingCycle } from '@/shared/api/billing-contracts.ts';
 import { billingQueryKeys } from '@/shared/api/billing-query-keys.ts';
 import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
  * Active subscription for the current organization — query + plan mutations.
  * Server state only — never mirrored into Zustand (file-structure.mdc).
  */
 export function useSubscription() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useQuery({
-    queryKey: billingQueryKeys.activeSubscription(),
+    queryKey: billingQueryKeys.activeSubscription(orgId),
     queryFn: billingApi.getActiveSubscription,
   });
 }
@@ -26,6 +28,7 @@ export function useBillingPlans() {
 }
 
 export function useSelectBillingPlan() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: async ({
       planId,
@@ -44,8 +47,8 @@ export function useSelectBillingPlan() {
       return billingApi.createSubscription({ planId, billingCycle });
     },
     invalidateKeys: [
-      billingQueryKeys.activeSubscription(),
-      billingQueryKeys.subscriptions(),
+      billingQueryKeys.activeSubscription(orgId),
+      billingQueryKeys.subscriptions(orgId),
     ],
     successMessage: (subscription) =>
       i18n.t(ERRORS_KEYS.frontend.hooks.subscription.changePlanSuccess, {
@@ -56,15 +59,17 @@ export function useSelectBillingPlan() {
 }
 
 export function useCancelSubscription() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (subscriptionId: string) => billingApi.cancelSubscription(subscriptionId),
-    invalidateKeys: [billingQueryKeys.activeSubscription()],
+    invalidateKeys: [billingQueryKeys.activeSubscription(orgId)],
   });
 }
 
 export function useResumeSubscription() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useAppMutation({
     mutationFn: (subscriptionId: string) => billingApi.resumeSubscription(subscriptionId),
-    invalidateKeys: [billingQueryKeys.activeSubscription()],
+    invalidateKeys: [billingQueryKeys.activeSubscription(orgId)],
   });
 }
