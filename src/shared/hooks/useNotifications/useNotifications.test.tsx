@@ -3,6 +3,9 @@ import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { notificationQueryKeys } from '@/shared/api/notification-query-keys.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
+
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -45,6 +48,7 @@ function wrapper({ children }: { children: ReactNode }) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  useOrganizationStore.getState().clearOrganization();
   listMock.mockResolvedValue([ITEM]);
   countMock.mockResolvedValue(3);
   markReadMock.mockResolvedValue(undefined);
@@ -74,5 +78,30 @@ describe('useNotifications', () => {
     const { result } = renderHook(() => useMarkAllNotificationsRead(), { wrapper });
     result.current.mutate();
     await waitFor(() => expect(markAllMock).toHaveBeenCalledTimes(1));
+  });
+
+  it('keys the inbox by active org so a switch never reuses the prior org cache', async () => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const shared = ({ children }: { children: ReactNode }) => (
+      <QueryClientProvider client={client}>{children}</QueryClientProvider>
+    );
+
+    // Org A was visited earlier — its inbox sits in the cache.
+    client.setQueryData(notificationQueryKeys.list('org_a'), [
+      { ...ITEM, id: 'ntf_org_a' },
+    ]);
+
+    // Active org is now B. The hook must read org B's key, fetch B's own rows,
+    // and never surface org A's cached notifications.
+    useOrganizationStore.setState({ organizationId: 'org_b' });
+    listMock.mockResolvedValue([{ ...ITEM, id: 'ntf_org_b' }]);
+    const { result } = renderHook(() => useNotifications(), { wrapper: shared });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data).toEqual([{ ...ITEM, id: 'ntf_org_b' }]);
+    // Org A's entry stays its own distinct cache key — untouched, never shown in B.
+    expect(client.getQueryData(notificationQueryKeys.list('org_a'))).toEqual([
+      { ...ITEM, id: 'ntf_org_a' },
+    ]);
   });
 });

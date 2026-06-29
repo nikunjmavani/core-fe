@@ -10,6 +10,7 @@ import { notificationQueryKeys } from '@/shared/api/notification-query-keys.ts';
 import * as api from '@/shared/api/notifications-api.ts';
 import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 import { notify } from '@/shared/notify/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
  * Notifications inbox hooks. With no realtime channel yet, the inbox +
@@ -19,19 +20,21 @@ import { notify } from '@/shared/notify/index.ts';
  */
 const POLL_INTERVAL_MS = 30_000;
 
-/** The signed-in user's notification inbox (newest first), polled. */
+/** The active org's notification inbox for this user (newest first), polled. */
 export function useNotifications() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useQuery({
-    queryKey: notificationQueryKeys.list(),
+    queryKey: notificationQueryKeys.list(orgId),
     queryFn: api.listNotifications,
     refetchInterval: POLL_INTERVAL_MS,
   });
 }
 
-/** Unread count for the bell badge, polled. */
+/** Unread count for the bell badge (active org), polled. */
 export function useUnreadCount() {
+  const orgId = useOrganizationStore((s) => s.organizationId);
   return useQuery({
-    queryKey: notificationQueryKeys.unreadCount(),
+    queryKey: notificationQueryKeys.unreadCount(orgId),
     queryFn: api.getUnreadCount,
     refetchInterval: POLL_INTERVAL_MS,
   });
@@ -40,36 +43,29 @@ export function useUnreadCount() {
 /** Mark one notification read with optimistic UI, then refresh. */
 export function useMarkNotificationRead() {
   const queryClient = useQueryClient();
+  const orgId = useOrganizationStore((s) => s.organizationId);
+  const listKey = notificationQueryKeys.list(orgId);
+  const countKey = notificationQueryKeys.unreadCount(orgId);
   return useMutation({
     mutationFn: (id: string) => api.markNotificationRead(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: notificationQueryKeys.all });
-      const previousList = queryClient.getQueryData<Notification[]>(
-        notificationQueryKeys.list(),
-      );
-      const previousCount = queryClient.getQueryData<number>(
-        notificationQueryKeys.unreadCount(),
-      );
-      queryClient.setQueryData<Notification[]>(notificationQueryKeys.list(), (old) =>
+      const previousList = queryClient.getQueryData<Notification[]>(listKey);
+      const previousCount = queryClient.getQueryData<number>(countKey);
+      queryClient.setQueryData<Notification[]>(listKey, (old) =>
         old?.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
       );
       if (typeof previousCount === 'number') {
-        queryClient.setQueryData(
-          notificationQueryKeys.unreadCount(),
-          Math.max(0, previousCount - 1),
-        );
+        queryClient.setQueryData(countKey, Math.max(0, previousCount - 1));
       }
       return { previousList, previousCount };
     },
     onError: (_err, _id, context) => {
       if (context?.previousList) {
-        queryClient.setQueryData(notificationQueryKeys.list(), context.previousList);
+        queryClient.setQueryData(listKey, context.previousList);
       }
       if (context?.previousCount !== undefined) {
-        queryClient.setQueryData(
-          notificationQueryKeys.unreadCount(),
-          context.previousCount,
-        );
+        queryClient.setQueryData(countKey, context.previousCount);
       }
       notify.error(
         i18n.t(ERRORS_KEYS.frontend.hooks.notifications.updateFailed, { ns: ERRORS_NS }),
