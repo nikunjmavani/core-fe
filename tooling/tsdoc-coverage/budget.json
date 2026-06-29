@@ -1,0 +1,8 @@
+{
+  "_comment": "Locked TSDoc-coverage budget. The gate (`pnpm tsdoc:check`) fails when either count exceeds these numbers. PRs may LOWER counts (and refresh this file via `pnpm tsdoc:check:refresh-budget`); they may not raise them.",
+  "_recordedAt": "2026-06-25",
+  "tokens": {
+    "MISSING_DESCRIPTION": 232,
+    "MISSING_REMARKS": 6
+  }
+}

@@ -1,9 +1,0 @@
-{
-  "_comment": "Frontend endpoint references that intentionally have no core-be route YET. Each entry needs a reason; the gate (pnpm contracts:drift) fails when an entry becomes stale (the backend ships the route) so this list can only shrink toward zero.",
-  "entries": [
-    {
-      "path": "/api/v1/auth/register",
-      "reason": "The register page is committed product surface; core-be has no email/password registration route yet (auth is magic-link/OAuth-first). Re-point or remove when the backend decides."
-    }
-  ]
-}
