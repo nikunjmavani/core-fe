@@ -52,11 +52,16 @@ export function useUpdateMemberRole() {
   });
 }
 
-/** Remove a member, then refresh the members list. */
+/** Remove a member — optimistically drops the row from the list. */
 export function useRemoveMember() {
   return useAppMutation({
     mutationFn: (membershipId: string) => orgApi.removeMember(membershipId),
     invalidateKeys: [orgQueryKeys.members()],
+    optimistic: {
+      queryKey: orgQueryKeys.members(),
+      update: (previous: Member[] | undefined, membershipId) =>
+        previous?.filter((member) => member.id !== membershipId),
+    },
     successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.members.removeSuccess, {
       ns: ERRORS_NS,
     }),

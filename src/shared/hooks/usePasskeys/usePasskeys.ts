@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import i18n from '@/lib/i18n/i18n.ts';
+import type { Passkey } from '@/shared/api/passkey-contracts.ts';
 import {
   listPasskeys,
   registerPasskey,
@@ -33,6 +34,11 @@ export function useRemovePasskey() {
   return useAppMutation({
     mutationFn: (id: string) => removePasskey(id),
     invalidateKeys: [passkeysQueryKey],
+    optimistic: {
+      queryKey: passkeysQueryKey,
+      update: (previous: Passkey[] | undefined, id) =>
+        previous?.filter((passkey) => passkey.id !== id),
+    },
     successMessage: i18n.t(ERRORS_KEYS.frontend.hooks.passkeys.removeSuccess, {
       ns: ERRORS_NS,
     }),

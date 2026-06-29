@@ -69,25 +69,24 @@ Every mutation hook returns TanStack Query's `isPending`. Non-optimistic trigger
 
 ## Current inventory (snapshot — 2026-06-29)
 
-**Optimistic** (instant, auto-rollback):
+**Optimistic** (instant, auto-rollback) — all safe removals + field-patches:
 
-| Domain        | Mutation                             |
-| ------------- | ------------------------------------ |
-| Invitations   | `useRevokeInvitation`                |
-| Roles         | `useUpdateRole`, `useDeleteRole`     |
-| API keys      | `useRenameApiKey`, `useRevokeApiKey` |
-| Members       | `useUpdateMemberRole`                |
-| Notifications | `useMarkNotificationRead`            |
+| Domain        | Mutation                                 |
+| ------------- | ---------------------------------------- |
+| Invitations   | `useRevokeInvitation`                    |
+| Roles         | `useUpdateRole`, `useDeleteRole`         |
+| API keys      | `useRenameApiKey`, `useRevokeApiKey`     |
+| Members       | `useUpdateMemberRole`, `useRemoveMember` |
+| Sessions      | `useRevokeSession`                       |
+| Passkeys      | `useRemovePasskey`                       |
+| Webhooks      | `useDeleteWebhook`                       |
+| Notifications | `useMarkNotificationRead`                |
 
-**Non-optimistic** (must show in-progress):
+**Non-optimistic** (must show in-progress) — creates + shapes we can't safely patch:
 
-- **Creates:** `useCreateInvitation`, `useCreateRole`, `useCreateApiKey`, `useCreateWebhook`
-- `useResendInvitation`, `useUpdateMemberStatus`
-- `useRemoveMember`, `useRevokeSession`, `useRemovePasskey`, `useDeleteWebhook`, `useRegisterPasskey`
+- **Creates:** `useCreateInvitation`, `useCreateRole`, `useCreateApiKey`, `useCreateWebhook`, `useRegisterPasskey`
+- `useResendInvitation` (no list change), `useUpdateMemberStatus`
 - `useMarkAllNotificationsRead`, `useUpdateNotificationPreferences`, `useUpdateOrganization`, billing/MFA
-
-**Candidates to convert to optimistic** (safe removals not yet done):
-`useRemoveMember`, `useRevokeSession`, `useRemovePasskey`, `useDeleteWebhook`.
 
 > The inventory drifts as hooks are added — the **policy** above is the durable
 > contract. When adding or changing a mutation, classify it and update this table.
