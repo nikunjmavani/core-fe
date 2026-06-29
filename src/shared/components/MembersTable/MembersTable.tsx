@@ -62,7 +62,7 @@ import {
   useUpdateMemberStatus,
 } from '@/shared/hooks/useMembers/index.ts';
 import { useHasPermission } from '@/shared/hooks/useRBAC/index.ts';
-import { Download, MoreHorizontal } from '@/shared/icons/index.ts';
+import { Download, Loader2, MoreHorizontal } from '@/shared/icons/index.ts';
 
 import { MEMBERS_TABLE_KEYS, MEMBERS_TABLE_NS } from './members-table.constants.ts';
 
@@ -160,9 +160,19 @@ function RowActions({ member, canManage }: { member: Member; canManage: boolean 
           <AlertDialogFooter>
             <AlertDialogCancel>{t(MEMBERS_TABLE_KEYS.cancel)}</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => removeMember.mutate(member.id)}
+              onClick={(event) => {
+                // Keep the dialog open until the request settles, then close.
+                event.preventDefault();
+                removeMember.mutate(member.id, {
+                  onSettled: () => setConfirmOpen(false),
+                });
+              }}
+              disabled={removeMember.isPending}
               data-testid={`member-remove-confirm-${member.id}`}
             >
+              {removeMember.isPending ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : null}
               {t(MEMBERS_TABLE_KEYS.confirmRemove)}
             </AlertDialogAction>
           </AlertDialogFooter>

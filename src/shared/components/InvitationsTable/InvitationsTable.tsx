@@ -33,10 +33,12 @@ function InvitationActions({
   invitation,
   onRevoke,
   onResend,
+  isResending,
 }: {
   invitation: Invitation;
   onRevoke: (id: string) => void;
   onResend: (id: string) => void;
+  isResending: boolean;
 }) {
   if (invitation.status !== 'pending' && invitation.status !== 'expired') return null;
   return (
@@ -46,9 +48,11 @@ function InvitationActions({
         size="sm"
         className="h-8"
         onClick={() => onResend(invitation.id)}
+        disabled={isResending}
+        isLoading={isResending}
         data-testid={`invitation-resend-${invitation.id}`}
       >
-        <RotateCw className="mr-1 h-4 w-4" />
+        {isResending ? null : <RotateCw className="mr-1 h-4 w-4" />}
         Resend
       </Button>
       {invitation.status === 'pending' ? (
@@ -76,6 +80,7 @@ function buildColumns(
   canManage: boolean,
   onRevoke: (id: string) => void,
   onResend: (id: string) => void,
+  isResending: (id: string) => boolean,
 ): ColumnDef<Invitation>[] {
   return [
     {
@@ -121,6 +126,7 @@ function buildColumns(
             invitation={row.original}
             onRevoke={onRevoke}
             onResend={onResend}
+            isResending={isResending(row.original.id)}
           />
         ) : null,
       enableSorting: false,
@@ -147,6 +153,7 @@ export function InvitationsTable({ invitations }: { invitations: Invitation[] })
         canManage,
         (id) => revoke.mutate(id),
         (id) => resend.mutate(id),
+        (id) => resend.isPending && resend.variables === id,
       ),
     [canManage, revoke, resend],
   );
