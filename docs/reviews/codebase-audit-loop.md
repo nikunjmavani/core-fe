@@ -373,3 +373,65 @@ Each with a regression test in `fetch-client.test.ts`:
 - **4.3, 4.4 — OPEN.** Left as documented findings (no code change this pass).
 
 ---
+
+## Iteration 5 — Scalability & data-layer (high-signal pass) (2026-06-29)
+
+### 5.1 Every list endpoint fetches the whole collection; tables page/sort/filter client-side
+
+- **Area:** Scalability / data layer
+- **Severity:** High
+- **Current:** `src/shared/api/organization-api.ts:112` — `listMembers(): Promise<Member[]>`
+  does `GET /memberships` with **no `page`/`size`/`sort`/`q`** params and returns
+  the entire array; same shape for `listInvitations` (`:187`), `listRoles`
+  (`:239`), `listApiKeys` (`:295`), `listSessions`, `listWebhooks`. The hooks
+  (`useMembers`, …) `useQuery` the full array, and `MembersTable` /
+  `InvitationsTable` use TanStack's **client-side** `getPaginationRowModel` +
+  `getFilteredRowModel` + `getSortedRowModel`. So the whole dataset is downloaded,
+  Zod-parsed, held in memory, and paged/sorted/filtered in the browser — even
+  though the HTTP client already surfaces `meta.pagination` (cursor) that nothing
+  consumes, and `useDataTableUrlState` writes `page/size/sort/q` to the URL that
+  the server never sees.
+- **Suggestion:** Move to **server-driven** pagination/sort/filter: pass the URL
+  params to the API, consume `meta.pagination` (cursor) via `useInfiniteQuery` or
+  manual paging, and switch the tables to `manualPagination/manualSorting/
+manualFiltering`. The URL state plumbing already exists — wire it through.
+- **+** Payload, memory, parse time, and interaction latency become **bounded**
+  (one page) regardless of org size; first render is fast; the URL params and the
+  `meta.pagination` contract become real; mutations refetch one page, not 50k rows.
+- **−** Requires paged/sorted/filtered list endpoints on the backend; more query
+  state; loses "instant" client-side sort/filter on small sets (mitigate with a
+  small-N fast path).
+- **Edge case / scale trigger:** An org with thousands–tens-of-thousands of
+  members/invitations. One request downloads the entire set, Zod-parses the whole
+  array on the response path, and the browser sorts/filters/paginates it in
+  memory — all **O(n)**. **Worse:** each optimistic mutation calls
+  `invalidateQueries`, which **re-downloads and re-parses the entire collection**,
+  so every add/remove/role-change triggers a full-list refetch storm at scale.
+
+### 5.2 The whole-collection Zod `.parse` runs synchronously on the response path
+
+- **Area:** Performance / robustness
+- **Severity:** Medium
+- **Current:** `organization-api.ts:113` —
+  `z.array(membershipWire).parse(res.data).map(toMember)` validates and maps the
+  **entire** array synchronously before the promise resolves. Combined with 5.1
+  (fetch-all), this is O(n) main-thread work, and `.parse` is **all-or-nothing**:
+  one malformed row rejects the whole list (a member page fails to render because
+  of a single bad record).
+- **Suggestion:** With server pagination (5.1) each parse is page-bounded. Beyond
+  that, consider `safeParse` per page with telemetry on drift, and per-row
+  tolerance (drop + log a bad row rather than fail the page) for resilience.
+- **+** Bounded validation cost; one corrupt row no longer blanks the table.
+- **−** `safeParse` + per-row tolerance changes error semantics and needs a
+  documented policy (when to drop vs surface).
+- **Edge case / scale trigger:** Large list response → multi-millisecond
+  synchronous parse/map blocking interaction; or a single shape-drifted row from
+  the backend taking down the entire list view.
+
+### Verified OK (this pass)
+
+- **Cursor pagination contract exists** end-to-end in the HTTP client
+  (`meta.pagination`: `next`, `has_more`, `estimated_total`) and is surfaced on
+  `HttpResponse.meta` — the plumbing for 5.1 is already there, just unused.
+
+---
