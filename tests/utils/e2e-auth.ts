@@ -85,9 +85,6 @@ export async function authenticateViaEmailCode(page: Page): Promise<{ email: str
   return { email };
 }
 
-/** @deprecated Use {@link authenticateViaEmailCode} — signup route removed in core-be PR #814. */
-export const authenticateViaSignup = authenticateViaEmailCode;
-
 /**
  * Walks the onboarding wizard through to a dashboard when the user still needs it.
  * Skips workspace/invite steps when they are hidden for the deployment mode.
@@ -118,9 +115,6 @@ export async function completeOnboardingWizard(page: Page): Promise<void> {
     timeout: 15000,
   });
 }
-
-/** Alias for explicit onboarding journey specs. */
-export const walkOnboardingWizard = completeOnboardingWizard;
 
 /**
  * Signs in through the unified `/login` email-code UI and lands on onboarding or a dashboard.

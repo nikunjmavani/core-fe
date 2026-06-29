@@ -1,11 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  completeOnboardingWizard,
   createTeamOrgViaSwitcher,
   loginViaEmailCodeUI,
   navigateInApp,
   registerNewUserAndGoToDashboard,
-  walkOnboardingWizard,
 } from '@/tests/utils/e2e-auth.ts';
 import {
   clickTestId,
@@ -36,7 +36,7 @@ test.describe('Product journeys', () => {
     requireDatabaseUrl();
     await loginViaEmailCodeUI(page, uniqueE2eEmail('onboard-ui'));
     if (page.url().includes('/onboarding')) {
-      await walkOnboardingWizard(page);
+      await completeOnboardingWizard(page);
     }
     await expect(page.getByTestId('dashboard-page')).toBeVisible({ timeout: 15000 });
   });
