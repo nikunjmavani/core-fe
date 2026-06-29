@@ -45,7 +45,6 @@ import {
   GENERATED_FONTS,
   GENERATED_PRESET,
   GENERATED_RADII,
-  type GeneratedTheme,
   HARMONY_RULES,
   hexToHue,
   ICON_COLORS,
@@ -70,6 +69,8 @@ import {
   type ToastVariant,
   TYPE_SCALES,
 } from '@/shared/theme/index.ts';
+
+import { lookFields } from './appearance-look.ts';
 
 const THEMES = [
   { id: 'light' as const, label: 'Light', description: 'Bright theme.', icon: Sun },
@@ -298,35 +299,6 @@ function FontSelect({
 
 function FieldLabel({ children }: { children: string }) {
   return <p className="text-sm font-medium">{children}</p>;
-}
-
-function accentIdForHue(hue: number): string | null {
-  return ACCENT_COLORS.find((c) => c.hue === hue)?.id ?? null;
-}
-
-function customLookLabel(bodyFontId: string, radiusId: string): string {
-  return [
-    // eslint-disable-next-line security/detect-object-injection -- key from the fixed font catalog
-    GENERATED_FONTS[bodyFontId]?.label,
-    // eslint-disable-next-line security/detect-object-injection -- key from the fixed radius catalog
-    GENERATED_RADII[radiusId]?.label,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-}
-
-/** Derive the selected picker ids + a summary label from the current look. */
-function lookFields(look: GeneratedTheme | null) {
-  const bodyFontId = look?.bodyFontId ?? 'inter';
-  const radiusId = look?.radiusId ?? 'default';
-  return {
-    accentId: look ? accentIdForHue(look.hue) : null,
-    chartId: look ? accentIdForHue(look.chartHue) : null,
-    bodyFontId,
-    headingFontId: look?.headingFontId ?? 'inter',
-    radiusId,
-    customLook: look ? customLookLabel(bodyFontId, radiusId) : '',
-  };
 }
 
 /** A small per-section shuffle button (re-rolls just one card's axes). */
