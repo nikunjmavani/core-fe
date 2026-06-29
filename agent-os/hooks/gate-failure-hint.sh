@@ -29,7 +29,7 @@ case "$lower" in *docs:lint*)
   HINTS+=("markdown lint → fix MD0xx (ordered-list prefixes, fenced-code language); emphasis style follows Prettier (documentation-maintenance)") ;;
 esac
 case "$lower" in *tsdoc*)
-  HINTS+=("TSDoc budget → add a summary to new exports; budget scripts/tsdoc/budget.json is a raise-only ratchet") ;;
+  HINTS+=("TSDoc budget → add a summary to new exports; budget tooling/tsdoc-coverage/budget.json is a raise-only ratchet") ;;
 esac
 # tsc / typecheck
 if printf '%s' "$lower" | grep -Eq 'pnpm tsc|tsc -b|tsc --noemit|type-check|typecheck'; then

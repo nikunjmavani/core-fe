@@ -63,7 +63,7 @@ Use this skill when the user asks to **run a full project health check**, **veri
 2. **Create missing tests**
    - Use **test-generation** skill templates (component, form, page, store, service, utility, hook).
    - Use `renderWithProviders` from `@/tests/utils/renderWithProviders.tsx` for component tests.
-   - Use `mockApiClient` from `@/tests/utils/mockApiClient.ts` for API mocking.
+   - Unit tests stub HTTP with `vi.mock()` + `vi.fn()` on `apiClient` or fetchers — no server.
    - Every component/form/page test MUST include: `expect(await axe(container)).toHaveNoViolations()`.
    - Use `data-testid` selectors; verify testids exist in the source component.
    - Use `import type` for type-only imports; include `.ts`/`.tsx` in imports; use `@/` alias.
@@ -117,7 +117,7 @@ Use **lint-guard** skill for common fix patterns: nested ternaries, React purity
 
 **Goal:** Env and public-asset validation pass.
 
-1. Run `pnpm validate:env-example` — `.env.example` must document all required vars from `scripts/required-env.txt`.
+1. Run `pnpm validate:env-example` — `.env.example` must document all schema keys (`pnpm tool:sync-env-example`).
 2. Run `pnpm validate:public` — required public assets (manifest, robots.txt, etc.) must exist.
 
 Fix any failures (add missing vars to `.env.example`, add missing assets to `public/`).

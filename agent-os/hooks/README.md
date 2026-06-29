@@ -18,13 +18,13 @@ derives the committed artifacts under `agent-os/platforms/`:
 | `platforms/claude/settings.json` (`hooks` block + shared permissions) | `.claude/settings.json` |
 | `platforms/cursor/hooks.json`                                         | `.cursor/hooks.json`    |
 | `platforms/codex/hooks.json`                                          | `.codex/hooks.json`     |
-| `platforms/codex/config.toml` (from `mcp/mcp.default.json`)           | `.codex/config.toml`    |
+| `platforms/codex/config.toml` (from `mcp/mcp.default.json`)             | `.codex/config.toml`    |
 
 Drift gate: `pnpm agent-os:generate:check`.
 
 | Hook                      | Event (Claude)                      | What it does                                                                                   |
 | ------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `session-start.sh`        | SessionStart                        | Verify/switch Node, install deps (web), scaffold `.mcp.json`, inject skill map                 |
+| `session-start.sh`        | SessionStart                        | Verify/switch Node, install deps (web), scaffold default MCP pair, inject skill map            |
 | `prompt-skill-router.sh`  | UserPromptSubmit                    | On a build/change prompt, inject the FE skill chain (conservative)                             |
 | `guard-edits.sh`          | PreToolUse · Edit\|Write\|MultiEdit | **Deny** `../` imports, direct `lucide-react`, raw palette classes, generated files            |
 | `guardrails.mjs`          | PreToolUse · Bash\|Edit\|Write      | **Deny** destructive shell (`rm -rf`, force-push, fork bomb) + secrets; warn on vendored paths |

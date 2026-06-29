@@ -76,7 +76,7 @@ Checks run on every `git commit` via `.husky/pre-commit` and `.husky/commit-msg`
 
 | #   | Check                   | What it does                                                                                   | Blocks commit?     |
 | --- | ----------------------- | ---------------------------------------------------------------------------------------------- | ------------------ |
-| 1   | **before-commit-guard** | `./scripts/validate/before-commit-guard.sh` — env docs, public assets, lint-staged, type-check | Yes                |
+| 1   | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` — env docs, public assets, lint-staged, type-check | Yes                |
 | 2   | `commitlint`            | Enforces conventional commit format (`feat:`, `fix:`, etc.)                                    | Yes                |
 | 3   | Gitleaks                | Scans staged files for secrets/API keys                                                        | Yes (if installed) |
 | 4   | Merge conflict markers  | Rejects files containing `<<<<<<<` or `>>>>>>>`                                                | Yes                |
@@ -89,7 +89,7 @@ See **before-commit-guard** skill (`agent-os/skills/before-commit-guard/SKILL.md
 | File                                      | Purpose                                                                          |
 | ----------------------------------------- | -------------------------------------------------------------------------------- |
 | `.husky/pre-commit`                       | Pre-commit hook (invokes before-commit-guard + gitleaks + conflict + large file) |
-| `scripts/validate/before-commit-guard.sh` | Guard script: env, public, lint-staged, type-check                               |
+| `tooling/validate/before-commit-guard.sh` | Guard script: env, public, lint-staged, type-check                               |
 | `.husky/commit-msg`                       | Commit message validation hook                                                   |
 | `.commitlintrc.json`                      | Conventional commit config                                                       |
 | `.gitleaks.toml`                          | Gitleaks secret scan allowlist                                                   |
@@ -127,7 +127,6 @@ Runs on every PR to `main`/`develop`. Multiple parallel jobs across several work
 | CI            | `.github/workflows/pr-ci.yml`         | Core quality + security checks  |
 | Preview       | `.github/workflows/preview.yml`       | PR preview builds               |
 | Post-merge CI | `.github/workflows/post-merge-ci.yml` | release-please + Netlify deploy |
-| Load Test     | `.github/workflows/load-test.yml`     | k6 browser load tests (weekly)  |
 | Mutation Test | `.github/workflows/mutation-test.yml` | Stryker mutation tests (weekly) |
 
 ### CI Jobs
@@ -166,7 +165,6 @@ Runs on every PR to `main`/`develop`. Multiple parallel jobs across several work
 | `.github/workflows/pr-ci.yml`         | 3     | CI workflow with quality + security jobs |
 | `.github/workflows/preview.yml`       | 3     | PR preview builds                        |
 | `.github/workflows/post-merge-ci.yml` | 3     | release-please + Netlify deploy          |
-| `.github/workflows/load-test.yml`     | 3     | k6 browser load tests                    |
 | `.github/workflows/mutation-test.yml` | 3     | Stryker mutation tests                   |
 | `.semgrepignore`                      | 3     | Semgrep ignore patterns for CI           |
 | `.lighthouserc.cjs`                   | 3     | Lighthouse CI assertions                 |

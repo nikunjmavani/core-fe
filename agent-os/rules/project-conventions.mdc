@@ -29,7 +29,7 @@ This is an enterprise React 18 + TypeScript + Vite frontend with a page-first ar
 
 ## Route Marker Convention
 
-Every directory under `src/pages/` that maps to a frontend URL **must** contain a `<page>.route.tsx` file that exports `Component` (required) and optionally `loader`, `action`, `ErrorBoundary`.
+Every directory under `src/pages/` that maps to a frontend URL **must** contain a `<page>.route.tsx` file that exports `Component` (required). Optional: `ErrorBoundary` when wired in routeTree. **Do not** export `loader()` for RBAC — use `routeTree.tsx` `beforeLoad` + `gatewayFromManifest`.
 
 ## TypeScript
 
@@ -80,9 +80,9 @@ pages/<page>/
 ## Routing
 
 - All routes are lazy loaded: `lazy: () => import('@/pages/<name>/<name>.route.tsx').then(m => ({ default: m.Component }))`
-- Route modules export `Component` (required), `loader` (optional), `ErrorBoundary` (optional)
-- Protected routes are wrapped with `<ProtectedRoute>` in the route config
-- RBAC enforcement in route loaders: `requirePermission('domain.action')`
+- Route modules export `Component` (required), `ErrorBoundary` (optional, when wired in routeTree)
+- Protected routes are wrapped with guards in `routeTree.tsx` `beforeLoad`
+- RBAC enforcement: `gatewayFromManifest(manifest)` (+ org/tenancy gates per route)
 
 ## HTTP / API
 
@@ -111,5 +111,4 @@ pages/<page>/
 - All test code: **`tests/`** at project root (see `tests/README.md`)
 - Unit/integration: `pages/**` → `__tests__/unit/`; `shared/`, `core/`, `lib/`, `stores/` → colocated `*.test.*`; run with Vitest
 - E2E: `tests/e2e/` — Playwright browser tests
-- Load: `tests/load/` — k6
 - Test utilities: `tests/utils/` (renderWithProviders); import as `@/tests/utils/...`

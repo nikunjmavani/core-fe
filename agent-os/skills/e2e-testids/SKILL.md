@@ -11,7 +11,7 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 
 - User asks for "test ids", "e2e selectors", "data-testid", or "ids for playwright"
 - New page, form, dialog, table, or nav item is added
-- Before writing or extending `tests/e2e/*.{e2e,integration}.test.ts`
+- Before writing or extending `tests/e2e/*.e2e.test.ts`
 - Page scaffolding or auto-implement completes UI work
 
 ## Rules
@@ -23,6 +23,18 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 5. **Do not** add testids to shadcn primitives in `shared/components/ui/` unless wrapping in a page-specific component.
 6. **Inventory:** After adding or renaming testids on a route, update `docs/reference/e2e-testids-inventory.md`.
 
+## CI gate
+
+`pnpm validate:testids` enforces **test contracts** (not every DOM node):
+
+| Check          | Rule                                                                                                                        |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Page manifests | `manifest.testId` must appear on a `data-testid` in the island or its delegated shell (e.g. `Dashboard` → `dashboard-page`) |
+| Forms          | `src/pages/**/forms/*Form.tsx` and `src/shared/forms/*Form.tsx` need `*-form` + primary action (`*-submit`, `*-sign-in`, …) |
+| Shell          | `app-layout`, `auth-layout`, `settings-modal` roots                                                                         |
+
+Allowlist: `tooling/validate/test-ids-allowlist.txt`. Runs in `pnpm health` after `validate:theme-axis`.
+
 ## Naming patterns
 
 | Element              | Pattern                                 | Example                         |
@@ -32,7 +44,7 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 | Layout shell         | `<layout>-layout`                       | `auth-layout`, `app-layout`     |
 | Form wrapper         | `<form>-form`                           | `login-form`                    |
 | Form field           | `<form>-<field>`                        | `login-email`                   |
-| Submit               | `<form>-submit`                         | `register-submit`               |
+| Submit               | `<form>-submit`                         | `auth-email-submit`             |
 | API / server error   | `<form>-error`                          | `login-error`, `form-error`     |
 | Field validation     | `<form>-<field>-error`                  | `login-email-error`             |
 | Link (auth switch)   | `<context>-link-<action>`               | `login-link-sign-up`            |
@@ -55,17 +67,24 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 3. Append the route section in `docs/reference/e2e-testids-inventory.md`.
 4. Write Playwright spec using `page.getByTestId('...')`.
 
-### Playwright usage
+### Playwright usage (hybrid)
+
+**Read `agent-os/skills/playwright-e2e/SKILL.md` first.** Actions use testid; visibility also asserts roles/labels via `tests/utils/e2e-hybrid.ts`.
 
 ```ts
+import {
+  clickTestId,
+  expectLoginFormReady,
+  fillTestId,
+} from '@/tests/utils/e2e-hybrid.ts';
+
 await page.goto('/login');
-await expect(page.getByTestId('login-form')).toBeVisible();
-await page.getByTestId('login-email').fill('user@example.com');
-await page.getByTestId('login-submit').click();
-await expect(page.getByTestId('login-error')).toBeVisible();
+await expectLoginFormReady(page); // testid + getByLabel/getByRole
+await fillTestId(page, 'login-email', 'user@example.com');
+await clickTestId(page, 'login-submit');
 ```
 
-Prefer `getByTestId` over `getByRole` in E2E **only where testids exist**; use role queries for a11y specs when testids are absent.
+Use `getByRole` / `getByLabel` for **a11y guards** on labeled controls; use `getByTestId` for **all interactions**.
 
 ### Checklist (every new page)
 

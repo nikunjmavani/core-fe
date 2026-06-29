@@ -64,7 +64,9 @@ Standard breakpoints: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px).
 ## Typography
 
 - Font family: Inter (sans), JetBrains Mono (mono) — defined in `@theme`
-- Use Tailwind's `text-*` utilities for sizing
+- Use Tailwind's `text-*` utilities for sizing — **minimum `text-xs` (12px) for readable UI copy**; do not use arbitrary sizes below 12px (e.g. `text-[0.6875rem]`) for labels, hints, or body text on product surfaces
+- **Surface pairing:** on `bg-card` / `bg-popover`, use `text-card-foreground` (or shadcn `Card`, which sets it). On `bg-background`, use `text-foreground`. Never put `text-foreground` on a card surface without checking contrast in both modes
+- **Preset axes:** type scale, density, and motion floors — `docs/reference/preset-product-design-rules.md`
 - Heading pattern: `text-3xl font-bold tracking-tight text-foreground`
 - Body pattern: `text-sm text-muted-foreground`
 
@@ -100,3 +102,4 @@ All shadcn/ui primitives live in `src/shared/components/ui/`. When adding new co
 - Never use `dark:` variant in components — rely on CSS variable overrides
 - Never hardcode colors — always use design tokens
 - Never use `!important`
+- **Never fade page/route content with opacity** — `--animate-fade-in-up` maps to transform-only `route-rise` in `index.css`. Do not reintroduce `opacity: 0` on `PageTransition`, layout outlets, or other wrappers that hold primary copy (causes invisible text with `animation-fill-mode: both` + reduced motion). Opacity fades are OK on overlays/dialogs, not on main content shells

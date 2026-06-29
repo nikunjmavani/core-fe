@@ -1,8 +1,16 @@
 {
   "mcpServers": {
+    "codegraph": {
+      "command": "pnpm",
+      "args": ["exec", "codegraph", "serve", "--mcp"]
+    },
+    "headroom": {
+      "command": "uvx",
+      "args": ["--from", "headroom-ai[mcp]", "headroom", "mcp", "serve"]
+    },
     "context7": {
       "command": "pnpm",
-      "args": ["exec", "context7-mcp", "--api-key", "YOUR_CONTEXT7_API_KEY"]
+      "args": ["exec", "context7-mcp", "--api-key", "${CONTEXT7_API_KEY}"]
     },
     "shadcn": {
       "command": "pnpm",
@@ -11,10 +19,6 @@
     "tailwindcss": {
       "command": "pnpm",
       "args": ["exec", "tailwindcss-server"]
-    },
-    "github": {
-      "url": "https://api.githubcopilot.com/mcp/",
-      "headers": {}
     },
     "core-be-api": {
       "url": "http://localhost:3000/api/v1/mcp"
@@ -37,14 +41,6 @@
         "SONARQUBE_URL",
         "mcp/sonarqube"
       ]
-    },
-    "codegraph": {
-      "command": "pnpm",
-      "args": ["exec", "codegraph", "serve", "--mcp"]
-    },
-    "headroom": {
-      "command": "uvx",
-      "args": ["--from", "headroom-ai[mcp]", "headroom", "mcp", "serve"]
     }
   }
 }

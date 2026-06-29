@@ -56,25 +56,30 @@ if [ "${CLAUDE_CODE_REMOTE:-}" = "true" ]; then
   fi
 fi
 
-# --- MCP config: scaffold the local config from the committed template -------
-# `.mcp.json` is a tracked symlink → agent-os/mcp/mcp.json (gitignored, holds the
-# Context7 key). When the real file is absent, scaffold it from the secret-free
-# mcp.example.json so servers are declared; the Context7 key still needs filling
-# in (see agent-os/docs/cursor-mcp-setup.md). Best-effort, fail-open.
+# --- MCP config: declare the full template set before the first prompt ------
+# Claude Code / Cursor read `.mcp.json` at startup (symlink → agent-os/mcp/mcp.json).
+# On local sessions, scaffold the full set from `.mcp.example.json` when absent —
+# same as `pnpm setup:local` / `pnpm mcp:setup`.
 mcp_status="n/a"
-if [ -f agent-os/mcp/mcp.json ]; then
+if [ -f .mcp.json ]; then
   if command -v jq >/dev/null 2>&1; then
-    mcp_status="$(jq -r '.mcpServers | keys | length' agent-os/mcp/mcp.json 2>/dev/null || echo '?') declared"
+    mcp_status="$(jq -r '.mcpServers | keys | length' .mcp.json 2>/dev/null || echo '?') declared"
   else
     mcp_status="declared"
   fi
-elif [ -f agent-os/mcp/mcp.example.json ]; then
-  if cp agent-os/mcp/mcp.example.json agent-os/mcp/mcp.json 2>/dev/null; then
-    mcp_status="scaffolded from template (set your Context7 key)"
-    echo "session-start: scaffolded agent-os/mcp/mcp.json from mcp.example.json — set YOUR_CONTEXT7_API_KEY (agent-os/docs/cursor-mcp-setup.md)." >&2
+elif [ "${CLAUDE_CODE_REMOTE:-}" != "true" ] && [ -f .mcp.example.json ]; then
+  if pnpm exec tsx tooling/dev/setup-mcp.ts >/dev/null 2>&1; then
+    if command -v jq >/dev/null 2>&1; then
+      mcp_status="$(jq -r '.mcpServers | keys | length' .mcp.json 2>/dev/null || echo '?') scaffolded (full set)"
+    else
+      mcp_status="scaffolded full MCP set"
+    fi
+    echo "session-start: scaffolded .mcp.json via pnpm mcp:setup; set CONTEXT7_API_KEY in .env.local." >&2
   else
-    mcp_status="template only (cp agent-os/mcp/mcp.example.json agent-os/mcp/mcp.json)"
+    mcp_status="template only (run: pnpm setup:local --no-start)"
   fi
+else
+  mcp_status="platform-managed on web (configure in environment MCP settings); local: pnpm setup:local"
 fi
 
 # --- Build session context: env summary + skill routing map ------------------
@@ -90,7 +95,7 @@ map_file="$ROOT/agent-os/docs/skill-triggers.md"
 map_section=""
 [ -f "$map_file" ] && map_section="$(cat "$map_file")"
 
-context="$(printf 'core-fe session ready — environment provisioned: %s.\n- Node %s (need >=%s) · deps %s · gh %s · mcp %s · gitleaks %s%s\n- Dev: pnpm dev (Vite :5173, mock API). Gates: pnpm health (all phases) · pnpm tsc · pnpm lint · pnpm validate:tokens · pnpm validate:structure · pnpm test\n- Skill-first: consult agent-os/skills/skill-registry/SKILL.md, then the listed skill(s) for the files you change.\n\n%s' \
+context="$(printf 'core-fe session ready — environment provisioned: %s.\n- Node %s (need >=%s) · deps %s · gh %s · mcp %s · gitleaks %s%s\n- Dev: pnpm dev (Vite :5173) + core-be on :3000. Bootstrap: pnpm setup:local. Gates: pnpm health (all phases) · pnpm tsc · pnpm lint · pnpm validate:tokens · pnpm validate:structure · pnpm validate:testids · pnpm validate:theme-axis · pnpm test\n- Skill-first: consult agent-os/skills/skill-registry/SKILL.md, then the listed skill(s) for the files you change.\n\n%s' \
   "$provisioned" "$node_version" "$required_major" "$deps" "$gh_cli" "$mcp_status" "$gitleaks_status" "$node_note" "$map_section")"
 
 # Prefer the structured additionalContext envelope; fall back to plain stdout

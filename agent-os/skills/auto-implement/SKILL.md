@@ -117,7 +117,7 @@ Once the user provides a requirement (Option A or B), the agent runs **all** of 
 4. **Add RBAC permissions** in `src/core/rbac/policies.ts`:
    - If the requirement specifies permission names (e.g. `notifications.read`), add them.
    - If not specified but the page is protected, infer from the page name (e.g. `<name>.read`, `<name>.write`).
-   - Add `requirePermission()` in the route's `loader` export.
+   - Enforce RBAC in `routeTree.tsx` `beforeLoad` via `gatewayFromManifest(manifest)` (not an island `loader()` export).
 
 ### Phase 3 — Test
 

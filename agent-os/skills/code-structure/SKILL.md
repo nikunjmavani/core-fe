@@ -53,7 +53,7 @@ src/
 │   ├── <page>.contracts.ts       Zod schemas
 │   ├── <page>.api.ts             fetchers
 │   ├── <page>.search.ts          URL search-param schema (optional)
-│   ├── <page>.fixtures.ts        mocks (optional)
+│   ├── <page>.fixtures.ts        placeholder data (optional, REPLACE_WITH_API)
 │   ├── store/use<X>Store/        rare — page-local Zustand
 │   ├── components/<Name>/        folder-per-unit
 │   ├── forms/<Name>Form/         folder-per-unit
@@ -64,7 +64,7 @@ src/
 │
 ├── shared/                       Cross-page reusables
 │   ├── api/                      cross-page API helpers (org domain, tenancy, my-orgs)
-│   ├── auth/                     auth runtime: token, service, refresh-timer, idle-timeout, mocks
+│   ├── auth/                     auth runtime: token, service, refresh-timer, idle-timeout
 │   ├── errors/                   error handling (HttpError, errorHandler)
 │   ├── components/
 │   │   ├── ui/                   shadcn primitives — FLAT (exception)
@@ -82,9 +82,8 @@ src/
 
 # Tests at project root
 tests/
-├── utils/                        renderWithProviders, mocks, setup (@/tests/utils/...)
-├── e2e/                          Playwright E2E
-└── load/                         k6 load tests
+├── utils/                        renderWithProviders, e2e helpers, setup (@/tests/utils/...)
+└── e2e/                          Playwright E2E
 ```
 
 ## Placement cheat sheet
@@ -107,7 +106,6 @@ tests/
 | Pure helper (no React, no API)         | `src/lib/`                                                                                                                          |
 | Standard CRUD hook (resource-agnostic) | `src/shared/hooks/use{List,One,Create,Update,Delete}/`                                                                              |
 | Resource manifest                      | `src/pages/<resource>/<resource>.resource.ts`                                                                                       |
-| Load tests (k6)                        | `tests/load/`                                                                                                                       |
 
 ## Route marker rule
 

@@ -19,14 +19,14 @@ The pre-commit hook (`.husky/pre-commit`) runs:
 
 | #   | Check                   | Script/Command                              | Purpose                                          |
 | --- | ----------------------- | ------------------------------------------- | ------------------------------------------------ | ------- | --------------------------- |
-| 1   | **before-commit-guard** | `./scripts/validate/before-commit-guard.sh` | Env docs, public assets, lint-staged, type-check |
+| 1   | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` | Env docs, public assets, lint-staged, type-check |
 | 2   | Gitleaks                | `gitleaks protect --staged`                 | Secret/API key detection (if installed)          |
 | 3   | Merge conflict markers  | `grep -rlE '^(<{7}                          | >{7}                                             | ={7})'` | Reject unresolved conflicts |
 | 4   | Large file check        | `wc -c`                                     | Reject files > 1MB                               |
 
 ### Inside before-commit-guard.sh
 
-1. **validate:env-example** — `.env.example` documents all vars from `scripts/required-env.txt` (VITE_API_BASE_URL, NODE_VERSION).
+1. **validate:env-example** — `.env.example` documents all keys from `src/core/config/env-schema.ts` (via `pnpm tool:sync-env-example`).
 2. **validate:public** — Required public assets exist: config.js, theme-init.js, vite.svg, manifest.webmanifest, \_headers, offline.html, robots.txt.
 3. **lint-staged** — ESLint --fix + Prettier on staged `.ts`, `.tsx`, `.css`, `.json`, `.md`, `.yaml`, `.yml`.
 4. **type-check** — `tsc --noEmit` for full project.
@@ -37,11 +37,7 @@ The pre-commit hook (`.husky/pre-commit`) runs:
 
 **Error:** "`.env.example` is missing required var(s): NODE_VERSION"
 
-**Fix:** Add the missing var to `.env.example`. See `scripts/required-env.txt` for the list. Example:
-
-```
-NODE_VERSION=24
-```
+**Fix:** Add the missing key to `.env.example` (or run `pnpm tool:sync-env-example --fix`). See `agent-os/skills/env-schema-add/SKILL.md`.
 
 ### validate:public fails
 
@@ -96,7 +92,8 @@ Use `pnpm health` or `pnpm health:fix` for the full path-to-production flow befo
 
 | File                                      | Purpose                                          |
 | ----------------------------------------- | ------------------------------------------------ |
-| `scripts/validate/before-commit-guard.sh` | Main guard script                                |
+| `tooling/validate/before-commit-guard.sh` | Main guard script                                |
 | `.husky/pre-commit`                       | Invokes guard + gitleaks + conflict + large file |
 | `package.json` `lint-staged`              | ESLint + Prettier on staged files                |
-| `scripts/required-env.txt`                | Required env var names for .env.example          |
+| `src/core/config/env-schema.ts`           | Schema source of truth for env keys              |
+| `tooling/validate/sync-env-example.ts`    | Schema ↔ `.env.example` parity                   |

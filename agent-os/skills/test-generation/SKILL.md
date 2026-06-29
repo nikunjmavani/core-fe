@@ -44,7 +44,7 @@ Use this skill when:
 ### 2. Create Test File
 
 - **Colocated beside source everywhere** — `src/pages/**` islands, `shared/`, `core/`, `lib/`, `stores/` all put `<Name>.test.{ts,tsx}` in the same folder as `<Name>`. (A page's cross-component _integration_ flows may additionally live in `pages/<page>/__tests__/integration/`.)
-- **E2E / integration** (`tests/e2e/`, Playwright): full-stack mock UI flow → `<name>.e2e.test.ts`; contract against the running core-be → `<name>.integration.test.ts`. Never `.spec.ts`.
+- **E2E** (`tests/e2e/`, Playwright): `<name>.e2e.test.ts` (UI) or `<name>-api.e2e.test.ts` (HTTP contracts). Never `.spec.ts`.
 
 See `agent-os/skills/route-island/SKILL.md` and `docs/reference/route-island-structure.md`.
 
@@ -157,7 +157,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 import { PageName } from './PageNamePage.tsx';
 
-// Mock API calls
+// Stub API module
 vi.mock('./api.ts', () => ({
   pageNameApi: {
     list: vi.fn().mockResolvedValue([]),
@@ -309,7 +309,7 @@ describe('useHookName', () => {
   });
 
   it('handles fetch errors', async () => {
-    // Mock API to fail
+    // Stub API to fail
     const { result } = renderHook(() => useHookName(), {
       wrapper: createWrapper(),
     });
@@ -359,20 +359,33 @@ After generating the test file:
 
 ### 7. E2E Test Considerations
 
-Before writing E2E specs, ensure testids exist (invoke **e2e-testids** skill) and match `docs/reference/e2e-testids-inventory.md`.
+Before writing E2E specs:
 
-For pages with complex user flows, also create a Playwright E2E spec at `tests/e2e/<feature>.e2e.test.ts`:
+1. Ensure testids exist — invoke **e2e-testids** skill; match `docs/reference/e2e-testids-inventory.md`
+2. Run **`pnpm validate:testids`** after adding pages/forms/shell surfaces
+3. Follow **playwright-e2e** skill — hybrid selectors via `tests/utils/e2e-hybrid.ts`
+
+**Hybrid pattern** (`agent-os/skills/playwright-e2e/SKILL.md`):
 
 ```ts
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
+import { clickTestId, expectLoginFormReady } from '@/tests/utils/e2e-hybrid.ts';
 
 test.describe('Feature Name', () => {
   test('completes the user flow', async ({ page }) => {
-    await page.goto('/feature-url');
-    await expect(page.getByTestId('feature-page')).toBeVisible();
-    // ... user interactions
+    await page.goto('/login');
+    await expectLoginFormReady(page);
+    await clickTestId(page, 'login-submit');
+    await expect(page.getByRole('heading', { name: /dashboard/i })).toBeVisible();
   });
 });
 ```
 
-Always include axe checks via `@axe-core/playwright` in E2E accessibility specs.
+- **Actions** (`click`, `fill`, navigation): `getByTestId` / `clickTestId` / `fillTestId`
+- **Visibility / a11y guards**: `getByRole`, `getByLabel` alongside testids
+- **Dialog unit tests**: `axeForDialog` from `@/tests/utils/axe-for-dialog.ts` (not raw `axe(container)` on portaled dialogs)
+
+Always include axe checks via `@axe-core/playwright` in `accessibility.e2e.test.ts` (and feature specs when auditing a11y).
+
+Full test matrix: `docs/reference/testing.md`.

@@ -10,16 +10,16 @@ Canonical layout for everything under `src/`. Read before adding any file. The r
 
 ## The pages rule in five lines
 
-1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/org_8fK2x/dashboard` → `pages/organization/$organizationId/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders with full-word names. One exception: `/` is a pure resolver route (redirect only, no island).
+1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/acme/dashboard` → `pages/organization/$organizationSlug/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders with full-word names. One exception: `/` is a pure resolver route (redirect only, no island).
 2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `<Page>Layout.tsx`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `src/app/routes/routeTree.tsx` and `docs/reference/routes-and-ui.md`. `$param` folders derive their prefix mechanically (strip `$`, kebab-case).
-3. **Page shells live in `shared/layouts/`** — `AuthLayout` via the pathless `auth-shell` route; `AppLayout` via the `pages/organization/$organizationId/` layout island (the org guard boundary). No grouping directories under `pages/`.
-4. **Promotion ladder:** one page → inside that page; a page + its OWN nested children → that page's `shared/` (family-shared, e.g. `pages/organization/$organizationId/shared/`); pages from different families or any `src/shared` component → root `src/shared/` (`shared/api/auth-api.ts`, `shared/tenancy/`, …).
+3. **Page shells live in `shared/layouts/`** — `AuthLayout` via the pathless `auth-shell` route; `AppLayout` via the `pages/organization/$organizationSlug/` layout island (the org guard boundary). No grouping directories under `pages/`.
+4. **Promotion ladder:** one page → inside that page; a page + its OWN nested children → that page's `shared/` (family-shared, e.g. `pages/organization/$organizationSlug/shared/`); pages from different families or any `src/shared` component → root `src/shared/` (`shared/api/auth-api.ts`, `shared/tenancy/`, …).
 5. **Settings is a global hash modal, not a route space** — `#settings/<scope>/<section>` (see "Settings hash modal" below). Full routing/tenancy spec: `docs/reference/routing-and-tenancy.md`.
 
 ## Top-Level Layout
 
 ```
-tests/                                  At project root: e2e/, load/, factories/, utils/
+tests/                                  At project root: e2e/, factories/, utils/
 src/
 ├── app/                                Application shell: route tree, guards, providers, error boundaries
 ├── core/                               Framework-agnostic services
@@ -34,7 +34,7 @@ src/
 **`src/core/`** is the irreducible platform kernel — only framework-agnostic, app-state-free services: `http/`, `rbac/`, `config/`, `data-provider/`, `resources/`, `types/`, `version/`. **Anything app-layout-y, React-Provider-y, or app-state-dependent lives outside `core/`:**
 - App-shell bootstrap (Sentry init, web-vitals, PostHog setup) → **`src/app/`** (`app/analytics/`, `app/observability/`)
 - Runtime infrastructure used by every layer (auth token + service, errors handling) → **`src/shared/`** (`shared/auth/`, `shared/errors/`)
-- Zustand client state → **`src/shared/store/<X>Store/`** (folder-per-unit) — all 5 stores including `useAuthStore` and `useOrganizationStore`
+- Zustand client state → **`src/shared/store/<X>Store/`** (folder-per-unit) — all 7 stores including `useAuthStore` and `useOrganizationStore`
 - Cross-page API helpers → **`src/shared/api/`** (`auth-*`, `organization-*`)
 - Organization/tenancy runtime (URL-driven context, membership, `/` resolver, my-organizations) → **`src/shared/tenancy/`**
 
@@ -46,7 +46,7 @@ One per page. The prefix makes them globally unique → AI agents, grep, and IDE
 
 | File | Required? | Purpose |
 |------|-----------|---------|
-| `<page>.route.tsx` | ✓ | Lazy boundary (`Component`, `loader`, `ErrorBoundary`) |
+| `<page>.route.tsx` | ✓ | Lazy boundary (`Component` only; optional `ErrorBoundary` if wired in routeTree) |
 | `<page>.manifest.ts` | ✓ | Manifest: `path`, `title`, `testId`, `permission`, `kind`, `children` |
 | `<page>.contracts.ts` | optional | Zod schemas + inferred TS types |
 | `<page>.api.ts` | optional | Fetcher functions for this page |
@@ -59,7 +59,7 @@ One per page. The prefix makes them globally unique → AI agents, grep, and IDE
 
 | File | Purpose |
 |------|---------|
-| `<PAGE>.OVERVIEW.md` | AI/human entry doc — first file an agent reads on this island. Name = UPPERCASE directory name with `-` → `_`; the dot separates name from role, mirroring the `<page>.route.tsx` grammar (`pages/forgot-password/` → `FORGOT_PASSWORD.OVERVIEW.md`). Every overview filename is globally unique (grep/quick-open/agent file-matching never collide) while staying visibly a doc, like `README.md`. Applies outside `pages/` too: `shared/api/API.OVERVIEW.md`, `shared/auth/AUTH.OVERVIEW.md`, `app/guards/GUARDS.OVERVIEW.md`. |
+| `<PAGE>.OVERVIEW.md` | AI/human entry doc — first file an agent reads on this island. Name = UPPERCASE directory name with `-` → `_`; the dot separates name from role, mirroring the `<page>.route.tsx` grammar (`pages/login/` → `LOGIN.OVERVIEW.md`). Every overview filename is globally unique (grep/quick-open/agent file-matching never collide) while staying visibly a doc, like `README.md`. Applies outside `pages/` too: `shared/api/API.OVERVIEW.md`, `shared/auth/AUTH.OVERVIEW.md`, `app/guards/GUARDS.OVERVIEW.md`. |
 
 ### 3. UI files — PascalCase
 
@@ -104,9 +104,9 @@ Apply to:
 | **kebab-case verb-noun** | Action / workflow | `pages/create-organization/` → `/create-organization` |
 | **kebab-case noun** | Multi-word concept | `pages/accept-invite/` → `/accept-invite` |
 
-Page directory names are **lowercase kebab-case**. Child route folders follow the same rules and nest directly (`organization/$organizationId/api-keys/`); dynamic segments are `$param` folders with full-word param names (`$organizationId/`, `$patientId/` — never `$orgId`).
+Page directory names are **lowercase kebab-case**. Child route folders follow the same rules and nest directly (`organization/$organizationSlug/api-keys/`); dynamic segments are `$param` folders with full-word param names (`$organizationSlug/`, `$patientId/` — never `$orgId`).
 
-**Sanctioned exception:** `pages/organization/` is singular yet serves the picker (a collection view) at `/organization` — it doubles as the `$organizationId/` parent, so the URL spec (`routing-and-tenancy.md` §2) wins over the plural-for-collections naming row.
+**Sanctioned exception:** `pages/organization/` is singular yet serves the picker (a collection view) at `/organization` — it doubles as the `$organizationSlug/` parent, so the URL spec (`routing-and-tenancy.md` §2) wins over the plural-for-collections naming row.
 
 ## Two page shapes — custom and resource
 
@@ -119,7 +119,7 @@ src/pages/<page>/                          ← folder = URL segment
 │
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
-├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.route.tsx                       lazy boundary — `Component` only; RBAC in routeTree `beforeLoad`
 ├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
@@ -127,7 +127,7 @@ src/pages/<page>/                          ← folder = URL segment
 ├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
 ├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
 │                                          even from its children — sharing goes via shared/)
-├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.fixtures.ts                     optional placeholder data (REPLACE_WITH_API)
 ├── <page>.search.ts                       URL search-param schema (validateSearch)
 ├── <page>.constants.ts                    page-scoped constants
 ├── <page>.resource.ts                     resource manifest (resource pages only)
@@ -215,20 +215,20 @@ Established cases:
 
 ## Nested routes — direct children (`<segment>/`, `$param/`)
 
-When a page is `kind: 'layout'`, child routes nest **directly** as `<segment>/` — the pages tree mirrors the URL tree 1:1; there is no `sub-pages/` bucket. Dynamic segments are `$param` folders with full-word param names (`$organizationId/`, `$patientId/`).
+When a page is `kind: 'layout'`, child routes nest **directly** as `<segment>/` — the pages tree mirrors the URL tree 1:1; there is no `sub-pages/` bucket. Dynamic segments are `$param` folders with full-word param names (`$organizationSlug/`, `$patientId/`).
 
-**`$param` naming rule (validator-enforced):** role files in a `$param` folder derive their prefix mechanically — strip the `$`, kebab-case the rest: `$organizationId/` → `organization-id.route.tsx`, `organization-id.manifest.ts`, `ORGANIZATION_ID.OVERVIEW.md`. Only the UI file stays human-named (`OrganizationLayout.tsx`, `PatientDetailPage.tsx`).
+**`$param` naming rule (validator-enforced):** role files in a `$param` folder derive their prefix mechanically — strip the `$`, kebab-case the rest: `$organizationSlug/` → `organization-slug.route.tsx`, `organization-slug.manifest.ts`, `ORGANIZATION_SLUG.OVERVIEW.md`. Only the UI file stays human-named (`OrganizationLayout.tsx`, `PatientDetailPage.tsx`).
 
 **Reserved segment names (validator-enforced):** `components`, `hooks`, `forms`, `dialogs`, `store`, `shared`, `__tests__` can never be route folders; `sub-pages` is retired. A `shared/` directory inside a layout page is the **family-shared** home (see Promotion ladder).
 
 ```
 pages/organization/                       → /organization (picker)
 ├── organization.route.tsx
-├── organization.manifest.ts                  kind: 'layout', children: ['$organizationId']
+├── organization.manifest.ts                  kind: 'layout', children: ['$organizationSlug']
 ├── OrganizationPickerPage.tsx
-└── $organizationId/                      → /organization/$organizationId (org guard boundary)
-    ├── organization-id.route.tsx
-    ├── organization-id.manifest.ts           kind: 'layout', children: ['dashboard', 'suspended']
+└── $organizationSlug/                      → /organization/$organizationSlug (org guard boundary)
+    ├── organization-slug.route.tsx
+    ├── organization-slug.manifest.ts         kind: 'layout', children: ['dashboard', 'suspended']
     ├── OrganizationLayout.tsx
     ├── dashboard/                        full island shape, recursively
     └── suspended/
@@ -238,7 +238,7 @@ pages/organization/                       → /organization (picker)
 
 Settings is **not a route space**. The global `SettingsModal` (`shared/components/SettingsModal/`) is mounted once on the root route and driven by the URL hash — `#settings/<scope>/<section>` with scopes `account` | `organization` — so it overlays ANY page (including deep organization URLs) without re-running route matching or unmounting the page behind it. Deep links reproduce page + modal, refresh keeps the section, back/Esc closes, and invalid hashes fall back to `#settings/account/profile`.
 
-Route guards never see hashes: auth, organization-context, and permission gating live inside the modal (`settings-permissions.ts`, reusing `core/rbac` — never forked). Open/section state lives in the URL hash — never in `useUIStore` (the store is only for transient chrome: `sidebarOpen`, `commandPaletteOpen`). Hash changes are invisible to pageview analytics, so the modal emits an explicit PostHog event. Escape hatch: a section that becomes a heavy admin surface (members, billing, …) is promoted to a real page under `pages/organization/$organizationId/`, keeping a hash → path redirect shim.
+Route guards never see hashes: auth, organization-context, and permission gating live inside the modal (`settings-permissions.ts`, reusing `core/rbac` — never forked). Open/section state lives in the URL hash — never in `useUIStore` (the store is only for transient chrome: `sidebarOpen`, `commandPaletteOpen`). Hash changes are invisible to pageview analytics, so the modal emits an explicit PostHog event. Escape hatch: a section that becomes a heavy admin surface (members, billing, …) is promoted to a real page under `pages/organization/$organizationSlug/`, keeping a hash → path redirect shim.
 
 `/` is the other folder-less URL: a pure resolver route (last-used organization's dashboard, else the `/organization` picker, else `/onboarding`) registered inline in `routeTree.tsx`.
 
@@ -270,8 +270,8 @@ used by…
 **Family-shared (`pages/<parent>/shared/`)** — for layout pages whose children share code:
 - Same unit shapes as root shared: `shared/components/<X>/`, `shared/hooks/use<X>/`, plus plain family modules (`<name>-contracts.ts`, `<name>-api.ts`).
 - Importable by the parent island and its descendants ONLY — never by sibling families.
-- Example: a chart widget used by `$organizationId/dashboard/` AND `$organizationId/reports/` → `pages/organization/$organizationId/shared/components/<X>/` (NOT `src/shared/`).
-- Note: the auth screens (`login/`, `register/`, …) are top-level **siblings** (no parent island — the `auth-shell` is pathless), so their shared code correctly lives in root `shared/api/auth-*` — different families.
+- Example: a chart widget used by `$organizationSlug/dashboard/` AND `$organizationSlug/reports/` → `pages/organization/$organizationSlug/shared/components/<X>/` (NOT `src/shared/`).
+- Note: the auth screens (`login/`, `mfa/`, …) are top-level **siblings** (no parent island — the `auth-shell` is pathless), so their shared code correctly lives in root `shared/api/auth-*` — different families.
 
 **Never promote when:**
 - Only one page uses it (even if it looks "generic")
@@ -292,11 +292,15 @@ src/shared/
 │   ├── use<X>/                             cross-page custom hooks
 │   ├── useList/, useOne/                   standard CRUD hooks (Refine-style)
 │   ├── useCreate/, useUpdate/, useDelete/
-├── layouts/<Name>/{...}                    RootLayout, AppLayout, AuthLayout
+├── layouts/<Name>/{...}                    AppLayout, AuthLayout, PublicLayout, LayoutVariantFallback
 └── store/                                  GLOBAL Zustand stores
+    ├── useAuthStore/{...}
+    ├── useOrganizationStore/{...}
     ├── useThemeStore/{...}
     ├── useUIStore/{...}
-    └── useOnboardingStore/{...}
+    ├── useOnboardingStore/{...}
+    ├── useConsentStore/{...}
+    └── useLocaleStore/{...}
 ```
 
 ## Core Layer
@@ -306,8 +310,8 @@ The irreducible, app-state-free platform kernel — one subfolder per domain:
 ```
 src/core/
 ├── config/                                 env schema, constants
-├── data-provider/                          CRUD abstraction (REST adapter, mock adapter)
-├── http/                                   apiClient (fetch + axios), interceptors, queryClient, mock helper
+├── data-provider/                          CRUD abstraction (HTTP REST adapter)
+├── http/                                   apiClient (fetch), interceptors, queryClient
 ├── rbac/                                   policies + guards (requireAuth, requirePermission)
 ├── resources/                              resource registry (central manifest)
 ├── types/                                  branded public-id types, permission codes
@@ -329,11 +333,11 @@ errors in `shared/errors/`, and analytics/observability bootstrap in `app/` — 
 | Form state | react-hook-form + Zod | Inside the form component |
 | URL state | TanStack Router | `<page>.search.ts` (validateSearch schema) |
 
-**All Zustand stores live in `src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useOrganizationStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`. There is no `core/<feature>/store.ts` pattern.
+**All Zustand stores live in `src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useOrganizationStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`, `useConsentStore`, `useLocaleStore`. There is no `core/<feature>/store.ts` pattern.
 
 Cross-page API helpers (functions reused by both `pages/` and `shared/components/`) live in **`src/shared/api/`** (e.g., `shared/api/organization-api.ts`); organization/tenancy runtime lives in **`src/shared/tenancy/`** (e.g., `shared/tenancy/my-organizations.ts`).
 
-Auth infrastructure (token storage, refresh timer, idle timeout, login/logout service, mocks) lives in **`src/shared/auth/`** — not in core, because the HTTP client, error handler, shared components, and pages all need it.
+Auth infrastructure (token storage, refresh timer, idle timeout, login/logout service) lives in **`src/shared/auth/`** — not in core, because the HTTP client, error handler, shared components, and pages all need it.
 
 **Rules:**
 1. **Server state never goes in Zustand.** TanStack Query owns it.
@@ -345,12 +349,9 @@ Auth infrastructure (token storage, refresh timer, idle timeout, login/logout se
 | Type | Location & file name |
 |------|----------|
 | Unit (component, hook, form, util, store) | Colocated `<Name>.test.{ts,tsx}` next to source |
-| Page integration (cross-component flow in this island) | `pages/<page>/__tests__/integration/` |
-| Full-stack UI flow (mock backend) | `tests/e2e/<name>.e2e.test.ts` (Playwright) |
-| Backend contract (against the running core-be on :3000) | `tests/e2e/<name>.integration.test.ts` (Playwright) |
-| Load | `tests/load/` (k6) |
+| Full-stack UI + API (Playwright) | `tests/e2e/<name>.e2e.test.ts` or `<name>-api.e2e.test.ts` |
 
-**`tests/e2e/` file naming mirrors core-be's `<name>.<kind>.test.ts`** (the backend uses `.unit.`/`.integration.`/`.contract.`/`.e2e.`): full-stack mock UI flows are **`<name>.e2e.test.ts`**; contracts that hit the running backend are **`<name>.integration.test.ts`** (self-contained — inline the signup/server-up helpers; no shared e2e util). `playwright.config.ts` matches `/\.(e2e|integration)\.test\.ts$/`; Vitest excludes `tests/e2e`, so these never run as unit tests. Colocated unit/component tests keep plain `<Name>.test.{ts,tsx}` (not renamed to `.unit.`). Never use `.spec.ts`, or the words "real"/"live", in test file names.
+**`tests/e2e/`** — all Playwright specs use **`*.e2e.test.ts`**. UI flows: `<name>.e2e.test.ts`; HTTP contracts: `<name>-api.e2e.test.ts`. Requires **core-be** on `:3000` (global-setup fails if down). Vitest excludes `tests/e2e`. Colocated unit tests keep plain `<Name>.test.{ts,tsx}`. Never use `.spec.ts`, or the words "real"/"live", in test file names.
 
 **Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
 

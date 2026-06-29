@@ -128,21 +128,16 @@ export type CreateEntityInput = z.infer<typeof createEntitySchema>;
 ## Creating a Page Route Module
 
 ```tsx
-// src/pages/<name>/route.tsx
-import { requirePermission } from '@/core/rbac/guards.ts';
+// src/pages/<name>/<name>.route.tsx — Component only
 import { MyPage } from './MyPage.tsx';
 
-// Loader runs before component renders — handles RBAC + data fetching
-export function loader() {
-  requirePermission('entities.read');
-  return null;
-}
-
-// Component is the page — lazy loaded by React Router
 export function Component() {
   return <MyPage />;
 }
 ```
+
+Register access in `src/app/routes/routeTree.tsx` (`beforeLoad` + `gatewayFromManifest(manifest)`).
+See `agent-os/skills/routing-tenancy/SKILL.md`.
 
 ## Animation Patterns
 

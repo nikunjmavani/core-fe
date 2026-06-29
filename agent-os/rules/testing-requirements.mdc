@@ -18,7 +18,7 @@ When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if 
 4. Every TanStack Query hook MUST ship a colocated `*.test.ts` beside its source (`hooks/use<X>/use<X>.test.ts`) — in both shared and page islands
 5. Component tests MUST include `vitest-axe` accessibility assertions (`toHaveNoViolations()`)
 6. **Colocated beside source everywhere** — `shared/`, `core/`, `lib/`, `stores/`, AND `pages/` islands. Cross-component *integration* flows for a page may additionally live in `pages/<page>/__tests__/integration/`
-7. All components MUST have `data-testid` attributes following the naming convention below
+7. All interactive UI MUST have `data-testid` on **test contracts** (pages, forms, primary actions, nav, dialogs) — not every DOM node. `pnpm validate:testids` enforces manifest ↔ page root, form root/submit, and shell surfaces.
 8. Coverage thresholds: 80% branches, functions, lines, statements (enforced in `vitest.config.ts`)
 9. Vitest runs colocated `src/**/*.test.{ts,tsx}` (plus `src/**/__tests__/**`); it **excludes** `tests/e2e` (Playwright owns those)
 
@@ -42,19 +42,28 @@ Colocated beside source **everywhere** (shared/core/lib/stores AND pages islands
 | `useMeContext.ts`   | `useMeContext.test.ts`         |
 | `DashboardPage.tsx` | `DashboardPage.test.tsx`       |
 
-## E2E & integration tests (`tests/e2e/`)
+## E2E tests (`tests/e2e/`)
 
-Playwright specs follow core-be's `<name>.<kind>.test.ts` (the backend uses
-`.unit.`/`.integration.`/`.contract.`/`.e2e.`):
+All Playwright specs use **`*.e2e.test.ts`** — one suite, one command (`pnpm test:e2e`).
 
-- **`<name>.e2e.test.ts`** — full-stack UI flow against the mock backend.
-- **`<name>.integration.test.ts`** — contract against the running core-be (:3000);
-  self-contained (inline signup/server-up/bearer helpers, no shared util), and
-  auto-skips when the server is unreachable. The UI-through-to-backend spec
-  (`app.integration.test.ts`) is gated behind `E2E_INTEGRATION=1` + `VITE_USE_MOCK_API=false`.
+- **`<name>.e2e.test.ts`** — browser UI flows
+- **`<name>-api.e2e.test.ts`** — HTTP contract checks via `playwright.request` → `:3000`
 
-`playwright.config.ts` matches `/\.(e2e|integration)\.test\.ts$/`; Vitest excludes
-`tests/e2e`. **Never** use `.spec.ts`, or the words "real"/"live", in test file names.
+Server-dependent E2E specs require **core-be** on `:3000`. `tests/e2e/global-setup.ts` probes `GET /readyz` and fails the run if core-be is down — no skip path. PR CI boots core-be via `.github/actions/setup-core-be`.
+
+Vitest excludes `tests/e2e`. **Never** use `.spec.ts`, or the words "real"/"live", in test file names.
+
+**Hybrid Playwright selectors** (`agent-os/skills/playwright-e2e/SKILL.md`): use `getByTestId` / `tests/utils/e2e-hybrid.ts` for clicks and fills; use `getByRole` / `getByLabel` for visibility and a11y guards. Full matrix: `docs/reference/testing.md`.
+
+## Test kinds (summary)
+
+| Kind | Location | Pattern |
+| ---- | -------- | ------- |
+| Unit / component | Colocated `src/` | `*.test.ts(x)` — no server; `vi.mock()` only |
+| Security | `tests/security/` | `*.security.test.ts` |
+| E2E | `tests/e2e/` | `*.e2e.test.ts` — needs API on `:3000` when gated |
+| Visual regression | `tests/e2e/visual.e2e.test.ts` | screenshots |
+| Mutation | Stryker (CI scheduled) | `stryker.config.json` |
 
 ## Exceptions (no test required)
 

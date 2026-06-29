@@ -18,7 +18,7 @@ src/pages/<page>/                          ← folder = URL segment
 │
 │══ MANDATORY — every page, validator-enforced ════════════════════════════
 ├── <PAGE>.OVERVIEW.md                     entry doc: purpose, files, test ids
-├── <page>.route.tsx                       lazy boundary — Component (+ loader: requirePermission)
+├── <page>.route.tsx                       lazy boundary — exports `Component` only; RBAC in routeTree
 ├── <page>.manifest.ts                     manifest — path, title, testId, permission, kind, children
 ├── <Page>Page.tsx | <Page>Layout.tsx      top-level UI (Layout + <Outlet/> when kind:'layout')
 │
@@ -26,7 +26,7 @@ src/pages/<page>/                          ← folder = URL segment
 ├── <page>.contracts.ts                    Zod schemas + types for THIS page's API shapes
 ├── <page>.api.ts                          fetchers → shared apiClient   (PRIVATE to this page,
 │                                          even from its children — sharing goes via shared/)
-├── <page>.fixtures.ts                     mock data (REPLACE_WITH_API)
+├── <page>.fixtures.ts                     optional placeholder data (REPLACE_WITH_API)
 ├── <page>.search.ts                       URL search-param schema (validateSearch)
 ├── <page>.constants.ts                    page-scoped constants
 ├── <page>.resource.ts                     resource manifest (resource pages only)
@@ -86,22 +86,31 @@ export const manifest = {
 
 ## `<page>.route.tsx` — the boundary
 
-Thin React boundary; imports the page manifest + the top-level UI:
+Thin React boundary — **`Component` only**. TanStack Router loads islands via
+`lazyRouteComponent(..., 'Component')` in `routeTree.tsx`; island `loader()`
+exports are **not wired** and must not be added for RBAC (false confidence).
+
+**Access control lives in `routeTree.tsx` `beforeLoad`:**
+
+- Org / workspace gates — `routing-tenancy` skill (`requireAuth`, `resolveActiveOrg`, …)
+- Permission + module (L5/L6b) — `gatewayFromManifest(manifest)` from the island manifest
+- Guest auth pages — pathless shell `beforeLoad` (e.g. `redirectIfAuthenticated`)
 
 ```tsx
-import { requirePermission } from '@/core/rbac/guards.ts';
-
 import { OrganizationsPage } from './OrganizationsPage.tsx';
-import { manifest } from './organizations.manifest.ts';
 
 export function Component() {
   return <OrganizationsPage />;
 }
+```
 
-export function loader() {
-  if (manifest.permission) requirePermission(manifest.permission);
-  return null;
-}
+Register in `routeTree.tsx`:
+
+```tsx
+beforeLoad: async ({ location, params, preload }) => {
+  if (preload) return;
+  await gatewayFromManifest(organizationsManifest)(toGateContext(location, params));
+},
 ```
 
 ## Folder-per-unit + barrel
@@ -152,12 +161,12 @@ Dialogs are **URL-driven** — the parent list page reads `useRouterState` to kn
 
 ## Tests
 
-| Test type                                  | Location                                                                                    |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Unit (component, hook, form, store)        | Colocated `<Name>.test.{ts,tsx}` next to source                                             |
-| Cross-component integration in this island | `__tests__/integration/`                                                                    |
-| Browser E2E (full app, mock backend)       | `tests/e2e/<name>.e2e.test.ts` (Playwright) — document flows in island `<PAGE>.OVERVIEW.md` |
-| Backend contract (running core-be :3000)   | `tests/e2e/<name>.integration.test.ts` (Playwright) — self-contained, auto-skips when down  |
+| Test type                                  | Location                                                                                           |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Unit (component, hook, form, store)        | Colocated `<Name>.test.{ts,tsx}` next to source                                                    |
+| Cross-component integration in this island | `__tests__/integration/`                                                                           |
+| Browser E2E (full app + API on `:3000`)    | `tests/e2e/<name>.e2e.test.ts` (Playwright) — document flows in island `<PAGE>.OVERVIEW.md`        |
+| E2E (UI + API contracts)                   | `tests/e2e/<name>.e2e.test.ts` or `<name>-api.e2e.test.ts` (Playwright) — skips when :3000 is down |
 
 **Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
 

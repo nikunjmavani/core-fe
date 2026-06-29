@@ -25,37 +25,38 @@ All paths are under **`docs/`**. Index: **`docs/README.md`**.
 
 ## Key file locations
 
-| Doc                         | Path                                                      | When to update                                             |
-| --------------------------- | --------------------------------------------------------- | ---------------------------------------------------------- |
-| **Index**                   | `docs/README.md`                                          | When adding a new doc or new use-case section.             |
-| **Local setup**             | `docs/getting-started/setup.md`                           | New prerequisite, env var, or run step for local dev.      |
-| **Requirement intake**      | `docs/getting-started/requirement-intake.md`              | Change in requirement types, skills, or rules.             |
-| **Requirement template**    | `docs/getting-started/requirement-format.md`              | New template section or field guide change.                |
-| **Sample requirement**      | `docs/getting-started/requirements/sample-requirement.md` | Update example to match template or conventions.           |
-| **Runbook**                 | `docs/deployment/runbook-dev-to-production.md`            | Change in dev → prod steps or order.                       |
-| **CI/CD & Netlify**         | `docs/deployment/cicd-and-netlify.md`                     | New env var, GitHub secrets step, or GitHub workflow.      |
-| **Full deployment**         | `docs/deployment/deployment-and-pre-launch.md`            | Pre-launch checklist, deploy options, or release workflow. |
-| **Path-to-production gate** | `docs/deployment/path-to-production.md`                   | Only if the gate criteria change (rare).                   |
-| **Netlify CLI**             | `docs/deployment/netlify-cli-setup.md`                    | CLI steps, script name, or one-time setup.                 |
-| **Credentials/env**         | `docs/integrations/credentials-and-env.md`                | New credential source or env var.                          |
-| **Sentry source maps**      | `docs/integrations/sentry-sourcemaps.md`                  | Sentry plugin or credential steps.                         |
-| **Cursor ↔ backend MCP**    | `agent-os/docs/cursor-backend-mcp.md`                     | MCP endpoint or Cursor config.                             |
-| **Git workflow**            | `docs/process/git-workflow.md`                            | Branch strategy or PR flow.                                |
-| **Tools/dependencies**      | `docs/reference/tools-and-usage.md`                       | New package or usage change.                               |
-| **i18n**                    | `docs/reference/internationalization.md`                  | Client-side i18n plan or backend message contract.         |
+| Doc                         | Path                                                      | When to update                                                 |
+| --------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| **Index**                   | `docs/README.md`                                          | When adding a new doc or new use-case section.                 |
+| **Local setup**             | `docs/getting-started/setup.md`                           | New prerequisite, env var, or run step for local dev.          |
+| **Requirement intake**      | `docs/getting-started/requirement-intake.md`              | Change in requirement types, skills, or rules.                 |
+| **Requirement template**    | `docs/getting-started/requirement-format.md`              | New template section or field guide change.                    |
+| **Sample requirement**      | `docs/getting-started/requirements/sample-requirement.md` | Update example to match template or conventions.               |
+| **Runbook**                 | `docs/deployment/runbook-dev-to-production.md`            | Change in dev → prod steps or order.                           |
+| **CI/CD & Netlify**         | `docs/deployment/cicd-and-netlify.md`                     | New env var, GitHub secrets step, or GitHub workflow.          |
+| **Full deployment**         | `docs/deployment/deployment-and-pre-launch.md`            | Pre-launch checklist, deploy options, or release workflow.     |
+| **Path-to-production gate** | `docs/deployment/path-to-production.md`                   | Only if the gate criteria change (rare).                       |
+| **Netlify CLI**             | `docs/deployment/netlify-cli-setup.md`                    | CLI steps, script name, or one-time setup.                     |
+| **Credentials/env**         | `docs/integrations/credentials-and-env.md`                | New credential source or env var.                              |
+| **Env schema / runbook**    | `docs/deployment/runbooks/environment-variables.md`       | Schema keys, auth switches, deploy overrides, troubleshooting. |
+| **Sentry source maps**      | `docs/integrations/sentry-sourcemaps.md`                  | Sentry plugin or credential steps.                             |
+| **Cursor ↔ backend MCP**    | `agent-os/docs/cursor-backend-mcp.md`                     | MCP endpoint or Cursor config.                                 |
+| **Git workflow**            | `docs/process/git-workflow.md`                            | Branch strategy or PR flow.                                    |
+| **Tools/dependencies**      | `docs/reference/tools-and-usage.md`                       | New package or usage change.                                   |
+| **i18n**                    | `docs/reference/internationalization.md`                  | Client-side i18n plan or backend message contract.             |
 
 ---
 
 ## When code changes affect docs
 
-| Change                                  | Update these                                                                                                                                        |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **New route or page**                   | README "Documentation" or "Adding a New Page" if we add a new pattern; CLAUDE if conventions change. Usually no new doc file.                       |
-| **New env var**                         | `docs/integrations/credentials-and-env.md`, `.env.example`, and optionally `docs/deployment/cicd-and-netlify.md` if used in Netlify/GitHub Secrets. |
-| **New deployment step or script**       | `docs/deployment/runbook-dev-to-production.md` and/or `docs/deployment/netlify-cli-setup.md` or `cicd-and-netlify.md`.                              |
-| **Pre-launch checklist change**         | `docs/deployment/deployment-and-pre-launch.md` (Pre-launch checklist section).                                                                      |
-| **New dependency or usage**             | `docs/reference/tools-and-usage.md`.                                                                                                                |
-| **Requirement format or intake change** | `docs/getting-started/requirement-format.md`, `requirement-intake.md`, and `requirements/sample-requirement.md` as needed.                          |
+| Change                                  | Update these                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **New route or page**                   | README "Documentation" or "Adding a New Page" if we add a new pattern; CLAUDE if conventions change. Usually no new doc file.                                                                                                                                                                                          |
+| **New env var**                         | `src/core/config/env-schema.ts`, `.env.example`, `pnpm tool:sync-env-example`, **`agent-os/skills/env-schema-add/SKILL.md`**, `docs/deployment/runbooks/environment-variables.md`, `docs/integrations/credentials-and-env.md`, and optionally `docs/deployment/cicd-and-netlify.md` if used in Netlify/GitHub Secrets. |
+| **New deployment step or script**       | `docs/deployment/runbook-dev-to-production.md` and/or `docs/deployment/netlify-cli-setup.md` or `cicd-and-netlify.md`.                                                                                                                                                                                                 |
+| **Pre-launch checklist change**         | `docs/deployment/deployment-and-pre-launch.md` (Pre-launch checklist section).                                                                                                                                                                                                                                         |
+| **New dependency or usage**             | `docs/reference/tools-and-usage.md`.                                                                                                                                                                                                                                                                                   |
+| **Requirement format or intake change** | `docs/getting-started/requirement-format.md`, `requirement-intake.md`, and `requirements/sample-requirement.md` as needed.                                                                                                                                                                                             |
 
 ---
 

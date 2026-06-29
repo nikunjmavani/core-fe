@@ -56,8 +56,14 @@ case "$FILE" in */components/ui/* | src/components/ui/*) is_vendored_ui="yes" ;;
 is_icon_surface="no"
 case "$FILE" in */shared/icons/* | src/shared/icons/*) is_icon_surface="yes" ;; esac
 
+# Page islands are the inverse: eslint's no-restricted-imports bans `@/pages/**`
+# inside src/pages and the message mandates relative imports WITHIN an island
+# (committed convention, e.g. login/forms/LoginForm). Exempt them from R2.
+is_page="no"
+case "$FILE" in */src/pages/* | src/pages/*) is_page="yes" ;; esac
+
 # R2 — no `../` parent-relative imports under src/ (use the '@/' alias).
-if printf '%s' "$CONTENT" | grep -Eq "(from|require|import)[[:space:]]*\(?[[:space:]]*['\"]\.\./"; then
+if [[ "$is_page" == "no" ]] && printf '%s' "$CONTENT" | grep -Eq "(from|require|import)[[:space:]]*\(?[[:space:]]*['\"]\.\./"; then
   deny "Relative parent import ('../') is banned under src/ — use the '@/' alias with an explicit .ts/.tsx extension (CLAUDE.md → Import Conventions; enforced by ESLint)."
 fi
 

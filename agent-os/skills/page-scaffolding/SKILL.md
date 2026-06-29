@@ -152,18 +152,11 @@ export function <Name>Page() {
 #### `src/pages/<name>/<name>.route.tsx` — lazy boundary
 
 ```tsx
-import { requirePermission } from '@/core/rbac/guards.ts';
-
 import { <Name>Page } from './<Name>Page.tsx';
-import { manifest } from './<name>.manifest.ts';
 
+/** Component only — RBAC/module gates go in routeTree `beforeLoad` (see step 4). */
 export function Component() {
   return <<Name>Page />;
-}
-
-export function loader() {
-  if (manifest.permission) requirePermission(manifest.permission);
-  return null;
 }
 ```
 
@@ -211,6 +204,11 @@ const <name>Route = createRoute({
   getParentRoute: () => organizationShellRoute, // or rootRoute / authShellRoute
   path: '<name>',
   head: manifestHead(<name>Manifest), // document title from manifest.title
+  beforeLoad: async ({ location, params, preload }) => {
+    if (preload) return;
+    await requireAuth(location.href); // when route is protected
+    await gatewayFromManifest(<name>Manifest)(toGateContext(location, params));
+  },
   component: <Name>Page,
   errorComponent: RouteErrorBoundary,
 });

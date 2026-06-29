@@ -151,7 +151,7 @@ const ignoreFile = join(agentOsDirectory, 'evals', 'ignore.json');
 const ignored = existsSync(ignoreFile) ? JSON.parse(readText(ignoreFile)).paths ?? [] : [];
 const pathRoots = [
   'src/',
-  'scripts/',
+  'tooling/',
   'agent-os/',
   'docs/',
   'tests/',

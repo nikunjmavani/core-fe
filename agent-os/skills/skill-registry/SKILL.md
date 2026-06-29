@@ -77,6 +77,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 | **ESLint / Husky / CI / security pipeline change**        | code-quality-security → before-commit-guard                                                                                                                                                                                 |
 | **Before committing**                                     | before-commit-guard (env docs, assets, format, lint, types)                                                                                                                                                                 |
 | **Add/rename/remove env var**                             | **platform-hygiene** → env-schema-add → tool:sync-env-example → documentation-maintenance (runbook)                                                                                                                         |
+| **PWA manifest / favicon / app icon**                     | **pwa-manifest** → `app-manifest.test.ts` + `validate:public` → documentation-maintenance                                                                                                                                   |
 | **Docs change / new route affecting README/CLAUDE**       | documentation-maintenance                                                                                                                                                                                                   |
 | **Extensions / IDE setup / new tooling**                  | extension-settings-recommendations                                                                                                                                                                                          |
 | **Full project health check**                             | project-health-check (chains docs, tests, lint, build, bundle)                                                                                                                                                              |
@@ -485,7 +486,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Skill: `agent-os/skills/route-island/SKILL.md`
 - Reference: `docs/reference/route-island-structure.md`
 - Template: `docs/getting-started/route-island-template.md`
-- Examples: `src/pages/organization/$organizationId/dashboard/`, `src/pages/login/`
+- Examples: `src/pages/organization/$organizationSlug/dashboard/`, `src/pages/login/`
 
 ---
 
@@ -711,6 +712,26 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
+### 11f. pwa-manifest
+
+**Path:** `agent-os/skills/pwa-manifest/SKILL.md`  
+**Rule:** `agent-os/rules/pwa-manifest-sync.mdc`  
+**Reference:** `docs/reference/pwa-manifest-and-app-icon.md`
+
+**Purpose:** PWA install surface — `app-manifest.ts` → `manifest.webmanifest`, Boxes icon, preset-aligned colors, favicon, VitePWA `includeAssets`.
+
+**Trigger keywords:** "PWA manifest", "app icon", "favicon", "theme_color", "manifest.webmanifest", "app-icon.svg", "installable", "Add to Home Screen"
+
+**Key behaviors:**
+
+- Edit `src/core/config/app-manifest.ts` first; sync JSON + `index.html` + `page-head.ts`
+- Regenerate PNGs with `rsvg-convert` after SVG changes
+- Run `app-manifest.test.ts` (drift guard)
+
+**Related skills:** documentation-maintenance, i18n-constants (in-app copy only)
+
+---
+
 ### 12. project-health-check
 
 **Path:** `agent-os/skills/project-health-check/SKILL.md`
@@ -818,17 +839,18 @@ These Cursor rules are always loaded and do not need to be invoked:
 | skill-router          | `agent-os/rules/skill-router.mdc`          | Auto-routes tasks to the right skill; complete all steps without asking                                   |
 | routing-tenancy-sync  | `agent-os/rules/routing-tenancy-sync.mdc`  | Org routes, guards, gateway — read routing-tenancy skill                                                  |
 | platform-hygiene-sync | `agent-os/rules/platform-hygiene-sync.mdc` | Env/platform config — read platform-hygiene skill                                                         |
+| pwa-manifest-sync     | `agent-os/rules/pwa-manifest-sync.mdc`     | PWA manifest/icon — read pwa-manifest skill                                                               |
 | env-schema-add-sync   | `agent-os/rules/env-schema-add-sync.mdc`   | Env schema / `.env.example` — read env-schema-add skill                                                   |
 | agent-behavior        | `agent-os/rules/agent-behavior.mdc`        | Complete tests, route reg, RBAC, docs without asking; never ask "Do you want X?"                          |
 
 ## Enterprise Platform Integration
 
-| Tool           | Config File                                                                  | Purpose                                   |
-| -------------- | ---------------------------------------------------------------------------- | ----------------------------------------- |
-| Backstage      | `catalog-info.yaml`                                                          | Service catalog registration              |
-| Nginx          | `nginx/default.conf`                                                         | SPA serving, caching, security headers    |
-| PWA            | `public/manifest.webmanifest`, `vite.config.ts`                              | Offline support, installability           |
-| release-please | `.github/release-please/config.json`, `.github/release-please/manifest.json` | Human-gated releases                      |
-| Sentry         | `src/app/observability/sentry.ts`                                            | Error tracking + PII scrubbing            |
-| PostHog        | `src/app/analytics/posthog.ts`                                               | Analytics + feature flags                 |
-| Web Vitals     | `src/app/observability/performance.ts`                                       | Performance monitoring → PostHog + Sentry |
+| Tool           | Config File                                                                        | Purpose                                   |
+| -------------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
+| Backstage      | `catalog-info.yaml`                                                                | Service catalog registration              |
+| Nginx          | `nginx/default.conf`                                                               | SPA serving, caching, security headers    |
+| PWA            | `src/core/config/app-manifest.ts`, `public/manifest.webmanifest`, `vite.config.ts` | Install surface; skill **pwa-manifest**   |
+| release-please | `.github/release-please/config.json`, `.github/release-please/manifest.json`       | Human-gated releases                      |
+| Sentry         | `src/app/observability/sentry.ts`                                                  | Error tracking + PII scrubbing            |
+| PostHog        | `src/app/analytics/posthog.ts`                                                     | Analytics + feature flags                 |
+| Web Vitals     | `src/app/observability/performance.ts`                                             | Performance monitoring → PostHog + Sentry |

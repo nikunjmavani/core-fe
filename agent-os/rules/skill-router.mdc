@@ -47,6 +47,8 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 | Full code review report, generate code review | full-code-review | `agent-os/skills/full-code-review/SKILL.md` |
 | **Theme axis audit** — appearance/shuffle compliance, "do elevation", one-by-one axis fixes | theme-axis-audit | `agent-os/skills/theme-axis-audit/SKILL.md` |
 | **Preset product rules** — type scale/density/contrast/motion floors, shuffle policy, WCAG | preset-product-design (doc + rule) | `docs/reference/preset-product-design-rules.md` · `agent-os/rules/preset-product-design.mdc` |
+| **PWA manifest / app icon / favicon / theme_color** — install surface, Boxes icon, manifest sync | pwa-manifest | `agent-os/skills/pwa-manifest/SKILL.md` |
+| **Local production perf** — bundle size, Lighthouse on built app (not dev server) | local-production-perf (doc) · project-health-check | `docs/reference/local-production-perf.md` |
 
 ## Auto-Invocation Rules
 
@@ -105,6 +107,10 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 19. **theme-axis-audit (mandatory for axis work)**: When the user asks to audit/fix Appearance or Shuffle axes, continue **"one by one"**, or name a specific axis (`elevation`, `density`, …), read **`agent-os/skills/theme-axis-audit/SKILL.md`** + **`docs/reference/theme-axis-audit-playbook.md`**. Complete Phases 0–4 in one cycle, deliver the detailed report, update the playbook status tracker. See **`agent-os/rules/theme-axis-audit.mdc`**.
 
 19b. **Preset product-design rules**: When changing **`presets.ts`**, Appearance pickers, `applyGeneratedTheme`, default axes, or dense product UI under Shuffle, read **`docs/reference/preset-product-design-rules.md`** and follow **`agent-os/rules/preset-product-design.mdc`** (typography floor 12px, density≠font size, touch targets, no opacity page fades).
+
+19c. **PWA manifest sync**: When changing **`app-manifest.ts`**, **`manifest.webmanifest`**, **`app-icon.svg`**, PWA PNGs, favicon, or install **`theme_color`**, read **`agent-os/skills/pwa-manifest/SKILL.md`** + **`docs/reference/pwa-manifest-and-app-icon.md`**. Edit `app-manifest.ts` first; sync JSON, `index.html`, `page-head.ts`, and PNGs; run **`app-manifest.test.ts`**. See **`agent-os/rules/pwa-manifest-sync.mdc`**.
+
+19d. **Local production perf**: When measuring bundle size or Lighthouse, **`pnpm build`** then **`pnpm preview`** (or static `serve dist`) — never Lighthouse on **`pnpm dev`**. See **`docs/reference/local-production-perf.md`**.
 
 20. **UI & craft stack (precedence — no conflicting taste skills):**
     - **Default** (any UI build/style): **`shadcn`** → **`frontend-design`** → **`web-design-guidelines`**. Query **`ui-ux-pro-max`** for advisory UX/style/chart hints only; never override semantic tokens (`src/index.css`), Lucide icons, or shadcn choices.

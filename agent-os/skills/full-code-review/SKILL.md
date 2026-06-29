@@ -65,4 +65,4 @@ When the user asks the AI to generate the report:
 
 - **Plan:** Full Code Review Plan (see `reports/code-review/full-code-review-report.md` header)
 - **Report output:** `reports/code-review/full-code-review-report.md`
-- **Script:** `scripts/reports/code-review-report.mjs`
+- **Script:** `tooling/reports/code-review-report.mjs`
