@@ -278,3 +278,83 @@ Each with a regression test in `fetch-client.test.ts`:
   no code change.
 
 ---
+
+## Iteration 4 — React purity & state correctness (2026-06-29)
+
+### 4.1 Data-table URL state is seed-once → back/forward doesn't restore the view
+
+- **Area:** React state / URL as source-of-truth
+- **Severity:** Low–Medium
+- **Current:** `src/shared/hooks/useDataTableUrlState/useDataTableUrlState.ts:55`
+  — `initialSorting` is memoized on `[enabled]` only (URL `search.sort`
+  deliberately excluded), and `initialPageIndex/Size` (`:70`) feed TanStack
+  Table's `initialState`, which the table reads **once** at mount. So a deep
+  link works, but an in-session URL change (browser back/forward, or another
+  control editing `?sort=`/`?page=`) does **not** update the table — the table
+  becomes the source of truth after mount and the URL only flows one way out.
+- **Suggestion:** Either make the table controlled (drive `state` from the URL
+  each render, not just `initialState`), or add a keyed remount / effect that
+  re-syncs table state when the relevant search params change.
+- **+** Back/forward and shared in-app links restore the exact table view;
+  removes the seed-vs-source ambiguity.
+- **−** Controlled tables are more wiring and re-render on each URL patch; risk of
+  a write→URL→read loop if not de-duped.
+
+### 4.2 `new Date()` is called during render
+
+- **Area:** React purity
+- **Severity:** Low
+- **Current:** `DashboardHero.tsx:64`
+  (`new Date().toLocaleDateString(...)`) and
+  `AppLayout/variants/AppLayoutSidebar.tsx:113`
+  (`new Date().getFullYear()`) read the clock **in render** — impure, recomputed
+  on every render, and not reactive (won't roll over at midnight without an
+  unrelated re-render).
+- **Suggestion:** Compute once (module-level for the year, `useMemo` for the
+  date) or, if a live date is wanted, a small `useNow`-style hook.
+- **+** Pure render; the React Compiler can memoize the subtree; no surprise
+  recompute.
+- **−** Trivial gain; a midnight-accurate date needs an explicit timer anyway.
+
+### 4.3 Stripe return params are read imperatively in a mount effect, not via the router
+
+- **Area:** React state / effects
+- **Severity:** Low
+- **Current:** `AccountBillingPanel.tsx:99` and
+  `BillingPaymentMethods/BillingPaymentMethods.tsx:76` read Stripe redirect
+  params from `window.location` inside a `[]` effect and `setState`
+  (the two `react-hooks/set-state-in-effect` suppressions). They consume-once via
+  `clearStripeBillingReturnParams()`, but bypass the router's typed `search`.
+- **Suggestion:** Read the return params from the route's `validateSearch`
+  schema (typed, testable) and derive the panel state from it, clearing via a
+  `navigate({ search })` instead of imperative URL mutation.
+- **+** Removes the imperative `window.location` read + the effect-setState
+  pattern; one source of truth for URL state; unit-testable without globals.
+- **−** Needs the billing route search schema to model the Stripe return params;
+  a bit more route plumbing.
+
+### 4.4 `initialFilters` recomputes on every search change but is consumed once
+
+- **Area:** React / dead work
+- **Severity:** Info
+- **Current:** `useDataTableUrlState.ts:61` — `initialFilters` is memoized on
+  `[enabled, search.q, search.role]`, so it recomputes whenever those params
+  change, yet TanStack Table only reads `initialState` at mount. The
+  recomputation has no effect after mount (and misleadingly _looks_ like it
+  re-syncs, unlike the deliberately-frozen `initialSorting`).
+- **Suggestion:** Memoize on `[enabled]` for consistency with `initialSorting`
+  (and resolve 4.1 if real re-sync is wanted).
+- **+** Removes confusing dead recomputation; consistent seeding story.
+- **−** None; purely a clarity fix.
+
+### Verified OK (this pass)
+
+- **`RateLimitNotice` reset-on-prop** uses the render-time "adjust state on prop
+  change" pattern (fixed earlier), not a `setState`-in-effect cascade.
+- **`react-hooks/incompatible-library` suppressions** on `MembersTable` /
+  `InvitationsTable` are legitimate — TanStack Table returns intentionally
+  non-memoizable callbacks; not a bug.
+- **`new Date().toISOString()` in `RecoveryCodesPanel`** is inside a
+  download-builder invoked from a click handler, not render — correct.
+
+---
