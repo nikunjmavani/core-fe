@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { queryClient } from '@/core/http/queryClient.ts';
+import { billingQueryKeys } from '@/shared/api/billing-query-keys.ts';
+import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import { type MeContext, meContextQueryKey } from './me-context.ts';
@@ -140,5 +142,52 @@ describe('tenancy/switch', () => {
       expect.stringContaining('/auth/switch-to-organization'),
       { organization_id: TEAM_ID },
     );
+  });
+
+  it('drops the previous org-scoped query cache on switch — no cross-tenant bleed (6.1)', async () => {
+    // Seed caches belonging to the org being left (keys omit the org id).
+    queryClient.setQueryData(orgQueryKeys.members(), [{ id: 'm_prev_org' }]);
+    queryClient.setQueryData(orgQueryKeys.apiKeys(), [{ id: 'key_prev_org' }]);
+    queryClient.setQueryData(['org', 'webhooks'], [{ id: 'wh_prev_org' }]);
+    queryClient.setQueryData([...billingQueryKeys.all, 'subscription'], {
+      id: 'sub_prev',
+    });
+
+    postMock.mockResolvedValue({
+      data: {
+        access_token: 't3',
+        active_organization: { ...PERSONAL_WIRE, id: TEAM_ID },
+        my_permissions: [],
+        global_role: null,
+      },
+    });
+
+    await switchToOrganization(TEAM_ID);
+
+    // Previous tenant's org-scoped data must be gone (removed, not just stale).
+    expect(queryClient.getQueryData(orgQueryKeys.members())).toBeUndefined();
+    expect(queryClient.getQueryData(orgQueryKeys.apiKeys())).toBeUndefined();
+    expect(queryClient.getQueryData(['org', 'webhooks'])).toBeUndefined();
+    expect(
+      queryClient.getQueryData([...billingQueryKeys.all, 'subscription']),
+    ).toBeUndefined();
+    // me-context is updated by the switch, not wiped by the org-cache clear.
+    expect(queryClient.getQueryData(meContextQueryKey)).toBeDefined();
+  });
+
+  it('also clears the org-scoped cache when switching to personal (6.1)', async () => {
+    queryClient.setQueryData(orgQueryKeys.members(), [{ id: 'm_prev_org' }]);
+    postMock.mockResolvedValue({
+      data: {
+        access_token: 't4',
+        active_organization: PERSONAL_WIRE,
+        my_permissions: ['organization:read'],
+        global_role: null,
+      },
+    });
+
+    await switchToPersonal();
+
+    expect(queryClient.getQueryData(orgQueryKeys.members())).toBeUndefined();
   });
 });

@@ -501,4 +501,19 @@ Webhooks/Notifications`). One bad record no longer blanks a whole table.
 - **User-scoped** lists (`sessions`, `passkeys`, notifications) are not org-keyed
   and are correctly unaffected by org switching.
 
+### ✅ Resolved (2026-06-29)
+
+- **6.1 — FIXED at the switch chokepoint.** `switch.ts` now calls
+  `clearActiveOrgQueryCache()` in both `switchToOrganization` and
+  `switchToPersonal`, doing `queryClient.removeQueries` for `['organization']`,
+  `['org']`, and `['billing']` whenever the active org changes. Uses
+  `removeQueries` (not `invalidate`) so the previous tenant's rows are **deleted**
+  — the new org refetches from scratch instead of briefly rendering stale
+  cross-tenant data. Every active-org change funnels through these two functions,
+  so isolation is guaranteed regardless of the un-org-keyed keys. Tests in
+  `switch.test.ts` seed members/api-keys/webhooks/billing caches and assert they
+  are gone after a switch (and that `me-context` survives). A further structural
+  enhancement (org-id IN the keys, for instant switch-back) is noted but not
+  required for correctness.
+
 ---

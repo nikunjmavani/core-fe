@@ -5,6 +5,8 @@ import { apiClient } from '@/core/http/fetch-client.ts';
 import { queryClient } from '@/core/http/queryClient.ts';
 import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
 import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
+import { billingQueryKeys } from '@/shared/api/billing-query-keys.ts';
+import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { scheduleTokenRefresh } from '@/shared/auth/refresh-timer.ts';
 import { setAccessToken } from '@/shared/auth/token.ts';
 
@@ -61,6 +63,23 @@ async function liveSwitch(
   );
 }
 
+/**
+ * Drop the previous tenant's org-scoped query cache on an active-org change.
+ * These keys omit the org id (`['organization', …]`, `['org', …]`,
+ * `['billing', …]`), so without this they would collide across orgs — and
+ * because the default `staleTime` is 5 min, the next org's tables would render
+ * the PREVIOUS org's rows with no refetch. `removeQueries` (not `invalidate`)
+ * deletes the data so the new org re-fetches from scratch; mounted observers
+ * fall to a loading state rather than briefly showing another tenant's data.
+ * Every active-org change funnels through these two functions, so this is the
+ * single chokepoint that guarantees isolation.
+ */
+function clearActiveOrgQueryCache(): void {
+  queryClient.removeQueries({ queryKey: orgQueryKeys.all }); // members/invitations/roles/api-keys
+  queryClient.removeQueries({ queryKey: ['org'] }); // webhooks
+  queryClient.removeQueries({ queryKey: billingQueryKeys.all }); // subscription/invoices/payment methods
+}
+
 export async function switchToOrganization(
   organizationId: string,
 ): Promise<MeContext | undefined> {
@@ -68,6 +87,7 @@ export async function switchToOrganization(
     organization_id: organizationId,
   });
   if (result) {
+    clearActiveOrgQueryCache();
     deriveOrgContext(result);
     captureAnalyticsEvent(ANALYTICS_EVENTS.organizationSwitched, {
       target_organization_id: organizationId,
@@ -81,6 +101,7 @@ export async function switchToOrganization(
 export async function switchToPersonal(): Promise<MeContext | undefined> {
   const result = await liveSwitch('/auth/switch-to-personal', {});
   if (result) {
+    clearActiveOrgQueryCache();
     deriveOrgContext(result);
     captureAnalyticsEvent(ANALYTICS_EVENTS.organizationSwitched, {
       target_type: result.activeOrganization?.type ?? 'PERSONAL',
