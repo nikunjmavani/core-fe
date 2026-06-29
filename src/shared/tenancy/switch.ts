@@ -46,11 +46,29 @@ function applyActiveOrg(
   );
 }
 
+/**
+ * Monotonic switch generation. Switching re-mints the GLOBAL access token, and
+ * switches can overlap — rapid org navigation (the URL guard) or a fast
+ * double-click in the switcher fire two `/auth/switch-*` POSTs whose round-trips
+ * interleave. Without a guard the LAST response to resolve wins the token
+ * regardless of which org the user actually ended on, so a superseded switch
+ * resolving late could leave the token pointing at the previous tenant while the
+ * URL/store say the new one — org-B-keyed queries would then fetch with org A's
+ * token (cross-tenant data confusion). Only the latest-initiated switch may
+ * apply its token + context; stale ones are dropped.
+ */
+let switchGeneration = 0;
+
 async function liveSwitch(
   path: string,
   body: Record<string, unknown>,
 ): Promise<MeContext | undefined> {
+  switchGeneration += 1;
+  const generation = switchGeneration;
   const res = await apiClient.post<unknown>(`${API_BASE_PATH}${path}`, body);
+  // A newer switch superseded this one while the POST was in flight — discard
+  // its token + context so it cannot clobber the active org.
+  if (generation !== switchGeneration) return undefined;
   const wire = switchWire.parse(res.data);
   setAccessToken(wire.access_token);
   scheduleTokenRefresh();

@@ -200,4 +200,64 @@ describe('tenancy/switch', () => {
       { id: 'b' },
     ]);
   });
+
+  it('drops a superseded switch so the latest org wins the token (race guard)', async () => {
+    const ORG_A = 'org_aaaaaaaaaaaaaaaaaaaaa';
+    const ORG_B = 'org_bbbbbbbbbbbbbbbbbbbbb';
+    const wireFor = (id: string) => ({
+      id,
+      name: 'Acme',
+      slug: 'acme',
+      type: 'TEAM' as const,
+      status: 'ACTIVE' as const,
+      logo_url: null,
+      created_at: TS,
+      updated_at: TS,
+    });
+
+    let resolveA!: (v: unknown) => void;
+    let resolveB!: (v: unknown) => void;
+    const pendingA = new Promise((r) => {
+      resolveA = r;
+    });
+    const pendingB = new Promise((r) => {
+      resolveB = r;
+    });
+    postMock.mockReturnValueOnce(pendingA).mockReturnValueOnce(pendingB);
+
+    // Two switches initiated back-to-back: A first (older), then B (latest).
+    const switchA = switchToOrganization(ORG_A);
+    const switchB = switchToOrganization(ORG_B);
+
+    // The latest switch (B) resolves first and applies its token + context.
+    resolveB({
+      data: {
+        access_token: 'tok_b',
+        active_organization: wireFor(ORG_B),
+        my_permissions: [],
+        global_role: null,
+      },
+    });
+    await switchB;
+
+    // The superseded switch (A) resolves LATE — it must be discarded, never
+    // clobber the token back to the previous tenant.
+    resolveA({
+      data: {
+        access_token: 'tok_a',
+        active_organization: wireFor(ORG_A),
+        my_permissions: [],
+        global_role: null,
+      },
+    });
+    const staleResult = await switchA;
+
+    expect(staleResult).toBeUndefined();
+    expect(setAccessTokenMock).toHaveBeenCalledWith('tok_b');
+    expect(setAccessTokenMock).not.toHaveBeenCalledWith('tok_a');
+    expect(setAccessTokenMock).toHaveBeenCalledTimes(1);
+    expect(
+      queryClient.getQueryData<MeContext>(meContextQueryKey)?.activeOrganization?.id,
+    ).toBe(ORG_B);
+  });
 });
