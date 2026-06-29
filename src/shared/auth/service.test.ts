@@ -1,6 +1,7 @@
 import { type Mock, vi } from 'vitest';
 
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import type { MeContext } from '@/shared/tenancy/me-context.ts';
 
 import { clearAccessToken, getAccessToken, setAccessToken } from './token.ts';
@@ -132,6 +133,21 @@ describe('auth/service', () => {
       expect(useAuthStore.getState().isAuthenticated).toBe(false);
       expect(useAuthStore.getState().user).toBeNull();
       expect(window.location.href).toBe('/login');
+    });
+
+    it('wipes the active-org context + RBAC permissions (no privilege bleed to next sign-in)', () => {
+      setAccessToken(VALID_TOKEN);
+      useAuthStore.getState().setUser(MOCK_USER);
+      // Seed an org context with elevated grants, as if a session were active.
+      useOrganizationStore.getState().setOrganization('org_prev', 'acme', 'active');
+      useOrganizationStore.setState({ permissions: ['membership:manage'] });
+
+      forceLogout();
+
+      // Must not rely on the post-logout reload — the store is cleared inline,
+      // so a non-reloading logout path can't leave one user's grants behind.
+      expect(useOrganizationStore.getState().organizationId).toBeNull();
+      expect(useOrganizationStore.getState().permissions).toEqual([]);
     });
   });
 

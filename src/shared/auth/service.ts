@@ -13,6 +13,7 @@ import { cancelTokenRefresh, scheduleTokenRefresh } from '@/shared/auth/refresh-
 import { clearSessionStart, markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import type { MeContext } from '@/shared/tenancy/me-context.ts';
 import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
 
@@ -47,6 +48,12 @@ function clearLocalAuthState(): void {
     clearAccessToken();
     clearSessionStart();
     useAuthStore.getState().clearAuth();
+    // Wipe the active-org context too — it holds the RBAC `permissions` that
+    // `useCan` reads. Clearing it here (not just relying on the post-logout
+    // full-page reload) keeps a non-reloading logout path — e.g. cross-tab
+    // logout while already on /login — from leaving one user's grants in the
+    // store for the next sign-in.
+    useOrganizationStore.getState().clearOrganization();
     queryClient.clear();
   } catch (cleanupError) {
     if (import.meta.env.DEV) {
