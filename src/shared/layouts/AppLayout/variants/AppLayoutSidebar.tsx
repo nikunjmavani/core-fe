@@ -24,6 +24,9 @@ import { LAYOUT_KEYS, LAYOUT_NS } from '@/shared/layouts/layout.constants.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 import { shouldShowOrganizationSwitcher } from '@/shared/tenancy/deployment-mode.ts';
 
+// Computed once at module load — a copyright year is not render-reactive.
+const CURRENT_YEAR = new Date().getFullYear();
+
 export function SidebarShell({
   navItems,
   organizationSlug,
@@ -110,7 +113,7 @@ export function SidebarShell({
             <SidebarQuickLinks />
           </div>
           <p className="text-sidebar-foreground/50 px-3 text-xs">
-            {t(LAYOUT_KEYS.app.footerCopyright, { year: new Date().getFullYear() })}
+            {t(LAYOUT_KEYS.app.footerCopyright, { year: CURRENT_YEAR })}
           </p>
         </div>
       </aside>

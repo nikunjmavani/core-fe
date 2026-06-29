@@ -357,4 +357,19 @@ Each with a regression test in `fetch-client.test.ts`:
 - **`new Date().toISOString()` in `RecoveryCodesPanel`** is inside a
   download-builder invoked from a click handler, not render — correct.
 
+### Partly resolved (2026-06-29)
+
+- **4.2 — FIXED.** `DashboardHero` reads the date once via `useMemo([])`;
+  `AppLayoutSidebar` hoists the copyright year to a module constant
+  (`CURRENT_YEAR`). No more `new Date()` in render.
+- **4.1 — DRAFTED then REVERTED.** A render-time reset keyed on a URL search
+  signature was implemented, but it could not be reliably regression-tested under
+  the jsdom + memory-router harness (`router.navigate` updated
+  `router.state.location.search`, yet `useSearch({ strict: false })` did not
+  re-render the table in-test). Rather than ship a behaviour-changing fix that
+  can't be verified, it was reverted. **Still open** — revisit with a fully
+  controlled table (drive `state` from the URL each render) plus a router-mocked
+  unit test, or an e2e back/forward test.
+- **4.3, 4.4 — OPEN.** Left as documented findings (no code change this pass).
+
 ---

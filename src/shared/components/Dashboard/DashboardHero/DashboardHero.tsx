@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils.ts';
@@ -43,6 +44,16 @@ export function DashboardHero({
   const isTeam = orgType === 'TEAM';
   const personalOnly = useDeploymentMode() === 'personal-only';
   const showOrgContext = !personalOnly;
+  // Read the clock once per mount, not on every render (purity).
+  const todayLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString(undefined, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+      }),
+    [],
+  );
 
   return (
     <header
@@ -61,11 +72,7 @@ export function DashboardHero({
       <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0 space-y-2">
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-            {new Date().toLocaleDateString(undefined, {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
+            {todayLabel}
           </p>
           <h1
             data-testid="dashboard-greeting"
