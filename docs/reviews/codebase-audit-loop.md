@@ -260,4 +260,21 @@ All four findings fixed, each with a regression test:
 - **POST/PATCH are not retried on 5xx** (not in `IDEMPOTENT_METHODS`) — safe
   default even though the idempotency key would technically allow it.
 
+### ✅ Resolved (2026-06-29)
+
+3.1–3.3 fixed by unifying the retry path in `fetch-client.ts` (one `run` loop
+with a single attempt budget; success-body parsing extracted to `parseJsonBody`).
+Each with a regression test in `fetch-client.test.ts`:
+
+- **3.1** — `nextRetryDelay` honors `Retry-After` for a 429, at most once and
+  only within `HTTP.MAX_RETRY_AFTER_MS` (5s); otherwise surfaces to
+  `RateLimitNotice` immediately. Tests: 429 with/without/over-cap Retry-After.
+- **3.2** — connection-error and bad-status retries now share one `attempt`
+  counter, so total attempts are bounded by `MAX_RETRIES + 1`. Test: mixed
+  connection + 5xx failures stay within budget.
+- **3.3** — `classifyFetchError` distinguishes `timeout` (AbortError) from
+  `connection`; timeouts are no longer retried. Test: AbortError → single call.
+- **3.4** — left as a convention note (per-endpoint Zod `parse` stays the guard);
+  no code change.
+
 ---

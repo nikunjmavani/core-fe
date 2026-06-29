@@ -36,6 +36,9 @@ export const HTTP = {
   TIMEOUT: 30_000,
   REFRESH_TIMEOUT: 5_000,
   MAX_RETRIES: 3,
+  /** Max `Retry-After` (ms) the client will transparently wait on a 429 before
+   * surfacing it to the user (RateLimitNotice). Longer waits are not auto-retried. */
+  MAX_RETRY_AFTER_MS: 5_000,
   STALE_TIME: 1000 * 60 * 5, // 5 minutes
 } as const;
 

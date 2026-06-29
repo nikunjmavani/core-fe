@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { HTTP } from '@/core/config/constants.ts';
 import { clearAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { HttpError, isUnauthorized } from '@/shared/errors/HttpError.ts';
 
@@ -352,6 +353,60 @@ describe('fetch-client', () => {
       const headers = (fetchMock.mock.calls[0][1] as RequestInit).headers as Headers;
       expect(headers.get('X-Organization-ID')).toBeNull();
       useOrganizationStore.getState().clearOrganization();
+    });
+  });
+
+  describe('retry budget & rate limiting (audit 3.1–3.3)', () => {
+    const errJson = (status: number, headers: Record<string, string> = {}) =>
+      new Response(JSON.stringify({ message: 'x' }), {
+        status,
+        headers: { 'Content-Type': 'application/json', ...headers },
+      });
+
+    it('429 with Retry-After retries once, then succeeds (3.1)', async () => {
+      fetchMock
+        .mockResolvedValueOnce(errJson(429, { 'Retry-After': '0' }))
+        .mockResolvedValueOnce(ok());
+      const { data } = await apiClient.get<{ ok: boolean }>('/x');
+      expect(data).toEqual({ ok: true });
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it('429 without Retry-After surfaces immediately — no auto-retry (3.1)', async () => {
+      fetchMock.mockResolvedValueOnce(errJson(429));
+      await expect(apiClient.get('/x')).rejects.toBeInstanceOf(HttpError);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('429 with a Retry-After beyond the cap is not auto-retried (3.1)', async () => {
+      fetchMock.mockResolvedValueOnce(errJson(429, { 'Retry-After': '60' }));
+      await expect(apiClient.get('/x')).rejects.toBeInstanceOf(HttpError);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('a timeout (AbortError) is not retried (3.3)', async () => {
+      const abort = Object.assign(new Error('timeout'), { name: 'AbortError' });
+      fetchMock.mockRejectedValueOnce(abort);
+      await expect(apiClient.get('/slow')).rejects.toBeInstanceOf(HttpError);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('caps total attempts across mixed connection + 5xx failures (3.2)', async () => {
+      vi.useFakeTimers();
+      try {
+        fetchMock
+          .mockRejectedValueOnce(new TypeError('network'))
+          .mockResolvedValueOnce(errJson(503))
+          .mockRejectedValueOnce(new TypeError('network'))
+          .mockImplementation(() => Promise.resolve(errJson(503)));
+        const assertion = expect(apiClient.get('/x')).rejects.toBeInstanceOf(HttpError);
+        await vi.runAllTimersAsync();
+        await assertion;
+        // Single budget: connection + status retries never exceed MAX_RETRIES + 1.
+        expect(fetchMock.mock.calls.length).toBeLessThanOrEqual(HTTP.MAX_RETRIES + 1);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 

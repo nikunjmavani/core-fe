@@ -123,23 +123,69 @@ async function parseErrorResponse(
   return new HttpError(message, response.status, url, method, data);
 }
 
-/** Idempotent methods: safe to retry on network/5xx (no body or same body). */
+/** Idempotent methods: safe to retry on connection/5xx (no body or same body). */
 const IDEMPOTENT_METHODS = new Set(['GET', 'HEAD', 'OPTIONS', 'PUT', 'DELETE']);
 
-function shouldRetry(
-  method: string,
-  status: number | null,
-  isNetworkError: boolean,
-): boolean {
-  if (status === 429) return true;
-  if (isNetworkError || (status !== null && status >= 500)) {
-    return IDEMPOTENT_METHODS.has(method);
-  }
-  return false;
+/**
+ * Classify a thrown fetch error. Timeouts (the `fetchWithTimeout` deadline) are
+ * deliberately distinguished from connection failures so they are NOT retried
+ * into piled latency (audit 3.3). Anything else is non-retryable.
+ */
+function classifyFetchError(err: unknown): 'timeout' | 'connection' | 'other' {
+  if ((err as Error)?.name === 'AbortError') return 'timeout';
+  if (err instanceof TypeError) return 'connection';
+  return 'other';
 }
 
 function exponentialDelay(attempt: number): number {
   return Math.min(1000 * 2 ** attempt, 30_000);
+}
+
+/** Dev-only retry trace (kept out of the hot path to bound its complexity). */
+function logRetry(attempt: number, url: string, suffix = ''): void {
+  if (import.meta.env.DEV) {
+    console.warn(`[HTTP] Retry attempt ${attempt + 1} for ${url}${suffix}`);
+  }
+}
+
+/** `Retry-After` header (delta-seconds) → ms, when present and finite. */
+function parseRetryAfterMs(response: Response): number | null {
+  const header = response.headers.get('Retry-After');
+  if (!header) return null;
+  const seconds = Number(header);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds * 1000 : null;
+}
+
+/**
+ * One unified retry budget for a logical request (audit 3.1–3.3): the delay (ms)
+ * before the next attempt, or `null` to stop and surface the error. A single
+ * `attempt` counter spans BOTH connection-error and bad-status retries, so the
+ * total is always bounded by `MAX_RETRIES`.
+ *
+ * - **429** → honor `Retry-After` at most ONCE and only within the cap; never
+ *   exponential-spam the limiter — otherwise surface to `RateLimitNotice` now.
+ * - **timeouts / other errors** → never retried.
+ * - **connection errors + 5xx** → exponential backoff, idempotent methods only.
+ */
+function nextRetryDelay(args: {
+  method: string;
+  attempt: number;
+  status: number | null;
+  errorKind: 'timeout' | 'connection' | 'other' | null;
+  response?: Response;
+}): number | null {
+  const { method, attempt, status, errorKind, response } = args;
+  if (attempt >= HTTP.MAX_RETRIES) return null;
+  if (status === 429) {
+    if (attempt >= 1 || !response) return null;
+    const retryAfter = parseRetryAfterMs(response);
+    return retryAfter !== null && retryAfter <= HTTP.MAX_RETRY_AFTER_MS
+      ? retryAfter
+      : null;
+  }
+  if (errorKind === 'timeout' || errorKind === 'other') return null;
+  const retryable = errorKind === 'connection' || (status !== null && status >= 500);
+  return retryable && IDEMPOTENT_METHODS.has(method) ? exponentialDelay(attempt) : null;
 }
 
 function buildRequestUrl(path: string): string {
@@ -168,6 +214,46 @@ async function doRefreshAndReplay<T>(
   return replay();
 }
 
+/** Parse a 2xx body: empty → undefined; JSON → unwrap the core-be envelope. */
+async function parseJsonBody<T>(
+  response: Response,
+  url: string,
+  method: string,
+): Promise<HttpResponse<T>> {
+  const text = await response.text();
+  if (!text) {
+    return { data: undefined as T };
+  }
+  const contentType = response.headers.get('Content-Type') ?? '';
+  if (!(contentType.includes('application/json') || contentType.includes('+json'))) {
+    throw new HttpError(
+      'Expected JSON response',
+      response.status,
+      url,
+      method,
+      text.slice(0, 200),
+    );
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text) as unknown;
+  } catch {
+    throw new HttpError(
+      'Invalid JSON response',
+      response.status,
+      url,
+      method,
+      text.slice(0, 200),
+    );
+  }
+  // core-be wraps every success as { data, meta }: unwrap to the payload and
+  // surface meta (request_id, pagination). Non-enveloped bodies pass through.
+  if (isEnvelope(parsed)) {
+    return { data: parsed.data as T, meta: parsed.meta };
+  }
+  return { data: parsed as T };
+}
+
 /** Write methods carry an auto-generated X-Idempotency-Key (server de-dupes). */
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -184,27 +270,28 @@ async function request<T>(
   // send the SAME key, so the server can collapse duplicates.
   const idempotencyKey = WRITE_METHODS.has(method) ? crypto.randomUUID() : undefined;
 
-  async function attemptFetch(retryCount: number): Promise<Response> {
+  function fetchOnce(): Promise<Response> {
     const headers = buildHeaders(idempotencyKey);
     const init: RequestInit = {
       method,
       headers,
       ...(body !== undefined && { body: JSON.stringify(body) }),
     };
+    return fetchWithTimeout(url, init, defaultConfig.timeout);
+  }
+
+  // Single attempt budget shared by connection-error AND bad-status retries.
+  const run = async (attempt = 0, hasRefreshed = false): Promise<HttpResponse<T>> => {
+    let response: Response;
     try {
-      return await fetchWithTimeout(url, init, defaultConfig.timeout);
+      response = await fetchOnce();
     } catch (err) {
-      const isNetworkError =
-        err instanceof TypeError || (err as Error)?.name === 'AbortError';
-      if (shouldRetry(method, null, isNetworkError) && retryCount < HTTP.MAX_RETRIES) {
-        await new Promise((r) => setTimeout(r, exponentialDelay(retryCount)));
-        if (import.meta.env.DEV) {
-          console.warn(
-            `[HTTP] Retry attempt ${retryCount + 1} for ${url}`,
-            (err as Error)?.message,
-          );
-        }
-        return attemptFetch(retryCount + 1);
+      const errorKind = classifyFetchError(err);
+      const delay = nextRetryDelay({ method, attempt, status: null, errorKind });
+      if (delay !== null) {
+        await new Promise((r) => setTimeout(r, delay));
+        logRetry(attempt, url, `: ${(err as Error)?.message ?? ''}`);
+        return run(attempt + 1, hasRefreshed);
       }
       throw new HttpError(
         (err as Error)?.message ?? 'Network error',
@@ -214,13 +301,6 @@ async function request<T>(
         undefined,
       );
     }
-  }
-
-  const doOne = async (
-    retryCount = 0,
-    hasRefreshed = false,
-  ): Promise<HttpResponse<T>> => {
-    const response = await attemptFetch(retryCount);
 
     if (response.status === 401 && !options?.skip401 && !isRefreshUrl) {
       if (hasRefreshed) {
@@ -230,56 +310,29 @@ async function request<T>(
         forceLogout();
         throw await parseErrorResponse(response, url, method);
       }
-      return doRefreshAndReplay(() => doOne(0, true));
+      return doRefreshAndReplay(() => run(0, true));
     }
 
     if (!response.ok) {
-      const status = response.status;
-      if (shouldRetry(method, status, false) && retryCount < HTTP.MAX_RETRIES) {
-        await new Promise((r) => setTimeout(r, exponentialDelay(retryCount)));
-        if (import.meta.env.DEV) {
-          console.warn(`[HTTP] Retry attempt ${retryCount + 1} for ${url} (${status})`);
-        }
-        return doOne(retryCount + 1);
+      const delay = nextRetryDelay({
+        method,
+        attempt,
+        status: response.status,
+        errorKind: null,
+        response,
+      });
+      if (delay !== null) {
+        await new Promise((r) => setTimeout(r, delay));
+        logRetry(attempt, url, ` (${response.status})`);
+        return run(attempt + 1, hasRefreshed);
       }
       throw await parseErrorResponse(response, url, method);
     }
 
-    const text = await response.text();
-    if (!text) {
-      return { data: undefined as T };
-    }
-    const contentType = response.headers.get('Content-Type') ?? '';
-    if (!(contentType.includes('application/json') || contentType.includes('+json'))) {
-      throw new HttpError(
-        'Expected JSON response',
-        response.status,
-        url,
-        method,
-        text.slice(0, 200),
-      );
-    }
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text) as unknown;
-    } catch {
-      throw new HttpError(
-        'Invalid JSON response',
-        response.status,
-        url,
-        method,
-        text.slice(0, 200),
-      );
-    }
-    // core-be wraps every success as { data, meta }: unwrap to the payload and
-    // surface meta (request_id, pagination). Non-enveloped bodies pass through.
-    if (isEnvelope(parsed)) {
-      return { data: parsed.data as T, meta: parsed.meta };
-    }
-    return { data: parsed as T };
+    return parseJsonBody<T>(response, url, method);
   };
 
-  return doOne();
+  return run();
 }
 
 // ------------------------------------------------------------------
