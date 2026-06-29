@@ -59,10 +59,7 @@ function createTestRouteTree(ui: ReactElement) {
  *   const { getByText } = renderWithProviders(<MyComponent />);
  *   expect(getByText('Hello')).toBeInTheDocument();
  *
- * For API mocking, use vi.mock() at the top of your test file:
- *   vi.mock('@/core/http/fetch-client.ts', () => ({
- *     apiClient: mockApiClient().instance,
- *   }));
+ * Stub dependencies with vi.mock() / vi.fn() at the top of your test file.
  */
 export function renderWithProviders(
   ui: ReactElement,

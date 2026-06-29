@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
 
+import { uniqueE2eEmail } from '@/tests/utils/e2e-faker.ts';
+import { expectLoginFormReady, fillTestId } from '@/tests/utils/e2e-hybrid.ts';
+
 /**
- * Network-fault resilience — the implementable slice of core-be's chaos
- * testing for a mock-mode frontend: connectivity loss surfaces the global
+ * Network-fault resilience — connectivity loss surfaces the global
  * OfflineIndicator (and recovers), and a failing /version.json poll endpoint
- * never takes the app down.
+ * never takes the app down. No API server required.
  */
 test.describe('Network resilience', () => {
   test('offline banner appears on connectivity loss and clears on recovery', async ({
@@ -12,7 +14,7 @@ test.describe('Network resilience', () => {
     context,
   }) => {
     await page.goto('/login');
-    await expect(page.getByTestId('login-page')).toBeVisible();
+    await expectLoginFormReady(page);
     await expect(page.getByTestId('offline-indicator')).toHaveCount(0);
 
     await context.setOffline(true);
@@ -32,11 +34,12 @@ test.describe('Network resilience', () => {
     page.on('pageerror', (error) => pageErrors.push(error));
 
     await page.goto('/login');
-    await expect(page.getByTestId('login-page')).toBeVisible();
+    await expectLoginFormReady(page);
 
-    // Still interactive: form accepts input despite the failing poll.
-    await page.getByLabel('Email').fill('user@example.com');
-    await expect(page.getByLabel('Email')).toHaveValue('user@example.com');
+    // Hybrid: fill via testid; assert value via label (a11y path still works).
+    const email = uniqueE2eEmail('network');
+    await fillTestId(page, 'auth-email', email);
+    await expect(page.getByLabel(/^email$/i)).toHaveValue(email);
 
     expect(
       pageErrors,

@@ -1,0 +1,14 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5180",
+      "localStorage": [
+        {
+          "name": "core-consent",
+          "value": "{\"state\":{\"analyticsConsent\":\"denied\"},\"version\":0}"
+        }
+      ]
+    }
+  ]
+}

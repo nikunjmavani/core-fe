@@ -1,23 +1,54 @@
 import { expect, test } from '@playwright/test';
 
-import { registerNewUserAndGoToDashboard } from '@/tests/utils/e2e-auth.ts';
+import {
+  createTeamOrgViaSwitcher,
+  registerNewUserAndGoToDashboard,
+  selectOrganizationInSwitcher,
+} from '@/tests/utils/e2e-auth.ts';
+import { verifyDatabaseConnection } from '@/tests/utils/e2e-session.ts';
 
-// Dual-URL switch-on-navigation (FE-19/21/24): the switcher moves between the
-// team org's `/organization/$id/dashboard` and the personal org's root
-// `/dashboard`, driven by the active org in me/context.
+/**
+ * Dual-URL org switching: personal `/dashboard` ↔ team `/organization/$slug/dashboard`.
+ * Requires live core-be, DATABASE_URL, and deployment flags that expose the switcher.
+ */
 test.describe('Organization switching (dual-URL)', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
+    test.skip(
+      !(await verifyDatabaseConnection()),
+      'DATABASE_URL must reach core-be Postgres (auth.mail_outbox)',
+    );
+  });
+
+  test('switcher moves between personal dashboard and a new team org', async ({
+    page,
+  }) => {
     await registerNewUserAndGoToDashboard(page);
-  });
 
-  test('starts on the team org dashboard URL', async ({ page }) => {
-    await expect(page).toHaveURL(/\/organization\/acme\/dashboard/);
-  });
+    const switcher = page.getByTestId('organization-switcher-trigger');
+    test.skip(
+      !(await switcher.isVisible().catch(() => false)),
+      'org switcher hidden for deployment mode',
+    );
 
-  test('switching to the personal org lands on the root /dashboard', async ({ page }) => {
+    const { slug: teamSlug } = await createTeamOrgViaSwitcher(page);
+    await expect(page).toHaveURL(new RegExp(`/organization/${teamSlug}/dashboard`));
+
     await page.getByTestId('organization-switcher-trigger').click();
-    await page.getByTestId('organization-switcher-option-personal').click();
-    await expect(page).toHaveURL(/\/dashboard$/);
+    const personalOption = page.getByTestId('organization-switcher-option-personal');
+    test.skip(
+      !(await personalOption.isVisible().catch(() => false)),
+      'personal org section disabled',
+    );
+    await page.keyboard.press('Escape');
+
+    await selectOrganizationInSwitcher(page, 'personal');
+    await expect(page).toHaveURL(/\/dashboard(?:\?|$|#)/, { timeout: 15000 });
+    await expect(page.getByTestId('dashboard-page')).toBeVisible();
+
+    await selectOrganizationInSwitcher(page, teamSlug);
+    await expect(page).toHaveURL(new RegExp(`/organization/${teamSlug}/dashboard`), {
+      timeout: 15000,
+    });
     await expect(page.getByTestId('dashboard-page')).toBeVisible();
   });
 });

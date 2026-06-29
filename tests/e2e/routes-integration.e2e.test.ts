@@ -1,0 +1,156 @@
+import { expect, test } from '@playwright/test';
+
+import {
+  authenticateViaEmailCodeAndLand,
+  registerNewUserAndGoToDashboard,
+} from '@/tests/utils/e2e-auth.ts';
+import {
+  clickTestId,
+  expectAppHeaderReady,
+  expectAuthScreenReady,
+  expectLoginFormReady,
+  gotoApp,
+  navigateAuthenticated,
+  openSettingsHash,
+} from '@/tests/utils/e2e-hybrid.ts';
+import { verifyDatabaseConnection } from '@/tests/utils/e2e-session.ts';
+
+/**
+ * End-to-end route matrix against live core-be (:3000) + FE dev/preview.
+ * Run across Chromium, Firefox, and WebKit via `pnpm test:e2e:integration:cross-browser`.
+ */
+test.describe('Live routes integration', () => {
+  test.describe('public routes', () => {
+    test('login shell is reachable without auth', async ({ page }) => {
+      await gotoApp(page, '/login');
+      await expectAuthScreenReady(page);
+    });
+
+    test('MFA page shows session-expired state without a handoff token', async ({
+      page,
+    }) => {
+      await gotoApp(page, '/mfa');
+      await expect(page.getByTestId('mfa-page')).toBeVisible({ timeout: 15000 });
+      await expect(page.getByTestId('mfa-form')).toBeVisible();
+      await expect(page.getByRole('heading', { name: /session expired/i })).toBeVisible();
+    });
+
+    test('OAuth callback without a session returns to login', async ({ page }) => {
+      await gotoApp(page, '/callback');
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+      await expectLoginFormReady(page);
+    });
+
+    test('accept-invite with an invalid id shows error and sign-in affordance', async ({
+      page,
+    }) => {
+      await gotoApp(page, '/accept-invite/inv_expired');
+      await expect(page.getByTestId('accept-invite-page')).toBeVisible({
+        timeout: 15000,
+      });
+      await expect(page.getByTestId('accept-invite-error')).toBeVisible({
+        timeout: 10000,
+      });
+      await expect(page.getByTestId('accept-invite-login')).toBeVisible();
+    });
+
+    test('unauthorized page renders without auth', async ({ page }) => {
+      await gotoApp(page, '/unauthorized');
+      await expect(page.getByTestId('unauthorized-page')).toBeVisible({ timeout: 15000 });
+      await expect(page.getByRole('heading', { name: /^403$/ })).toBeVisible();
+    });
+  });
+
+  test.describe('auth guards', () => {
+    const protectedPaths = ['/', '/dashboard', '/onboarding', '/organization'] as const;
+
+    for (const path of protectedPaths) {
+      test(`${path} redirects unauthenticated visitors to login`, async ({ page }) => {
+        await gotoApp(page, path);
+        await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+        await expectLoginFormReady(page);
+      });
+    }
+
+    test('unknown path shows 404 without requiring auth', async ({ page }) => {
+      await gotoApp(page, '/route-integration-missing-page');
+      await expect(page.getByTestId('not-found-page')).toBeVisible({ timeout: 10000 });
+    });
+  });
+
+  test.describe('authenticated journey', () => {
+    test.beforeEach(async () => {
+      test.skip(
+        !(await verifyDatabaseConnection()),
+        'DATABASE_URL must reach core-be Postgres (auth.mail_outbox)',
+      );
+    });
+
+    test('email-code sign-in lands on dashboard with app shell', async ({ page }) => {
+      await registerNewUserAndGoToDashboard(page);
+      await expectAppHeaderReady(page);
+      await expect(page.getByTestId('app-layout')).toBeVisible();
+    });
+
+    test('root resolver and personal dashboard route both serve the dashboard shell', async ({
+      page,
+    }) => {
+      await registerNewUserAndGoToDashboard(page);
+
+      await navigateAuthenticated(page, '/');
+      await expect(page.getByTestId('dashboard-page')).toBeVisible({ timeout: 10000 });
+
+      await navigateAuthenticated(page, '/dashboard');
+      await expect(page.getByTestId('dashboard-page')).toBeVisible();
+    });
+
+    test('organization picker redirects personal workspace users to dashboard', async ({
+      page,
+    }) => {
+      await registerNewUserAndGoToDashboard(page);
+      await navigateAuthenticated(page, '/organization');
+      await expect(page).toHaveURL(/\/dashboard/, { timeout: 10000 });
+      await expect(page.getByTestId('dashboard-page')).toBeVisible();
+    });
+
+    test('settings hash modal opens over org dashboard and closes with Escape', async ({
+      page,
+    }) => {
+      await registerNewUserAndGoToDashboard(page);
+      await openSettingsHash(page, 'account', 'profile');
+
+      await expect(page.getByTestId('settings-modal')).toBeVisible();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(page.getByTestId('settings-modal')).not.toBeVisible();
+    });
+
+    test('onboarding is skipped once the user is provisioned', async ({ page }) => {
+      await registerNewUserAndGoToDashboard(page);
+      await navigateAuthenticated(page, '/onboarding');
+      await expect(page).not.toHaveURL(/\/onboarding/, { timeout: 10000 });
+      await expect(page.getByTestId('dashboard-page')).toBeVisible();
+    });
+
+    test('404 while authenticated still renders not-found', async ({ page }) => {
+      await registerNewUserAndGoToDashboard(page);
+      await navigateAuthenticated(page, '/authenticated-missing-route');
+      await expect(page.getByTestId('not-found-page')).toBeVisible({ timeout: 5000 });
+    });
+
+    test('API session hydrate via refresh cookie resolves `/` to dashboard', async ({
+      page,
+    }) => {
+      await authenticateViaEmailCodeAndLand(page);
+      await expect(page.getByTestId('dashboard-page')).toBeVisible();
+    });
+
+    test('logout returns to login', async ({ page }) => {
+      await registerNewUserAndGoToDashboard(page);
+      await page.getByTestId('user-menu-trigger').click();
+      await clickTestId(page, 'logout-button');
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+      await expectLoginFormReady(page);
+    });
+  });
+});

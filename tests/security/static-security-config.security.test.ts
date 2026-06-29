@@ -43,7 +43,10 @@ describe('content security policy (index.html meta)', () => {
 
   it.each([
     ["default-src 'self'", /default-src 'self'/],
-    ["script-src 'self' (no unsafe-inline/eval)", /script-src 'self';/],
+    [
+      "script-src 'self' + Turnstile + Stripe (no unsafe-inline/eval)",
+      /script-src 'self' https:\/\/challenges\.cloudflare\.com https:\/\/js\.stripe\.com/,
+    ],
     ["object-src 'none'", /object-src 'none'/],
     ["base-uri 'self'", /base-uri 'self'/],
     ["form-action 'self'", /form-action 'self'/],
@@ -55,8 +58,24 @@ describe('content security policy (index.html meta)', () => {
     expect(indexHtml).toMatch(pattern);
   });
 
+  it('never weakens meta script-src with unsafe-inline or unsafe-eval', () => {
+    const match = indexHtml.match(
+      /http-equiv="Content-Security-Policy"[\s\S]*?content="([^"]*)"/,
+    );
+    expect(match?.[1]).toBeDefined();
+    expect(match?.[1]).not.toMatch(/script-src[^;]*unsafe-(inline|eval)/);
+  });
+
   it('does NOT carry a frame-ancestors directive in the meta CSP (header-only directive — it lives in public/_headers)', () => {
     expect(indexHtml).not.toMatch(/frame-ancestors\s+'/);
+  });
+
+  it('does NOT carry upgrade-insecure-requests in the meta CSP (header-only — breaks Safari on http://localhost preview)', () => {
+    const match = indexHtml.match(
+      /http-equiv="Content-Security-Policy"[\s\S]*?content="([^"]*)"/,
+    );
+    expect(match?.[1]).toBeDefined();
+    expect(match?.[1]).not.toMatch(/upgrade-insecure-requests/);
   });
 });
 

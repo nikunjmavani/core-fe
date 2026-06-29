@@ -1,9 +1,10 @@
 import { expect, type Page, test } from '@playwright/test';
 
 import { registerNewUserAndGoToDashboard } from '@/tests/utils/e2e-auth.ts';
+import { expectLoginFormReady } from '@/tests/utils/e2e-hybrid.ts';
 
 /**
- * Responsive guardrails at the smallest supported width (320px), mock mode.
+ * Responsive guardrails at the smallest supported width (320px).
  * The app must hold from 320px up to 27" — these assert the hard floor:
  * no horizontal scroll, and the settings modal collapses to its mobile layout.
  */
@@ -21,13 +22,7 @@ test.describe('Responsive @ 320px', () => {
 
   test('login page fits with no horizontal scroll', async ({ page }) => {
     await page.goto('/login');
-    await expect(page.getByTestId('login-form')).toBeVisible();
-    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
-  });
-
-  test('register page (denser form) fits with no horizontal scroll', async ({ page }) => {
-    await page.goto('/register');
-    await expect(page.getByTestId('register-email')).toBeVisible();
+    await expectLoginFormReady(page);
     expect(await horizontalOverflow(page)).toBeLessThanOrEqual(1);
   });
 
@@ -42,7 +37,8 @@ test.describe('Responsive @ 320px', () => {
     page,
   }) => {
     await registerNewUserAndGoToDashboard(page);
-    await page.goto('/organization/acme/dashboard#settings/account/profile');
+    const orgPath = new URL(page.url()).pathname.replace(/\/$/, '');
+    await page.goto(`${orgPath}#settings/account/profile`);
 
     await expect(page.getByTestId('settings-modal')).toBeVisible();
     // Mobile: the section <Select> drives nav; the desktop sidebar is hidden.

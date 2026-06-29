@@ -31,11 +31,17 @@ function stripComments(code: string): string {
   return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
 }
 
+/** Allowlisted sinks — locally generated SVG only; data is never user HTML. */
+const ALLOWLISTED_SINKS: ReadonlyArray<string> = [
+  '../../src/shared/components/QrCode/QrCode.tsx',
+];
+
 describe('XSS sink tripwire', () => {
   it('app source contains no raw HTML/JS injection sinks', () => {
     const offenders: string[] = [];
     for (const [path, code] of Object.entries(sources)) {
       if (path.includes('.test.') || path.includes('/components/ui/')) continue;
+      if (ALLOWLISTED_SINKS.includes(path)) continue;
       const stripped = stripComments(code);
       for (const [label, pattern] of SINKS) {
         if (pattern.test(stripped)) offenders.push(`${path} → ${label}`);
