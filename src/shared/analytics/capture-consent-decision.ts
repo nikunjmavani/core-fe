@@ -1,5 +1,8 @@
 import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
-import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
+import {
+  captureAnalyticsEvent,
+  purgeAnalyticsOnConsentRevoked,
+} from '@/shared/analytics/capture.ts';
 import type { ConsentDecision } from '@/shared/store/useConsentStore/index.ts';
 
 /** @deprecated Use {@link ANALYTICS_EVENTS.consentDecision}. */
@@ -14,7 +17,11 @@ export const ANALYTICS_CONSENT_EVENT = ANALYTICS_EVENTS.consentDecision;
 export async function captureAnalyticsConsentDecision(
   decision: Exclude<ConsentDecision, null>,
 ): Promise<void> {
-  if (decision === 'denied') return;
+  if (decision === 'denied') {
+    // Withdrawal: purge any analytics state stored under a prior grant.
+    purgeAnalyticsOnConsentRevoked();
+    return;
+  }
 
   captureAnalyticsEvent(ANALYTICS_EVENTS.consentDecision, {
     decision: 'granted',

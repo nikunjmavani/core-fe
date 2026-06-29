@@ -6,8 +6,9 @@ import { useConsentStore } from '@/shared/store/useConsentStore/index.ts';
 
 import { ConsentBanner } from './ConsentBanner.tsx';
 
+const env = vi.hoisted(() => ({ privacyPolicyUrl: undefined as string | undefined }));
 vi.mock('@/core/config/env.ts', () => ({
-  platformConfig: { privacyPolicyUrl: undefined },
+  platformConfig: env,
 }));
 
 const captureAnalyticsConsentDecision = vi.fn(async () => undefined);
@@ -20,6 +21,15 @@ describe('ConsentBanner', () => {
   beforeEach(() => {
     useConsentStore.getState().resetAnalyticsConsent();
     captureAnalyticsConsentDecision.mockClear();
+    env.privacyPolicyUrl = undefined;
+  });
+
+  it('renders the privacy link with a safe rel for an external _blank target', () => {
+    env.privacyPolicyUrl = 'https://example.com/privacy';
+    render(<ConsentBanner />);
+    const link = screen.getByRole('link', { name: 'Privacy Policy' });
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('shows while the decision is undecided', () => {

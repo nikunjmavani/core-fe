@@ -28,6 +28,32 @@ function ensurePostHogBootstrapped(): void {
   postHogBootstrap?.();
 }
 
+let postHogActive = false;
+
+/** Marked once PostHog has actually initialized (called from app/analytics/posthog.ts). */
+export function markPostHogActive(): void {
+  postHogActive = true;
+}
+
+/**
+ * Consent withdrawn → stop capture and purge PostHog's stored identifiers
+ * (localStorage + cookie). No-op when PostHog never initialized, so a
+ * decline-from-start never loads the analytics chunk.
+ */
+export function purgeAnalyticsOnConsentRevoked(): void {
+  if (!postHogActive) return;
+  postHogActive = false;
+  import('posthog-js')
+    .then(({ default: posthog }) => {
+      if (!posthog.__loaded) return;
+      posthog.opt_out_capturing();
+      posthog.reset(true);
+    })
+    .catch(() => {
+      /* analytics must never throw */
+    });
+}
+
 /** Shared context attached to every captured event (no PII). */
 export function getAnalyticsContext(): Record<string, unknown> {
   const auth = useAuthStore.getState();

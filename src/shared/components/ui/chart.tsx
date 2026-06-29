@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as RechartsPrimitive from 'recharts';
 
+import { isSafeCssColor } from '@/lib/css-safe.ts';
 import { cn } from '@/lib/utils.ts';
 
 const THEMES = { light: '', dark: '.dark' } as const;
@@ -74,7 +75,9 @@ function buildThemeCss(id: string, config: ChartConfig): string {
       const vars = entries
         .map(([key, c]) => {
           const color = c.theme?.[theme as keyof typeof THEMES] ?? c.color;
-          return color ? `  --color-${key}: ${color};` : null;
+          // Guard the raw `<style>` interpolation against CSS/HTML injection if a
+          // config color is ever sourced from data (see lib/css-safe.ts).
+          return color && isSafeCssColor(color) ? `  --color-${key}: ${color};` : null;
         })
         .filter(Boolean)
         .join('\n');

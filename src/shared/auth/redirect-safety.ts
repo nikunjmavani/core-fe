@@ -34,6 +34,23 @@ export function safeRedirect(value: unknown): string | undefined {
   return typeof value === 'string' && isSafeRedirectPath(value) ? value : undefined;
 }
 
+/**
+ * Validate an absolute external URL before a full-page navigation to it — e.g.
+ * the OAuth provider authorize URL returned by the backend. Requires a parseable
+ * `https:` URL with a host, blocking `javascript:` / `data:` schemes, relative
+ * and protocol-relative smuggling. Defense-in-depth: the backend is the OAuth
+ * broker, but the client should never `assign()` an unvalidated URL.
+ */
+export function isSafeExternalHttpsUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length === 0) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' && url.hostname.length > 0;
+  } catch {
+    return false;
+  }
+}
+
 const RETURN_TO_KEY = 'core-auth:return-to';
 
 /**

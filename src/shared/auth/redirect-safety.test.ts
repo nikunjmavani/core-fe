@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  isSafeExternalHttpsUrl,
   isSafeRedirectPath,
   popReturnTo,
   safeRedirect,
@@ -31,6 +32,26 @@ describe('safeRedirect', () => {
     expect(safeRedirect('//evil.example.com')).toBeUndefined();
     expect(safeRedirect(undefined)).toBeUndefined();
     expect(safeRedirect(123)).toBeUndefined();
+  });
+});
+
+describe('isSafeExternalHttpsUrl (OAuth authorize URL guard)', () => {
+  it('accepts an absolute https URL with a host', () => {
+    expect(
+      isSafeExternalHttpsUrl('https://accounts.google.com/o/oauth2/v2/auth?x=1'),
+    ).toBe(true);
+  });
+
+  it('rejects non-https schemes, relative, and non-string values', () => {
+    expect(isSafeExternalHttpsUrl('javascript:alert(1)')).toBe(false);
+    expect(isSafeExternalHttpsUrl('data:text/html,<script>')).toBe(false);
+    // eslint-disable-next-line sonarjs/no-clear-text-protocols -- asserting http:// is rejected
+    expect(isSafeExternalHttpsUrl('http://accounts.google.com')).toBe(false);
+    expect(isSafeExternalHttpsUrl('//evil.example.com')).toBe(false);
+    expect(isSafeExternalHttpsUrl('/relative/path')).toBe(false);
+    expect(isSafeExternalHttpsUrl('not a url')).toBe(false);
+    expect(isSafeExternalHttpsUrl('')).toBe(false);
+    expect(isSafeExternalHttpsUrl(undefined)).toBe(false);
   });
 });
 

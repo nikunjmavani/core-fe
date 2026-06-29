@@ -6,6 +6,7 @@ import { scrubObjectUrls } from '@/lib/telemetry-scrub.ts';
 import {
   attachPostHogIdentitySync,
   attachPostHogRouter,
+  markPostHogActive,
   registerPostHogBootstrap,
   registerPostHogSuperProperties,
 } from '@/shared/analytics/capture.ts';
@@ -63,6 +64,7 @@ export function initPostHog(router?: AnyRouter): void {
       },
     });
     initialized = true;
+    markPostHogActive();
 
     registerPostHogSuperProperties(posthog);
     attachPostHogIdentitySync(posthog);

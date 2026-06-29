@@ -46,7 +46,7 @@ export function ConsentBanner() {
               <a
                 href={platformConfig.privacyPolicyUrl}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="text-foreground font-medium underline"
               >
                 Privacy Policy

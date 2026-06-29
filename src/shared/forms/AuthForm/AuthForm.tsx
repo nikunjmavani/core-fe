@@ -13,7 +13,7 @@ import {
 } from '@/shared/auth/auto-google-sign-in.ts';
 import { useTurnstileReady } from '@/shared/auth/captcha/useTurnstileReady/index.ts';
 import { signInWithPasskey } from '@/shared/auth/passkey-sign-in.ts';
-import { stashReturnTo } from '@/shared/auth/redirect-safety.ts';
+import { isSafeExternalHttpsUrl, stashReturnTo } from '@/shared/auth/redirect-safety.ts';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
@@ -107,6 +107,10 @@ export function AuthForm() {
     try {
       captureAnalyticsEvent(ANALYTICS_EVENTS.authOauthStarted, { provider });
       const url = await authApi.oauthStart(provider);
+      // Defense-in-depth: never navigate to an unvalidated backend-supplied URL.
+      if (!isSafeExternalHttpsUrl(url)) {
+        throw new Error('Unsafe OAuth redirect URL');
+      }
       window.location.assign(url);
     } catch (err) {
       skipAutoGoogleSignIn();

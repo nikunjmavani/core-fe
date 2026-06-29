@@ -3,6 +3,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 vi.mock('posthog-js', () => ({
   default: {
     capture: vi.fn(),
+    opt_out_capturing: vi.fn(),
+    reset: vi.fn(),
     __loaded: true,
   },
 }));
@@ -20,6 +22,7 @@ vi.mock('@/shared/store/useConsentStore/index.ts', () => ({
 
 import posthog from 'posthog-js';
 
+import { markPostHogActive } from './capture.ts';
 import {
   ANALYTICS_CONSENT_EVENT,
   captureAnalyticsConsentDecision,
@@ -47,6 +50,17 @@ describe('captureAnalyticsConsentDecision', () => {
   it('does not capture when consent is denied', async () => {
     await captureAnalyticsConsentDecision('denied');
 
+    expect(posthog.capture).not.toHaveBeenCalled();
+  });
+
+  it('purges PostHog state when consent is denied after it was active', async () => {
+    markPostHogActive();
+    await captureAnalyticsConsentDecision('denied');
+
+    await vi.waitFor(() => {
+      expect(posthog.opt_out_capturing).toHaveBeenCalled();
+      expect(posthog.reset).toHaveBeenCalledWith(true);
+    });
     expect(posthog.capture).not.toHaveBeenCalled();
   });
 });
