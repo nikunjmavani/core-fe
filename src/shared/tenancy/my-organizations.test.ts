@@ -43,12 +43,40 @@ describe('listMyOrganizations', () => {
     expect(result).toEqual([]);
   });
 
-  it('throws on invalid organization shape', async () => {
+  it('drops an invalid org row instead of failing the whole list (tolerant)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     vi.mocked(apiClient.get).mockResolvedValue({
-      data: [{ id: 'org-1' }], // missing name and slug
+      data: [
+        { id: 'org-1', name: 'Acme', slug: 'acme' },
+        { id: 'org-bad' }, // missing name + slug → dropped, not fatal
+      ],
     });
 
-    await expect(listMyOrganizations()).rejects.toThrow();
+    const result = await listMyOrganizations();
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe('org-1');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('follows cursor pagination so a user in >25 orgs sees them all (no truncation)', async () => {
+    vi.mocked(apiClient.get).mockReset();
+    vi.mocked(apiClient.get)
+      .mockResolvedValueOnce({
+        data: [{ id: 'org-1', name: 'A', slug: 'a' }],
+        meta: { pagination: { has_more: true, next: 'cur1' } },
+      })
+      .mockResolvedValueOnce({
+        data: [{ id: 'org-2', name: 'B', slug: 'b' }],
+        meta: { pagination: { has_more: false, next: null } },
+      });
+
+    const result = await listMyOrganizations();
+
+    expect(result.map((o) => o.id)).toEqual(['org-1', 'org-2']);
+    expect(apiClient.get).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(apiClient.get).mock.calls[0]?.[0]).toContain('limit=100');
+    expect(vi.mocked(apiClient.get).mock.calls[1]?.[0]).toContain('after=cur1');
   });
 });
 
