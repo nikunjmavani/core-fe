@@ -32,7 +32,7 @@ when choosing how **read vs write** paths surface failures.
 3. **422 mapping** — in `onError`:
 
 ```tsx
-import { mapValidationErrors } from '@/lib/forms/map-validation-errors.ts';
+import { mapValidationErrors } from '@/shared/errors/map-validation-errors.ts';
 import { notifyError } from '@/shared/errors/errorHandler.ts';
 
 onError: (error) => {
@@ -53,8 +53,17 @@ import { RateLimitNotice } from '@/shared/components/RateLimitNotice/index.ts';
 Helpers: `shared/errors/rate-limit.ts` (`isRateLimitError`, `getRateLimitRetryAfterSeconds`).
 
 6. **Success** — invalidate query keys; close dialog or navigate per UX spec.
-7. **Idempotency** — fetch client attaches `Idempotency-Key` on writes automatically — do not disable.
-8. **Tests** — colocated form test: 422 maps to field; 429 shows notice; axe clean.
+7. **Write feedback (pick one)** — route writes through `useAppMutation` and choose:
+   - **Optimistic** for a safe in-place cache patch — a **removal** (filter by `id`)
+     or **field update** (map by `id`) — via its `optimistic` config. Instant UI,
+     auto-rollback on error.
+   - **Non-optimistic** otherwise (especially **creates** — temp-id reconciliation
+     is error-prone): show `mutation.isPending` (disabled button + spinner).
+   - Never leave a write with no feedback. Policy + inventory:
+     `docs/reference/data-mutations.md`.
+8. **Idempotency** — fetch client attaches `Idempotency-Key` on writes automatically — do not disable.
+9. **Tests** — colocated form test: 422 maps to field; 429 shows notice; axe clean.
+   Optimistic paths also need patch-on-success + rollback-on-error.
 
 ---
 

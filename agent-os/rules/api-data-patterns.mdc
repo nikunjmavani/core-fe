@@ -56,6 +56,37 @@ export function useCreateUser() {
 }
 ```
 
+## Optimistic Updates & Write UX
+
+Every write mutation goes through `useAppMutation` (`@/shared/hooks/useAppMutation`)
+and picks **one** of two modes. Full policy + current inventory:
+`docs/reference/data-mutations.md`.
+
+- **Optimistic** — only for a **safe in-place patch** of a cached list: a **removal**
+  (filter by `id`) or a **field update** (map by `id`). Use the `optimistic` config;
+  it cancels in-flight refetches, snapshots, patches, **auto-rolls back on error**,
+  and reconciles via `invalidateKeys`.
+
+  ```ts
+  useAppMutation({
+    mutationFn: (id: string) => orgApi.revokeApiKey(id),
+    invalidateKeys: [orgQueryKeys.apiKeys()],
+    optimistic: {
+      queryKey: orgQueryKeys.apiKeys(),
+      update: (previous: ApiKey[] | undefined, id) =>
+        previous?.filter((k) => k.id !== id),
+    },
+  });
+  ```
+
+- **Non-optimistic** — **creates** (temp-id reconciliation is error-prone) and any
+  shape we can't safely guess. These **must show an in-progress state**: wire
+  `mutation.isPending` to a disabled button + spinner. Never leave a write with no
+  feedback (optimistic row-change OR `isPending` — one or the other).
+- **Do not** optimistically insert created rows. **Always** pass `invalidateKeys`.
+- Optimistic paths require **patch-on-success + rollback-on-error** tests
+  (see `useAppMutation.test.tsx`).
+
 ## Data Flow
 
 ```
