@@ -183,3 +183,81 @@ All four findings fixed, each with a regression test:
   vacuous-true footgun. Test: `policies.test.ts`.
 
 ---
+
+## Iteration 3 — HTTP client & auth-token resilience (2026-06-29)
+
+### 3.1 429 auto-retry ignores `Retry-After` and pre-empts the RateLimitNotice
+
+- **Area:** HTTP / rate-limit handling
+- **Severity:** Medium
+- **Current:** `src/core/http/fetch-client.ts:134` — `shouldRetry` returns `true`
+  for **every** 429 (all methods), and `doOne` (`:238`) retries using
+  `exponentialDelay(retryCount)` — the **server's `Retry-After` header is never
+  read**. So the client retries up to `MAX_RETRIES` on its own clock (1s→2s→4s)
+  before surfacing the error, likely re-hitting the limit, and delaying the
+  `RateLimitNotice` UX that is meant to show 429s to the user.
+- **Suggestion:** Either don't auto-retry 429 at all (surface immediately to
+  `RateLimitNotice`), or honor `Retry-After` (capped) instead of exponential
+  backoff. At minimum, cap 429 retries to 1.
+- **+** Stops the client amplifying rate-limit pressure; users see the
+  retry-after countdown sooner; respects server intent.
+- **−** Read paths lose a transparent auto-recovery on transient 429s; needs the
+  `Retry-After` parse (already available via `getRateLimitRetryAfterSeconds`).
+
+### 3.2 Network-retry and status-retry are separate loops → retry budget can be exceeded
+
+- **Area:** HTTP / resilience (load amplification)
+- **Severity:** Low–Medium
+- **Current:** `fetch-client.ts:187` — `attemptFetch` retries **network** errors
+  on its own `retryCount` recursion; `doOne` (`:219`) retries **5xx/429** by
+  calling `doOne(retryCount + 1)` → a fresh `attemptFetch`. The two loops both
+  key off `retryCount` but are independent, so a request that mixes network +
+  5xx failures can issue more than `MAX_RETRIES` attempts (worst case ≈
+  `(MAX_RETRIES+1)²`).
+- **Suggestion:** Track a single total-attempt counter (or a deadline budget)
+  threaded through both paths so retries are globally bounded.
+- **+** Predictable, bounded outbound load against a failing/slow backend.
+- **−** Small refactor of the retry recursion; needs tests for the mixed
+  network-then-5xx case.
+
+### 3.3 Timeouts (`AbortError`) are retried like connection errors
+
+- **Area:** HTTP / latency
+- **Severity:** Low
+- **Current:** `fetch-client.ts:197` — `err.name === 'AbortError'` (the
+  `fetchWithTimeout` deadline) is classed as `isNetworkError` and retried for
+  idempotent methods. A slow endpoint therefore burns `timeout × attempts` plus
+  backoff before failing (compounded by 3.2).
+- **Suggestion:** Distinguish a timeout from a connection error; retry timeouts
+  fewer times (or not at all) and/or enforce an overall request deadline.
+- **+** Faster, more predictable failure on a degraded endpoint; less piled
+  latency for the user.
+- **−** Loses a retry that occasionally recovers a one-off slow response.
+
+### 3.4 Response envelope is cast, not validated, at the HTTP boundary
+
+- **Area:** Input validation / type-safety (HTTP layer)
+- **Severity:** Low
+- **Current:** `fetch-client.ts:57,276` — `isEnvelope` only checks that a `data`
+  key exists; the payload is then returned as `parsed.data as T` — an unchecked
+  cast. Runtime correctness depends entirely on each caller doing `schema.parse`
+  (some do, some don't).
+- **Suggestion:** Keep per-endpoint Zod `parse` on security/integrity-critical
+  reads (the documented convention) and add a lint/CI note; optionally accept an
+  optional schema in the client for opt-in validation.
+- **+** Closes the gap where a drifted server shape silently flows in as the
+  wrong TS type.
+- **−** Per-endpoint Zod has a (small) runtime cost; a generic client schema hook
+  adds API surface.
+
+### Verified OK (this pass)
+
+- **401 refresh is loop-safe** — single-flight `refreshAccessToken` + one replay;
+  a second 401 after a fresh token → `forceLogout` (`:226`), never a refresh loop.
+- **Idempotency-Key is minted once per logical request** (`:185`) and reused
+  across retries + the post-refresh replay, so the server can de-dupe writes.
+- **Timeout handle is cleared in `finally`** (`:99`) — no dangling timer.
+- **POST/PATCH are not retried on 5xx** (not in `IDEMPOTENT_METHODS`) — safe
+  default even though the idempotency key would technically allow it.
+
+---
