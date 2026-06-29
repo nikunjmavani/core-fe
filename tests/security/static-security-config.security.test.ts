@@ -7,8 +7,24 @@
 import { describe, expect, it } from 'vitest';
 
 import indexHtml from '../../index.html?raw';
+import pkg from '../../package.json';
 import headers from '../../public/_headers?raw';
 import viteConfig from '../../vite.config.ts?raw';
+
+/** Lowest version a semver range like `^7.3.6` / `>=3.4.7` can resolve to. */
+function rangeFloor(range: string): [number, number, number] {
+  const match = range.match(/(\d+)\.(\d+)\.(\d+)/);
+  if (!match) throw new Error(`unparseable version range: ${range}`);
+  return [Number(match[1]), Number(match[2]), Number(match[3])];
+}
+
+function atLeast(range: string, min: [number, number, number]): boolean {
+  const [a, b, c] = rangeFloor(range);
+  const [x, y, z] = min;
+  if (a !== x) return a > x;
+  if (b !== y) return b > y;
+  return c >= z;
+}
 
 describe('security response headers (public/_headers)', () => {
   it.each([
@@ -82,5 +98,16 @@ describe('content security policy (index.html meta)', () => {
 describe('vite build security config', () => {
   it('keeps assetsInlineLimit at 0 (no inlined data: URIs — CSP compliance)', () => {
     expect(viteConfig).toMatch(/assetsInlineLimit:\s*0/);
+  });
+});
+
+describe('supply-chain dependency floors (no downgrade past a known CVE)', () => {
+  it('pins vite at >=7.3.5 (server.fs.deny bypass — GHSA dev-server path traversal)', () => {
+    expect(atLeast(pkg.devDependencies.vite, [7, 3, 5])).toBe(true);
+  });
+
+  it('forces dompurify >=3.4.7 via pnpm override (cross-realm XSS — GHSA-76mc-f452-cxcm)', () => {
+    // dompurify is a transitive of posthog-js; the override is the only floor.
+    expect(atLeast(pkg.pnpm.overrides.dompurify, [3, 4, 7])).toBe(true);
   });
 });
