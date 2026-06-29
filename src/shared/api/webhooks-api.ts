@@ -1,7 +1,7 @@
-import { z } from 'zod';
 
 import { API_BASE_PATH } from '@/core/config/constants.ts';
 import { apiClient } from '@/core/http/fetch-client.ts';
+import { parseListTolerant } from '@/lib/parse-list-tolerant.ts';
 
 import {
   type CreateWebhookInput,
@@ -14,7 +14,7 @@ const WEBHOOKS_API = `${API_BASE_PATH}/notify/webhooks`;
 
 export async function listWebhooks(): Promise<Webhook[]> {
   const res = await apiClient.get<unknown>(WEBHOOKS_API);
-  return z.array(webhookWireSchema).parse(res.data).map(toWebhook);
+  return parseListTolerant(webhookWireSchema, res.data, 'webhooks').map(toWebhook);
 }
 
 export async function createWebhook(input: CreateWebhookInput): Promise<Webhook> {

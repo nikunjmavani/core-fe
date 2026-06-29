@@ -5,6 +5,7 @@ import { apiClient } from '@/core/http/fetch-client.ts';
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 import { organizationPermissionSchema } from '@/core/types/permissions.ts';
 import { isoDateString, publicId } from '@/core/types/wire.ts';
+import { parseListTolerant } from '@/lib/parse-list-tolerant.ts';
 import type {
   ApiKey,
   ApiKeyWithSecret,
@@ -111,7 +112,7 @@ function toMember(w: MembershipWire): Member {
 
 export async function listMembers(): Promise<Member[]> {
   const res = await apiClient.get<unknown>(`${ORG_API}/memberships`);
-  return z.array(membershipWire).parse(res.data).map(toMember);
+  return parseListTolerant(membershipWire, res.data, 'memberships').map(toMember);
 }
 
 export async function updateMemberRole(input: {
@@ -186,7 +187,7 @@ function toInvitation(w: z.infer<typeof invitationWire>): Invitation {
 
 export async function listInvitations(): Promise<Invitation[]> {
   const res = await apiClient.get<unknown>(`${ORG_API}/invitations`);
-  return z.array(invitationWire).parse(res.data).map(toInvitation);
+  return parseListTolerant(invitationWire, res.data, 'invitations').map(toInvitation);
 }
 
 export async function createInvitation(input: {
@@ -238,7 +239,7 @@ function toRoleSummary(w: RoleWire): RoleSummary {
 
 export async function listRoles(): Promise<RoleSummary[]> {
   const res = await apiClient.get<unknown>(`${ORG_API}/roles`);
-  return z.array(roleWire).parse(res.data).map(toRoleSummary);
+  return parseListTolerant(roleWire, res.data, 'roles').map(toRoleSummary);
 }
 
 export async function createRole(input: {
@@ -294,7 +295,7 @@ function toApiKey(w: ApiKeyWire): ApiKey {
 
 export async function listApiKeys(): Promise<ApiKey[]> {
   const res = await apiClient.get<unknown>(`${ORG_API}/api-keys`);
-  return z.array(apiKeyWire).parse(res.data).map(toApiKey);
+  return parseListTolerant(apiKeyWire, res.data, 'api-keys').map(toApiKey);
 }
 
 export async function createApiKey(input: {

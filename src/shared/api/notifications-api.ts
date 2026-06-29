@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { API_BASE_PATH } from '@/core/config/constants.ts';
 import { apiClient } from '@/core/http/fetch-client.ts';
+import { parseListTolerant } from '@/lib/parse-list-tolerant.ts';
 
 import {
   type Notification,
@@ -19,7 +20,9 @@ const PREFS_API = `${API_BASE_PATH}/users/me/notification-preferences`;
 
 export async function listNotifications(): Promise<Notification[]> {
   const res = await apiClient.get<unknown>(NOTIF_API);
-  return z.array(notificationWireSchema).parse(res.data).map(toNotification);
+  return parseListTolerant(notificationWireSchema, res.data, 'notifications').map(
+    toNotification,
+  );
 }
 
 export async function getUnreadCount(): Promise<number> {

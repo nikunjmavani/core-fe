@@ -434,4 +434,18 @@ manualFiltering`. The URL state plumbing already exists — wire it through.
   (`meta.pagination`: `next`, `has_more`, `estimated_total`) and is surfaced on
   `HttpResponse.meta` — the plumbing for 5.1 is already there, just unused.
 
+### Status (2026-06-29)
+
+- **5.2 — FIXED.** New `lib/parse-list-tolerant.ts` parses list rows with
+  per-row `safeParse`: valid rows render, malformed rows are dropped and
+  `console.warn`-ed (captured by Sentry's `captureConsoleIntegration`). Wired
+  into all 7 list fetchers (`listMembers/Invitations/Roles/ApiKeys/Sessions/
+Webhooks/Notifications`). One bad record no longer blanks a whole table.
+  Test: `parse-list-tolerant.test.ts`.
+- **5.1 — BLOCKED on backend contract.** The strong fix (server-driven
+  pagination/sort/filter) requires the backend list **request** contract
+  (cursor/limit/sort/filter param names), which is not in this repo and only
+  discoverable via the core-be MCP. Awaiting the contract before implementing —
+  guessing the params would break the live lists.
+
 ---
