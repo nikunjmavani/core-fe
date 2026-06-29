@@ -30,6 +30,10 @@ export function denyAccess(onDeny: DenyMode = 'unauthorized'): never {
  *
  * @param permission - The required org-scoped permission code.
  * @param onDeny - How an authorization denial surfaces (default `'unauthorized'`).
+ * @param expectedOrgSlug - When given (org-scoped routes), the gate fails closed
+ *   unless the synced active-org context matches the route's org — so it never
+ *   authorizes against another tenant's permission set even if an upstream guard
+ *   is reordered/omitted (FE-52 sibling check). Omitted for personal-mode routes.
  *
  * @example
  * beforeLoad: () => requirePermission('membership:read');
@@ -37,6 +41,7 @@ export function denyAccess(onDeny: DenyMode = 'unauthorized'): never {
 export async function requirePermission(
   permission: OrganizationPermission,
   onDeny?: DenyMode,
+  expectedOrgSlug?: string,
 ): Promise<void> {
   await awaitAuthBootstrap();
   const { user, isAuthenticated } = useAuthStore.getState();
@@ -45,7 +50,11 @@ export async function requirePermission(
     throw redirect({ to: AUTH_ROUTES.LOGIN });
   }
 
-  const { permissions } = useOrganizationStore.getState();
+  const { organizationSlug, permissions } = useOrganizationStore.getState();
+  // Never check permissions against a different tenant's synced context.
+  if (expectedOrgSlug !== undefined && organizationSlug !== expectedOrgSlug) {
+    denyAccess(onDeny);
+  }
   if (!hasPermission({ role: user.role, permissions }, permission)) {
     denyAccess(onDeny);
   }

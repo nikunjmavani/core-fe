@@ -134,4 +134,15 @@ describe('ensurePermissionsFor (per-organization refetch)', () => {
     await ensurePermissionsFor('org_globex');
     expect(getMyPermissions).toHaveBeenCalledTimes(2);
   });
+
+  it('clears prior-org grants when a cross-org refetch fails (2.2 fail-closed)', async () => {
+    await ensurePermissionsFor('org_acme');
+    expect(useOrganizationStore.getState().permissions).toEqual(['organization:read']);
+
+    vi.mocked(getMyPermissions).mockRejectedValueOnce(new Error('network'));
+    await expect(ensurePermissionsFor('org_globex')).rejects.toThrow('network');
+
+    // Org A's grants must NOT survive the failed switch to org B.
+    expect(useOrganizationStore.getState().permissions).toEqual([]);
+  });
 });

@@ -166,4 +166,20 @@ All four findings from this pass are fixed, each with a regression test:
   a route that forgets a permission still fails closed (authenticated, not open).
 - **`requireActiveOrganization` fails closed** on slug mismatch (FE-52).
 
+### ✅ Resolved (2026-06-29)
+
+All four findings fixed, each with a regression test:
+
+- **2.1** — `requirePermission` takes `expectedOrgSlug`; `requirePermissionGate`
+  binds it from `ctx.params.organizationSlug` and fails closed on a tenant
+  mismatch. Tests: `guards.test.ts`, `require-permission.test.ts`.
+- **2.2** — `ensurePermissionsFor` clears the prior org's grants before a
+  cross-org refetch, so a failed switch leaves an empty deny-all set.
+  Test: `organization-membership.test.ts`.
+- **2.3** — documented as accepted risk #5 in `docs/reference/security-model.md`
+  (client RBAC is non-authoritative; backend re-checks). super_admin behaviour
+  is already test-locked in `policies.test.ts` / `guards.test.ts`.
+- **2.4** — `hasAllPermissions([])` now emits a dev-only warning about the
+  vacuous-true footgun. Test: `policies.test.ts`.
+
 ---

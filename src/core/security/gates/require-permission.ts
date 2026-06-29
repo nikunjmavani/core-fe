@@ -14,7 +14,9 @@ export function requirePermissionGate(
   permission: OrganizationPermission,
   onDeny?: DenyMode,
 ): Gate {
-  return async () => {
-    await requirePermission(permission, onDeny);
+  return async (ctx) => {
+    // Bind the route's org (when org-scoped) so the gate fails closed on a
+    // tenant mismatch instead of trusting an upstream guard to have synced it.
+    await requirePermission(permission, onDeny, ctx.params.organizationSlug);
   };
 }

@@ -72,6 +72,13 @@ let permissionsLoadedFor: string | null = null;
 export async function ensurePermissionsFor(organizationId: string): Promise<void> {
   const store = useOrganizationStore.getState();
   if (permissionsLoadedFor === organizationId && store.permissions.length > 0) return;
+  // Org changed (or first load): clear stale grants up front so a *failed*
+  // refetch leaves an empty (deny-all) set rather than the previous org's
+  // permissions — never carry one tenant's grants into another.
+  if (permissionsLoadedFor !== organizationId) {
+    permissionsLoadedFor = null;
+    store.setPermissions([]);
+  }
   // REPLACE_WITH_API: permissions come from the membership response for THIS
   // organization (org-scoped endpoints carry the organization id in the path).
   store.setPermissions(await getMyPermissions());

@@ -47,6 +47,13 @@ export function hasAllPermissions(
   ctx: AccessContext,
   permissions: OrganizationPermission[],
 ): boolean {
+  // Footgun: an empty list is vacuously `true` ("require none" → allow). Make a
+  // dynamically-empty list loud in dev so it isn't mistaken for an access grant.
+  if (import.meta.env.DEV && permissions.length === 0) {
+    console.warn(
+      '[rbac] hasAllPermissions([]) is vacuously true; pass a non-empty list or gate explicitly.',
+    );
+  }
   return permissions.every((p) => hasPermission(ctx, p));
 }
 

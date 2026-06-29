@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { AccessContext } from './policies.ts';
 import {
@@ -55,8 +55,11 @@ describe('hasAllPermissions', () => {
     ).toBe(false);
   });
 
-  it('returns true for an empty list', () => {
+  it('returns true for an empty list but warns about the footgun in dev (2.4)', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     expect(hasAllPermissions(ctx(), [])).toBe(true);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 });
 

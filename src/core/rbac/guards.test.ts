@@ -26,7 +26,7 @@ vi.mock('@/shared/store/useAuthStore/index.ts', () => {
 });
 
 vi.mock('@/shared/store/useOrganizationStore/index.ts', () => {
-  let state = { permissions: [] as string[] };
+  let state = { permissions: [] as string[], organizationSlug: undefined as unknown };
   return {
     useOrganizationStore: {
       getState: () => state,
@@ -125,5 +125,30 @@ describe('requirePermission', () => {
     });
     setOrganization({ permissions: [] });
     await expect(requirePermission('organization:delete')).resolves.toBeUndefined();
+  });
+
+  it('fails closed when the synced org context does not match the route org (2.1)', async () => {
+    setAuth({
+      user: { id: '1', email: 'u@test.com', role: 'user' },
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    // Store synced to acme, but the route is for globex → deny even with the grant.
+    setOrganization({ permissions: ['membership:manage'], organizationSlug: 'acme' });
+    await expect(
+      requirePermission('membership:manage', undefined, 'globex'),
+    ).rejects.toMatchObject({ to: '/unauthorized' });
+  });
+
+  it('allows when the expected org slug matches the synced context (2.1)', async () => {
+    setAuth({
+      user: { id: '1', email: 'u@test.com', role: 'user' },
+      isAuthenticated: true,
+      isLoading: false,
+    });
+    setOrganization({ permissions: ['membership:manage'], organizationSlug: 'acme' });
+    await expect(
+      requirePermission('membership:manage', undefined, 'acme'),
+    ).resolves.toBeUndefined();
   });
 });

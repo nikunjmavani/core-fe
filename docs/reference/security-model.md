@@ -115,6 +115,15 @@ header-only — `http-equiv` can't carry it — so there is no meta fallback.
 4. **Login is not synced across tabs** (only logout is). A fresh tab obtains its
    own token via the boot silent-refresh; tokens never leave their tab's memory.
    Propagating login would tempt cross-tab token sharing for no security gain.
+5. **Client-side RBAC is non-authoritative.** Route guards (`requirePermission`,
+   the security gateway) and UI gating (`useCan`, `<Gate>`) read the in-memory
+   role + active-org permission set — including `super_admin` god-mode in
+   [`core/rbac/policies.ts`](../../src/core/rbac/policies.ts) (`role === 'super_admin' → true`).
+   A tampered in-memory store can flip any of these **client-side**. This is
+   accepted: it is UX/redirect logic only — **every** org-scoped action re-checks
+   on the backend (org id in the URL path), and the route loader's fetch is the
+   real authorization boundary (API 403/404 → Unauthorized/NotFound islands).
+   Never let a destructive action rely on the client check alone.
 
 ## Backend's half (confirm, don't implement here)
 
