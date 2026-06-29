@@ -71,21 +71,21 @@ Every mutation hook returns TanStack Query's `isPending`. Non-optimistic trigger
 
 **Optimistic** (instant, auto-rollback) — all safe removals + field-patches:
 
-| Domain        | Mutation                                 |
-| ------------- | ---------------------------------------- |
-| Invitations   | `useRevokeInvitation`                    |
-| Roles         | `useUpdateRole`, `useDeleteRole`         |
-| API keys      | `useRenameApiKey`, `useRevokeApiKey`     |
-| Members       | `useUpdateMemberRole`, `useRemoveMember` |
-| Sessions      | `useRevokeSession`                       |
-| Passkeys      | `useRemovePasskey`                       |
-| Webhooks      | `useDeleteWebhook`                       |
-| Notifications | `useMarkNotificationRead`                |
+| Domain        | Mutation                                                          |
+| ------------- | ----------------------------------------------------------------- |
+| Invitations   | `useRevokeInvitation`                                             |
+| Roles         | `useUpdateRole`, `useDeleteRole`                                  |
+| API keys      | `useRenameApiKey`, `useRevokeApiKey`                              |
+| Members       | `useUpdateMemberRole`, `useUpdateMemberStatus`, `useRemoveMember` |
+| Sessions      | `useRevokeSession`                                                |
+| Passkeys      | `useRemovePasskey`                                                |
+| Webhooks      | `useDeleteWebhook`                                                |
+| Notifications | `useMarkNotificationRead`                                         |
 
 **Non-optimistic** (must show in-progress) — creates + shapes we can't safely patch:
 
 - **Creates:** `useCreateInvitation`, `useCreateRole`, `useCreateApiKey`, `useCreateWebhook`, `useRegisterPasskey`
-- `useResendInvitation` (no list change), `useUpdateMemberStatus`
+- `useResendInvitation` (no list change)
 - `useMarkAllNotificationsRead`, `useUpdateNotificationPreferences`, `useUpdateOrganization`, billing/MFA
 
 > The inventory drifts as hooks are added — the **policy** above is the durable

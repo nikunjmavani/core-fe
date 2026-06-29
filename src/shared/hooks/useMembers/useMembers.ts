@@ -68,12 +68,19 @@ export function useRemoveMember() {
   });
 }
 
-/** Suspend or reactivate a member, then refresh the members list. */
+/** Suspend or reactivate a member — optimistically flips the status badge. */
 export function useUpdateMemberStatus() {
   return useAppMutation({
     mutationFn: (input: { membershipId: string; status: MembershipStatus }) =>
       orgApi.updateMemberStatus(input),
     invalidateKeys: [orgQueryKeys.members()],
+    optimistic: {
+      queryKey: orgQueryKeys.members(),
+      update: (previous: Member[] | undefined, { membershipId, status }) =>
+        previous?.map((member) =>
+          member.id === membershipId ? { ...member, status } : member,
+        ),
+    },
     successMessage: (member) =>
       i18n.t(
         member.status === 'suspended'
