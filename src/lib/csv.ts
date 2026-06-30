@@ -3,7 +3,19 @@
  * from rows and triggers a browser download via an object URL.
  */
 
-/** Escape a single CSV field (quotes, commas, newlines). */
+/**
+ * Neutralize CSV / formula injection (OWASP). A cell whose first character is
+ * `= + - @`, a tab, or a carriage return is executed as a formula by Excel /
+ * Google Sheets / LibreOffice when the file is opened — so user-controlled data
+ * (a member's display name or email) could run `=HYPERLINK(...)` to exfiltrate
+ * other cells, a DDE command, or a phishing link. Prefixing with an apostrophe
+ * makes the spreadsheet read the cell as literal text.
+ */
+function neutralizeFormula(str: string): string {
+  return /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
+}
+
+/** Escape a single CSV field (formula triggers, then quotes/commas/newlines). */
 function escapeField(value: unknown): string {
   let str: string;
   if (value == null) str = '';
@@ -15,6 +27,7 @@ function escapeField(value: unknown): string {
   )
     str = String(value);
   else str = JSON.stringify(value) ?? '';
+  str = neutralizeFormula(str);
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }
