@@ -23,6 +23,16 @@ describe('toCsv', () => {
     expect(toCsv(['x'], [[null], [undefined]])).toBe('x\n\n');
   });
 
+  it('serializes number, boolean, and bigint cells as plain values', () => {
+    // Exercises the typeof number/boolean/bigint branch (a bigint would throw
+    // under JSON.stringify, so this also pins the String() coercion).
+    expect(toCsv(['n', 'b', 'big'], [[42, true, 10n]])).toBe('n,b,big\n42,true,10');
+  });
+
+  it('serializes an object cell as quoted JSON (the non-primitive branch)', () => {
+    expect(toCsv(['x'], [[{ a: 1 }]])).toBe('x\n"{""a"":1}"');
+  });
+
   it('neutralizes formula-injection triggers (=, +, -, @) with a leading quote', () => {
     const csv = toCsv(
       ['name'],
