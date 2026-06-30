@@ -60,11 +60,35 @@ function isEnvelope(value: unknown): value is { data: unknown; meta?: ResponseMe
   );
 }
 
+/**
+ * The bearer token is a credential, so it must never leave the configured API
+ * origin. Pin it: a request only carries `Authorization` when its resolved URL
+ * targets the API origin. This stops a stray absolute URL — a future bug, a
+ * server-supplied `next` cursor used verbatim, or a compromised dependency that
+ * builds a URL — from exfiltrating the access token to a foreign host. (In dev
+ * `apiBaseUrl` is empty → the API origin is the app's own origin.)
+ */
+function isApiOriginUrl(resolvedUrl: string): boolean {
+  const here =
+    typeof globalThis.location === 'undefined' ? undefined : globalThis.location.origin;
+  try {
+    const target = new URL(resolvedUrl, here).origin;
+    const apiBase = new URL(defaultConfig.baseURL || '/', here).origin;
+    return target === apiBase;
+  } catch {
+    return false;
+  }
+}
+
 // No X-Organization-ID header: the backend scopes organization context from the
 // signed `org` claim in the access token (set via /auth/switch-to-organization),
 // not from a header or URL segment. (The upload domain is the lone server-side
 // reader of that header; the SPA never needs to send it.)
-function buildHeaders(idempotencyKey?: string, customHeaders?: HeadersInit): Headers {
+function buildHeaders(
+  url: string,
+  idempotencyKey?: string,
+  customHeaders?: HeadersInit,
+): Headers {
   const headers = new Headers(customHeaders);
   headers.set('Content-Type', 'application/json');
   headers.set('X-Requested-With', 'XMLHttpRequest');
@@ -75,7 +99,7 @@ function buildHeaders(idempotencyKey?: string, customHeaders?: HeadersInit): Hea
   }
 
   const accessToken = getAccessToken();
-  if (accessToken) {
+  if (accessToken && isApiOriginUrl(url)) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
   return headers;
@@ -271,7 +295,7 @@ async function request<T>(
   const idempotencyKey = WRITE_METHODS.has(method) ? crypto.randomUUID() : undefined;
 
   function fetchOnce(): Promise<Response> {
-    const headers = buildHeaders(idempotencyKey);
+    const headers = buildHeaders(url, idempotencyKey);
     const init: RequestInit = {
       method,
       headers,

