@@ -68,7 +68,7 @@ function isEnvelope(value: unknown): value is { data: unknown; meta?: ResponseMe
  * builds a URL — from exfiltrating the access token to a foreign host. (In dev
  * `apiBaseUrl` is empty → the API origin is the app's own origin.)
  */
-function isApiOriginUrl(resolvedUrl: string): boolean {
+export function isApiOriginUrl(resolvedUrl: string): boolean {
   const here =
     typeof globalThis.location === 'undefined' ? undefined : globalThis.location.origin;
   try {
