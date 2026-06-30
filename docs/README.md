@@ -113,30 +113,31 @@ flowchart TB
 
 ## Reference
 
-| Doc                                                                        | Purpose                                                                                                          |
-| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| [tools-and-usage.md](reference/tools-and-usage.md)                         | Dependency usage table (what each package is used for)                                                           |
-| [data-mutations.md](reference/data-mutations.md)                           | **Optimistic updates & write UX** — which mutations are optimistic vs in-progress, the policy, and the inventory |
-| [quality/sonarqube-local.md](reference/quality/sonarqube-local.md)         | **SonarQube local quality gate** — Docker server, `pnpm sonar:scan`, pre-push enforcement                        |
-| [quality/test-coverage.md](reference/quality/test-coverage.md)             | **Test coverage** — runners, global ratchet thresholds, patch coverage, strict colocation                        |
-| [security-model.md](reference/security-model.md)                           | **Frontend security model** — threats covered, CSP delivery, accepted risks, backend's half                      |
-| [third-party-comparison.md](reference/third-party-comparison.md)           | Keep/swap verdicts for major dependencies (charts, analytics, routing)                                           |
-| [ui-components-sourcing.md](reference/ui-components-sourcing.md)           | shadcn-first UI workflow (`npx shadcn add`, research sites)                                                      |
-| [design.md](reference/design.md)                                           | **Design language** — aesthetic POV, typography, colour, motion, themeability principles                         |
-| [preset-product-design-rules.md](reference/preset-product-design-rules.md) | **Preset product rules** — per-axis floors (type, density, contrast, motion, touch) + WCAG/industry refs         |
-| [theming.md](reference/theming.md)                                         | **Theming mechanics** — token map, shadcn-create adoption, Shuffle + swappable icon engine                       |
-| [theme-axis-audit-playbook.md](reference/theme-axis-audit-playbook.md)     | **Theme axis audit playbook** — full preset catalog + per-axis fix procedure (all 18 axes ✅)                    |
-| [dependency-upgrades.md](reference/dependency-upgrades.md)                 | Audits, Dependabot, and intentional version pins                                                                 |
-| [route-island-structure.md](reference/route-island-structure.md)           | **Per-route folders** — same layout for every route/sub-route; import boundaries                                 |
-| [routes-and-ui.md](reference/routes-and-ui.md)                             | **Live frontend routes** (and backend APIs they use) and **UI** (shadcn component library and primitives)        |
-| [unified-auth-flows.md](reference/unified-auth-flows.md)                   | **Unified login + sign-up** — email/phone OTP, OAuth, route/API matrix, env toggles                              |
-| [frontend-platform.md](reference/frontend-platform.md)                     | **Platform kernel** — boot order, gateway, session context, modules, errors, QueryBoundary policy                |
-| [pwa-manifest-and-app-icon.md](reference/pwa-manifest-and-app-icon.md)     | **PWA manifest + icon** — `app-manifest.ts` source of truth, preset colors, PNG regen (skill: `pwa-manifest`)    |
-| [local-production-perf.md](reference/local-production-perf.md)             | **Local prod perf audit** — build + preview/serve, size limits, Lighthouse workflow                              |
-| [e2e-testids-inventory.md](reference/e2e-testids-inventory.md)             | Playwright `data-testid` inventory by route (skill: `agent-os/skills/e2e-testids/`)                              |
-| [internationalization.md](reference/internationalization.md)               | Client-side i18n (react-i18next) + backend message contract                                                      |
-| [constants-and-i18n.md](reference/constants-and-i18n.md)                   | Constants file placement, locale namespaces, rollout waves                                                       |
-| **[public/README.md](../public/README.md)** (project root)                 | **Static assets** in `public/`: manifest, robots.txt, icons, \_headers; required list and maintenance            |
+| Doc                                                                          | Purpose                                                                                                          |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| [tools-and-usage.md](reference/tools-and-usage.md)                           | Dependency usage table (what each package is used for)                                                           |
+| [data-mutations.md](reference/data-mutations.md)                             | **Optimistic updates & write UX** — which mutations are optimistic vs in-progress, the policy, and the inventory |
+| [quality/sonarqube-local.md](reference/quality/sonarqube-local.md)           | **SonarQube local quality gate** — Docker server, `pnpm sonar:scan`, pre-push enforcement                        |
+| [quality/test-coverage.md](reference/quality/test-coverage.md)               | **Test coverage** — runners, global ratchet thresholds, patch coverage, strict colocation                        |
+| [security-model.md](reference/security-model.md)                             | **Frontend security model** — threats covered, CSP delivery, accepted risks, backend's half                      |
+| [backend-list-pagination-spec.md](reference/backend-list-pagination-spec.md) | **Backend pagination spec** — core-be cursor for invoices + server-side sort/filter; FE follow-ups               |
+| [third-party-comparison.md](reference/third-party-comparison.md)             | Keep/swap verdicts for major dependencies (charts, analytics, routing)                                           |
+| [ui-components-sourcing.md](reference/ui-components-sourcing.md)             | shadcn-first UI workflow (`npx shadcn add`, research sites)                                                      |
+| [design.md](reference/design.md)                                             | **Design language** — aesthetic POV, typography, colour, motion, themeability principles                         |
+| [preset-product-design-rules.md](reference/preset-product-design-rules.md)   | **Preset product rules** — per-axis floors (type, density, contrast, motion, touch) + WCAG/industry refs         |
+| [theming.md](reference/theming.md)                                           | **Theming mechanics** — token map, shadcn-create adoption, Shuffle + swappable icon engine                       |
+| [theme-axis-audit-playbook.md](reference/theme-axis-audit-playbook.md)       | **Theme axis audit playbook** — full preset catalog + per-axis fix procedure (all 18 axes ✅)                    |
+| [dependency-upgrades.md](reference/dependency-upgrades.md)                   | Audits, Dependabot, and intentional version pins                                                                 |
+| [route-island-structure.md](reference/route-island-structure.md)             | **Per-route folders** — same layout for every route/sub-route; import boundaries                                 |
+| [routes-and-ui.md](reference/routes-and-ui.md)                               | **Live frontend routes** (and backend APIs they use) and **UI** (shadcn component library and primitives)        |
+| [unified-auth-flows.md](reference/unified-auth-flows.md)                     | **Unified login + sign-up** — email/phone OTP, OAuth, route/API matrix, env toggles                              |
+| [frontend-platform.md](reference/frontend-platform.md)                       | **Platform kernel** — boot order, gateway, session context, modules, errors, QueryBoundary policy                |
+| [pwa-manifest-and-app-icon.md](reference/pwa-manifest-and-app-icon.md)       | **PWA manifest + icon** — `app-manifest.ts` source of truth, preset colors, PNG regen (skill: `pwa-manifest`)    |
+| [local-production-perf.md](reference/local-production-perf.md)               | **Local prod perf audit** — build + preview/serve, size limits, Lighthouse workflow                              |
+| [e2e-testids-inventory.md](reference/e2e-testids-inventory.md)               | Playwright `data-testid` inventory by route (skill: `agent-os/skills/e2e-testids/`)                              |
+| [internationalization.md](reference/internationalization.md)                 | Client-side i18n (react-i18next) + backend message contract                                                      |
+| [constants-and-i18n.md](reference/constants-and-i18n.md)                     | Constants file placement, locale namespaces, rollout waves                                                       |
+| **[public/README.md](../public/README.md)** (project root)                   | **Static assets** in `public/`: manifest, robots.txt, icons, \_headers; required list and maintenance            |
 
 ---
 
