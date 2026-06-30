@@ -8,7 +8,7 @@ import { useAppMutation } from '@/shared/hooks/useAppMutation/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /** Org-scoped so two tenants never share a webhooks cache entry. */
-const webhooksQueryKey = (organizationId: string | null) =>
+export const webhooksQueryKey = (organizationId: string | null) =>
   ['org', organizationId, 'webhooks'] as const;
 
 /** The active org's outbound webhooks. Server state only. */
