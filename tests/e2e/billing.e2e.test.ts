@@ -168,4 +168,84 @@ test.describe('Billing & subscription', () => {
     await expect(page.getByTestId('billing-cycle-toggle')).toHaveCount(0);
     await expect(page.getByTestId('billing-cancellation-card')).toHaveCount(0);
   });
+
+  test('cancelling a subscription runs the confirm flow without error', async ({
+    page,
+    playwright,
+  }) => {
+    const ctx = await setUpTeamBilling(page, playwright, { withSubscription: true });
+    test.skip(ctx === null, 'team org could not be provisioned in this environment');
+    test.skip(!ctx?.subscribed, 'subscription create unavailable in this environment');
+
+    await openSettingsHash(page, 'account', 'billing');
+    await expect(page.getByTestId('billing-cancellation-card')).toBeVisible({
+      timeout: 15000,
+    });
+
+    const cancelButton = page.getByTestId('billing-cancel');
+    test.skip(
+      !(await cancelButton.isEnabled().catch(() => false)),
+      'subscription not in a cancellable state',
+    );
+
+    await cancelButton.click();
+    await expect(page.getByTestId('billing-cancel-dialog')).toBeVisible();
+    // a11y guard: the destructive confirm is a labelled button.
+    await page.getByRole('button', { name: 'Confirm cancellation' }).click();
+
+    // The dialog closes and the panel stays healthy (no error toast / crash).
+    await expect(page.getByTestId('billing-cancel-dialog')).toHaveCount(0);
+    await expect(page.getByTestId('billing-cancellation-card')).toBeVisible();
+  });
+
+  test('switching plans updates the subscription (upgrade)', async ({
+    page,
+    playwright,
+  }) => {
+    const ctx = await setUpTeamBilling(page, playwright, { withSubscription: true });
+    test.skip(ctx === null, 'team org could not be provisioned in this environment');
+    test.skip(!ctx?.subscribed, 'subscription create unavailable in this environment');
+
+    await openSettingsHash(page, 'account', 'billing');
+    const summary = page.getByTestId('billing-summary');
+    await expect(summary).toBeVisible({ timeout: 15000 });
+
+    // The current plan shows a badge, not a button — so the first plan button is
+    // an alternate plan. Selecting it changes the subscription; depending on the
+    // Stripe config that lands as a trial, an active switch, or the in-app
+    // payment step — all of which update the summary away from the current plan.
+    const beforeSummary = (await summary.innerText()).trim();
+    const switchButton = page.getByTestId('plan-options').getByRole('button').first();
+    test.skip(
+      !(await switchButton.isVisible().catch(() => false)),
+      'no alternate plan seeded to switch to',
+    );
+    await switchButton.click();
+
+    await expect(summary).not.toHaveText(beforeSummary, { timeout: 20000 });
+  });
+
+  test('an invoice row links out to its hosted invoice when one exists', async ({
+    page,
+    playwright,
+  }) => {
+    const ctx = await setUpTeamBilling(page, playwright, { withSubscription: true });
+    test.skip(ctx === null, 'team org could not be provisioned in this environment');
+    test.skip(!ctx?.subscribed, 'subscription create unavailable in this environment');
+
+    await openSettingsHash(page, 'account', 'billing');
+    await expect(page.getByTestId('billing-invoices-card')).toBeVisible({
+      timeout: 15000,
+    });
+
+    const viewLink = page.getByTestId('billing-invoice-view').first();
+    test.skip(
+      !(await viewLink.isVisible().catch(() => false)),
+      'no invoice generated for this subscription',
+    );
+    // Opens the hosted invoice safely in a new tab.
+    await expect(viewLink).toHaveAttribute('href', /^https?:\/\/.+/);
+    await expect(viewLink).toHaveAttribute('target', '_blank');
+    await expect(viewLink).toHaveAttribute('rel', /noopener/);
+  });
 });
