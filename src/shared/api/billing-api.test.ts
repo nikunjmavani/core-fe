@@ -73,6 +73,18 @@ describe('billing-api', () => {
     });
   });
 
+  it('drops a malformed plan instead of blanking the whole catalog (tolerant)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    getMock.mockResolvedValue({ data: [PLAN_WIRE, { id: 'pln_broken' }] });
+
+    const plans = await listBillingPlans();
+
+    expect(plans).toHaveLength(1);
+    expect(plans[0]?.id).toBe(PLN_PRO);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   it('returns the first non-terminal subscription', async () => {
     getMock.mockResolvedValue({
       data: [
@@ -138,6 +150,34 @@ describe('billing-api', () => {
       amountDue: 1200,
       hostedInvoiceUrl: 'https://stripe.test/in_123',
     });
+  });
+
+  it('drops a malformed invoice row instead of blanking the whole history (tolerant)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    getMock.mockResolvedValue({
+      data: [
+        {
+          id: 'in_ok',
+          invoice_number: 'INV-1',
+          status: 'PAID',
+          amount_due: '12.00',
+          amount_paid: '12.00',
+          currency: 'USD',
+          created_at: TS,
+          due_date: null,
+          hosted_invoice_url: null,
+          invoice_pdf: null,
+        },
+        { id: 'in_bad' }, // missing required fields — must NOT throw / blank the list
+      ],
+    });
+
+    const invoices = await listBillingInvoices();
+
+    expect(invoices).toHaveLength(1);
+    expect(invoices[0]?.id).toBe('in_ok');
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('maps payment methods from the wire shape', async () => {

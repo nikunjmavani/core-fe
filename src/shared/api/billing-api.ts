@@ -1,7 +1,8 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 
 import { API_BASE_PATH } from '@/core/config/constants.ts';
 import { apiClient } from '@/core/http/fetch-client.ts';
+import { parseListTolerant } from '@/lib/parse-list-tolerant.ts';
 import type {
   BillingCycle,
   BillingInvoice,
@@ -130,15 +131,20 @@ function toBillingPaymentMethod(
 
 export async function listBillingPlans(): Promise<BillingPlan[]> {
   const res = await apiClient.get<unknown>(`${BILLING_API}/plans`);
-  return z.array(billingPlanWireSchema).parse(res.data).map(toBillingPlan);
+  // Tolerant parse: one malformed plan row must not blank the whole pricing
+  // catalog — drop it (logged) and render the rest.
+  return parseListTolerant(billingPlanWireSchema, res.data, 'billing-plans').map(
+    toBillingPlan,
+  );
 }
 
 export async function listSubscriptions(): Promise<BillingSubscription[]> {
   const res = await apiClient.get<unknown>(`${BILLING_API}/subscriptions`);
-  return z
-    .array(billingSubscriptionWireSchema)
-    .parse(res.data)
-    .map(toBillingSubscription);
+  return parseListTolerant(
+    billingSubscriptionWireSchema,
+    res.data,
+    'billing-subscriptions',
+  ).map(toBillingSubscription);
 }
 
 /** First non-terminal subscription for the active organization, if any. */
@@ -203,15 +209,20 @@ export async function getSubscriptionPaymentSetup(
 
 export async function listBillingInvoices(): Promise<BillingInvoice[]> {
   const res = await apiClient.get<unknown>(`${BILLING_API}/invoices`);
-  return z.array(billingInvoiceWireSchema).parse(res.data).map(toBillingInvoice);
+  // Tolerant parse: a single malformed invoice (an unexpected Stripe field on
+  // one row) must not blank the user's entire billing history.
+  return parseListTolerant(billingInvoiceWireSchema, res.data, 'billing-invoices').map(
+    toBillingInvoice,
+  );
 }
 
 export async function listBillingPaymentMethods(): Promise<BillingPaymentMethod[]> {
   const res = await apiClient.get<unknown>(`${BILLING_API}/payment-methods`);
-  return z
-    .array(billingPaymentMethodWireSchema)
-    .parse(res.data)
-    .map(toBillingPaymentMethod);
+  return parseListTolerant(
+    billingPaymentMethodWireSchema,
+    res.data,
+    'billing-payment-methods',
+  ).map(toBillingPaymentMethod);
 }
 
 export async function createPaymentMethodSetup(): Promise<{
