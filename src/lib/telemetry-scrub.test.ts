@@ -98,4 +98,12 @@ describe('scrubEventUrls', () => {
     expect(out.breadcrumbs[0]?.data?.to).toBe('/reset-password?token=[Filtered]');
     expect(out.breadcrumbs[0]?.data?.from).toBe('/login');
   });
+
+  it('handles an event with no request and no breadcrumbs without throwing', () => {
+    // Pins the `event.request?.url` / `event.breadcrumbs` guards: a transaction
+    // or minimal event has neither, and the scrubber must pass it through.
+    const event = { type: 'transaction' };
+    expect(() => scrubEventUrls(event)).not.toThrow();
+    expect(scrubEventUrls(event)).toBe(event);
+  });
 });

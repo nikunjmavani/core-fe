@@ -7,13 +7,15 @@ import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.
 
 import { type MeContext, meContextQueryKey } from './me-context.ts';
 
-const { postMock, setAccessTokenMock } = vi.hoisted(() => ({
+const { postMock, setAccessTokenMock, captureMock } = vi.hoisted(() => ({
   postMock: vi.fn(),
   setAccessTokenMock: vi.fn(),
+  captureMock: vi.fn(),
 }));
 vi.mock('@/core/http/fetch-client.ts', () => ({ apiClient: { post: postMock } }));
 vi.mock('@/shared/auth/token.ts', () => ({ setAccessToken: setAccessTokenMock }));
 vi.mock('@/shared/auth/refresh-timer.ts', () => ({ scheduleTokenRefresh: vi.fn() }));
+vi.mock('@/shared/analytics/capture.ts', () => ({ captureAnalyticsEvent: captureMock }));
 
 import { switchToOrganization, switchToPersonal } from './switch.ts';
 
@@ -88,6 +90,7 @@ const PERSONAL_WIRE = {
 beforeEach(() => {
   postMock.mockReset();
   setAccessTokenMock.mockReset();
+  captureMock.mockReset();
   useOrganizationStore.getState().clearOrganization();
   queryClient.setQueryData(meContextQueryKey, structuredClone(BASE_CTX));
 });
@@ -124,23 +127,47 @@ describe('tenancy/switch', () => {
     // org store is derived from the switched context
     expect(useOrganizationStore.getState().organizationType).toBe('PERSONAL');
     expect(useOrganizationStore.getState().organizationId).toBe(PERSONAL_ID);
+    // analytics fires with the personal target.
+    expect(captureMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ target_type: 'PERSONAL', switch_target: 'personal' }),
+    );
   });
 
-  it('posts the immutable org id on switch-to-organization (live)', async () => {
+  it('switches org context, derives the store, applies the role + analytics (live)', async () => {
     postMock.mockResolvedValue({
       data: {
         access_token: 't2',
-        active_organization: { ...PERSONAL_WIRE, id: TEAM_ID },
-        my_permissions: [],
-        global_role: null,
+        active_organization: {
+          ...PERSONAL_WIRE,
+          id: TEAM_ID,
+          type: 'TEAM',
+          slug: 'acme',
+        },
+        my_permissions: ['membership:manage'],
+        global_role: 'admin',
       },
     });
 
-    await switchToOrganization(TEAM_ID);
+    const result = await switchToOrganization(TEAM_ID);
 
     expect(postMock).toHaveBeenCalledWith(
       expect.stringContaining('/auth/switch-to-organization'),
       { organization_id: TEAM_ID },
+    );
+    // The `if (result)` block ran: deriveOrgContext synced the store to the team.
+    expect(useOrganizationStore.getState().organizationType).toBe('TEAM');
+    expect(useOrganizationStore.getState().organizationId).toBe(TEAM_ID);
+    // global_role is applied via the `??` fallback (a `&&` mutant would null it).
+    expect(result?.globalRole).toBe('admin');
+    // analytics fires with the org id + resolved type.
+    expect(captureMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        target_organization_id: TEAM_ID,
+        target_type: 'TEAM',
+        switch_target: 'organization',
+      }),
     );
   });
 
