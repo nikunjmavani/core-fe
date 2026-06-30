@@ -48,6 +48,15 @@ describe('formatCurrencyValue', () => {
     expect(us).toMatch(/\$/);
     expect(jp).toMatch(/[\d¥]/);
   });
+
+  it('does not throw on a malformed server currency code (falls back gracefully)', () => {
+    // Intl.NumberFormat throws RangeError on a non-alpha-3 currency; the billing
+    // UI must never crash over one bad server value.
+    for (const bad of ['US', 'USDD', '$$', '12']) {
+      expect(() => formatCurrencyValue(1299, bad, prefs())).not.toThrow();
+      expect(formatCurrencyValue(1299, bad, prefs())).toContain('12.99');
+    }
+  });
 });
 
 describe('formatNumberValue', () => {

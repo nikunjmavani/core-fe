@@ -48,11 +48,20 @@ export function formatCurrencyValue(
   prefs: LocaleFormatInput,
 ): string {
   const code = (currency || prefs.currencyCode || 'USD').toUpperCase();
-  return new Intl.NumberFormat(intlLocaleFor(prefs.formatLocale), {
-    style: 'currency',
-    currency: code,
-    ...currencyFormatOptions(prefs.currencyDisplay),
-  }).format(cents / 100);
+  const amount = cents / 100;
+  try {
+    return new Intl.NumberFormat(intlLocaleFor(prefs.formatLocale), {
+      style: 'currency',
+      currency: code,
+      ...currencyFormatOptions(prefs.currencyDisplay),
+    }).format(amount);
+  } catch {
+    // `Intl` throws `RangeError` on a malformed currency code (it validates the
+    // alpha-3 ISO 4217 *shape*, not membership) — and `currency` comes straight
+    // from the server. Never let one bad value crash the billing UI; fall back
+    // to a plain number plus the raw code.
+    return `${amount.toFixed(2)} ${code}`;
+  }
 }
 
 export function formatRelativeTimeValue(
