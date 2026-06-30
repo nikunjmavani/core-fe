@@ -29,6 +29,25 @@ describe('scrubSensitiveUrl', () => {
     const url = '/organization/org_1/dashboard?tab=overview';
     expect(scrubSensitiveUrl(url)).toBe(url);
   });
+
+  it('filters Stripe client secrets from the billing-return URL', () => {
+    const url =
+      'https://app.example.com/organization/acme/dashboard?payment_intent_client_secret=pi_3ABC_secret_xyz&redirect_status=succeeded';
+    expect(scrubSensitiveUrl(url)).toBe(
+      'https://app.example.com/organization/acme/dashboard?payment_intent_client_secret=[Filtered]&redirect_status=succeeded',
+    );
+  });
+
+  it('filters the setup-intent client secret (add-card return)', () => {
+    expect(
+      scrubSensitiveUrl('/dashboard?setup_intent_client_secret=seti_1_secret_2#settings'),
+    ).toBe('/dashboard?setup_intent_client_secret=[Filtered]#settings');
+  });
+
+  it('does NOT touch the non-secret intent id or redirect_status', () => {
+    const url = '/dashboard?payment_intent=pi_3ABC&redirect_status=succeeded';
+    expect(scrubSensitiveUrl(url)).toBe(url);
+  });
 });
 
 describe('hasSensitiveParams', () => {

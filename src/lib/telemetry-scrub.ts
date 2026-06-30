@@ -7,7 +7,16 @@
  */
 
 /** Query params whose values are single-use secrets. */
-const SENSITIVE_QUERY_PARAMS = ['token'];
+// `token` covers invite / reset / verify-email links. The Stripe
+// `*_client_secret` params land in the billing-return URL — Stripe documents
+// that they must never be logged or embedded in URLs, and `capture_pageview`
+// records `$current_url` before the billing panel strips them, so without this
+// they would reach PostHog/Sentry.
+const SENSITIVE_QUERY_PARAMS = [
+  'token',
+  'payment_intent_client_secret',
+  'setup_intent_client_secret',
+];
 
 const FILTERED = '[Filtered]';
 
@@ -16,7 +25,11 @@ const FILTERED = '[Filtered]';
 // classes — no backtracking risk. Literal regexes on purpose; when adding a
 // param, add BOTH a pattern here and the name above (the static security
 // lint forbids dynamically-built RegExps).
-const PARAM_PATTERNS = [/([?&#]token=)[^&#]*/gi];
+const PARAM_PATTERNS = [
+  /([?&#]token=)[^&#]*/gi,
+  /([?&#]payment_intent_client_secret=)[^&#]*/gi,
+  /([?&#]setup_intent_client_secret=)[^&#]*/gi,
+];
 
 /** Replace sensitive query-param values in a URL(-ish) string. */
 export function scrubSensitiveUrl(url: string): string {
