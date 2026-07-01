@@ -59,6 +59,19 @@ test.describe('Live routes integration', () => {
       await expect(page.getByTestId('unauthorized-page')).toBeVisible({ timeout: 15000 });
       await expect(page.getByRole('heading', { name: /^403$/ })).toBeVisible();
     });
+
+    test('the document title is composed from the route manifest', async ({ page }) => {
+      await gotoApp(page, '/login');
+      await expectAuthScreenReady(page);
+      // manifestHead → "<title> · Core Admin" (RouteAnnouncer reads the same title).
+      await expect(page).toHaveTitle(/· Core Admin$/);
+    });
+
+    test('OAuth callback with an error query returns to login', async ({ page }) => {
+      await gotoApp(page, '/callback?error=access_denied');
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+      await expectLoginFormReady(page);
+    });
   });
 
   test.describe('auth guards', () => {
@@ -149,6 +162,21 @@ test.describe('Live routes integration', () => {
       await registerNewUserAndGoToDashboard(page);
       await page.getByTestId('user-menu-trigger').click();
       await clickTestId(page, 'logout-button');
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+      await expectLoginFormReady(page);
+    });
+
+    test('after logout the session is torn down and protected routes re-guard', async ({
+      page,
+    }) => {
+      await registerNewUserAndGoToDashboard(page);
+      await page.getByTestId('user-menu-trigger').click();
+      await clickTestId(page, 'logout-button');
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+
+      // A full reload proves the session is truly gone (in-memory token cleared
+      // and the refresh cookie revoked) — the guard sends us back to login.
+      await gotoApp(page, '/dashboard');
       await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
       await expectLoginFormReady(page);
     });

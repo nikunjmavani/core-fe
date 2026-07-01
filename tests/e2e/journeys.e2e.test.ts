@@ -157,4 +157,44 @@ test.describe('Product journeys', () => {
       timeout: 10000,
     });
   });
+
+  test('account settings nav tour switches sections via nav clicks and syncs the URL', async ({
+    page,
+  }) => {
+    await registerNewUserAndGoToDashboard(page);
+    await openSettingsHash(page, 'account', 'profile');
+    await expect(page.getByTestId('settings-section-profile')).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Drive the modal via its nav items (not the hash) — each click swaps the
+    // panel and syncs the URL hash.
+    await page.getByTestId('settings-nav-account-security').click();
+    await expect(page).toHaveURL(/#settings\/account\/security$/);
+    await expect(page.getByTestId('settings-section-security')).toBeVisible({
+      timeout: 10000,
+    });
+
+    await page.getByTestId('settings-nav-account-sessions').click();
+    await expect(page).toHaveURL(/#settings\/account\/sessions$/);
+    await expect(page.getByTestId('settings-account-sessions')).toBeVisible({
+      timeout: 10000,
+    });
+  });
+
+  test('the active settings nav item is marked with aria-current=page', async ({
+    page,
+  }) => {
+    await registerNewUserAndGoToDashboard(page);
+    await openSettingsHash(page, 'account', 'security');
+
+    await expect(page.getByTestId('settings-nav-account-security')).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(page.getByTestId('settings-nav-account-profile')).not.toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  });
 });

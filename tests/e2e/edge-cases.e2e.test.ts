@@ -89,6 +89,55 @@ test.describe('Edge cases — settings hash modal', () => {
     await expect(page.getByTestId('login-page')).toBeVisible();
     await expect(page.getByTestId('settings-modal')).not.toBeVisible();
   });
+
+  test('a non-settings hash (skip-link anchor) never mounts the modal', async ({
+    page,
+  }) => {
+    await registerNewUserAndGoToDashboard(page);
+    await page.evaluate(() => {
+      window.location.hash = '#main-content';
+    });
+    // parseSettingsHash returns null for non-settings hashes → modal stays closed.
+    await expect(page.getByTestId('settings-modal')).not.toBeVisible();
+    await expect(page.getByTestId('dashboard-page')).toBeVisible();
+  });
+
+  test('switching section via the hash swaps the panel in place (single modal)', async ({
+    page,
+  }) => {
+    await registerNewUserAndGoToDashboard(page);
+    await openSettingsHash(page, 'account', 'profile');
+    await expect(page.getByTestId('settings-section-profile')).toBeVisible({
+      timeout: 10000,
+    });
+
+    await page.evaluate(() => {
+      window.location.hash = '#settings/account/security';
+    });
+    await expect(page.getByTestId('settings-section-security')).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page.getByTestId('settings-section-profile')).toBeHidden();
+    // The modal is swapped in place, not stacked.
+    await expect(page.getByTestId('settings-modal')).toHaveCount(1);
+  });
+
+  test('Escape closes the 404-overlaid settings modal and keeps the 404 page', async ({
+    page,
+  }) => {
+    await registerNewUserAndGoToDashboard(page);
+    await navigateAuthenticated(page, '/this-page-does-not-exist-e2e-2');
+    await expect(page.getByTestId('not-found-page')).toBeVisible({ timeout: 10000 });
+
+    await openSettingsHash(page, 'account', 'security');
+    await expect(page.getByTestId('settings-modal')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('settings-modal')).not.toBeVisible();
+    // The underlying 404 route is preserved; only the hash overlay is dismissed.
+    await expect(page.getByTestId('not-found-page')).toBeVisible();
+    await expect(page).not.toHaveURL(/#settings/);
+  });
 });
 
 test.describe('Edge cases — auth email flow', () => {
@@ -177,8 +226,10 @@ test.describe('Edge cases — billing Stripe return', () => {
       .poll(
         () => {
           const url = new URL(page.url());
-          return (
-            !((url.searchParams.has('redirect_status') ||url.searchParams.has('payment_intent_client_secret') ) ||url.searchParams.has('setup_intent_client_secret'))
+          return !(
+            url.searchParams.has('redirect_status') ||
+            url.searchParams.has('payment_intent_client_secret') ||
+            url.searchParams.has('setup_intent_client_secret')
           );
         },
         { timeout: 15_000 },

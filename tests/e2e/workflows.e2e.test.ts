@@ -118,6 +118,30 @@ test.describe('Invitations workflow (API)', () => {
     expect(res.status()).toBe(401);
     expect((await res.json()).error).toBeTruthy();
   });
+
+  test('authenticated accept of an unknown invitation fails cleanly (4xx, not 500)', async () => {
+    const { accessToken } = await createSessionViaEmailCode(api);
+    const res = await api.post(
+      `${API}/tenancy/invitations/inv_${'z'.repeat(21)}/accept`,
+      {
+        headers: bearerHeaders(accessToken),
+        data: {},
+      },
+    );
+    expect(res.status()).toBeGreaterThanOrEqual(400);
+    expect(res.status()).toBeLessThan(500);
+    expect((await res.json()).error).toBeTruthy();
+  });
+
+  test('authenticated accept of a malformed invitation id fails cleanly (4xx, not 500)', async () => {
+    const { accessToken } = await createSessionViaEmailCode(api);
+    const res = await api.post(`${API}/tenancy/invitations/not-a-valid-id/accept`, {
+      headers: bearerHeaders(accessToken),
+      data: {},
+    });
+    expect(res.status()).toBeGreaterThanOrEqual(400);
+    expect(res.status()).toBeLessThan(500);
+  });
 });
 
 test.describe('Auth workflow (UI)', () => {

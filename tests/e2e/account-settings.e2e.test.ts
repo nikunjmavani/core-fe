@@ -92,4 +92,44 @@ test.describe('Account settings', () => {
     // The center opens; a fresh account shows the empty inbox state inside it.
     await expect(page.getByTestId('notification-popover')).toBeVisible();
   });
+
+  test('profile submit is disabled on a pristine form and enables after an edit', async ({
+    page,
+  }) => {
+    await openSettingsHash(page, 'account', 'profile');
+    await expect(page.getByTestId('profile-form')).toBeVisible({ timeout: 15000 });
+
+    // No changes yet → the save button is gated by isDirty.
+    await expect(page.getByTestId('profile-submit')).toBeDisabled();
+    await page.getByTestId('profile-name').fill('Grace Hopper E2E');
+    await expect(page.getByTestId('profile-submit')).toBeEnabled();
+  });
+
+  test('editing profile opens an accessible save-confirmation alertdialog', async ({
+    page,
+  }) => {
+    await openSettingsHash(page, 'account', 'profile');
+    await expect(page.getByTestId('profile-form')).toBeVisible({ timeout: 15000 });
+
+    await page.getByTestId('profile-name').fill('Katherine Johnson');
+    await page.getByTestId('profile-submit').click();
+
+    // The confirm step is a proper alertdialog exposing both actions (a11y guard).
+    const dialog = page.getByRole('alertdialog');
+    await expect(dialog).toBeVisible();
+    await expect(page.getByTestId('profile-confirm-save')).toBeVisible();
+    await expect(page.getByTestId('profile-confirm-cancel')).toBeVisible();
+
+    // Escape dismisses the confirmation without committing the edit.
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  });
+
+  test('the notification center closes on Escape', async ({ page }) => {
+    await page.getByTestId('notification-bell').click();
+    await expect(page.getByTestId('notification-popover')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('notification-popover')).not.toBeVisible();
+  });
 });
