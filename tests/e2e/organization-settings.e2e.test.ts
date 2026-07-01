@@ -38,6 +38,7 @@ async function landOnTeamDashboard(
       await establish(token);
     }, teamToken);
 
+    if (!org.slug) throw new Error('team org slug missing');
     await navigateInApp(page, `/organization/${org.slug}/dashboard`);
     await expect(page.getByTestId('dashboard-page')).toBeVisible({ timeout: 15000 });
     return { slug: org.slug };

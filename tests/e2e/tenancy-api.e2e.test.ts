@@ -237,3 +237,34 @@ test.describe('core-be — personal-org guards (422)', () => {
     expect(res.status()).toBe(422);
   });
 });
+
+test.describe('core-be — tenancy auth guards (401)', () => {
+  // Every tenancy surface rejects an unauthenticated caller before any body or
+  // membership check — no org data leaks to anonymous requests.
+  test('[-] create organization without auth → 401', async () => {
+    const res = await api.post(`${API}/tenancy/organizations`, {
+      headers: { 'X-Idempotency-Key': idempotencyKey() },
+      data: { name: e2eOrganizationName(), slug: e2eOrganizationSlug() },
+    });
+    expect(res.status()).toBe(401);
+  });
+
+  test('[-] list roles without auth → 401', async () => {
+    expect((await api.get(`${API}/tenancy/organization/roles`)).status()).toBe(401);
+  });
+
+  test('[-] list memberships without auth → 401', async () => {
+    expect((await api.get(`${API}/tenancy/organization/memberships`)).status()).toBe(401);
+  });
+
+  test('[-] permission catalog without auth → 401', async () => {
+    expect((await api.get(`${API}/tenancy/permissions`)).status()).toBe(401);
+  });
+
+  test('[-] by-slug lookup without auth → 401 (no tenant enumeration)', async () => {
+    const res = await api.get(
+      `${API}/tenancy/organizations/by-slug/${e2eOrganizationSlug()}`,
+    );
+    expect(res.status()).toBe(401);
+  });
+});

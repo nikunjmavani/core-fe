@@ -55,4 +55,39 @@ test.describe('core-be — health & session lifecycle', () => {
       401,
     );
   });
+
+  test('[+] /readyz reports every dependency connected', async () => {
+    const res = await api.get('/readyz');
+    expect(res.status()).toBe(200);
+    const body = await res.json();
+    expect(body.status).toBe('ok');
+    // Readiness aggregates the backing services — all must be connected.
+    expect(body.database).toBe('connected');
+    expect(body.redis).toBe('connected');
+    expect(body.bullmq).toBe('connected');
+  });
+
+  test('[-] logout without an Authorization header → 401', async () => {
+    await expectApiStatus(() => api.post(`${API}/auth/logout`), 401);
+  });
+
+  test('[-] switch-to-organization without auth → 401', async () => {
+    await expectApiStatus(
+      () =>
+        api.post(`${API}/auth/switch-to-organization`, {
+          data: { organization_id: 'org_zzzzzzzzzzzzzzzzzzzzz' },
+        }),
+      401,
+    );
+  });
+
+  test('[-] me/context with an empty Bearer value → 401', async () => {
+    await expectApiStatus(
+      () =>
+        api.get(`${API}/auth/me/context`, {
+          headers: { Authorization: 'Bearer ' },
+        }),
+      401,
+    );
+  });
 });

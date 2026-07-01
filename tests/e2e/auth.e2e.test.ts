@@ -100,4 +100,41 @@ test.describe('Authentication', () => {
     await expect(page.getByTestId('auth-email-resend-countdown')).toBeVisible();
     await expect(page.getByTestId('auth-email-change')).toBeVisible();
   });
+
+  test('an invalid email format is blocked by native validation and never calls send-code', async ({
+    page,
+  }) => {
+    let sendCodeCalled = false;
+    page.on('request', (req) => {
+      if (req.url().includes(API_ENDPOINTS.AUTH.EMAIL_CODE_SEND)) sendCodeCalled = true;
+    });
+
+    await gotoApp(page, '/login');
+    await fillTestId(page, 'auth-email', 'not-an-email');
+    await clickTestId(page, 'auth-email-submit');
+
+    // The field is type="email" with no noValidate, so the browser's constraint
+    // validation blocks submission: the input is invalid (typeMismatch), the
+    // request never fires, and we stay on the email panel.
+    const validity = await page.getByTestId('auth-email').evaluate((el) => {
+      const input = el as HTMLInputElement;
+      return { valid: input.validity.valid, typeMismatch: input.validity.typeMismatch };
+    });
+    expect(validity).toEqual({ valid: false, typeMismatch: true });
+    await expect(page.getByTestId('auth-email-verify-panel')).toBeHidden();
+    expect(sendCodeCalled).toBe(false);
+  });
+
+  test('the change-email action returns from verification to the email entry panel', async ({
+    page,
+  }) => {
+    const email = uniqueE2eEmail('change-email');
+    await gotoApp(page, '/login');
+    await submitAuthEmailForCode(page, email);
+    await expect(page.getByTestId('auth-email-verify-panel')).toBeVisible();
+
+    await clickTestId(page, 'auth-email-change');
+    await expect(page.getByTestId('auth-email-panel')).toBeVisible();
+    await expect(page.getByTestId('auth-email')).toBeVisible();
+  });
 });

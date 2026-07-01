@@ -188,7 +188,14 @@ function BillingContent({ sub, plans }: BillingContentProps) {
               onCancel={() => setPaymentClientSecret(null)}
               onComplete={() => {
                 setPaymentClientSecret(null);
-                clearStripeBillingReturnParams();
+                // Strip the Stripe return params through the router (mirrors the
+                // redirect-return effect above) so its cached location stays in sync.
+                void navigate({
+                  to: '.',
+                  search: ((prev: Record<string, unknown>) =>
+                    omitStripeReturnParams(prev)) as never,
+                  replace: true,
+                });
                 void refreshBilling();
               }}
             />

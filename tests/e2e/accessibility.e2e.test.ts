@@ -29,6 +29,32 @@ test.describe('Accessibility', () => {
     expect(critical).toEqual([]);
   });
 
+  // Auth-light utility/error pages — reachable without a session, so they run
+  // fast and deterministically. Each must be axe-clean at critical/serious.
+  const utilityPages = [
+    { path: '/some-nonexistent-page', testId: 'not-found-page', label: '404' },
+    { path: '/unauthorized', testId: 'unauthorized-page', label: 'unauthorized' },
+    { path: '/mfa', testId: 'mfa-page', label: 'MFA' },
+  ] as const;
+
+  for (const { path, testId, label } of utilityPages) {
+    test(`${label} page has no critical a11y violations`, async ({ page }) => {
+      await gotoApp(page, path);
+      await expect(page.getByTestId(testId)).toBeVisible({ timeout: 5000 });
+      await settleAnimations(page);
+
+      const results = await new AxeBuilder({ page })
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+        .analyze();
+
+      const critical = results.violations.filter(
+        (v) => v.impact === 'critical' || v.impact === 'serious',
+      );
+
+      expect(critical).toEqual([]);
+    });
+  }
+
   test('dashboard page has no critical a11y violations', async ({ page }) => {
     await registerNewUserAndGoToDashboard(page);
     await expect(page.getByTestId('dashboard-page')).toBeVisible({ timeout: 15000 });

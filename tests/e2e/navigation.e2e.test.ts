@@ -35,4 +35,33 @@ test.describe('Navigation', () => {
     await page.goto('/accept-invite/inv_expired');
     await expect(page.getByTestId('accept-invite-page')).toBeVisible();
   });
+
+  test('protected route preserves the intended destination in the redirect param', async ({
+    page,
+  }) => {
+    await page.goto('/onboarding');
+    await expect(page).toHaveURL(/\/login\?redirect=/, { timeout: 5000 });
+    // requireAuth(location.href) carries the original path so login can return there.
+    expect(decodeURIComponent(new URL(page.url()).search)).toContain('onboarding');
+    await expectLoginFormReady(page);
+  });
+
+  test('deeply nested unknown routes fall through to the 404 page', async ({ page }) => {
+    await page.goto('/organization/acme/does/not/exist');
+    await expect(page.getByTestId('not-found-page')).toBeVisible({ timeout: 5000 });
+    await expect(page.getByRole('heading', { name: '404' })).toBeVisible();
+  });
+
+  test('404 page offers a labelled way home that lands on login when unauthenticated', async ({
+    page,
+  }) => {
+    await page.goto('/some-nonexistent-page');
+    const goHome = page.getByRole('link', { name: 'Go Home' });
+    await expect(goHome).toBeVisible({ timeout: 5000 });
+    await expect(page).toHaveTitle(/Page not found/);
+    await goHome.click();
+    // `/` resolves through the auth guard; a guest lands on login.
+    await expect(page).toHaveURL(/\/login/, { timeout: 5000 });
+    await expectLoginFormReady(page);
+  });
 });

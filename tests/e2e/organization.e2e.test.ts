@@ -19,6 +19,42 @@ test.describe('Organization picker', () => {
     await expect(page.getByTestId('dashboard-page')).toBeVisible();
   });
 
+  test('the switcher opens an accessible menu and closes on Escape', async ({ page }) => {
+    await registerNewUserAndGoToDashboard(page);
+    const trigger = page.getByTestId('organization-switcher-trigger');
+    test.skip(!(await trigger.isVisible().catch(() => false)), 'org switcher hidden');
+
+    await trigger.click();
+    // Radix DropdownMenuContent exposes role="menu".
+    await expect(page.getByRole('menu')).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('menu')).toBeHidden();
+  });
+
+  test('the create-organization action opens the create dialog', async ({ page }) => {
+    await registerNewUserAndGoToDashboard(page);
+    const trigger = page.getByTestId('organization-switcher-trigger');
+    test.skip(!(await trigger.isVisible().catch(() => false)), 'org switcher hidden');
+
+    await trigger.click();
+    const createItem = page.getByTestId('organization-switcher-create');
+    test.skip(
+      !(await createItem.isVisible().catch(() => false)),
+      'team creation disabled in this deployment mode',
+    );
+
+    await createItem.click();
+    await expect(page.getByTestId('create-organization-dialog-form')).toBeVisible();
+    await expect(page.getByTestId('create-organization-dialog-name')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: /create organization/i }),
+    ).toBeVisible();
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('create-organization-dialog-form')).toBeHidden();
+  });
+
   test('organization switcher lists team org after create', async ({ page }) => {
     await registerNewUserAndGoToDashboard(page);
     const switcher = page.getByTestId('organization-switcher-trigger');

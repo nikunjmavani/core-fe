@@ -41,6 +41,46 @@ test.describe('Settings modal (hash-driven)', () => {
     });
   });
 
+  test('an unknown section hash is rewritten to the canonical default deep link', async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      window.location.hash = '#settings/account/does-not-exist-xyz';
+    });
+    await expect(page.getByTestId('settings-modal')).toBeVisible({ timeout: 15000 });
+    // Invalid scope/section falls back to account/profile and the URL is canonicalized.
+    await expect(page.getByTestId('settings-section-profile')).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page).toHaveURL(/#settings\/account\/profile$/);
+  });
+
+  test('a bare settings hash opens account profile and canonicalizes the URL', async ({
+    page,
+  }) => {
+    await page.evaluate(() => {
+      window.location.hash = '#settings';
+    });
+    await expect(page.getByTestId('settings-modal')).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId('settings-section-profile')).toBeVisible({
+      timeout: 10000,
+    });
+    await expect(page).toHaveURL(/#settings\/account\/profile$/);
+  });
+
+  test('closing the modal clears the settings hash so a refresh will not reopen it', async ({
+    page,
+  }) => {
+    await openSettingsHash(page, 'account', 'security');
+    await expect(page.getByTestId('settings-section-security')).toBeVisible({
+      timeout: 10000,
+    });
+
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('settings-modal')).not.toBeVisible();
+    await expect(page).not.toHaveURL(/#settings/);
+  });
+
   test('organization nav appears after creating a team org', async ({ page }) => {
     const switcher = page.getByTestId('organization-switcher-trigger');
     test.skip(!(await switcher.isVisible().catch(() => false)), 'org switcher hidden');

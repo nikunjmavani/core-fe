@@ -190,6 +190,43 @@ test.describe('core-be server — auth & tenancy contracts', () => {
     expect(res.status()).toBe(401);
   });
 
+  test('[-] send-code with a missing email field → 4xx validation envelope', async () => {
+    const res = await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
+      data: {},
+      headers: E2E_AUTH_HEADERS,
+    });
+    expect(res.status()).toBeGreaterThanOrEqual(400);
+    expect(res.status()).toBeLessThan(500);
+    const body = await res.json();
+    expect(body.error).toBeTruthy();
+    expect(body.meta.request_id).toBeTruthy();
+  });
+
+  test('[-] email login with a missing code field → 4xx validation', async () => {
+    const res = await api.post(AUTH_EMAIL_CODE_LOGIN_PATH, {
+      data: { email: uniqueE2eEmail() },
+      headers: E2E_AUTH_HEADERS,
+    });
+    expect(res.status()).toBeGreaterThanOrEqual(400);
+    expect(res.status()).toBeLessThan(500);
+  });
+
+  test('[-] me/context with a garbage Bearer token → 401', async () => {
+    const res = await api.get('/api/v1/auth/me/context', {
+      headers: { Authorization: 'Bearer garbage.token.value' },
+    });
+    expect(res.status()).toBe(401);
+  });
+
+  test('[-] unknown /api/v1 route → 404 with uniform error envelope', async () => {
+    const res = await api.get('/api/v1/this-route-does-not-exist-xyz');
+    expect(res.status()).toBe(404);
+    const body = await res.json();
+    // Same envelope shape as every other error: { error, meta.request_id }.
+    expect(body.error.code).toBe('not_found');
+    expect(body.meta.request_id).toBeTruthy();
+  });
+
   test('[-] logout twice on the same token → second call still safe', async () => {
     const { accessToken } = await createSessionViaEmailCode(api);
     const auth = { Authorization: `Bearer ${accessToken}` };

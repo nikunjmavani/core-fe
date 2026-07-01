@@ -257,4 +257,31 @@ test.describe('core-be — billing', () => {
     expect([201, 409]).toContain(second.status());
     expect(second.status()).toBe(first.status());
   });
+
+  test('[-] POST /billing/subscriptions without auth → 401', async () => {
+    const res = await api.post(`${API}/billing/subscriptions`, {
+      headers: { 'X-Idempotency-Key': idempotencyKey() },
+      data: { plan_id: `pln_${'z'.repeat(21)}`, billing_cycle: 'monthly' },
+    });
+    expect(res.status()).toBe(401);
+  });
+
+  // Billing is gated to team orgs — a personal-org token must never read billing
+  // data (subscriptions is proven 403 above; invoices/payment-methods share the
+  // gate). Assert the personal org is denied and never leaks a 200 with data.
+  test('[-] GET /billing/invoices on a personal org is gated (no 200 leak)', async () => {
+    const token = await sessionToken();
+    const res = await api.get(`${API}/billing/invoices`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect([403, 404]).toContain(res.status());
+  });
+
+  test('[-] GET /billing/payment-methods on a personal org is gated (no 200 leak)', async () => {
+    const token = await sessionToken();
+    const res = await api.get(`${API}/billing/payment-methods`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect([403, 404]).toContain(res.status());
+  });
 });

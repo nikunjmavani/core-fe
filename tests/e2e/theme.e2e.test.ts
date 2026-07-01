@@ -42,4 +42,20 @@ test.describe('Theme mode toggle', () => {
     await expect(page.getByTestId('theme-dark')).toBeVisible();
     await expect(page.getByTestId('theme-system')).toBeVisible();
   });
+
+  test('dark selection persists across a full page reload', async ({ page }) => {
+    const html = page.locator('html');
+
+    await page.getByTestId('theme-toggle').click();
+    await page.getByTestId('theme-dark').click();
+    await expect(html).toHaveClass(/dark/);
+
+    // useThemeStore persists to localStorage('theme-preference'); a cold reload
+    // must re-apply .dark before first paint, not fall back to light/system.
+    await page.reload();
+    await expect(html).toHaveClass(/dark/, { timeout: 5000 });
+
+    const persisted = await page.evaluate(() => localStorage.getItem('theme-preference'));
+    expect(persisted).toContain('dark');
+  });
 });

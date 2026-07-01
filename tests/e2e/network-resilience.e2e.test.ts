@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test';
 
 import { uniqueE2eEmail } from '@/tests/utils/e2e-faker.ts';
-import { expectLoginFormReady, fillTestId } from '@/tests/utils/e2e-hybrid.ts';
+import {
+  clickTestId,
+  expectLoginFormReady,
+  fillTestId,
+} from '@/tests/utils/e2e-hybrid.ts';
 
 /**
  * Network-fault resilience — connectivity loss surfaces the global
@@ -45,5 +49,52 @@ test.describe('Network resilience', () => {
       pageErrors,
       `uncaught page errors: ${pageErrors.map((e) => e.message).join(', ')}`,
     ).toHaveLength(0);
+  });
+
+  test('a 500 from send-code does not crash the app or falsely advance the flow', async ({
+    page,
+  }) => {
+    // Force the sign-in request to fail server-side, before the app loads.
+    await page.route('**/auth/email/send-code', (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          error: { type: 'request_error', code: 'server_error', detail: 'boom' },
+          meta: { request_id: 'e2e-500' },
+        }),
+      }),
+    );
+    const pageErrors: Error[] = [];
+    page.on('pageerror', (error) => pageErrors.push(error));
+
+    await page.goto('/login');
+    await expectLoginFormReady(page);
+    await fillTestId(page, 'auth-email', uniqueE2eEmail('resilience'));
+    await clickTestId(page, 'auth-email-submit');
+
+    // A server error must NOT advance to the verification step, and the form
+    // stays interactive — no white screen, no uncaught error.
+    await expect(page.getByTestId('auth-email-verify-panel')).toBeHidden();
+    await expect(page.getByTestId('auth-email')).toBeVisible();
+    expect(
+      pageErrors,
+      `uncaught page errors: ${pageErrors.map((e) => e.message).join(', ')}`,
+    ).toHaveLength(0);
+  });
+
+  test('the offline indicator survives rapid connectivity flapping', async ({
+    page,
+    context,
+  }) => {
+    await page.goto('/login');
+    await expectLoginFormReady(page);
+
+    for (let cycle = 0; cycle < 2; cycle += 1) {
+      await context.setOffline(true);
+      await expect(page.getByTestId('offline-indicator')).toBeVisible();
+      await context.setOffline(false);
+      await expect(page.getByTestId('offline-indicator')).toHaveCount(0);
+    }
   });
 });

@@ -19,4 +19,23 @@ test.describe('Accept invite', () => {
     await gotoApp(page, '/accept-invite/not-a-valid-invitation-id');
     await expect(page.getByTestId('not-found-page')).toBeVisible({ timeout: 10000 });
   });
+
+  test('accept-invite without an invitation id falls through to 404', async ({
+    page,
+  }) => {
+    // The route is /accept-invite/$invitationId — a bare /accept-invite has no
+    // match and lands on the splat 404.
+    await gotoApp(page, '/accept-invite');
+    await expect(page.getByTestId('not-found-page')).toBeVisible({ timeout: 10000 });
+  });
+
+  test('the invalid-invite error state links back to /login', async ({ page }) => {
+    await gotoApp(page, '/accept-invite/inv_expired');
+    await expect(page.getByTestId('accept-invite-error')).toBeVisible({ timeout: 15000 });
+
+    // The sign-in affordance is a real anchor to /login (hybrid: testid + role).
+    const signIn = page.getByTestId('accept-invite-login');
+    await expect(signIn).toHaveAttribute('href', /\/login$/);
+    await expect(page.getByRole('link', { name: /sign in/i })).toBeVisible();
+  });
 });
