@@ -58,4 +58,21 @@ test.describe('Theme mode toggle', () => {
     const persisted = await page.evaluate(() => localStorage.getItem('theme-preference'));
     expect(persisted).toContain('dark');
   });
+
+  test('system mode follows the OS prefers-color-scheme', async ({ page }) => {
+    const html = page.locator('html');
+
+    await page.getByTestId('theme-toggle').click();
+    await page.getByTestId('theme-system').click();
+    // Radix closes the menu on select; wait for it before emulating the OS pref.
+    await expect(page.getByTestId('theme-system')).toHaveCount(0);
+
+    // In system mode the applied theme tracks the emulated OS preference live
+    // (useThemeStore re-applies on the matchMedia 'change' event).
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await expect(html).toHaveClass(/dark/);
+
+    await page.emulateMedia({ colorScheme: 'light' });
+    await expect(html).not.toHaveClass(/dark/);
+  });
 });
