@@ -89,4 +89,29 @@ test.describe('deployment — personal-and-team', () => {
     });
     expect(teamBilling.status()).toBe(200);
   });
+
+  test('switching between workspaces re-scopes the token (team then back to personal)', async () => {
+    const { accessToken } = await createSessionViaEmailCode(api);
+    const personalCtx = await fetchMeContextWire(api, accessToken);
+    const personalOrgId = personalCtx.user.personal_organization_id;
+    expect(personalOrgId).toBeTruthy();
+
+    // Creating a team re-mints a token scoped to that TEAM workspace.
+    const { org, teamToken } = await createTeamOrganization(api, accessToken);
+    const teamCtx = await fetchMeContextWire(api, teamToken);
+    expect(teamCtx.active_organization?.type).toBe('TEAM');
+    expect(teamCtx.active_organization?.id).toBe(org?.id);
+
+    // Switching that token back to the personal workspace re-scopes it to PERSONAL.
+    const sw = await api.post(`${API}/auth/switch-to-organization`, {
+      headers: bearerHeaders(teamToken),
+      data: { organization_id: personalOrgId },
+    });
+    expect([200, 201]).toContain(sw.status());
+    const backToken = (await sw.json()).data.access_token as string;
+
+    const backCtx = await fetchMeContextWire(api, backToken);
+    expect(backCtx.active_organization?.type).toBe('PERSONAL');
+    expect(backCtx.active_organization?.id).toBe(personalOrgId);
+  });
 });
