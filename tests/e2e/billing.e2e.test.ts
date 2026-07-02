@@ -23,12 +23,14 @@ import { bearerHeaders, createTeamOrganization } from '@/tests/utils/e2e-tenancy
 
 const API = 'http://localhost:3000/api/v1';
 
-type TeamContext = { slug: string; subscribed: boolean };
+type TeamContext = { slug: string; subscribed: boolean; planCount: number };
 
 /**
  * Create a team org via the API, optionally seed a free-plan subscription, then
  * hydrate the browser with the team-scoped token and land on its dashboard.
  * Returns `null` when the environment can't provision one (seat seed / Stripe).
+ * `planCount` reflects the seeded plan catalog so plan-dependent specs can skip
+ * gracefully when no plans exist in this environment.
  */
 async function setUpTeamBilling(
   page: Page,
@@ -41,16 +43,19 @@ async function setUpTeamBilling(
     const { org, teamToken } = await createTeamOrganization(api, accessToken);
     if (!org) return null;
 
+    // The plan catalog is public; read it up front so every spec knows whether
+    // any plans are seeded (an empty catalog means the plan cards never render).
+    const plansRes = await api.get(`${API}/billing/plans`);
+    const plans = plansRes.ok()
+      ? (
+          (await plansRes.json()) as {
+            data: Array<{ id: string; price_monthly: string }>;
+          }
+        ).data
+      : [];
+
     let subscribed = false;
     if (opts.withSubscription) {
-      const plansRes = await api.get(`${API}/billing/plans`);
-      const plans = plansRes.ok()
-        ? (
-            (await plansRes.json()) as {
-              data: Array<{ id: string; price_monthly: string }>;
-            }
-          ).data
-        : [];
       // A free plan activates without a payment method — the reliable seed path.
       const freePlan = plans.find((p) => Number(p.price_monthly) === 0) ?? plans[0];
       if (freePlan) {
@@ -75,7 +80,7 @@ async function setUpTeamBilling(
     if (!org.slug) throw new Error('team org slug missing');
     await navigateInApp(page, `/organization/${org.slug}/dashboard`);
     await expect(page.getByTestId('dashboard-page')).toBeVisible({ timeout: 15000 });
-    return { slug: org.slug, subscribed };
+    return { slug: org.slug, subscribed, planCount: plans.length };
   } finally {
     await api.dispose();
   }
@@ -95,6 +100,7 @@ test.describe('Billing & subscription', () => {
   }) => {
     const ctx = await setUpTeamBilling(page, playwright, { withSubscription: false });
     test.skip(ctx === null, 'team org could not be provisioned in this environment');
+    test.skip(ctx?.planCount === 0, 'no billing plans seeded in this environment');
 
     await openSettingsHash(page, 'account', 'billing');
 
@@ -120,6 +126,7 @@ test.describe('Billing & subscription', () => {
   }) => {
     const ctx = await setUpTeamBilling(page, playwright, { withSubscription: false });
     test.skip(ctx === null, 'team org could not be provisioned in this environment');
+    test.skip(ctx?.planCount === 0, 'no billing plans seeded in this environment');
 
     await openSettingsHash(page, 'account', 'billing');
     await expect(page.getByTestId('billing-cycle-toggle')).toBeVisible({
