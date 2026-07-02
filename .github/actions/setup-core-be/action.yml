@@ -41,6 +41,11 @@ runs:
       working-directory: core-be
       run: pnpm db:migrate
 
+    - name: Seed core-be reference data (permissions + billing plans)
+      shell: bash
+      working-directory: core-be
+      run: pnpm db:seed
+
     - name: Build core-be
       shell: bash
       working-directory: core-be
