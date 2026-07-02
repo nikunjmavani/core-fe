@@ -118,6 +118,9 @@ function collectApiClientEndpoints() {
         .replace(/\$\{[^}]+\}/g, ':param');
       // Generic data-provider style paths (fully dynamic) carry no contract.
       if (!resolved.startsWith('/api/')) continue;
+      // A bare `${API_BASE_PATH}${path}` helper is fully dynamic past the
+      // base — concrete paths live at its call sites, not in the template.
+      if (resolved === `${API_BASE_PATH}:param`) continue;
       endpoints.push({
         path: normalize(resolved),
         source: file.slice(REPO_ROOT.length + 1),
