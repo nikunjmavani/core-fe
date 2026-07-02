@@ -249,13 +249,15 @@ Both run `pnpm build` then `netlify deploy` (with or without `--prod`).
 
 ## CI (GitHub Actions)
 
-| Workflow                                                  | Trigger                 | What it does                                                                                                                                                                                                                                                           |
-| --------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PR CI** (`.github/workflows/pr-ci.yml`)                 | PR to `main` or `dev`   | Path-filtered parallel lanes: lint, biome, knip, format, type-check, structure/token validators, agent-os evals, unit + security Vitest, build + bundle size, gitleaks, Semgrep, Trivy IaC, dependency review, actionlint, Playwright E2E; aggregate **Quality gate**. |
-| **Post-merge CI** (`.github/workflows/post-merge-ci.yml`) | Push to `main` or `dev` | SBOM attestation, post-merge unit/security/E2E, release-please (stable on `main`, prerelease on `dev`), release SBOM attach, Netlify deploy + smoke (`development` / `production` GitHub environments).                                                                |
-| **Preview** (`.github/workflows/preview.yml`)             | PR to `main` or `dev`   | Build and upload `dist/` artifact (retention 7 days).                                                                                                                                                                                                                  |
+| Workflow                                                  | Trigger                 | What it does                                                                                                                                                                                                                                           |
+| --------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **PR CI** (`.github/workflows/pr-ci.yml`)                 | PR to `main` or `dev`   | Path-filtered parallel lanes: lint, biome, knip, format, type-check, structure/token validators, agent-os evals, unit + security Vitest, build + bundle size, gitleaks, Semgrep, Trivy IaC, dependency review, actionlint; aggregate **Quality gate**. |
+| **Post-merge CI** (`.github/workflows/post-merge-ci.yml`) | Push to `main` or `dev` | SBOM attestation, post-merge unit/security Vitest, release-please (stable on `main`, prerelease on `dev`), release SBOM attach, Netlify deploy + smoke (`development` / `production` GitHub environments).                                             |
+| **Preview** (`.github/workflows/preview.yml`)             | PR to `main` or `dev`   | Build and upload `dist/` artifact (retention 7 days).                                                                                                                                                                                                  |
 
-**Build runs only on GitHub.** Netlify never runs a build; it only serves the `dist/` uploaded by post-merge CI (`dev` → development, `main` → production).
+**Build runs only on GitHub.** Netlify never runs a build; it only serves the `dist/` uploaded by post-merge CI (`dev` → development, `main` → production). Netlify is the current deploy target of record.
+
+**CI never boots core-be.** Playwright E2E is local-only (`pnpm test:e2e` against a live core-be on `:3000`); CI and CD need only the deployed backend URL (`VITE_API_BASE_URL` secret per environment) — never a full backend.
 
 ### Branches and environments
 
@@ -281,4 +283,4 @@ Both run `pnpm build` then `netlify deploy` (with or without `--prod`).
 | **Env vars**        | GitHub secrets: `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`.                            |
 | **Deploy (GitHub)** | Deploy workflow: push to `main` → build → upload `dist/` to Netlify.                                                     |
 | **Deploy (CLI)**    | `pnpm run deploy:netlify` (draft), `pnpm run deploy:netlify:prod` (production); build runs locally.                      |
-| **CI**              | GitHub Actions: lint, type-check, test, build (smoke), E2E on push/PR.                                                   |
+| **CI**              | GitHub Actions: lint, type-check, unit + security tests, build (smoke) on push/PR. E2E is local-only.                    |

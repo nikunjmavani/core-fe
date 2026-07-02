@@ -9,8 +9,11 @@ name: Post-merge CI
 #   main → production
 #
 # Flow:
-#   detect changes → SBOM → unit + security + E2E → release-please (dev + main)
+#   detect changes → SBOM → unit + security → release-please (dev + main)
 #   → release SBOM attach → Netlify deploy (dev + main)
+#
+# Playwright E2E runs locally only (needs a live core-be on :3000) — post-merge
+# needs just the deployed backend URL (VITE_API_BASE_URL), never a full backend.
 
 on:
   push:
@@ -18,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       skip_tests:
-        description: Skip post-merge Vitest + E2E suite
+        description: Skip post-merge Vitest suite
         required: false
         type: boolean
         default: false
@@ -138,18 +141,9 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
       - run: pnpm test:security
 
-  e2e-tests:
-    needs: [changes, sbom]
-    if: |
-      always() &&
-      inputs.skip_tests != true &&
-      needs.changes.outputs.src-code == 'true' &&
-      (needs.sbom.result == 'success' || needs.sbom.result == 'skipped')
-    uses: ./.github/workflows/reusable-vitest-e2e.yml
-
   matrix-tests:
     name: Matrix tests gate
-    needs: [unit-tests, security-tests, e2e-tests]
+    needs: [unit-tests, security-tests]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -158,10 +152,9 @@ jobs:
         env:
           UNIT: ${{ needs.unit-tests.result }}
           SECURITY: ${{ needs.security-tests.result }}
-          E2E: ${{ needs.e2e-tests.result }}
         run: |
           FAILED=0
-          for job in UNIT SECURITY E2E; do
+          for job in UNIT SECURITY; do
             result="${!job}"
             echo "$job=$result"
             case "$result" in
