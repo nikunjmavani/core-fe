@@ -18,6 +18,7 @@ import {
   billingPlanWireSchema,
   billingSubscriptionWireSchema,
 } from '@/shared/api/billing-contracts.ts';
+import { fetchAllPages } from '@/shared/api/fetch-all-pages.ts';
 
 const BILLING_API = `${API_BASE_PATH}/billing`;
 
@@ -208,12 +209,16 @@ export async function getSubscriptionPaymentSetup(
 }
 
 export async function listBillingInvoices(): Promise<BillingInvoice[]> {
-  const res = await apiClient.get<unknown>(`${BILLING_API}/invoices`);
-  // Tolerant parse: a single malformed invoice (an unexpected Stripe field on
-  // one row) must not blank the user's entire billing history.
-  return parseListTolerant(billingInvoiceWireSchema, res.data, 'billing-invoices').map(
-    toBillingInvoice,
+  // Follow the backend cursor (`meta.pagination.next`) so a customer with more
+  // than one Stripe page of invoices sees their full history — not just the
+  // latest page. Rows are parsed tolerantly per page (a single malformed invoice
+  // — an unexpected Stripe field on one row — must not blank the whole history).
+  const rows = await fetchAllPages(
+    `${BILLING_API}/invoices`,
+    billingInvoiceWireSchema,
+    'billing-invoices',
   );
+  return rows.map(toBillingInvoice);
 }
 
 export async function listBillingPaymentMethods(): Promise<BillingPaymentMethod[]> {

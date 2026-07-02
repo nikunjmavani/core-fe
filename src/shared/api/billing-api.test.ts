@@ -180,6 +180,37 @@ describe('billing-api', () => {
     warn.mockRestore();
   });
 
+  it('follows the invoice cursor across pages (no latest-page ceiling)', async () => {
+    const invoice = (id: string) => ({
+      id,
+      invoice_number: id,
+      status: 'PAID',
+      amount_due: '1.00',
+      amount_paid: '1.00',
+      currency: 'USD',
+      created_at: TS,
+      due_date: null,
+      hosted_invoice_url: null,
+      invoice_pdf: null,
+    });
+    getMock
+      .mockResolvedValueOnce({
+        data: [invoice('in_1')],
+        meta: { pagination: { has_more: true, next: 'cur1' } },
+      })
+      .mockResolvedValueOnce({
+        data: [invoice('in_2')],
+        meta: { pagination: { has_more: false, next: null } },
+      });
+
+    const invoices = await listBillingInvoices();
+
+    // Both pages are accumulated, and the second request carries the cursor.
+    expect(invoices.map((i) => i.id)).toEqual(['in_1', 'in_2']);
+    expect(getMock).toHaveBeenCalledTimes(2);
+    expect(getMock.mock.calls[1]?.[0]).toContain('after=cur1');
+  });
+
   it('maps payment methods from the wire shape', async () => {
     getMock.mockResolvedValue({
       data: [
