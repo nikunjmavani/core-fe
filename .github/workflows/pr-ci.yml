@@ -1,8 +1,9 @@
 name: PR CI
 
 # Fast merge gate (~3–5 min target). Mirrors core-be pr-ci.yml shape: path-filtered
-# parallel lanes, reusable Vitest/E2E workflows, security scans, and a single
+# parallel lanes, a reusable Vitest workflow, security scans, and a single
 # aggregate `quality-gate` required check (branch protection: .github/rulesets/).
+# Playwright E2E runs locally only (needs a live core-be on :3000) — no CI lane.
 #
 # Frontend-specific lanes replace core-be's domain/OpenAPI/Postgres/RLS/Docker gates.
 # Post-merge deploy/release/SBOM: post-merge-ci.yml (Netlify, not Railway).
@@ -176,6 +177,8 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
+
+      - uses: ./.github/actions/setup-node-pnpm
 
       - name: Route-island structure
         run: ./tooling/validate/route-islands.sh
@@ -414,13 +417,6 @@ jobs:
       - name: Run actionlint
         uses: rhysd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
 
-  e2e:
-    needs: [changes]
-    if: |
-      needs.changes.outputs.docs-only-md != 'true' &&
-      needs.changes.outputs.e2e == 'true'
-    uses: ./.github/workflows/reusable-vitest-e2e.yml
-
   quality-gate:
     name: Quality gate
     needs:
@@ -442,7 +438,6 @@ jobs:
         security-iac,
         dependency-review,
         actionlint,
-        e2e,
       ]
     if: always()
     runs-on: ubuntu-latest
@@ -467,7 +462,6 @@ jobs:
             security-iac=${{ needs.security-iac.result }}
             dependency-review=${{ needs.dependency-review.result }}
             actionlint=${{ needs.actionlint.result }}
-            e2e=${{ needs.e2e.result }}
         run: |
           FAILED=0
           {

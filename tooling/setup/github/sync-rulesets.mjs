@@ -34,7 +34,7 @@ import { join, resolve } from 'node:path';
 
 import { GitHubApiError, getRepositoryIdentifier, runGhJson } from './github-shared.mjs';
 
-const RULESETS_DIRECTORY = resolve(import.meta.dirname, '../../.github/rulesets');
+const RULESETS_DIRECTORY = resolve(import.meta.dirname, '../../../.github/rulesets');
 
 function loadLocalRulesets(directory = RULESETS_DIRECTORY) {
   const entries = readdirSync(directory)

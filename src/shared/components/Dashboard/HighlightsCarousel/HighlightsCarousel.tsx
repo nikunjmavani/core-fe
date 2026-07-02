@@ -240,8 +240,9 @@ export function HighlightsCarousel() {
                   aria-selected={isActive}
                   aria-controls={highlightPanelId(slide.id)}
                   tabIndex={isActive ? 0 : -1}
+                  data-slot="button"
                   className={cn(
-                    'text-foreground focus-visible:ring-ring inline-flex min-h-8 touch-manipulation items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-[color,background-color,box-shadow] duration-200 ease-out focus-visible:ring-[3px] focus-visible:outline-none sm:text-sm',
+                    'text-foreground inline-flex min-h-8 touch-manipulation items-center justify-center rounded-md px-3 py-1.5 text-xs font-medium transition-[color,background-color,box-shadow] duration-200 ease-out outline-none focus-visible:outline-hidden sm:text-sm',
                     isActive
                       ? 'bg-background text-foreground shadow-sm'
                       : 'text-muted-foreground hover:text-foreground hover:bg-background/60',

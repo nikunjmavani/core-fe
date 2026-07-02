@@ -28,9 +28,10 @@ coverage** (`pnpm coverage:patch` — changed lines ≥ 80% in PR CI). Vitest is
 safety, header tripwires) projects. Markdown is linted
 (`pnpm docs:lint`; emphasis style follows Prettier). CI (`.github/workflows/pr-ci.yml`) runs
 path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest+patch-coverage/docs-lint/
-structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint/e2e —
+structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint —
 behind a single aggregate `quality-gate` required check (branch protection as code:
-`.github/rulesets/`, `pnpm gh:rulesets:sync`). CodeQL, Stryker mutation tests, Lighthouse
+`.github/rulesets/`, `pnpm gh:rulesets:sync`). Playwright E2E is local-only (needs
+core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
 budgets, cache cleanup, and Dependabot CI triage run as scheduled/event workflows.
 
 ## Documentation
