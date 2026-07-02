@@ -5,7 +5,10 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-const ENVIRONMENTS_DIRECTORY = resolve(import.meta.dirname, '../../.github/environments');
+const ENVIRONMENTS_DIRECTORY = resolve(
+  import.meta.dirname,
+  '../../../.github/environments',
+);
 
 function normalizeLogin(login) {
   return login.trim().toLowerCase();
@@ -28,7 +31,9 @@ function omitUndefined(record) {
 /**
  * @param {string} [environmentsDirectory]
  */
-export function loadGitHubEnvironmentConfigs(environmentsDirectory = ENVIRONMENTS_DIRECTORY) {
+export function loadGitHubEnvironmentConfigs(
+  environmentsDirectory = ENVIRONMENTS_DIRECTORY,
+) {
   const fileNames = readdirSync(environmentsDirectory)
     .filter((fileName) => fileName.endsWith('.json'))
     .sort();
