@@ -178,6 +178,8 @@ jobs:
         with:
           fetch-depth: 1
 
+      - uses: ./.github/actions/setup-node-pnpm
+
       - name: Route-island structure
         run: ./tooling/validate/route-islands.sh
 

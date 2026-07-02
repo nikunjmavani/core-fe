@@ -261,10 +261,12 @@ Both run `pnpm build` then `netlify deploy` (with or without `--prod`).
 
 ### Branches and environments
 
-| Branch | GitHub Environment | Release channel                           | Netlify deploy                              |
-| ------ | ------------------ | ----------------------------------------- | ------------------------------------------- |
-| `dev`  | `development`      | `-dev.N` prereleases (`CHANGELOG-dev.md`) | Dev site secrets in `development` env       |
-| `main` | `production`       | Stable releases (`CHANGELOG.md`)          | Production site secrets in `production` env |
+| Branch | GitHub Environment | Release channel                           | Netlify deploy                                      |
+| ------ | ------------------ | ----------------------------------------- | --------------------------------------------------- |
+| `dev`  | `development`      | `-dev.N` prereleases (`CHANGELOG-dev.md`) | Alias deploy: `dev--core-fe.netlify.app`            |
+| `main` | `production`       | Stable releases (`CHANGELOG.md`)          | Production deploy (`--prod`): `core-fe.netlify.app` |
+
+**One Netlify project (`core-fe`) serves both environments** — `main` publishes the production deploy, `dev` publishes an alias deploy on the same site (Netlify deploy contexts), so there is no separate dev site. Both GitHub Environments carry the same `NETLIFY_SITE_ID`; only `VITE_API_BASE_URL` differs.
 
 - Feature PRs target **`dev`**. Promote with **`dev → main`** when ready for production.
 - PR CI (`pr-ci.yml`) and Preview (`preview.yml`) run on pull requests to both branches.
