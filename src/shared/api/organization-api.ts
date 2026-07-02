@@ -20,7 +20,7 @@ import { AppError } from '@/shared/errors/AppError.ts';
 import { FRONTEND_ERROR_CODES } from '@/shared/errors/frontend-error-codes.ts';
 import { fetchMeContext } from '@/shared/tenancy/me-context.ts';
 
-import { fetchAllPages } from './fetch-all-pages.ts';
+import { fetchListPage, type ListPage, type ListPageParams } from './fetch-list-page.ts';
 
 /** Active-org scoped tenancy base (active org comes from the token, not the URL). */
 const ORG_API = `${API_BASE_PATH}/tenancy/organization`;
@@ -112,10 +112,21 @@ function toMember(w: MembershipWire): Member {
   };
 }
 
-export async function listMembers(): Promise<Member[]> {
-  return (
-    await fetchAllPages(`${ORG_API}/memberships`, membershipWire, 'memberships')
-  ).map(toMember);
+/**
+ * One page of the active organization's members. Windowed server-side (search
+ * `q` + keyset cursor) so a large org never ships its whole roster to the
+ * browser; callers accumulate pages via `useInfiniteQuery`.
+ */
+export async function listMembers(
+  params: ListPageParams = {},
+): Promise<ListPage<Member>> {
+  const page = await fetchListPage(
+    `${ORG_API}/memberships`,
+    membershipWire,
+    'memberships',
+    params,
+  );
+  return { ...page, rows: page.rows.map(toMember) };
 }
 
 export async function updateMemberRole(input: {
@@ -240,8 +251,12 @@ function toRoleSummary(w: RoleWire): RoleSummary {
   };
 }
 
-export async function listRoles(): Promise<RoleSummary[]> {
-  return (await fetchAllPages(`${ORG_API}/roles`, roleWire, 'roles')).map(toRoleSummary);
+/** One page of the active organization's roles (windowed: search `q` + keyset cursor). */
+export async function listRoles(
+  params: ListPageParams = {},
+): Promise<ListPage<RoleSummary>> {
+  const page = await fetchListPage(`${ORG_API}/roles`, roleWire, 'roles', params);
+  return { ...page, rows: page.rows.map(toRoleSummary) };
 }
 
 export async function createRole(input: {
@@ -295,10 +310,12 @@ function toApiKey(w: ApiKeyWire): ApiKey {
   };
 }
 
-export async function listApiKeys(): Promise<ApiKey[]> {
-  return (await fetchAllPages(`${ORG_API}/api-keys`, apiKeyWire, 'api-keys')).map(
-    toApiKey,
-  );
+/** One page of the active organization's API keys (windowed: search `q` + keyset cursor). */
+export async function listApiKeys(
+  params: ListPageParams = {},
+): Promise<ListPage<ApiKey>> {
+  const page = await fetchListPage(`${ORG_API}/api-keys`, apiKeyWire, 'api-keys', params);
+  return { ...page, rows: page.rows.map(toApiKey) };
 }
 
 export async function createApiKey(input: {

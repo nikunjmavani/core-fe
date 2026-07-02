@@ -36,6 +36,20 @@ const KEY = {
   prefix: 'sk_live_abc',
   createdAt: '2026-01-15T00:00:00.000Z',
 };
+
+function apiKeysResult(overrides: { rows?: (typeof KEY)[] } & Record<string, unknown>) {
+  return {
+    rows: overrides.rows ?? [],
+    isPending: false,
+    isError: false,
+    isFetching: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: vi.fn(),
+    refetch: vi.fn(),
+    ...overrides,
+  };
+}
 const WEBHOOK = {
   id: 'whk_1',
   url: 'https://x.test/hook',
@@ -59,14 +73,14 @@ beforeEach(() => {
   vi.clearAllMocks();
   revokeMutateAsync.mockResolvedValue(undefined);
   deleteWebhookMutateAsync.mockResolvedValue(undefined);
-  useApiKeysMock.mockReturnValue({ data: [KEY], isLoading: false, isError: false });
+  useApiKeysMock.mockReturnValue(apiKeysResult({ rows: [KEY] }));
   useWebhooksMock.mockReturnValue({ data: [WEBHOOK], isLoading: false, isError: false });
   useOrganizationStore.getState().clearOrganization();
 });
 
 describe('OrganizationIntegrationsPanel — API keys', () => {
   it('shows an empty state when there are no keys', () => {
-    useApiKeysMock.mockReturnValue({ data: [], isLoading: false, isError: false });
+    useApiKeysMock.mockReturnValue(apiKeysResult({ rows: [] }));
     render(<OrganizationIntegrationsPanel />);
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
@@ -91,6 +105,42 @@ describe('OrganizationIntegrationsPanel — API keys', () => {
     await user.click(screen.getByTestId('apikey-revoke-key_1'));
     await user.click(screen.getByTestId('confirm-accept'));
     await waitFor(() => expect(revokeMutateAsync).toHaveBeenCalledWith('key_1'));
+  });
+
+  it('forwards the debounced search term to the hook', async () => {
+    useApiKeysMock.mockReturnValue(apiKeysResult({ rows: [] }));
+    const user = userEvent.setup();
+    render(<OrganizationIntegrationsPanel />);
+    await user.type(screen.getByTestId('apikeys-search'), 'ci');
+    await waitFor(() =>
+      expect(useApiKeysMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ q: 'ci', sort: 'name', order: 'asc' }),
+      ),
+    );
+  });
+
+  it('forwards the selected sort preset to the hook', async () => {
+    useApiKeysMock.mockReturnValue(apiKeysResult({ rows: [] }));
+    const user = userEvent.setup();
+    render(<OrganizationIntegrationsPanel />);
+    await user.click(screen.getByTestId('apikeys-sort'));
+    await user.click(await screen.findByRole('option', { name: 'Oldest first' }));
+    await waitFor(() =>
+      expect(useApiKeysMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sort: 'created_at', order: 'asc' }),
+      ),
+    );
+  });
+
+  it('loads the next page when Load more is clicked', async () => {
+    const fetchNextPage = vi.fn();
+    useApiKeysMock.mockReturnValue(
+      apiKeysResult({ rows: [KEY], hasNextPage: true, fetchNextPage }),
+    );
+    const user = userEvent.setup();
+    render(<OrganizationIntegrationsPanel />);
+    await user.click(screen.getByTestId('apikeys-load-more'));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 });
 

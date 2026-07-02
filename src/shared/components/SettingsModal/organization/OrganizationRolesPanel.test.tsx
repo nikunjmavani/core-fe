@@ -37,15 +37,19 @@ const SYSTEM_ROLE = {
 };
 
 function rolesQueryResult(
-  overrides: Partial<ReturnType<typeof useRolesMock>> & {
-    data?: (typeof CUSTOM_ROLE | typeof SYSTEM_ROLE)[] | undefined;
-  },
+  overrides: { rows?: (typeof CUSTOM_ROLE | typeof SYSTEM_ROLE)[] } & Record<
+    string,
+    unknown
+  >,
 ) {
   return {
-    data: overrides.data,
-    isPending: overrides.isPending ?? false,
-    isError: overrides.isError ?? false,
+    rows: overrides.rows ?? [],
+    isPending: false,
+    isError: false,
     isFetching: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: vi.fn(),
     refetch: vi.fn(),
     ...overrides,
   };
@@ -69,13 +73,13 @@ beforeEach(() => {
 
 describe('OrganizationRolesPanel', () => {
   it('shows an empty state when there are no roles', () => {
-    useRolesMock.mockReturnValue(rolesQueryResult({ data: [] }));
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [] }));
     render(<OrganizationRolesPanel />);
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
   it('lists roles; only custom roles are deletable, and only with the permission', () => {
-    useRolesMock.mockReturnValue(rolesQueryResult({ data: [CUSTOM_ROLE, SYSTEM_ROLE] }));
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE, SYSTEM_ROLE] }));
     setCanManage(true);
     render(<OrganizationRolesPanel />);
     expect(screen.getByText('Billing Manager')).toBeInTheDocument();
@@ -85,14 +89,14 @@ describe('OrganizationRolesPanel', () => {
   });
 
   it('hides delete controls without the manage-roles permission', () => {
-    useRolesMock.mockReturnValue(rolesQueryResult({ data: [CUSTOM_ROLE] }));
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE] }));
     setCanManage(false);
     render(<OrganizationRolesPanel />);
     expect(screen.queryByTestId('role-delete-rol_1')).not.toBeInTheDocument();
   });
 
   it('confirms and deletes a custom role', async () => {
-    useRolesMock.mockReturnValue(rolesQueryResult({ data: [CUSTOM_ROLE] }));
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE] }));
     setCanManage(true);
     const user = userEvent.setup();
     render(<OrganizationRolesPanel />);
@@ -101,5 +105,45 @@ describe('OrganizationRolesPanel', () => {
     await user.click(screen.getByTestId('confirm-accept'));
 
     await waitFor(() => expect(deleteMutate).toHaveBeenCalledWith('rol_1'));
+  });
+
+  it('forwards the debounced search term to the hook', async () => {
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [] }));
+    const user = userEvent.setup();
+    render(<OrganizationRolesPanel />);
+
+    await user.type(screen.getByTestId('roles-search'), 'bill');
+    await waitFor(() =>
+      expect(useRolesMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ q: 'bill', sort: 'name', order: 'asc' }),
+      ),
+    );
+  });
+
+  it('forwards the selected sort preset to the hook', async () => {
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [] }));
+    const user = userEvent.setup();
+    render(<OrganizationRolesPanel />);
+
+    await user.click(screen.getByTestId('roles-sort'));
+    await user.click(await screen.findByRole('option', { name: 'Name (Z–A)' }));
+
+    await waitFor(() =>
+      expect(useRolesMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sort: 'name', order: 'desc' }),
+      ),
+    );
+  });
+
+  it('loads the next page when Load more is clicked', async () => {
+    const fetchNextPage = vi.fn();
+    useRolesMock.mockReturnValue(
+      rolesQueryResult({ rows: [CUSTOM_ROLE], hasNextPage: true, fetchNextPage }),
+    );
+    const user = userEvent.setup();
+    render(<OrganizationRolesPanel />);
+
+    await user.click(screen.getByTestId('roles-load-more'));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 });

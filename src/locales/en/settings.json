@@ -101,6 +101,9 @@
       "loadFailed": "Couldn't load members. Please try again.",
       "emptyTitle": "No members yet",
       "emptyDescription": "Invite teammates to collaborate in this organization.",
+      "searchPlaceholder": "Search members…",
+      "noResults": "No members match your search.",
+      "loadMore": "Load more",
       "removeAria": "Remove {{name}}",
       "removeTitle": "Remove {{name}}?",
       "removeDescription": "They'll lose access to this organization. You can undo for a few seconds after confirming.",
@@ -113,6 +116,9 @@
       "loadFailed": "Couldn't load roles. Please try again.",
       "emptyTitle": "No roles yet",
       "emptyDescription": "Create a custom role to grant a tailored set of permissions.",
+      "searchPlaceholder": "Search roles…",
+      "noResults": "No roles match your search.",
+      "loadMore": "Load more",
       "systemBadge": "System",
       "memberCount": "{{count}} member",
       "memberCount_other": "{{count}} members",
@@ -121,6 +127,13 @@
       "deleteDescription": "Members with this role will need a new one assigned. You can undo for a few seconds after confirming.",
       "deleteConfirm": "Delete",
       "deletePending": "Deleting {{name}}…"
+    },
+    "listSort": {
+      "label": "Sort by",
+      "nameAsc": "Name (A–Z)",
+      "nameDesc": "Name (Z–A)",
+      "newest": "Newest first",
+      "oldest": "Oldest first"
     },
     "profile": {
       "title": "Profile",

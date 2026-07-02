@@ -1,8 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  type InfiniteData,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type { ListPage } from '@/shared/api/fetch-list-page.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
@@ -31,8 +36,18 @@ import { useApiKeys, useRenameApiKey, useRevokeApiKey } from './useApiKeys.ts';
 type Row = { id: string; name?: string };
 
 const ORG = 'org_aaaaaaaaaaaaaaaaaaaaa';
-const KEY = orgQueryKeys.apiKeys(ORG);
-const ids = (rows: Row[] | undefined) => rows?.map((r) => r.id);
+const LIST_KEY = orgQueryKeys.apiKeysList(ORG, {});
+
+function seedPage(client: QueryClient, rows: Row[]) {
+  client.setQueryData<InfiniteData<ListPage<Row>>>(LIST_KEY, {
+    pages: [{ rows, next: null, hasMore: false }],
+    pageParams: [undefined],
+  });
+}
+
+const pageRows = (client: QueryClient): Row[] | undefined =>
+  client.getQueryData<InfiniteData<ListPage<Row>>>(LIST_KEY)?.pages[0]?.rows;
+const ids = (client: QueryClient) => pageRows(client)?.map((r) => r.id);
 
 let client: QueryClient;
 function wrapper({ children }: { children: ReactNode }) {
@@ -55,50 +70,54 @@ afterEach(() => {
 });
 
 describe('useApiKeys', () => {
-  it('loads listApiKeys data under the organization query key', async () => {
-    listApiKeys.mockResolvedValue([{ id: 'key_1', name: 'CI' }]);
+  it('accumulates the first page of keys under the list key', async () => {
+    listApiKeys.mockResolvedValue({
+      rows: [{ id: 'key_1', name: 'CI' }],
+      next: null,
+      hasMore: false,
+    });
     const { result } = renderHook(() => useApiKeys(), { wrapper });
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-    expect(result.current.data).toEqual([{ id: 'key_1', name: 'CI' }]);
+    await waitFor(() => expect(result.current.rows.length).toBe(1));
+    expect(result.current.rows).toEqual([{ id: 'key_1', name: 'CI' }]);
   });
 });
 
 describe('useRenameApiKey', () => {
   it('optimistically renames the key and rolls back on error', async () => {
-    client.setQueryData<Row[]>(KEY, [{ id: 'key_1', name: 'Old' }]);
+    seedPage(client, [{ id: 'key_1', name: 'Old' }]);
     renameApiKey.mockRejectedValue(new Error('boom'));
     const { result } = renderHook(() => useRenameApiKey(), { wrapper });
 
     result.current.mutate({ id: 'key_1', name: 'New' });
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(client.getQueryData<Row[]>(KEY)?.[0]?.name).toBe('Old');
+    expect(pageRows(client)?.[0]?.name).toBe('Old');
     expect(notifyError).toHaveBeenCalledTimes(1);
   });
 });
 
 describe('useRevokeApiKey', () => {
   it('optimistically drops the key and toasts on success', async () => {
-    client.setQueryData<Row[]>(KEY, [{ id: 'key_1' }, { id: 'key_2' }]);
+    seedPage(client, [{ id: 'key_1' }, { id: 'key_2' }]);
     revokeApiKey.mockResolvedValue(undefined);
     const { result } = renderHook(() => useRevokeApiKey(), { wrapper });
 
     result.current.mutate('key_1');
 
-    await waitFor(() => expect(ids(client.getQueryData<Row[]>(KEY))).toEqual(['key_2']));
+    await waitFor(() => expect(ids(client)).toEqual(['key_2']));
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(notifySuccess).toHaveBeenCalledTimes(1);
   });
 
   it('restores the key on error', async () => {
-    client.setQueryData<Row[]>(KEY, [{ id: 'key_1' }, { id: 'key_2' }]);
+    seedPage(client, [{ id: 'key_1' }, { id: 'key_2' }]);
     revokeApiKey.mockRejectedValue(new Error('nope'));
     const { result } = renderHook(() => useRevokeApiKey(), { wrapper });
 
     result.current.mutate('key_1');
 
     await waitFor(() => expect(result.current.isError).toBe(true));
-    expect(ids(client.getQueryData<Row[]>(KEY))).toEqual(['key_1', 'key_2']);
+    expect(ids(client)).toEqual(['key_1', 'key_2']);
     expect(notifyError).toHaveBeenCalledTimes(1);
   });
 });

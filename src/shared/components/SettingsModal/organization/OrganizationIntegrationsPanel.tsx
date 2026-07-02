@@ -27,6 +27,7 @@ import { Label } from '@/shared/components/ui/label.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
 import { useApiKeys, useRevokeApiKey } from '@/shared/hooks/useApiKeys/index.ts';
 import { useCan } from '@/shared/hooks/useCan/index.ts';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue/index.ts';
 import {
   useCreateWebhook,
   useDeleteWebhook,
@@ -34,43 +35,71 @@ import {
 } from '@/shared/hooks/useWebhooks/index.ts';
 import { Boxes, Plus, Trash2 } from '@/shared/icons/index.ts';
 
+import {
+  DEFAULT_ORG_LIST_SORT,
+  type OrgListSortPreset,
+  orgListSortToParams,
+} from './org-list-sort.ts';
+import { OrgListControls } from './OrgListControls.tsx';
+
 function useCanManageIntegrations(): boolean {
   return useCan({ permission: 'role:manage', teamOrganizationOnly: true });
 }
 
-/** API keys — list (masked) + cap-gated revoke. */
+/** API keys — windowed list (masked) + search + cap-gated revoke. */
 function ApiKeysSection() {
-  const { data: keys, isLoading, isError } = useApiKeys();
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<OrgListSortPreset>(DEFAULT_ORG_LIST_SORT);
+  const debouncedSearch = useDebouncedValue(search.trim());
+  const sortParams = orgListSortToParams(sort);
+  const keys = useApiKeys({
+    q: debouncedSearch || undefined,
+    ...sortParams,
+  });
   const canManage = useCanManageIntegrations();
   const revokeKey = useRevokeApiKey();
   const [toRevoke, setToRevoke] = useState<ApiKey | null>(null);
+  const isSearching = debouncedSearch.length > 0;
 
   return (
     <div className="space-y-3">
       <h3 className="text-sm font-medium">API keys</h3>
-      {isLoading ? (
+      <OrgListControls
+        search={search}
+        onSearchChange={setSearch}
+        sort={sort}
+        onSortChange={setSort}
+        searchPlaceholder="Search API keys…"
+        searchTestId="apikeys-search"
+        sortTestId="apikeys-sort"
+      />
+      {keys.isPending ? (
         <div className="space-y-2" data-testid="apikeys-loading">
           {['a', 'b'].map((key) => (
             <Skeleton key={key} className="h-14 w-full" />
           ))}
         </div>
       ) : null}
-      {isError ? (
+      {keys.isError ? (
         <p className="text-destructive text-sm" role="alert">
           Couldn&apos;t load API keys. Please try again.
         </p>
       ) : null}
-      {keys && keys.length === 0 ? (
+      {!keys.isPending && !keys.isError && keys.rows.length === 0 ? (
         <EmptyState
           icon={<Boxes />}
-          title="No API keys"
-          description="API keys let external services talk to your organization."
+          title={isSearching ? 'No matching API keys' : 'No API keys'}
+          description={
+            isSearching
+              ? 'No API keys match your search.'
+              : 'API keys let external services talk to your organization.'
+          }
         />
       ) : null}
-      {keys && keys.length > 0 ? (
+      {!keys.isError && keys.rows.length > 0 ? (
         <Card className="gap-0 overflow-hidden py-0">
           <ul className="divide-border divide-y" data-testid="apikeys-list">
-            {keys.map((key) => (
+            {keys.rows.map((key) => (
               <li key={key.id} className="flex items-center gap-3 p-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{key.name}</p>
@@ -93,6 +122,19 @@ function ApiKeysSection() {
             ))}
           </ul>
         </Card>
+      ) : null}
+      {!keys.isError && keys.hasNextPage ? (
+        <div className="flex justify-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={keys.fetchNextPage}
+            disabled={keys.isFetchingNextPage}
+            data-testid="apikeys-load-more"
+          >
+            Load more
+          </Button>
+        </div>
       ) : null}
       <ConfirmDialog
         open={toRevoke !== null}

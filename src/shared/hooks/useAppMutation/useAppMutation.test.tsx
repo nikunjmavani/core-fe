@@ -136,4 +136,76 @@ describe('useAppMutation', () => {
     expect(client.getQueryData(key)).toEqual(initial);
     expect(errorMock).toHaveBeenCalledWith('nope');
   });
+
+  it('optimisticInfinite patches every page of matching infinite queries', async () => {
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    // Two param-variants under the same prefix — both should be patched.
+    const prefix = ['items'];
+    const keyA = ['items', 'list', { q: '' }];
+    const keyB = ['items', 'list', { q: 'x' }];
+    const page = (rows: { id: string }[]) => ({ rows, next: null, hasMore: false });
+    client.setQueryData(keyA, {
+      pages: [page([{ id: 'a' }, { id: 'b' }])],
+      pageParams: [undefined],
+    });
+    client.setQueryData(keyB, { pages: [page([{ id: 'a' }])], pageParams: [undefined] });
+
+    const { result } = renderHook(
+      () =>
+        useAppMutation({
+          mutationFn: async (id: string) => id,
+          optimisticInfinite: {
+            queryKey: prefix,
+            update: (rows: { id: string }[], id: string) =>
+              rows.filter((row) => row.id !== id),
+          },
+        }),
+      { wrapper: makeWrapper(client) },
+    );
+
+    await result.current.mutateAsync('a');
+
+    expect(
+      (client.getQueryData(keyA) as { pages: { rows: { id: string }[] }[] }).pages[0]
+        ?.rows,
+    ).toEqual([{ id: 'b' }]);
+    expect(
+      (client.getQueryData(keyB) as { pages: { rows: { id: string }[] }[] }).pages[0]
+        ?.rows,
+    ).toEqual([]);
+    expect(errorMock).not.toHaveBeenCalled();
+  });
+
+  it('rolls back the optimisticInfinite patch on error', async () => {
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    const key = ['items', 'list', { q: '' }];
+    const initial = {
+      pages: [{ rows: [{ id: 'a' }, { id: 'b' }], next: null, hasMore: false }],
+      pageParams: [undefined],
+    };
+    client.setQueryData(key, initial);
+
+    const { result } = renderHook(
+      () =>
+        useAppMutation({
+          mutationFn: async () => {
+            throw new Error('nope');
+          },
+          optimisticInfinite: {
+            queryKey: ['items'],
+            update: (rows: { id: string }[], id: string) =>
+              rows.filter((row) => row.id !== id),
+          },
+        }),
+      { wrapper: makeWrapper(client) },
+    );
+
+    await expect(result.current.mutateAsync('a')).rejects.toThrow('nope');
+
+    expect(
+      (client.getQueryData(key) as { pages: { rows: { id: string }[] }[] }).pages[0]
+        ?.rows,
+    ).toEqual([{ id: 'a' }, { id: 'b' }]);
+    expect(errorMock).toHaveBeenCalledWith('nope');
+  });
 });

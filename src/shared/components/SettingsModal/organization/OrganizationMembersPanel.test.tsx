@@ -30,15 +30,16 @@ const MEMBER = {
 };
 
 function membersQueryResult(
-  overrides: Partial<ReturnType<typeof useMembersMock>> & {
-    data?: (typeof MEMBER)[] | undefined;
-  },
+  overrides: { rows?: (typeof MEMBER)[] } & Record<string, unknown>,
 ) {
   return {
-    data: overrides.data,
-    isPending: overrides.isPending ?? false,
-    isError: overrides.isError ?? false,
+    rows: overrides.rows ?? [],
+    isPending: false,
+    isError: false,
     isFetching: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: vi.fn(),
     refetch: vi.fn(),
     ...overrides,
   };
@@ -62,21 +63,19 @@ beforeEach(() => {
 
 describe('OrganizationMembersPanel', () => {
   it('shows an empty state when there are no members', () => {
-    useMembersMock.mockReturnValue(membersQueryResult({ data: [] }));
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [] }));
     render(<OrganizationMembersPanel />);
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
   it('shows a loading skeleton', () => {
-    useMembersMock.mockReturnValue(
-      membersQueryResult({ data: undefined, isPending: true }),
-    );
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [], isPending: true }));
     render(<OrganizationMembersPanel />);
     expect(screen.getByTestId('members-loading')).toBeInTheDocument();
   });
 
   it('lists members with a remove control when the org can manage members', () => {
-    useMembersMock.mockReturnValue(membersQueryResult({ data: [MEMBER] }));
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [MEMBER] }));
     setCanManage(true);
     render(<OrganizationMembersPanel />);
     expect(screen.getByText('Ada Byron')).toBeInTheDocument();
@@ -85,7 +84,7 @@ describe('OrganizationMembersPanel', () => {
   });
 
   it('hides the remove control without the capability (e.g. a personal org)', () => {
-    useMembersMock.mockReturnValue(membersQueryResult({ data: [MEMBER] }));
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [MEMBER] }));
     setCanManage(false);
     render(<OrganizationMembersPanel />);
     expect(screen.getByText('Ada Byron')).toBeInTheDocument();
@@ -93,7 +92,7 @@ describe('OrganizationMembersPanel', () => {
   });
 
   it('confirms and removes a member', async () => {
-    useMembersMock.mockReturnValue(membersQueryResult({ data: [MEMBER] }));
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [MEMBER] }));
     setCanManage(true);
     const user = userEvent.setup();
     render(<OrganizationMembersPanel />);
@@ -102,5 +101,45 @@ describe('OrganizationMembersPanel', () => {
     await user.click(screen.getByTestId('confirm-accept'));
 
     await waitFor(() => expect(removeMutate).toHaveBeenCalledWith('mem_1'));
+  });
+
+  it('renders a search box and forwards the debounced term to the hook', async () => {
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [] }));
+    const user = userEvent.setup();
+    render(<OrganizationMembersPanel />);
+
+    await user.type(screen.getByTestId('members-search'), 'ada');
+    await waitFor(() =>
+      expect(useMembersMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ q: 'ada', sort: 'name', order: 'asc' }),
+      ),
+    );
+  });
+
+  it('forwards the selected sort preset to the hook', async () => {
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [] }));
+    const user = userEvent.setup();
+    render(<OrganizationMembersPanel />);
+
+    await user.click(screen.getByTestId('members-sort'));
+    await user.click(await screen.findByRole('option', { name: 'Newest first' }));
+
+    await waitFor(() =>
+      expect(useMembersMock).toHaveBeenLastCalledWith(
+        expect.objectContaining({ sort: 'created_at', order: 'desc' }),
+      ),
+    );
+  });
+
+  it('loads the next page when Load more is clicked', async () => {
+    const fetchNextPage = vi.fn();
+    useMembersMock.mockReturnValue(
+      membersQueryResult({ rows: [MEMBER], hasNextPage: true, fetchNextPage }),
+    );
+    const user = userEvent.setup();
+    render(<OrganizationMembersPanel />);
+
+    await user.click(screen.getByTestId('members-load-more'));
+    expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
 });

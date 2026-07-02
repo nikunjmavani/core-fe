@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { RoleSummary } from '@/shared/api/organization-contracts.ts';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/index.ts';
 import { EmptyState } from '@/shared/components/EmptyState/index.ts';
-import { QueryBoundary } from '@/shared/components/QueryBoundary/index.ts';
+import { RetryError } from '@/shared/components/RetryError/index.ts';
 import {
   formatSettingsBreadcrumb,
   SETTINGS_GROUP_LABEL_KEYS,
@@ -18,9 +18,17 @@ import { Button } from '@/shared/components/ui/button.tsx';
 import { Card } from '@/shared/components/ui/card.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
 import { useCan } from '@/shared/hooks/useCan/index.ts';
+import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue/index.ts';
 import { useDeleteRole, useRoles } from '@/shared/hooks/useRoles/index.ts';
 import { ShieldCheck, Trash2 } from '@/shared/icons/index.ts';
 import { notifyDeferredCommit } from '@/shared/notify/notify-deferred.ts';
+
+import {
+  DEFAULT_ORG_LIST_SORT,
+  type OrgListSortPreset,
+  orgListSortToParams,
+} from './org-list-sort.ts';
+import { OrgListControls } from './OrgListControls.tsx';
 
 function RolesLoading() {
   return (
@@ -38,7 +46,14 @@ function RolesLoading() {
  */
 export function OrganizationRolesPanel() {
   const { t } = useTranslation(SETTINGS_NS);
-  const rolesQuery = useRoles();
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState<OrgListSortPreset>(DEFAULT_ORG_LIST_SORT);
+  const debouncedSearch = useDebouncedValue(search.trim());
+  const sortParams = orgListSortToParams(sort);
+  const roles = useRoles({
+    q: debouncedSearch || undefined,
+    ...sortParams,
+  });
   const canManage = useCan({ permission: 'role:manage', teamOrganizationOnly: true });
   const deleteRole = useDeleteRole();
   const [toDelete, setToDelete] = useState<RoleSummary | null>(null);
@@ -48,6 +63,7 @@ export function OrganizationRolesPanel() {
     t(SETTINGS_GROUP_LABEL_KEYS.organization),
     t(SETTINGS_SECTION_LABEL_KEYS.roles),
   );
+  const isSearching = debouncedSearch.length > 0;
 
   return (
     <section className="space-y-6" data-testid="settings-organization-roles">
@@ -57,57 +73,84 @@ export function OrganizationRolesPanel() {
         description={t(panels.description)}
       />
 
-      <QueryBoundary
-        query={rolesQuery}
-        errorMessage={t(panels.loadFailed)}
-        loading={<RolesLoading />}
-      >
-        {(roles) => (
-          <>
-            {roles.length === 0 ? (
-              <EmptyState
-                icon={<ShieldCheck />}
-                title={t(panels.emptyTitle)}
-                description={t(panels.emptyDescription)}
-              />
-            ) : (
-              <Card className="gap-0 overflow-hidden py-0">
-                <ul className="divide-border divide-y" data-testid="roles-list">
-                  {roles.map((role) => (
-                    <li key={role.id} className="flex items-center gap-3 p-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-medium">{role.name}</p>
-                          {role.isSystem ? (
-                            <Badge variant="outline">{t(panels.systemBadge)}</Badge>
-                          ) : null}
-                        </div>
-                        <p className="text-muted-foreground truncate text-xs">
-                          {role.description}
-                        </p>
-                      </div>
-                      <span className="text-muted-foreground shrink-0 text-xs">
-                        {t(panels.memberCount, { count: role.memberCount })}
-                      </span>
-                      {canManage && !role.isSystem ? (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          aria-label={t(panels.deleteAria, { name: role.name })}
-                          onClick={() => setToDelete(role)}
-                          data-testid={`role-delete-${role.id}`}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
+      <OrgListControls
+        search={search}
+        onSearchChange={setSearch}
+        sort={sort}
+        onSortChange={setSort}
+        searchPlaceholder={t(panels.searchPlaceholder)}
+        searchTestId="roles-search"
+        sortTestId="roles-sort"
+      />
+
+      {roles.isPending ? <RolesLoading /> : null}
+
+      {roles.isError ? (
+        <RetryError
+          message={t(panels.loadFailed)}
+          onRetry={roles.refetch}
+          isRetrying={roles.isFetching}
+        />
+      ) : null}
+
+      {!roles.isPending && !roles.isError && roles.rows.length === 0 ? (
+        <EmptyState
+          icon={<ShieldCheck />}
+          title={isSearching ? t(panels.noResults) : t(panels.emptyTitle)}
+          description={isSearching ? '' : t(panels.emptyDescription)}
+        />
+      ) : null}
+
+      {!roles.isError && roles.rows.length > 0 ? (
+        <>
+          <Card className="gap-0 overflow-hidden py-0">
+            <ul className="divide-border divide-y" data-testid="roles-list">
+              {roles.rows.map((role) => (
+                <li key={role.id} className="flex items-center gap-3 p-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-medium">{role.name}</p>
+                      {role.isSystem ? (
+                        <Badge variant="outline">{t(panels.systemBadge)}</Badge>
                       ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            )}
-          </>
-        )}
-      </QueryBoundary>
+                    </div>
+                    <p className="text-muted-foreground truncate text-xs">
+                      {role.description}
+                    </p>
+                  </div>
+                  <span className="text-muted-foreground shrink-0 text-xs">
+                    {t(panels.memberCount, { count: role.memberCount })}
+                  </span>
+                  {canManage && !role.isSystem ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label={t(panels.deleteAria, { name: role.name })}
+                      onClick={() => setToDelete(role)}
+                      data-testid={`role-delete-${role.id}`}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </Card>
+          {roles.hasNextPage ? (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={roles.fetchNextPage}
+                disabled={roles.isFetchingNextPage}
+                data-testid="roles-load-more"
+              >
+                {t(panels.loadMore)}
+              </Button>
+            </div>
+          ) : null}
+        </>
+      ) : null}
 
       <ConfirmDialog
         open={toDelete !== null}

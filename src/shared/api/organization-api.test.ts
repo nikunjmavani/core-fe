@@ -54,7 +54,8 @@ beforeEach(() => {
 describe('organization-api memberships (live)', () => {
   it('maps the membership wire to the flat Member domain shape', async () => {
     getMock.mockResolvedValue({ data: [WIRE_MEMBER] });
-    const [member] = await listMembers();
+    const { rows } = await listMembers();
+    const [member] = rows;
     expect(member).toMatchObject({
       id: 'mem_abcdefghij0123456789x',
       userId: USR,
@@ -70,6 +71,20 @@ describe('organization-api memberships (live)', () => {
     );
   });
 
+  it('windows the list: forwards q + limit and surfaces the keyset cursor', async () => {
+    getMock.mockResolvedValue({
+      data: [WIRE_MEMBER],
+      meta: { pagination: { has_more: true, next: 'cur_1', per_page: 25 } },
+    });
+    const page = await listMembers({ q: 'ada' });
+    expect(page.rows).toHaveLength(1);
+    expect(page.next).toBe('cur_1');
+    expect(page.hasMore).toBe(true);
+    const url = getMock.mock.calls[0]?.[0] as string;
+    expect(url).toContain('q=ada');
+    expect(url).toContain('limit=25');
+  });
+
   it('falls back to email for a nameless user and buckets custom roles as member', async () => {
     getMock.mockResolvedValue({
       data: [
@@ -80,7 +95,7 @@ describe('organization-api memberships (live)', () => {
         },
       ],
     });
-    const [member] = await listMembers();
+    const [member] = (await listMembers()).rows;
     expect(member?.name).toBe('ada@acme.test');
     expect(member?.role).toBe('member');
   });
@@ -138,7 +153,7 @@ const ROLE_WIRE = {
 describe('organization-api roles (live)', () => {
   it('maps the role wire to RoleSummary', async () => {
     getMock.mockResolvedValue({ data: [ROLE_WIRE] });
-    const [role] = await listRoles();
+    const [role] = (await listRoles()).rows;
     expect(role).toMatchObject({
       id: ROL,
       name: 'Admin',
@@ -151,7 +166,7 @@ describe('organization-api roles (live)', () => {
 
   it('defaults missing permissions / member_count / description', async () => {
     getMock.mockResolvedValue({ data: [{ id: ROL, name: 'Viewer', is_system: true }] });
-    const [role] = await listRoles();
+    const [role] = (await listRoles()).rows;
     expect(role?.permissions).toEqual([]);
     expect(role?.memberCount).toBe(0);
     expect(role?.description).toBe('');
@@ -186,7 +201,7 @@ const KEY_WIRE = {
 describe('organization-api api-keys (live)', () => {
   it('maps the api-key wire to ApiKey', async () => {
     getMock.mockResolvedValue({ data: [KEY_WIRE] });
-    const [key] = await listApiKeys();
+    const [key] = (await listApiKeys()).rows;
     expect(key).toMatchObject({
       id: 'key_1',
       name: 'CI token',
