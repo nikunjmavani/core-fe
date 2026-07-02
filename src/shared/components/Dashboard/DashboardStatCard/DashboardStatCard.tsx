@@ -58,7 +58,8 @@ export function DashboardKpiTile({
   return (
     <article
       data-testid={testId}
-      className="border-border/70 bg-card text-card-foreground flex flex-col gap-3 rounded-xl border p-4 shadow-sm"
+      data-slot="card"
+      className="border-border/70 bg-card text-card-foreground flex flex-col gap-3 rounded-xl border p-4"
     >
       <div className="flex items-start justify-between gap-2">
         <p className="text-muted-foreground text-xs font-medium">{label}</p>
@@ -93,6 +94,7 @@ export function DashboardStatsPanel({
   return (
     <section
       aria-label={ariaLabel}
+      data-slot="card"
       className="border-border/70 bg-card text-card-foreground divide-border/60 divide-y overflow-hidden rounded-xl border"
     >
       {children}
@@ -117,7 +119,7 @@ export function DashboardStatCard({
   compact?: boolean;
 }) {
   return (
-    <div className={cn('border-border/70 bg-card rounded-xl border')}>
+    <div data-slot="card" className={cn('border-border/70 bg-card rounded-xl border')}>
       <DashboardStatRow
         icon={icon}
         label={label}
