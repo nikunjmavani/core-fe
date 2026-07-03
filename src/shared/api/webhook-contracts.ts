@@ -47,7 +47,7 @@ export function toWebhook(wire: WebhookWire): Webhook {
 
 /** New-webhook input (the URL + which events to deliver). */
 export const createWebhookSchema = z.object({
-  url: z.string().url('Enter a valid https URL'),
+  url: z.url('Enter a valid https URL'),
   events: z.array(z.string()).min(1, 'Choose at least one event'),
 });
 export type CreateWebhookInput = z.infer<typeof createWebhookSchema>;

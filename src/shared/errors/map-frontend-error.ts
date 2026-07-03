@@ -99,9 +99,7 @@ function resolveErrorMessage(message: string): string | undefined {
 function resolveHttpReason(error: unknown): string | undefined {
   if (!isHttpError(error)) return undefined;
   const body = error.data as
-    | { error?: { reason?: string; detail?: string } }
-    | null
-    | undefined;
+    { error?: { reason?: string; detail?: string } } | null | undefined;
   const reason = body?.error?.reason;
   if (typeof reason === 'string') {
     const fromReason = resolveByCode(reason);

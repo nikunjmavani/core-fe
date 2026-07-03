@@ -11,7 +11,7 @@ import unusedImports from 'eslint-plugin-unused-imports';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist', 'node_modules', 'coverage', 'test-results']),
+  globalIgnores(['dist', 'node_modules', 'coverage', 'test-results', '.stryker-tmp']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -135,12 +135,21 @@ export default defineConfig([
     },
   },
 
-  // E2E test utilities — fixtures, unique IDs for isolation
+  // E2E test utilities — fixtures, unique IDs for isolation.
+  // no-skipped-tests: Playwright's conditional `test.skip(condition, reason)`
+  // is the sanctioned environment-dependent skip (org switcher hidden, no
+  // seeded plans, …) and always carries a reason — the rule targets jest-style
+  // unconditional `.skip` and misreads this idiom.
+  // assertions-in-tests: hybrid e2e assertions live in tests/utils helpers
+  // (expect* wrappers), which the rule cannot see — same rationale as the
+  // S2699 test exclusion in sonar-project.properties.
   {
     files: ['tests/**/*.ts', 'tests/**/*.tsx'],
     rules: {
       'sonarjs/no-hardcoded-passwords': 'off',
       'sonarjs/pseudo-random': 'off',
+      'sonarjs/no-skipped-tests': 'off',
+      'sonarjs/assertions-in-tests': 'off',
     },
   },
 

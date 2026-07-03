@@ -14,7 +14,7 @@ export type QrCodeProps = HTMLAttributes<HTMLDivElement> & {
 const oklchRegex = /oklch\(([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)\)/;
 
 const getOklch = (color: string, fallback: [number, number, number]) => {
-  const oklchMatch = color.match(oklchRegex);
+  const oklchMatch = oklchRegex.exec(color);
 
   if (!oklchMatch) {
     return { l: fallback[0], c: fallback[1], h: fallback[2] };

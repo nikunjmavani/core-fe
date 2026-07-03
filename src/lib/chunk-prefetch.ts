@@ -67,6 +67,7 @@ export function useAuthenticatedIdleChunkPrefetch(
   importFn: () => Promise<unknown>,
   enabled: boolean,
 ): void {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: callers pass `() => import('…')` — a stable module path; only re-run when `enabled` flips
   useEffect(() => {
     if (!enabled) return;
     return scheduleIdleChunkPrefetch(importFn);

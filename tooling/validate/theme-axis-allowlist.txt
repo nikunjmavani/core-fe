@@ -8,3 +8,6 @@ AppearancePanel.tsx
 # Intentional flat semantic surfaces.
 FormError.tsx
 App.tsx
+# Highlights tab pill: active-state shadow-sm mirrors the vendored shadcn
+# tabs-trigger depth (category D — not a card surface; focus uses data-slot).
+'bg-background text-foreground shadow-sm'

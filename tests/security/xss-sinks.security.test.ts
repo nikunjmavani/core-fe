@@ -28,7 +28,22 @@ const SINKS: ReadonlyArray<readonly [string, RegExp]> = [
 ];
 
 function stripComments(code: string): string {
-  return code.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  // Plain index scan — regex comment matchers all trip sonarjs/super-linear-regex.
+  let out = '';
+  let i = 0;
+  while (i < code.length) {
+    if (code.startsWith('/*', i)) {
+      const end = code.indexOf('*/', i + 2);
+      i = end === -1 ? code.length : end + 2;
+    } else if (code.startsWith('//', i)) {
+      const newline = code.indexOf('\n', i);
+      i = newline === -1 ? code.length : newline;
+    } else {
+      out += code[i];
+      i += 1;
+    }
+  }
+  return out;
 }
 
 /** Allowlisted sinks — locally generated SVG only; data is never user HTML. */

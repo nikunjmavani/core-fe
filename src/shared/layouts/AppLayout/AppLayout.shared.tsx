@@ -281,7 +281,7 @@ const sidebarNavBase =
 // eslint-disable-next-line react-refresh/only-export-components -- static class map colocated with the layout shell
 export const NAV_STYLES = {
   sidebar: {
-    active: `${sidebarNavBase} bg-sidebar-accent text-sidebar-accent-foreground shadow-sm before:absolute before:top-1/2 before:left-0 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-sidebar-primary [&_svg]:text-sidebar-accent-foreground`,
+    active: `${sidebarNavBase} bg-sidebar-accent text-sidebar-accent-foreground before:absolute before:top-1/2 before:left-0 before:h-5 before:w-0.5 before:-translate-y-1/2 before:rounded-full before:bg-sidebar-primary [&_svg]:text-sidebar-accent-foreground`,
     inactive: `${sidebarNavBase} text-sidebar-foreground/75 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground [&_svg]:${iconOnSidebarSurface}`,
   },
   top: {

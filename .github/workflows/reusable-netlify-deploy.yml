@@ -4,6 +4,10 @@ name: Reusable — Netlify deploy
 # Reads deploy secrets from the selected GitHub Environment:
 #   dev  → development (VITE_API_BASE_URL, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID)
 #   main → production
+#
+# ONE Netlify project ("core-fe") serves both environments via deploy contexts:
+#   main → production deploy (--prod, core-fe.netlify.app)
+#   dev  → alias deploy (--alias dev, dev--core-fe.netlify.app)
 
 on:
   workflow_call:
@@ -100,9 +104,16 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          GITHUB_ENVIRONMENT: ${{ inputs.github_environment }}
         run: |
-          pnpm exec netlify deploy --prod --dir=dist --json > deploy-result.json
-          DEPLOY_URL=$(node -e "console.log(JSON.parse(require('fs').readFileSync('deploy-result.json','utf8')).url ?? '')")
+          if [ "$GITHUB_ENVIRONMENT" = "production" ]; then
+            DEPLOY_FLAGS="--prod"
+          else
+            DEPLOY_FLAGS="--alias dev"
+          fi
+          # shellcheck disable=SC2086 # DEPLOY_FLAGS is two words by design
+          pnpm exec netlify deploy $DEPLOY_FLAGS --dir=dist --json > deploy-result.json
+          DEPLOY_URL=$(node -e "const r=JSON.parse(require('fs').readFileSync('deploy-result.json','utf8')); console.log(r.url ?? r.deploy_url ?? '')")
           if [ -z "$DEPLOY_URL" ]; then
             echo "Could not read the deploy URL from netlify output:" >&2
             cat deploy-result.json >&2
