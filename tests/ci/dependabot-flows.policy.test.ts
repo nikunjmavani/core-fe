@@ -33,10 +33,19 @@ describe('dependabot auto-merge policy', () => {
     expect(autoMerge).not.toContain("'npm-major'");
   });
 
-  it('uses squash auto-merge with the built-in token and no third-party actions', () => {
+  it('uses squash auto-merge with no third-party actions', () => {
     expect(autoMerge).toContain('gh pr merge --auto --squash');
-    expect(autoMerge).toMatch(/GH_TOKEN:\s*\$\{\{\s*secrets\.GITHUB_TOKEN\s*\}\}/);
     expect(autoMerge).not.toContain('uses:');
+  });
+
+  it('merges with the PAT (github.token fallback) so the merge push triggers post-merge CI', () => {
+    // A GITHUB_TOKEN-attributed merge starts no workflows: PR #27 merged with
+    // no post-merge run (no SBOM / tests / dev deploy for that commit). The
+    // PAT is an environment secret, so the job must select an environment.
+    expect(autoMerge).toMatch(
+      /GH_TOKEN:\s*\$\{\{\s*secrets\.RELEASE_PLEASE_TOKEN \|\| secrets\.GITHUB_TOKEN\s*\}\}/,
+    );
+    expect(autoMerge).toContain('environment: development');
   });
 });
 
