@@ -40,7 +40,7 @@ export async function fetchAllPages<T>(
     rows.push(...parseListTolerant(rowSchema, res.data, resource));
 
     const pagination = res.meta?.pagination;
-    if (!pagination?.has_more || !pagination.next) {
+    if (!(pagination?.has_more && pagination.next)) {
       return rows;
     }
     after = pagination.next;

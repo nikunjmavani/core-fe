@@ -23,8 +23,7 @@ export function FullPageSpinner() {
   if (!splashHidden) return null;
 
   return (
-    <div
-      role="status"
+    <output
       aria-label="Loading"
       data-testid="full-page-spinner"
       className="bg-background fixed inset-0 z-50 flex flex-col items-center justify-center gap-6 overflow-hidden"
@@ -51,6 +50,6 @@ export function FullPageSpinner() {
         <span className="bg-primary animate-boot-progress block h-full w-1/2 rounded-full" />
       </span>
       <span className="sr-only">Loading…</span>
-    </div>
+    </output>
   );
 }

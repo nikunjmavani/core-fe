@@ -94,25 +94,23 @@ export async function silentRefresh(): Promise<void> {
 let authBootstrapPromise: Promise<void> | null = null;
 
 export function startAuthBootstrap(): Promise<void> {
-  if (!authBootstrapPromise) {
-    authBootstrapPromise = (async () => {
-      try {
-        await silentRefresh();
-      } catch {
-        const { isAuthenticated } = useAuthStore.getState();
-        if (!(isAuthenticated || getAccessToken())) {
-          if (import.meta.env.DEV) {
-            console.info('[Bootstrap] No active session');
-          }
-          useAuthStore.getState().clearAuth();
+  authBootstrapPromise ??= (async () => {
+    try {
+      await silentRefresh();
+    } catch {
+      const { isAuthenticated } = useAuthStore.getState();
+      if (!(isAuthenticated || getAccessToken())) {
+        if (import.meta.env.DEV) {
+          console.info('[Bootstrap] No active session');
         }
-      } finally {
-        if (useAuthStore.getState().isLoading) {
-          useAuthStore.getState().setLoading(false);
-        }
+        useAuthStore.getState().clearAuth();
       }
-    })();
-  }
+    } finally {
+      if (useAuthStore.getState().isLoading) {
+        useAuthStore.getState().setLoading(false);
+      }
+    }
+  })();
   return authBootstrapPromise;
 }
 

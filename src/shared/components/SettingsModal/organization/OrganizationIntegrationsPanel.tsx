@@ -85,7 +85,7 @@ function ApiKeysSection() {
           Couldn&apos;t load API keys. Please try again.
         </p>
       ) : null}
-      {!keys.isPending && !keys.isError && keys.rows.length === 0 ? (
+      {!(keys.isPending || keys.isError) && keys.rows.length === 0 ? (
         <EmptyState
           icon={<Boxes />}
           title={isSearching ? 'No matching API keys' : 'No API keys'}
