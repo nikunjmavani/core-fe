@@ -174,10 +174,10 @@ export function AccountNotificationsPanel() {
                 ))}
               </div>
               {desktopDenied ? (
-                <p className="text-muted-foreground mt-4 text-xs" role="status">
+                <output className="text-muted-foreground mt-4 block text-xs">
                   Desktop notifications need browser permission. Enable them in your
                   browser settings, then turn this on again.
-                </p>
+                </output>
               ) : null}
             </>
           ) : null}

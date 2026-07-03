@@ -10,7 +10,7 @@ import type { Resource } from './types.ts';
  */
 export const memberSchema = z.object({
   id: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   role: z.string(),
   status: z.enum(['active', 'invited', 'suspended']),
 });

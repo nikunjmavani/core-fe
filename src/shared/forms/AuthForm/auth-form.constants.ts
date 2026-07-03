@@ -26,8 +26,8 @@ export const AUTH_FORM_TEST_IDS = {
   emailChange: 'auth-email-change',
   autoGooglePending: 'auth-auto-google-pending',
   skipAutoGoogle: 'auth-skip-auto-google',
-  /** @deprecated use auth-continue-* — kept for transitional e2e selectors */
-  oauth: (provider: string) => `auth-continue-${provider}`,
+  /** Fallback selector for providers without a dedicated `continue*` id. */
+  continueProvider: (provider: string) => `auth-continue-${provider}`,
 } as const;
 
 export const AUTH_FORM_COOLDOWN_BASE_MS = 1_000;

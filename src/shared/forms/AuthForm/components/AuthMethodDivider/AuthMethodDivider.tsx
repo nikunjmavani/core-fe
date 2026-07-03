@@ -10,9 +10,9 @@ export function AuthMethodDivider() {
 
   return (
     <div
+      aria-hidden="true"
       className="flex items-center gap-3"
       data-testid={AUTH_FORM_TEST_IDS.methodDivider}
-      role="presentation"
     >
       <Separator className="flex-1" />
       <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">

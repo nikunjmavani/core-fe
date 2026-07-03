@@ -11,7 +11,7 @@ import type { I18nLocale } from './locales.ts';
 import { DEFAULT_LOCALE } from './locales.ts';
 import { I18N_NAMESPACES, type I18nNamespace } from './namespaces.ts';
 
-export const I18N_BUILD_MODE = 'multi' as const;
+export const I18N_BUILD_MODE = 'multi';
 export const I18N_BUILD_BCP47 = 'en-US';
 export const I18N_BUILD_UI_LOCALE: I18nLocale = DEFAULT_LOCALE;
 

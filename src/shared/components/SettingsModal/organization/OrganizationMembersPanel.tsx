@@ -117,7 +117,7 @@ export function OrganizationMembersPanel() {
         />
       ) : null}
 
-      {!members.isPending && !members.isError && members.rows.length === 0 ? (
+      {!(members.isPending || members.isError) && members.rows.length === 0 ? (
         <EmptyState
           icon={<Users />}
           title={isSearching ? t(panels.noResults) : t(panels.emptyTitle)}
