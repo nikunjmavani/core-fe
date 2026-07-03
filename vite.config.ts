@@ -112,10 +112,6 @@ export default defineConfig(({ mode }) => {
           : undefined,
     },
 
-    esbuild: {
-      drop: mode === 'production' ? ['console', 'debugger'] : [],
-    },
-
     build: {
       outDir: 'dist',
       // 'hidden' in production: generates source maps for Sentry upload but doesn't
@@ -126,6 +122,17 @@ export default defineConfig(({ mode }) => {
       // Content hashes in filenames for cache busting — new builds get new URLs
       rollupOptions: {
         output: {
+          // Vite 8 (rolldown/oxc) ignores `esbuild.drop` — console/debugger
+          // stripping moved to the oxc minifier. compress/mangle/codegen keep
+          // their defaults; only the drop flags are added.
+          minify:
+            mode === 'production'
+              ? {
+                  compress: { dropConsole: true, dropDebugger: true },
+                  mangle: true,
+                  codegen: true,
+                }
+              : undefined,
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash][extname]',
