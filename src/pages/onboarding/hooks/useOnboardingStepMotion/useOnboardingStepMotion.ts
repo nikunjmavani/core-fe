@@ -2,7 +2,6 @@ import { animate, createTimeline, cubicBezier } from 'animejs';
 import { useLayoutEffect, useRef } from 'react';
 
 import { prefersReducedMotion } from '@/lib/animations/prefers-reduced-motion.ts';
-import type { OnboardingStep } from '@/shared/store/useOnboardingStore/index.ts';
 
 import { ONBOARDING_MOTION } from '../../onboarding.constants.ts';
 
@@ -24,7 +23,7 @@ function settleMotionTarget(el: HTMLElement | null) {
  * (no horizontal slide). Forward steps rise into place; back steps ease down
  * slightly — spatial consistency for a top-to-bottom wizard, not a carousel.
  */
-export function useOnboardingStepMotion(stepIndex: number, step: OnboardingStep) {
+export function useOnboardingStepMotion(stepIndex: number) {
   const cardRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const stepBodyRef = useRef<HTMLDivElement>(null);
@@ -103,7 +102,7 @@ export function useOnboardingStepMotion(stepIndex: number, step: OnboardingStep)
       settleMotionTarget(header);
       settleMotionTarget(body);
     };
-  }, [stepIndex, step]);
+  }, [stepIndex]);
 
   return { cardRef, headerRef, stepBodyRef };
 }

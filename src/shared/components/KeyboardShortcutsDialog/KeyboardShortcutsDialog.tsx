@@ -13,7 +13,8 @@ import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
 function isMacPlatform(): boolean {
   if (typeof navigator === 'undefined') return true;
-  return /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+  const uaData = (navigator as { userAgentData?: { platform?: string } }).userAgentData;
+  return /Mac|iPhone|iPad|iPod/i.test(uaData?.platform ?? navigator.userAgent);
 }
 
 /**

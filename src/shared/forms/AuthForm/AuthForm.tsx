@@ -77,7 +77,7 @@ function providerTestId(provider: string): string {
   if (provider === 'google') return AUTH_FORM_TEST_IDS.continueGoogle;
   if (provider === 'github') return AUTH_FORM_TEST_IDS.continueGithub;
   if (provider === 'apple') return AUTH_FORM_TEST_IDS.continueApple;
-  return AUTH_FORM_TEST_IDS.oauth(provider);
+  return AUTH_FORM_TEST_IDS.continueProvider(provider);
 }
 
 /**
@@ -129,6 +129,7 @@ export function AuthForm() {
     setAutoGooglePending(false);
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: auto-start fires at most once (autoGoogleStartedRef guard); startOAuth is render-local and its identity must not retrigger the timer
   useEffect(() => {
     const canAutoStartGoogle =
       authMethods.oauthAutoGoogle &&
