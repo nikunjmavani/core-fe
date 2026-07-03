@@ -41,8 +41,7 @@ export function resetClientEnvCacheForTests(): void {
 const runtimeConfig: Record<string, string> =
   typeof window !== 'undefined'
     ? (((window as unknown as Record<string, unknown>).__CONFIG__ as
-        | Record<string, string>
-        | undefined) ?? {})
+        Record<string, string> | undefined) ?? {})
     : {};
 
 /** Read a config value: runtime (`window.__CONFIG__`) → `import.meta.env.VITE_*`. */

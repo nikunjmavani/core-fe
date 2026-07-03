@@ -27,19 +27,10 @@ import {
 export type SettingsScope = 'account' | 'organization';
 
 type AccountSettingsSection =
-  | 'profile'
-  | 'account'
-  | 'security'
-  | 'notifications'
-  | 'sessions'
-  | 'billing';
+  'profile' | 'account' | 'security' | 'notifications' | 'sessions' | 'billing';
 
 export type OrganizationSettingsSection =
-  | 'general'
-  | 'members'
-  | 'roles'
-  | 'branches'
-  | 'integrations';
+  'general' | 'members' | 'roles' | 'branches' | 'integrations';
 
 export type SettingsSection = AccountSettingsSection | OrganizationSettingsSection;
 
