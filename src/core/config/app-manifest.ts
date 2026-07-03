@@ -19,8 +19,8 @@ export const APP_MANIFEST_BACKGROUND_COLOR = '#ffffff';
 /** Shell / browser chrome — matches index.html `theme-color` and brand tile. */
 export const APP_MANIFEST_THEME_COLOR = '#0a0a0a';
 
-export const APP_MANIFEST_DISPLAY = 'standalone' as const;
-export const APP_MANIFEST_ORIENTATION = 'portrait-primary' as const;
+export const APP_MANIFEST_DISPLAY = 'standalone';
+export const APP_MANIFEST_ORIENTATION = 'portrait-primary';
 
 /** Lucide {@link Boxes} brand mark — same icon as AuthLayout / FullPageSpinner. */
 export const APP_ICON_PATHS = {

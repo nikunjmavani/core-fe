@@ -116,4 +116,4 @@ export const ONBOARDING_ANALYTICS = {
 // ── API / non-copy defaults ──────────────────────────────────────────────────
 
 /** Default invitation role sent on the finish step (API contract — not UI copy). */
-export const ONBOARDING_INVITE_ROLE = 'member' as const;
+export const ONBOARDING_INVITE_ROLE = 'member';

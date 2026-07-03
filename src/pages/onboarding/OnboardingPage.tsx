@@ -231,7 +231,7 @@ export function OnboardingPage() {
   const [submitting, setSubmitting] = useState(false);
   const step = stepAtIndex(stepIndex, effectiveSteps);
   const metaKeys = getStepMetaKeys(step);
-  const { cardRef, headerRef, stepBodyRef } = useOnboardingStepMotion(stepIndex, step);
+  const { cardRef, headerRef, stepBodyRef } = useOnboardingStepMotion(stepIndex);
   const dirty = isOnboardingDirty({ completed, stepIndex, data });
   const { guardDialog } = useUnsavedChangesGuard({
     when: dirty && !submitting,

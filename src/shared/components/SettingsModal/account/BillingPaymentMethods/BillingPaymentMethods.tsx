@@ -87,7 +87,7 @@ export function BillingPaymentMethods({
       // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time sync from Stripe redirect params
       setSetupSecret(setupIntentClientSecret);
     }
-  }, [queryClient, navigate]);
+  }, [queryClient, navigate, orgId]);
 
   async function handleAddPaymentMethod() {
     setIsAdding(true);

@@ -90,6 +90,7 @@ function BillingContent({ sub, plans }: BillingContentProps) {
     await queryClient.invalidateQueries({ queryKey: billingQueryKeys.all });
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one-time Stripe redirect-return read on mount; navigate is a stable router handle and refreshBilling only wraps queryClient
   useEffect(() => {
     const { paymentIntentClientSecret, redirectStatus } = readStripeBillingReturnParams();
     if (redirectStatus === 'succeeded') {
@@ -216,12 +217,11 @@ function BillingContent({ sub, plans }: BillingContentProps) {
             </p>
           </div>
           {canManage ? (
-            <div
+            <fieldset
               className="inline-flex rounded-md border p-0.5"
-              role="group"
-              aria-label="Billing cycle"
               data-testid="billing-cycle-toggle"
             >
+              <legend className="sr-only">Billing cycle</legend>
               {(['monthly', 'yearly'] as const).map((cycle) => (
                 <Button
                   key={cycle}
@@ -235,7 +235,7 @@ function BillingContent({ sub, plans }: BillingContentProps) {
                   {cycle === 'monthly' ? 'Monthly' : 'Yearly'}
                 </Button>
               ))}
-            </div>
+            </fieldset>
           ) : null}
         </div>
 

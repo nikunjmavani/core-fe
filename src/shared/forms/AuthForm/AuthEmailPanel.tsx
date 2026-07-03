@@ -51,7 +51,10 @@ const inlineLinkClassName =
   'text-foreground h-auto p-0 text-sm font-normal underline underline-offset-4 hover:text-foreground/80 disabled:pointer-events-none disabled:opacity-50';
 
 const emailOnlySchema = z.object({
-  email: z.string().min(1, 'validation.emailRequired').email('validation.invalidEmail'),
+  email: z
+    .string()
+    .min(1, 'validation.emailRequired')
+    .pipe(z.email('validation.invalidEmail')),
 });
 
 type EmailOnlyInput = z.infer<typeof emailOnlySchema>;
@@ -80,8 +83,6 @@ function getRedirectPath(location: {
 }
 
 type AuthEmailPanelProps = {
-  /** @deprecated always embedded on `/login` — kept for API stability. */
-  embedded?: boolean;
   pending?: AuthContinuePending | null;
   onPendingChange?: (pending: AuthContinuePending | null) => void;
   onInteract?: () => void;
@@ -89,7 +90,6 @@ type AuthEmailPanelProps = {
 };
 
 export function AuthEmailPanel({
-  embedded: _embedded = true,
   pending = null,
   onPendingChange,
   onInteract,

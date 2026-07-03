@@ -16,11 +16,15 @@ export function readInjectedI18nBcp47() {
 }
 
 export function readInjectedAppBuildId() {
-  return (import.meta.env.VITE_APP_BUILD_ID as string | undefined) || undefined;
+  const raw = import.meta.env.VITE_APP_BUILD_ID as string | undefined;
+  // An empty string means "not injected at build time" — collapse it on purpose.
+  return raw === undefined || raw === '' ? undefined : raw;
 }
 
 export function readInjectedAppVersion() {
-  return (import.meta.env.VITE_APP_VERSION as string | undefined) || undefined;
+  const raw = import.meta.env.VITE_APP_VERSION as string | undefined;
+  // An empty string means "not injected at build time" — collapse it on purpose.
+  return raw === undefined || raw === '' ? undefined : raw;
 }
 
 /** Snapshot at module load — use the `readInjected*` helpers when env may change (tests). */

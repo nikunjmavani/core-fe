@@ -11,12 +11,8 @@ import { isMultiLocaleBuild } from '@/lib/i18n/build-runtime.ts';
 import { formatDateValue } from '@/lib/i18n/format.ts';
 import {
   type CurrencyCode,
-  type CurrencyDisplayPreference,
-  type DateFormatPreference,
   type FormatLocaleTag,
-  type HourCyclePreference,
   LOCALE_FORMAT_SAMPLES,
-  type NumberStylePreference,
 } from '@/lib/i18n/intl-config.ts';
 import {
   CURRENCY_CODE_LIST,
@@ -279,7 +275,7 @@ export function LanguagePanel() {
                   // eslint-disable-next-line security/detect-object-injection -- fixed preference catalog
                   t(DATE_FORMAT_LABEL_KEYS[id])
                 }
-                onPick={(id) => setDateFormat(id as DateFormatPreference)}
+                onPick={(id) => setDateFormat(id)}
                 testPrefix="date-format"
               />
             </div>
@@ -293,7 +289,7 @@ export function LanguagePanel() {
                   // eslint-disable-next-line security/detect-object-injection -- fixed preference catalog
                   t(HOUR_CYCLE_LABEL_KEYS[id])
                 }
-                onPick={(id) => setHourCycle(id as HourCyclePreference)}
+                onPick={(id) => setHourCycle(id)}
                 testPrefix="hour-cycle"
               />
             </div>
@@ -307,7 +303,7 @@ export function LanguagePanel() {
                   // eslint-disable-next-line security/detect-object-injection -- fixed preference catalog
                   t(NUMBER_STYLE_LABEL_KEYS[id])
                 }
-                onPick={(id) => setNumberStyle(id as NumberStylePreference)}
+                onPick={(id) => setNumberStyle(id)}
                 testPrefix="number-style"
               />
             </div>
@@ -321,7 +317,7 @@ export function LanguagePanel() {
                   // eslint-disable-next-line security/detect-object-injection -- fixed preference catalog
                   t(CURRENCY_DISPLAY_LABEL_KEYS[id])
                 }
-                onPick={(id) => setCurrencyDisplay(id as CurrencyDisplayPreference)}
+                onPick={(id) => setCurrencyDisplay(id)}
                 testPrefix="currency-display"
               />
             </div>
