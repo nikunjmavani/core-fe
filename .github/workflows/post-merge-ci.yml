@@ -176,10 +176,26 @@ jobs:
       (needs.matrix-tests.result == 'success' || needs.matrix-tests.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # release-please creates GitHub Releases with RELEASE_PLEASE_TOKEN (a PAT with
+    # the `workflow` scope; the default GITHUB_TOKEN cannot create releases here —
+    # the create-a-release API path requires that scope). The token is a GitHub
+    # Environment secret, so this job selects the matching environment to read it:
+    # dev → development, main → production. Both environments have no protection
+    # rules, so this does not gate the run.
     environment: ${{ github.ref_name == 'dev' && 'development' || 'production' }}
     permissions:
       contents: write
       pull-requests: write
+      issues: write
+      # Some recent release-please-action paths invoke endpoints that the
+      # default `GITHUB_TOKEN` cannot reach unless `id-token: write` is also
+      # granted (OIDC-scoped octokit calls inside the action). Adding it here
+      # is a no-op for the actual release create/update but unblocks the
+      # underlying API call when the action falls into that path. Pair with
+      # `actions: write` so the action can update the run's own status when
+      # a release PR-creation step runs after release creation.
+      id-token: write
+      actions: write
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created == 'true' && 'true' || 'false' }}
     env:
@@ -193,10 +209,126 @@ jobs:
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         id: release
         with:
+          # PAT (repo + workflow scopes) read from the GitHub Environment secret
+          # selected by the job `environment:` above. Falls back to github.token
+          # until RELEASE_PLEASE_TOKEN is provisioned (github.token cannot create
+          # releases, but the fallback keeps release-PR creation working meanwhile).
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           target-branch: ${{ github.ref_name }}
           config-file: .github/release-please/config${{ env.CHANNEL_SUFFIX }}.json
           manifest-file: .github/release-please/manifest${{ env.CHANNEL_SUFFIX }}.json
+
+      - name: Lint-fix CHANGELOGs on release PR branches
+        if: steps.release.outputs.prs_created == 'true' || steps.release.outputs.pr != ''
+        env:
+          # PAT (not github.token) so the lint-fix commit pushed to the release PR
+          # branch re-triggers the PR checks that auto-merge waits on.
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          RELEASE_PRS: ${{ steps.release.outputs.prs }}
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
+          GH_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          mapfile -t branches < <(
+            jq -rn --arg pr "${RELEASE_PR}" --arg prs "${RELEASE_PRS}" '
+              def parse_object($raw):
+                try ($raw | fromjson) catch null;
+              def parse_array($raw):
+                try ($raw | fromjson) catch [];
+              (
+                [parse_object($pr) | .headBranchName // .headRefName // empty] +
+                [parse_array($prs)[] | .headBranchName // .headRefName // empty]
+              )
+              | map(select(. != null and . != ""))
+              | unique
+              | .[]
+            '
+          )
+
+          if [ "${#branches[@]}" -eq 0 ]; then
+            echo "No release PR branches to lint-fix."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          for branch in "${branches[@]}"; do
+            echo "::group::Lint-fix CHANGELOG on ${branch}"
+            git fetch origin "${branch}" --depth=2
+            git checkout -B "${branch}" "origin/${branch}"
+            # Repo config (.markdownlint-cli2.jsonc) is auto-discovered. Both
+            # changelogs are in its ignores today, so this is a no-op safety net
+            # that only bites if changelogs re-enter the docs-lint surface —
+            # without it, a lint-dirty generated CHANGELOG would wedge the
+            # release PR's docs lane and auto-merge would wait forever.
+            npx --yes markdownlint-cli2@0.22.1 \
+              --fix \
+              'CHANGELOG*.md' || true
+            if [ -n "$(git status --porcelain CHANGELOG*.md 2>/dev/null)" ]; then
+              git add CHANGELOG*.md
+              git commit -m "chore(docs): lint-fix CHANGELOG after release-please"
+              git push origin "${branch}"
+              echo "Pushed CHANGELOG lint-fix to ${branch}"
+            else
+              echo "${branch} CHANGELOG already lint-clean."
+            fi
+            echo "::endgroup::"
+          done
+
+      - name: Enable auto-merge on release PRs
+        # Use the PAT (not github.token) so the eventual auto-merge of the release
+        # PR is attributed to the PAT and its push to dev/main RE-TRIGGERS this
+        # workflow. A merge performed with the default GITHUB_TOKEN does not start
+        # a new workflow run, so the Release Please job would never run on the
+        # merge commit and the tag / GitHub Release would never be created.
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
+          RELEASE_PR: ${{ steps.release.outputs.pr }}
+          RELEASE_PRS: ${{ steps.release.outputs.prs }}
+          TARGET_BRANCH: ${{ github.ref_name }}
+          GH_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          pr_numbers_from_outputs="$(
+            jq -rn --arg pr "${RELEASE_PR}" --arg prs "${RELEASE_PRS}" '
+              def parse_object($raw):
+                try ($raw | fromjson) catch null;
+              def parse_array($raw):
+                try ($raw | fromjson) catch [];
+              (
+                [parse_object($pr) | .number // empty] +
+                [parse_array($prs)[] | .number // empty]
+              )
+              | map(select(. != null))
+              | unique
+              | .[]
+            '
+          )"
+
+          pr_numbers_from_api="$(
+            gh pr list \
+              --repo "${GH_REPOSITORY}" \
+              --state open \
+              --base "${TARGET_BRANCH}" \
+              --search 'head:release-please--branches--' \
+              --json number \
+              --jq '.[].number'
+          )"
+
+          pr_numbers="$(printf '%s\n%s\n' "${pr_numbers_from_outputs}" "${pr_numbers_from_api}" | awk 'NF' | sort -u)"
+
+          if [ -z "${pr_numbers}" ]; then
+            echo "No open release PRs to auto-merge."
+            exit 0
+          fi
+
+          for pr_number in ${pr_numbers}; do
+            echo "Enabling auto-merge for release PR #${pr_number}"
+            gh pr merge "${pr_number}" --auto --merge --delete-branch=false
+          done
 
   release-sbom:
     name: Release SBOM

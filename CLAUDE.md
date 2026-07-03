@@ -32,7 +32,8 @@ structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/ac
 behind a single aggregate `quality-gate` required check (branch protection as code:
 `.github/rulesets/`, `pnpm gh:rulesets:sync`). Playwright E2E is local-only (needs
 core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
-budgets, cache cleanup, and Dependabot CI triage run as scheduled/event workflows.
+budgets, cache cleanup, release-flow guards (branch-ancestry + environment-drift canaries),
+and Dependabot CI triage run as scheduled/event workflows.
 
 ## Documentation
 
