@@ -77,7 +77,7 @@ describe('useRoles', () => {
       hasMore: false,
     });
     const { result } = renderHook(() => useRoles(), { wrapper });
-    await waitFor(() => expect(result.current.rows.length).toBe(1));
+    await waitFor(() => expect(result.current.rows).toHaveLength(1));
     expect(result.current.rows).toEqual([{ id: 'role_1', name: 'Admin' }]);
   });
 });

@@ -8,7 +8,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 
 function base64url(value: string): string {
-  return btoa(value).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return btoa(value)
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/={1,2}$/, '');
 }
 
 const FAKE_JWT = `${base64url('{"alg":"none"}')}.${base64url('{"sub":"user_1"}')}.signature`;
@@ -28,8 +31,8 @@ describe('access token storage (security)', () => {
 
     expect(getAccessToken()).toBe(FAKE_JWT);
     expect(storageWrite).not.toHaveBeenCalled();
-    expect(localStorage.length).toBe(0);
-    expect(sessionStorage.length).toBe(0);
+    expect(localStorage).toHaveLength(0);
+    expect(sessionStorage).toHaveLength(0);
   });
 
   it('rejects an empty token', () => {

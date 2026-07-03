@@ -77,7 +77,7 @@ describe('useApiKeys', () => {
       hasMore: false,
     });
     const { result } = renderHook(() => useApiKeys(), { wrapper });
-    await waitFor(() => expect(result.current.rows.length).toBe(1));
+    await waitFor(() => expect(result.current.rows).toHaveLength(1));
     expect(result.current.rows).toEqual([{ id: 'key_1', name: 'CI' }]);
   });
 });
