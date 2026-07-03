@@ -47,6 +47,7 @@ export async function fillEmailVerificationCode(
   verificationCode: string,
 ): Promise<void> {
   const input = page.getByTestId('auth-email-code');
+  // eslint-disable-next-line sonarjs/no-forced-browser-interaction -- the OTP field renders slot overlays above the real input; a plain click targets the overlay and never focuses it
   await input.click({ force: true });
   await input.pressSequentially(verificationCode, { delay: 20 });
 

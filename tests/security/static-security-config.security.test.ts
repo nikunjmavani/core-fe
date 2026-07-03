@@ -13,9 +13,10 @@ import viteConfig from '../../vite.config.ts?raw';
 
 /** Lowest version a semver range like `^7.3.6` / `>=3.4.7` can resolve to. */
 function rangeFloor(range: string): [number, number, number] {
-  const match = range.match(/(\d+)\.(\d+)\.(\d+)/);
-  if (!match) throw new Error(`unparseable version range: ${range}`);
-  return [Number(match[1]), Number(match[2]), Number(match[3])];
+  // Single-token /\d+/g scan — linear, unlike a chained \d+\.\d+\.\d+ pattern.
+  const parts = range.match(/\d+/g);
+  if (!parts || parts.length < 3) throw new Error(`unparseable version range: ${range}`);
+  return [Number(parts[0]), Number(parts[1]), Number(parts[2])];
 }
 
 function atLeast(range: string, min: [number, number, number]): boolean {
