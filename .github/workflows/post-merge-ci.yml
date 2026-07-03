@@ -180,8 +180,12 @@ jobs:
     # the `workflow` scope; the default GITHUB_TOKEN cannot create releases here —
     # the create-a-release API path requires that scope). The token is a GitHub
     # Environment secret, so this job selects the matching environment to read it:
-    # dev → development, main → production. Both environments have no protection
-    # rules, so this does not gate the run.
+    # dev → development, main → production. development has no protection rules
+    # (dev runs ungated), but production declares a required reviewer in
+    # .github/environments/production.json, so on `main` this job — and the
+    # downstream `deploy` job, which also selects production — PAUSES for manual
+    # approval before it runs. That approval gate is intentional governance, not
+    # a bug: a production release/deploy waits until a reviewer approves it.
     environment: ${{ github.ref_name == 'dev' && 'development' || 'production' }}
     permissions:
       contents: write
