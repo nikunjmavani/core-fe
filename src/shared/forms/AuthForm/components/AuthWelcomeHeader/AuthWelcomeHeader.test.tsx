@@ -8,7 +8,7 @@ describe('AuthWelcomeHeader', () => {
   it('renders the welcome heading and subheading', () => {
     render(<AuthWelcomeHeader />);
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Welcome' }),
+      screen.getByRole('heading', { level: 1, name: 'Welcome back' }),
     ).toBeInTheDocument();
     expect(screen.getByText(/one account for sign-in and sign-up/i)).toBeInTheDocument();
   });
