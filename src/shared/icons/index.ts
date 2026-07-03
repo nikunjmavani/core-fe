@@ -30,7 +30,6 @@ import {
   EyeOff as LuEyeOff,
   Fingerprint as LuFingerprint,
   GitBranch as LuGitBranch,
-  Github as LuGithub,
   Globe as LuGlobe,
   Languages as LuLanguages,
   Laptop as LuLaptop,
@@ -72,6 +71,8 @@ import { createElement } from 'react';
 
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 
+// lucide-react 1.0 removed brand icons — the GitHub mark is vendored locally.
+import { GithubMark as LuGithub } from './github-mark.tsx';
 import type { IconName } from './icon-names.ts';
 import { useIconSet } from './icon-registry.ts';
 import type { AppIcon, IconProps } from './icon-types.ts';

@@ -1,6 +1,7 @@
+import babel from '@rolldown/plugin-babel';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
+import react, { reactCompilerPreset } from '@vitejs/plugin-react';
 import path from 'path';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, loadEnv, type PluginOption } from 'vite';
@@ -20,7 +21,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       // React Compiler: automatic memoization at build time (React 19).
       // The eslint react-hooks rules already lint for compiler compatibility.
-      react({ babel: { plugins: [['babel-plugin-react-compiler', {}]] } }),
+      // plugin-react 6 dropped the `babel` option — the compiler now runs via
+      // @rolldown/plugin-babel with the exported reactCompilerPreset.
+      react(),
+      babel({ presets: [reactCompilerPreset()] }),
       tailwindcss(),
       i18nBuild({
         modeFlag: env.BUILD_I18N_MODE,
@@ -108,10 +112,6 @@ export default defineConfig(({ mode }) => {
           : undefined,
     },
 
-    esbuild: {
-      drop: mode === 'production' ? ['console', 'debugger'] : [],
-    },
-
     build: {
       outDir: 'dist',
       // 'hidden' in production: generates source maps for Sentry upload but doesn't
@@ -122,6 +122,17 @@ export default defineConfig(({ mode }) => {
       // Content hashes in filenames for cache busting — new builds get new URLs
       rollupOptions: {
         output: {
+          // Vite 8 (rolldown/oxc) ignores `esbuild.drop` — console/debugger
+          // stripping moved to the oxc minifier. compress/mangle/codegen keep
+          // their defaults; only the drop flags are added.
+          minify:
+            mode === 'production'
+              ? {
+                  compress: { dropConsole: true, dropDebugger: true },
+                  mangle: true,
+                  codegen: true,
+                }
+              : undefined,
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash][extname]',
