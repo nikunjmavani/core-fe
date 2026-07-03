@@ -200,11 +200,23 @@ jobs:
       releases_created: ${{ steps.release.outputs.releases_created == 'true' && 'true' || 'false' }}
     env:
       CHANNEL_SUFFIX: ${{ github.ref_name == 'dev' && '.dev' || '' }}
+      # secrets.* is not readable in step `if:` expressions — hoist to job env.
+      HAS_RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN != '' }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.sha }}
           fetch-depth: 0
+
+      # The github.token fallback below keeps the job green when the PAT is
+      # missing, but degrades SILENTLY: auto-merged release PR merges then do
+      # not re-trigger this workflow, so the tag/GitHub Release is never cut
+      # on the merge commit. Surface that on every run instead of at release
+      # time.
+      - name: Tripwire — RELEASE_PLEASE_TOKEN not provisioned
+        if: env.HAS_RELEASE_PLEASE_TOKEN != 'true'
+        run: |
+          echo "::warning title=RELEASE_PLEASE_TOKEN not provisioned::Release Please is running on the default GITHUB_TOKEN fallback. Release-PR auto-merge will NOT re-trigger post-merge CI, so no tag/GitHub Release is created on the merge commit. Add a PAT (repo + workflow scopes) as RELEASE_PLEASE_TOKEN to the development and production GitHub Environments."
 
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         id: release
