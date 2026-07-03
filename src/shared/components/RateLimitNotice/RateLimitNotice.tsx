@@ -38,7 +38,10 @@ export function RateLimitNotice({ error, className, onDismiss }: RateLimitNotice
 
   if (!isRateLimitError(error)) return null;
 
-  const message = formatRateLimitMessage(secondsLeft || retryAfter);
+  // A missing or finished countdown (0) falls back to the server's retry-after.
+  const message = formatRateLimitMessage(
+    secondsLeft !== undefined && secondsLeft > 0 ? secondsLeft : retryAfter,
+  );
 
   return (
     <div

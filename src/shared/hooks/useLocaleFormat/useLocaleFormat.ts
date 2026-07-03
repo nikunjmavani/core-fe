@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import {
   formatCurrencyValue,
@@ -40,18 +40,17 @@ export function useLocaleFormat(): {
   const numberStyle = useLocaleStore((s) => s.numberStyle);
   const currencyDisplay = useLocaleStore((s) => s.currencyDisplay);
   const currencyCode = useLocaleStore((s) => s.currencyCode);
-  const prefs = localeFormatPrefs({
-    locale,
-    formatLocale,
-    dateFormat,
-    hourCycle,
-    numberStyle,
-    currencyDisplay,
-    currencyCode,
-  });
-
-  const formatDate = useCallback(
-    (iso: string | Date) => formatDateValue(iso, prefs),
+  const prefs = useMemo(
+    () =>
+      localeFormatPrefs({
+        locale,
+        formatLocale,
+        dateFormat,
+        hourCycle,
+        numberStyle,
+        currencyDisplay,
+        currencyCode,
+      }),
     [
       locale,
       formatLocale,
@@ -61,44 +60,25 @@ export function useLocaleFormat(): {
       currencyDisplay,
       currencyCode,
     ],
+  );
+
+  const formatDate = useCallback(
+    (iso: string | Date) => formatDateValue(iso, prefs),
+    [prefs],
   );
   const formatNumber = useCallback(
     (value: number, options?: Intl.NumberFormatOptions) =>
       formatNumberValue(value, prefs, options),
-    [
-      locale,
-      formatLocale,
-      dateFormat,
-      hourCycle,
-      numberStyle,
-      currencyDisplay,
-      currencyCode,
-    ],
+    [prefs],
   );
   const formatCurrency = useCallback(
     (cents: number, currency?: string) =>
       formatCurrencyValue(cents, currency ?? currencyCode, prefs),
-    [
-      locale,
-      formatLocale,
-      dateFormat,
-      hourCycle,
-      numberStyle,
-      currencyDisplay,
-      currencyCode,
-    ],
+    [prefs, currencyCode],
   );
   const formatRelativeTime = useCallback(
     (iso: string | Date, base?: Date) => formatRelativeTimeValue(iso, prefs, base),
-    [
-      locale,
-      formatLocale,
-      dateFormat,
-      hourCycle,
-      numberStyle,
-      currencyDisplay,
-      currencyCode,
-    ],
+    [prefs],
   );
 
   const facts = regionLocaleFacts(formatLocale);

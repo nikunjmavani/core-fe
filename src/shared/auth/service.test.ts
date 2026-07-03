@@ -32,7 +32,10 @@ vi.mock('@/shared/auth/refresh-timer.ts', () => ({
 /** Helper to create a minimal JWT (base64url) */
 function makeJwt(payload: Record<string, unknown>): string {
   const encode = (obj: Record<string, unknown>) =>
-    btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    btoa(JSON.stringify(obj))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/={1,2}$/, '');
   const header = encode({ alg: 'HS256', typ: 'JWT' });
   const body = encode(payload);
   return `${header}.${body}.dGVzdHNpZw`;

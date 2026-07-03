@@ -18,6 +18,8 @@
     "reports/**",
     ".stryker-tmp/**",
     "CHANGELOG.md",
+    // release-please generates the dev-channel changelog too (asterisk bullets).
+    "CHANGELOG-dev.md",
     ".github/PULL_REQUEST_TEMPLATE.md",
     ".claude/**",
     ".netlify/**",

@@ -48,8 +48,7 @@ export function EmailVerificationBanner() {
   };
 
   return (
-    <div
-      role="status"
+    <output
       data-testid="email-verify-banner"
       className="bg-muted/60 flex flex-wrap items-center gap-x-2 gap-y-1 border-b px-4 py-2 text-sm sm:px-6"
     >
@@ -66,6 +65,6 @@ export function EmailVerificationBanner() {
       >
         {resendButtonLabel()}
       </Button>
-    </div>
+    </output>
   );
 }

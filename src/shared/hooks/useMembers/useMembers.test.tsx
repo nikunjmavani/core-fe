@@ -88,7 +88,7 @@ describe('useMembers', () => {
       hasMore: false,
     });
     const { result } = renderHook(() => useMembers(), { wrapper });
-    await waitFor(() => expect(result.current.rows.length).toBe(1));
+    await waitFor(() => expect(result.current.rows).toHaveLength(1));
     expect(result.current.rows).toEqual([{ id: 'm_1', name: 'Ada' }]);
     expect(result.current.hasNextPage).toBe(false);
   });

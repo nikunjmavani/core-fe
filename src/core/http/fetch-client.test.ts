@@ -22,7 +22,10 @@ import { apiClient } from './fetch-client.ts';
 /** Helper to create a base64url-encoded JWT */
 function makeJwt(payload: Record<string, unknown>): string {
   const encode = (obj: Record<string, unknown>) =>
-    btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    btoa(JSON.stringify(obj))
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/={1,2}$/, '');
   return `${encode({ alg: 'HS256', typ: 'JWT' })}.${encode(payload)}.dGVzdHNpZw`;
 }
 

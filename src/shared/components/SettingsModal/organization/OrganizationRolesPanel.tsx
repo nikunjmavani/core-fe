@@ -93,7 +93,7 @@ export function OrganizationRolesPanel() {
         />
       ) : null}
 
-      {!roles.isPending && !roles.isError && roles.rows.length === 0 ? (
+      {!(roles.isPending || roles.isError) && roles.rows.length === 0 ? (
         <EmptyState
           icon={<ShieldCheck />}
           title={isSearching ? t(panels.noResults) : t(panels.emptyTitle)}

@@ -23,8 +23,9 @@ export function DashboardActionCard({
     <a
       href={href}
       data-testid={testId}
+      data-slot="card"
       title={description}
-      className="border-border/60 bg-card text-card-foreground hover:border-border hover:bg-muted/30 group flex w-full min-w-0 items-center gap-3 rounded-xl border p-3 shadow-sm transition-[box-shadow,background-color,border-color] hover:shadow-md"
+      className="border-border/60 bg-card text-card-foreground hover:border-border hover:bg-muted/30 group flex w-full min-w-0 items-center gap-3 rounded-xl border p-3 transition-[background-color,border-color]"
     >
       <div
         data-slot="icon-chip"
