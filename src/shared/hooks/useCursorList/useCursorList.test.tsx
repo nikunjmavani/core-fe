@@ -35,7 +35,7 @@ describe('useCursorList', () => {
       { wrapper },
     );
 
-    await waitFor(() => expect(result.current.rows.length).toBe(2));
+    await waitFor(() => expect(result.current.rows).toHaveLength(2));
     expect(result.current.rows).toEqual([{ id: 'a' }, { id: 'b' }]);
     expect(result.current.hasNextPage).toBe(true);
     expect(queryFn).toHaveBeenCalledWith(undefined);
@@ -52,10 +52,10 @@ describe('useCursorList', () => {
       { wrapper },
     );
 
-    await waitFor(() => expect(result.current.rows.length).toBe(1));
+    await waitFor(() => expect(result.current.rows).toHaveLength(1));
     result.current.fetchNextPage();
 
-    await waitFor(() => expect(result.current.rows.length).toBe(2));
+    await waitFor(() => expect(result.current.rows).toHaveLength(2));
     expect(result.current.rows).toEqual([{ id: 'a' }, { id: 'b' }]);
     expect(result.current.hasNextPage).toBe(false);
     expect(queryFn).toHaveBeenNthCalledWith(2, 'cur_1');

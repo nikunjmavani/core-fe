@@ -60,9 +60,7 @@ function unwrapEnvelope(json: unknown): unknown {
 /** Human error message from the core-be error envelope or a bare `{ message }`. */
 function errorMessage(json: unknown, fallback: string): string {
   const j = json as
-    | { error?: { detail?: string; reason?: string }; message?: string }
-    | null
-    | undefined;
+    { error?: { detail?: string; reason?: string }; message?: string } | null | undefined;
   return j?.error?.detail ?? j?.error?.reason ?? j?.message ?? fallback;
 }
 
