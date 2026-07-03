@@ -16,7 +16,7 @@ import { listGitHubEnvironmentSecretNames, requireGhAuth } from './github-shared
 import { parseEnvFile } from './parse-env-file.mjs';
 import { getConfiguredEnvironmentNames, getEnvironmentConfig } from './setup-config.mjs';
 
-const PROJECT_ROOT = resolve(import.meta.dirname, '../..');
+const PROJECT_ROOT = resolve(import.meta.dirname, '../../..');
 const CONFIG_SETUP_PATH = resolve(PROJECT_ROOT, 'config.setup.env');
 
 /**
