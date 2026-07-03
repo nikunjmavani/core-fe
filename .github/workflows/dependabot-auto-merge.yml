@@ -36,6 +36,10 @@ jobs:
     name: Enable auto-merge for approved low-risk Dependabot updates
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Dependabot PRs target dev, so the development environment is always the
+    # right scope. Selected only to read RELEASE_PLEASE_TOKEN (an environment
+    # secret); development has no protection rules, so this does not gate the run.
+    environment: development
     # Maintainer approved + Dependabot-authored + the non-major npm group only.
     # `npm-major` does not contain the substring `npm-non-major`, so majors never match.
     if: >-
@@ -50,4 +54,9 @@ jobs:
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # PAT (falling back to github.token) so the eventual merge is
+          # PAT-attributed and its push to dev TRIGGERS post-merge CI. PR #27's
+          # GITHUB_TOKEN merge produced no post-merge run — no SBOM, no
+          # post-merge tests, no dev deploy for that commit (healed only
+          # because a later push covered it). Same fix as the release PRs.
+          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
