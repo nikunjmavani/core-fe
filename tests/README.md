@@ -6,12 +6,13 @@
 
 ## Layout
 
-| Path                  | Purpose                                                                    | Tool                | Command              |
-| --------------------- | -------------------------------------------------------------------------- | ------------------- | -------------------- |
-| **`tests/utils/`**    | Helpers: `renderWithProviders`, `e2e-hybrid`, `e2e-auth`, `axe-for-dialog` | Vitest / Playwright | (imported by tests)  |
-| **`tests/fixtures/`** | Test-only fixture data (never imported by `src/`)                          | —                   | —                    |
-| **`tests/e2e/`**      | Browser + API E2E (one suite)                                              | Playwright          | `pnpm test:e2e`      |
-| **`tests/security/`** | Security tripwires                                                         | Vitest              | `pnpm test:security` |
+| Path                  | Purpose                                                                                 | Tool                | Command               |
+| --------------------- | --------------------------------------------------------------------------------------- | ------------------- | --------------------- |
+| **`tests/utils/`**    | Helpers: `renderWithProviders`, `e2e-hybrid`, `e2e-auth`, `axe-for-dialog`              | Vitest / Playwright | (imported by tests)   |
+| **`tests/fixtures/`** | Test-only fixture data (never imported by `src/`)                                       | —                   | —                     |
+| **`tests/e2e/`**      | Browser + API E2E (one suite)                                                           | Playwright          | `pnpm test:e2e`       |
+| **`tests/ci/`**       | CI-flow policy invariants (workflow wiring, release-please manifests, Dependabot rules) | Vitest              | `pnpm test:ci-policy` |
+| **`tests/security/`** | Security tripwires                                                                      | Vitest              | `pnpm test:security`  |
 
 ## Two test layers
 
