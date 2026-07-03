@@ -33,7 +33,8 @@ behind a single aggregate `quality-gate` required check (branch protection as co
 `.github/rulesets/`, `pnpm gh:rulesets:sync`). Playwright E2E is local-only (needs
 core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
 budgets, cache cleanup, release-flow guards (branch-ancestry + environment-drift canaries),
-and Dependabot CI triage run as scheduled/event workflows.
+and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)
+run as scheduled/event workflows.
 
 ## Documentation
 

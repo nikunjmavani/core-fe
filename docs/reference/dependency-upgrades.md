@@ -12,7 +12,18 @@ Use this as the **operational checklist** when triaging versions and security re
 
 ## Dependabot
 
-Weekly npm updates are configured in [`.github/dependabot.yml`](../../.github/dependabot.yml) (grouped devDependency patches/minors). **Prefer merging Dependabot PRs** over ad-hoc bumps, then run `pnpm validate` on the branch.
+Weekly npm updates are configured in [`.github/dependabot.yml`](../../.github/dependabot.yml), grouped **by risk** (same shape as core-be):
+
+| Group              | Contents                       | Merge path                                                                                                                                                                                     |
+| ------------------ | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm-non-major`    | patch + minor, prod + dev deps | **Approval-triggered auto-merge**: approve the PR and [`dependabot-auto-merge.yml`](../../.github/workflows/dependabot-auto-merge.yml) arms squash auto-merge; it lands when PR CI goes green. |
+| `npm-major`        | major upgrades                 | Manual review + merge.                                                                                                                                                                         |
+| `security-updates` | Dependabot security PRs        | Manual review + merge (prioritize per `SECURITY.md`).                                                                                                                                          |
+| `actions`          | github-actions bumps           | Manual review + merge.                                                                                                                                                                         |
+
+The approval is the manual gate — `dev` requires 0 approvals (solo-maintained; an author can't approve their own PRs, but a maintainer can approve Dependabot's), so approving a low-risk group PR is the explicit opt-in signal. Failed CI on any Dependabot PR opens a triage issue via [`dependabot-ci-triage.yml`](../../.github/workflows/dependabot-ci-triage.yml). The `@tanstack/react-router` minor/major pin below is enforced via a Dependabot `ignore` rule.
+
+**Prefer merging Dependabot PRs** over ad-hoc bumps, then run `pnpm validate` on the branch.
 
 ## Node.js (runtime)
 

@@ -25,9 +25,13 @@ on:
   pull_request:
     types: [closed]
   workflow_run:
+    # Names must match each workflow's `name:` exactly — a stale name here means
+    # that trigger never fires (this listened for the old 'CI' name before).
     workflows:
-      - 'CI'
+      - 'PR CI'
       - 'PR Governance'
+      - 'Docs lane'
+      - 'Post-merge CI'
     types: [completed]
   schedule:
     - cron: '15 4 * * *'
