@@ -5,10 +5,15 @@
 #      missed post-release back-merge silently diverges the branches; the next
 #      dev → main promote then needs a manual ancestry-repair PR. Fix by merging
 #      the open `release/backmerge-v*` PR or re-running "Post-release back-merge".
-#   2. GitHub environment protection drift (weekly): the committed
-#      `.github/environments/*.json` must match the GitHub UI. The Netlify deploy
-#      validates the environment as a pre-flight (validate-github-env.mjs), so
-#      catching drift here turns a refused deploy into a Monday notification.
+#   2. GitHub environment protection + branch ruleset drift (weekly): the
+#      committed `.github/environments/*.json` must match the GitHub UI
+#      (full protection diff — the Netlify deploy refuses to deploy on this
+#      drift), and every committed `.github/rulesets/*.json` must still EXIST
+#      on the remote (presence check — a deleted/renamed "Protect main" ruleset
+#      becomes a Monday ping instead of an unprotected branch).
+#      (Ruleset PARAMETER drift and secret-NAME drift stay local-only via
+#      `pnpm github:sync:check` — the Actions GITHUB_TOKEN has no `secrets`
+#      permission, and sync-rulesets --check compares presence, not content.)
 
 name: Release-flow guards
 
@@ -54,7 +59,7 @@ jobs:
           fi
 
   environment-drift:
-    name: GitHub environment protection drift
+    name: GitHub environment + ruleset drift
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 6 * * 1'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -67,9 +72,14 @@ jobs:
         with:
           install: 'false'
 
-      # The validator is a plain-Node script (no dependencies) that compares the
-      # committed .github/environments/*.json against the GitHub API via `gh`.
+      # Both validators are plain-Node scripts (no dependencies) that compare
+      # committed JSON against the GitHub API via `gh`.
       - name: Validate GitHub environment protection (config vs UI)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
         run: node tooling/setup/github/check-environments-drift.mjs
+
+      - name: Validate branch rulesets (config vs UI)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
+        run: node tooling/setup/github/sync-rulesets.mjs --check

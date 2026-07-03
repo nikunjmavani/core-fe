@@ -59,6 +59,12 @@ Workflow summary:
    every `dev` push). Do **not** promote on a red matrix — `release-please` on
    `main` is gated on it, so a red matrix strands the release after merge (no
    tag, no GitHub Release, no Netlify deploy, no back-merge).
+   Then run the local E2E suite: `pnpm test:e2e` with core-be on `:3000`.
+   CI never runs Playwright (it never boots the backend), so this is the ONLY
+   end-to-end verification a release gets — core-fe's post-merge matrix is
+   unit + security only, unlike core-be's comprehensive per-domain matrix.
+   Report the E2E result in the Handoff Summary; promote on failures only if
+   the user explicitly accepts them.
 6. Find an existing open release PR from `dev` to `main`. If none exists, open one
    with the chosen title.
 7. Ensure the release PR title is release/promote-shaped. Prefer today's local date:
