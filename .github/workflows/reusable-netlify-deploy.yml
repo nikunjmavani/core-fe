@@ -86,14 +86,28 @@ jobs:
           echo "vite_app_version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Build
-        run: pnpm build
-        # Every VITE_* value the client bundle needs at runtime must be present
-        # HERE — `pnpm build` bakes `import.meta.env.VITE_*` into the bundle.
-        # Passing them only to the validate step above is not enough: the app
-        # reads them at boot and `validatePlatformInvariantsAtBoot` throws a
-        # white-screen error in production when e.g. VITE_CAPTCHA_DISABLED is
-        # absent and no VITE_TURNSTILE_SITE_KEY is set. Keep this list in sync
-        # with the validate step and tooling/setup/github/validate-github-env.mjs.
+        # Vite bakes `import.meta.env.VITE_*` into the client bundle from `.env`
+        # FILES — bare `process.env.VITE_*` (a workflow `env:` block) is NOT
+        # reliably exposed to `import.meta.env` in CI, and all `.env*` files are
+        # gitignored so none exist on a fresh checkout. So materialize the
+        # deploy-provided client env into `.env.production.local` (highest Vite
+        # precedence, gitignored, never uploaded — we deploy `--dir=dist`) before
+        # building. Without this the app booted with VITE_CAPTCHA_DISABLED unset
+        # and VITE_API_BASE_URL blank → `validatePlatformInvariantsAtBoot` threw
+        # a white-screen error. Keep this list in sync with the validate step and
+        # tooling/setup/github/validate-github-env.mjs.
+        run: |
+          : > .env.production.local
+          for key in VITE_API_BASE_URL VITE_APP_VERSION VITE_CAPTCHA_DISABLED \
+            VITE_TURNSTILE_SITE_KEY VITE_POSTHOG_KEY VITE_POSTHOG_HOST \
+            VITE_PRIVACY_POLICY_URL VITE_CSP_REPORT_URI; do
+            value="${!key}"
+            if [ -n "$value" ]; then
+              printf '%s=%s\n' "$key" "$value" >> .env.production.local
+            fi
+          done
+          echo "Materialized $(grep -c = .env.production.local) client env keys for the build."
+          pnpm build
         env:
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_APP_VERSION: ${{ steps.version.outputs.vite_app_version }}
