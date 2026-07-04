@@ -40,6 +40,13 @@ describe('security response headers (public/_headers)', () => {
     ['Referrer-Policy', /Referrer-Policy:\s*strict-origin-when-cross-origin/],
     ['Strict-Transport-Security', /Strict-Transport-Security:\s*max-age=\d+/],
     ['Permissions-Policy', /Permissions-Policy:\s*camera=\(\)/],
+    // COOP isolates the top-level window (origin isolation). Value is
+    // same-origin-allow-popups — not the stricter same-origin — so Stripe
+    // 3-D Secure popups and any window.opener flow keep working.
+    [
+      'Cross-Origin-Opener-Policy',
+      /Cross-Origin-Opener-Policy:\s*same-origin-allow-popups/,
+    ],
   ])('serves %s on every route', (_name, pattern) => {
     expect(headers).toMatch(pattern);
   });

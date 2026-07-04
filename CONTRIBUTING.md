@@ -160,11 +160,11 @@ Full matrix: **[docs/reference/testing.md](docs/reference/testing.md)** and **[t
 
 [Husky](.husky/) runs checks locally. Fix failures rather than skipping hooks (`--no-verify`).
 
-| Hook           | What runs                                                                                                                                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **pre-commit** | before-commit-guard (env docs, public assets), lint-staged (biome check → eslint --fix → prettier), gitleaks scan, conflict-marker + large-file guards                                       |
-| **commit-msg** | commitlint (Conventional Commits, lower-case subject)                                                                                                                                        |
-| **pre-push**   | biome check, type-check, build, changed-markdown lint, unit tests (when relevant), API contract drift vs core-be, SonarQube gate on deployed-surface changes (`SKIP_SONAR=1` to bypass once) |
+| Hook           | What runs                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **pre-commit** | before-commit-guard (env docs, public assets), lint-staged (biome check → eslint --fix → prettier), gitleaks scan, conflict-marker + large-file guards                                     |
+| **commit-msg** | commitlint (Conventional Commits, lower-case subject)                                                                                                                                      |
+| **pre-push**   | biome check, type-check, build, changed-markdown lint, unit tests (when relevant), API contract drift vs core-be, SonarQube gate on deployed-surface changes (no bypass — fix, don't skip) |
 
 **Full local gate:** `pnpm quality` = `pnpm health` (every phase: format, lint, biome, docs, types, tests, build, size, env, public, tsdoc, structure) + the local SonarQube gate ([docs/reference/quality/sonarqube-local.md](docs/reference/quality/sonarqube-local.md)). CI mirrors these as parallel lanes behind a single required `quality-gate` check.
 

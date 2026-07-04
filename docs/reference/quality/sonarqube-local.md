@@ -55,12 +55,11 @@ port of core-be's `tooling/sonar/sonar-gate.ts`):
 5. **Reports** every unresolved issue + hotspot and **exits 1** (blocking the push) if there is at
    least one; exits 0 when clean.
 
-### Escape hatches
+### No bypass
 
-```bash
-SKIP_SONAR=1 git push    # skip only the Sonar gate (still runs biome/typecheck/build/tests)
-git push --no-verify     # skip all pre-push hooks
-```
+There is **no per-gate skip** for Sonar: a red gate must be fixed, not dodged. (`git push
+--no-verify` skips _all_ pre-push hooks — build, tests, everything — so it is not a Sonar
+escape hatch and must not be used to route around a red gate.)
 
 ## What SonarQube analyzes
 
@@ -88,4 +87,4 @@ So a clean gate means **zero issues in the code that ships to production**.
 - **Port 9000 already in use when `sonar:up` fails** — core-be's server owns the port; that is
   fine, see [Sharing port 9000](#sharing-port-9000-with-core-be).
 - **Server slow / stuck after an upgrade** — `pnpm sonar:reset`.
-- **Need to bypass once** — `SKIP_SONAR=1 git push` (see above), then fix and re-push.
+- **Gate is red** — fix the reported issues, then re-push. There is no per-gate bypass.
