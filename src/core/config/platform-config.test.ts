@@ -16,6 +16,14 @@ describe('platform-config', () => {
     expect(platform.authMethods.oauthAutoGoogle).toBe(false);
   });
 
+  it('strips trailing slashes from apiBaseUrl so path joins never double up', () => {
+    const platform = resolvePlatformConfig(
+      (key) => (key === 'API_BASE_URL' ? 'https://api.example.com//' : undefined),
+      { MODE: 'production', DEV: false, PROD: true },
+    );
+    expect(platform.apiBaseUrl).toBe('https://api.example.com');
+  });
+
   it('enabled oauth providers from env getters', () => {
     expect(
       __testEnabledOAuthFromGet((key) => {
