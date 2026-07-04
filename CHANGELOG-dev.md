@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.0-dev.2](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2026-07-04)
+
+
+### Fixed
+
+* correct env-tooling PROJECT_ROOT depth and align dev preview port ([#33](https://github.com/nikunjmavani/core-fe/issues/33)) ([3ac3013](https://github.com/nikunjmavani/core-fe/commit/3ac3013a5dedfea1cf09d22c8ee4b61360b46f06))
+* **deploy:** bundle client VITE_* env into the production build + dev-preview/env-tooling fixes ([#37](https://github.com/nikunjmavani/core-fe/issues/37)) ([977e415](https://github.com/nikunjmavani/core-fe/commit/977e415faa437fdd57b1dd366c63019467156218))
+* **deploy:** materialize client env into .env.production.local before build ([#38](https://github.com/nikunjmavani/core-fe/issues/38)) ([2bef55a](https://github.com/nikunjmavani/core-fe/commit/2bef55a5d02b3fd8c83e6e08675c0189f5ed41ec))
+
 ## [1.0.0-dev.1](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.0...v1.0.0-dev.1) (2026-07-03)
 
 
