@@ -4,11 +4,12 @@ Single reference for **every test kind** in this repo: where it lives, how to ru
 
 ## Two layers
 
-| Layer                  | Tool         | Location               | Pattern              | Command              | Server                                |
-| ---------------------- | ------------ | ---------------------- | -------------------- | -------------------- | ------------------------------------- |
-| **Unit / component**   | Vitest + RTL | Colocated under `src/` | `*.test.ts(x)`       | `pnpm test:unit`     | None — `vi.mock()` only               |
-| **Security tripwires** | Vitest       | `tests/security/`      | `*.security.test.ts` | `pnpm test:security` | None                                  |
-| **E2E**                | Playwright   | `tests/e2e/`           | `*.e2e.test.ts`      | `pnpm test:e2e`      | **core-be** on `:3000` (**required**) |
+| Layer                  | Tool         | Location               | Pattern              | Command               | Server                                |
+| ---------------------- | ------------ | ---------------------- | -------------------- | --------------------- | ------------------------------------- |
+| **Unit / component**   | Vitest + RTL | Colocated under `src/` | `*.test.ts(x)`       | `pnpm test:unit`      | None — `vi.mock()` only               |
+| **Security tripwires** | Vitest       | `tests/security/`      | `*.security.test.ts` | `pnpm test:security`  | None                                  |
+| **CI-flow policy**     | Vitest       | `tests/ci/`            | `*.policy.test.ts`   | `pnpm test:ci-policy` | None — reads workflow/config files    |
+| **E2E**                | Playwright   | `tests/e2e/`           | `*.e2e.test.ts`      | `pnpm test:e2e`       | **core-be** on `:3000` (**required**) |
 
 **Never** use `.spec.ts` or the words `real`/`live` in test file names.
 

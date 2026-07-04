@@ -44,6 +44,17 @@ export default defineConfig({
           include: ['tests/security/**/*.test.ts'],
         },
       },
+      {
+        extends: true,
+        test: {
+          name: 'ci-policy',
+          // Release/CI-flow invariants (core-be src/tests/unit/ci pattern):
+          // workflow YAML wiring, release-please manifest shape, Dependabot
+          // flow rules. Guards against silent drift like a renamed workflow
+          // killing a workflow_run trigger.
+          include: ['tests/ci/**/*.test.ts'],
+        },
+      },
     ],
     coverage: {
       provider: 'v8',

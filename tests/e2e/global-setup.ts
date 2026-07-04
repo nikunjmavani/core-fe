@@ -48,6 +48,7 @@ export default async function globalSetup(): Promise<void> {
         'Start core-be, then run pnpm test:e2e.',
         `Probe failed: ${detail}`,
       ].join('\n'),
+      { cause },
     );
   }
 

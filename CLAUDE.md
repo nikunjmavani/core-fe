@@ -24,15 +24,18 @@ Coverage thresholds in `vitest.config.ts` are a **ratchet**: pinned just under m
 coverage, raised as coverage rises, never lowered; the same raise-never philosophy applies to
 the **TSDoc budget** (`pnpm tsdoc:check`, `tooling/tsdoc-coverage/budget.json`) and to **patch
 coverage** (`pnpm coverage:patch` — changed lines ≥ 80% in PR CI). Vitest is split into
-`unit` (colocated src suites) and `security` (tests/security — token storage, redirect
-safety, header tripwires) projects. Markdown is linted
+`unit` (colocated src suites), `security` (tests/security — token storage, redirect
+safety, header tripwires), and `ci-policy` (tests/ci — workflow wiring, release-please
+manifests, Dependabot flow invariants) projects. Markdown is linted
 (`pnpm docs:lint`; emphasis style follows Prettier). CI (`.github/workflows/pr-ci.yml`) runs
 path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest+patch-coverage/docs-lint/
 structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint —
 behind a single aggregate `quality-gate` required check (branch protection as code:
 `.github/rulesets/`, `pnpm gh:rulesets:sync`). Playwright E2E is local-only (needs
 core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
-budgets, cache cleanup, and Dependabot CI triage run as scheduled/event workflows.
+budgets, cache cleanup, release-flow guards (branch-ancestry + environment-drift canaries),
+and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)
+run as scheduled/event workflows.
 
 ## Documentation
 

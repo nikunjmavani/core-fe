@@ -1,27 +1,80 @@
-version: 2
-updates:
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-    open-pull-requests-limit: 10
-    labels:
-      - dependencies
-    groups:
-      dev-deps:
-        patterns:
-          - '@types/*'
-          - 'eslint*'
-          - 'prettier*'
-          - 'vitest*'
-          - '@testing-library/*'
-        update-types:
-          - minor
-          - patch
+# Dependabot version updates. CI failure triage: .github/workflows/dependabot-ci-triage.yml
+#
+# npm PRs are grouped by risk to reduce lockfile-conflict cascades (same shape
+# as core-be):
+#   - `npm-non-major` (patch + minor, prod + dev) — auto-merged after approval via
+#     .github/workflows/dependabot-auto-merge.yml.
+#   - `npm-major` (major, prod + dev) — manual review + merge.
+#   - `security-updates` — manual review + merge.
+# github-actions bumps are reviewed and merged manually.
+#
+# All ecosystems open PRs against the repository default branch (dev) — no
+# target-branch override needed now that dev is the default.
 
-  - package-ecosystem: github-actions
-    directory: /
+version: 2
+
+updates:
+  # npm (pnpm) dependencies — lockfile + semver ranges in package.json
+  - package-ecosystem: 'npm'
+    directory: '/'
     schedule:
-      interval: weekly
+      interval: 'weekly'
+      day: 'monday'
+      time: '06:00'
+      timezone: 'Asia/Kolkata'
+    open-pull-requests-limit: 15
+    versioning-strategy: increase
+    commit-message:
+      prefix: 'chore'
+      prefix-development: 'chore'
+      include: 'scope'
     labels:
-      - ci
+      - 'dependencies'
+    ignore:
+      - dependency-name: '@types/node'
+        update-types:
+          - 'version-update:semver-major'
+      # Pinned to the 1.160.x line (docs/reference/dependency-upgrades.md):
+      # 1.169+ minors caused unhandled navigation rejections and maximum update
+      # depth in guard tests. Patches within ~1.160.x still flow.
+      - dependency-name: '@tanstack/react-router'
+        update-types:
+          - 'version-update:semver-minor'
+          - 'version-update:semver-major'
+    groups:
+      # Low risk: patch + minor across production and development dependencies.
+      # Auto-merged (after approval) by dependabot-auto-merge.yml.
+      npm-non-major:
+        applies-to: version-updates
+        patterns:
+          - '*'
+        update-types:
+          - patch
+          - minor
+      # Major upgrades across production and development dependencies. Manual.
+      npm-major:
+        applies-to: version-updates
+        patterns:
+          - '*'
+        update-types:
+          - major
+      security-updates:
+        applies-to: security-updates
+        patterns:
+          - '*'
+
+  # GitHub Actions versions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    labels:
+      - 'ci'
+    groups:
+      actions:
+        patterns:
+          - '*'
