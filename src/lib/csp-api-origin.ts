@@ -50,11 +50,19 @@ const STRIPE_ORIGINS = [
   'https://m.stripe.network',
 ] as const;
 
+/**
+ * PostHog serves its analytics API from us.i.posthog.com and lazy-loads
+ * additional scripts (array/config.js, surveys.js, …) from us-assets — so this
+ * host must be in BOTH connect-src and script-src, or the browser blocks the
+ * script loads (a real CSP violation seen on the deployed login page).
+ */
+const POSTHOG_ASSETS_ORIGIN = 'https://us-assets.i.posthog.com';
+
 const CONNECT_SRC_THIRD_PARTY = [
   'https://*.ingest.sentry.io',
   'https://*.sentry.io',
   'https://us.i.posthog.com',
-  'https://us-assets.i.posthog.com',
+  POSTHOG_ASSETS_ORIGIN,
   // Have I Been Pwned range API — k-anonymity password breach check on the
   // register/reset forms (only a hash prefix is ever sent). See
   // `lib/password-breach.ts`.
@@ -88,7 +96,7 @@ export function buildContentSecurityPolicy(
     "default-src 'self'",
     // Cloudflare Turnstile: the challenge script is loaded from challenges.cloudflare.com
     // and renders inside an iframe from the same origin (frame-src below).
-    `script-src 'self' ${TURNSTILE_ORIGIN} ${STRIPE_ORIGINS[0]}`,
+    `script-src 'self' ${TURNSTILE_ORIGIN} ${STRIPE_ORIGINS[0]} ${POSTHOG_ASSETS_ORIGIN}`,
     "style-src 'self' 'unsafe-inline'",
     `connect-src ${connectSrc.join(' ')}`,
     "img-src 'self' data: blob:",

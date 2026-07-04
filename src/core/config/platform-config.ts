@@ -66,8 +66,15 @@ export function resolvePlatformConfig(
   const oauth = resolveOAuthProviderFlags(get);
   const oauthAutoGoogleRaw = resolveAuthMethodFlag(get('AUTH_OAUTH_AUTO_GOOGLE'), false);
 
+  // Strip trailing slash(es) so joining `${base}/api/...` never yields a double
+  // slash (e.g. `https://api.example.com//api/v1/...`), which some proxies/CORS
+  // setups 404 or reject on preflight. Done with a loop (not a regex) to avoid
+  // the sonarjs super-linear-regex rule and to handle repeated slashes.
+  let apiBaseUrl = clientEnv.MODE === 'development' ? '' : (get('API_BASE_URL') ?? '');
+  while (apiBaseUrl.endsWith('/')) apiBaseUrl = apiBaseUrl.slice(0, -1);
+
   return {
-    apiBaseUrl: clientEnv.MODE === 'development' ? '' : (get('API_BASE_URL') ?? ''),
+    apiBaseUrl,
 
     sentryDsn: get('SENTRY_DSN'),
     posthogKey: get('POSTHOG_KEY'),
