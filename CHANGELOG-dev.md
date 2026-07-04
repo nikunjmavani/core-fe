@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-dev.3](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2026-07-04)
+
+
+### Fixed
+
+* **csp,http:** allow PostHog script host and normalize API base URL ([#44](https://github.com/nikunjmavani/core-fe/issues/44)) ([0cc3898](https://github.com/nikunjmavani/core-fe/commit/0cc3898fbefb6fc32815447935089bc606118856))
+
 ## [1.0.0-dev.2](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.1...v1.0.0-dev.2) (2026-07-04)
 
 
