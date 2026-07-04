@@ -19,7 +19,7 @@ pnpm quality      # health + local SonarQube gate (Docker)
 **Quality gates (mirrors core-be):** Biome is a second lint lane (`biome.json`; formatter
 disabled — Prettier + `prettier-plugin-tailwindcss` own formatting). SonarQube runs locally in
 Docker and is enforced by `.husky/pre-push` on deployed-surface changes (`pnpm sonar:scan`;
-`SKIP_SONAR=1 git push` to bypass once) — see docs/reference/quality/sonarqube-local.md.
+no per-gate bypass — a red gate must be fixed, not skipped) — see docs/reference/quality/sonarqube-local.md.
 Coverage thresholds in `vitest.config.ts` are a **ratchet**: pinned just under measured
 coverage, raised as coverage rises, never lowered; the same raise-never philosophy applies to
 the **TSDoc budget** (`pnpm tsdoc:check`, `tooling/tsdoc-coverage/budget.json`) and to **patch

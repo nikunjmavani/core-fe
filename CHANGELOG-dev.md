@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-dev.4](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2026-07-04)
+
+
+### Fixed
+
+* **security,perf:** COOP header, Turnstile preconnect, button transition + remove SKIP_SONAR bypass ([#46](https://github.com/nikunjmavani/core-fe/issues/46)) ([c6239e5](https://github.com/nikunjmavani/core-fe/commit/c6239e52bb62c88763f4ea361988ce9e0bd5b0a3))
+
 ## [1.0.0-dev.3](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.2...v1.0.0-dev.3) (2026-07-04)
 
 
