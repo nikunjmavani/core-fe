@@ -8,6 +8,14 @@ name: Reusable — Netlify deploy
 # ONE Netlify project ("core-fe") serves both environments via deploy contexts:
 #   main → production deploy (--prod, core-fe.netlify.app)
 #   dev  → alias deploy (--alias dev, dev--core-fe.netlify.app)
+#
+# Two ways in (parity with core-be's reusable-railway-deploy.yml):
+#   - workflow_call  — post-merge-ci passes target_branch + github_environment
+#   - workflow_dispatch — deploy on demand: pick the branch in the Actions "Run
+#     workflow" dropdown (→ github.ref_name) and the `target` environment. Lets
+#     you re-publish after an env-var change / hotfix / rollback without the full
+#     test + release-please pipeline. The production environment's required
+#     reviewer still gates a manual prod deploy, so governance is preserved.
 
 on:
   workflow_call:
@@ -30,6 +38,15 @@ on:
         required: false
         type: string
         default: release-dist
+  workflow_dispatch:
+    inputs:
+      target:
+        description: GitHub Environment to deploy
+        required: true
+        type: choice
+        options:
+          - production
+          - development
 
 permissions:
   contents: read
@@ -37,12 +54,62 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: ${{ vars.FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 || 'true' }}
 
+# Serialize deploys per environment so a manual (workflow_dispatch) deploy can
+# never clobber an in-flight release deploy to the same target — it queues.
+concurrency:
+  group: netlify-deploy-${{ inputs.target || inputs.github_environment }}
+  cancel-in-progress: false
+
 jobs:
+  resolve-environment:
+    name: Resolve deploy target
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      environment: ${{ steps.map.outputs.environment }}
+      target_branch: ${{ steps.map.outputs.target_branch }}
+    steps:
+      - id: map
+        env:
+          # `github.event_name` LEAKS into a called reusable as the CALLER's
+          # event (e.g. 'workflow_dispatch' when post-merge-ci was itself
+          # dispatched), so only trust `target` when it is actually set —
+          # otherwise fall back to the workflow_call inputs. Same guard core-be
+          # documents in reusable-railway-deploy.yml.
+          EVENT_NAME: ${{ github.event_name }}
+          TARGET_INPUT: ${{ inputs.target }}
+          GH_ENV_INPUT: ${{ inputs.github_environment }}
+          TARGET_BRANCH_INPUT: ${{ inputs.target_branch }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "workflow_dispatch" ] && [ -n "$TARGET_INPUT" ]; then
+            # Manual deploy: environment from the `target` input, branch from the
+            # Actions "Run workflow" dropdown selection (github.ref_name).
+            environment="$TARGET_INPUT"
+            branch="$REF_NAME"
+          elif [ -n "$GH_ENV_INPUT" ]; then
+            # Called from post-merge-ci.
+            environment="$GH_ENV_INPUT"
+            branch="$TARGET_BRANCH_INPUT"
+          else
+            echo "::error::Could not resolve a deploy environment (no dispatch target and no github_environment input)."
+            exit 1
+          fi
+          case "$environment" in
+            production | development) ;;
+            *) echo "::error::Unsupported environment: $environment" && exit 1 ;;
+          esac
+          echo "environment=$environment" >> "$GITHUB_OUTPUT"
+          echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
+          echo "Resolved deploy target: environment=$environment branch=$branch (event=$EVENT_NAME)"
+
   run:
-    name: Netlify deploy
+    name: Netlify deploy (${{ needs.resolve-environment.outputs.environment }})
+    needs: resolve-environment
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    environment: ${{ inputs.github_environment }}
+    environment: ${{ needs.resolve-environment.outputs.environment }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -52,7 +119,7 @@ jobs:
         env:
           GITHUB_ENV_VALIDATION_SOURCE: runtime
           SKIP_GITHUB_ENV: '1'
-          CONFIG: ${{ inputs.github_environment }}
+          CONFIG: ${{ needs.resolve-environment.outputs.environment }}
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
@@ -64,7 +131,7 @@ jobs:
       - uses: ./.github/actions/setup-node-pnpm
 
       - name: Validate production client env (VITE_*)
-        if: inputs.github_environment == 'production'
+        if: needs.resolve-environment.outputs.environment == 'production'
         env:
           NODE_ENV: production
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
@@ -75,7 +142,7 @@ jobs:
       - name: Resolve app version from release-please manifest
         id: version
         env:
-          TARGET_BRANCH: ${{ inputs.target_branch }}
+          TARGET_BRANCH: ${{ needs.resolve-environment.outputs.target_branch }}
         run: |
           set -euo pipefail
           suffix=""
@@ -131,7 +198,7 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-          GITHUB_ENVIRONMENT: ${{ inputs.github_environment }}
+          GITHUB_ENVIRONMENT: ${{ needs.resolve-environment.outputs.environment }}
         run: |
           if [ "$GITHUB_ENVIRONMENT" = "production" ]; then
             DEPLOY_FLAGS="--prod"
@@ -146,7 +213,7 @@ jobs:
             cat deploy-result.json >&2
             exit 1
           fi
-          echo "Deployed to $DEPLOY_URL (${{ inputs.github_environment }})"
+          echo "Deployed to $DEPLOY_URL (${{ needs.resolve-environment.outputs.environment }})"
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
       - name: Post-deploy smoke
