@@ -9,6 +9,9 @@
  *     only; gitignored local files (e.g. `.env.development` with auto-managed
  *     SONAR_* + machine secrets) are skipped, so local secrets never trip a guard.
  *     Deploy env comes from GitHub Environments and is covered by `required`.
+ *   - `allowed` values are enforced strictly (HARD FAIL) against the per-env
+ *     `.env.<env>` file (locally) or the injected GitHub Environment (CI) — e.g.
+ *     production permits only the safe value for each diagnostics flag.
  *
  * Environment resolution (first match wins):
  *   1. `--env <development|production>`
@@ -157,6 +160,41 @@ function forbiddenErrors(
   return errors;
 }
 
+/** Non-empty values set in the per-environment file `.env.<env>` (behavior config). */
+function envFileValues(environment: DeployEnvironment): Record<string, string> {
+  const path = resolve(projectRoot, `.env.${environment}`);
+  if (!existsSync(path)) return {};
+  const merged: Record<string, string> = {};
+  for (const [key, value] of Object.entries(parse(readFileSync(path)))) {
+    if (value !== '') merged[key] = value;
+  }
+  return merged;
+}
+
+/**
+ * Strict per-environment allowed-value errors (hard fail). Checks the `.env.<env>`
+ * file (authoritative for that environment's config, locally) and — on CI, where
+ * the file isn't checked out — the injected GitHub Environment (`process.env`).
+ */
+function allowedErrors(environment: DeployEnvironment): string[] {
+  const allowed = envProfiles[environment].allowed;
+  if (!allowed) return [];
+  const fileVals = envFileValues(environment);
+  const onCi = process.env.GITHUB_ACTIONS === 'true';
+  const errors: string[] = [];
+  for (const [key, permitted] of Object.entries(allowed)) {
+    // eslint-disable-next-line security/detect-object-injection -- key from schema, not user input
+    const value = fileVals[key] ?? (onCi ? runtimeGet(key) : undefined);
+    if (value === undefined) continue;
+    if (!permitted.includes(value)) {
+      errors.push(
+        `${key}=${value} is not allowed in ${environment} (allowed: ${permitted.join(' | ')})`,
+      );
+    }
+  }
+  return errors;
+}
+
 function report(
   environment: DeployEnvironment,
   errors: string[],
@@ -188,13 +226,14 @@ function main(): void {
   const profile = envProfiles[environment];
   console.log(`client-env: validating "${environment}" deploy variables`);
   console.log(
-    `  required: ${profile.required.length} · forbidden: ${profile.forbidden.length}`,
+    `  required: ${profile.required.length} · forbidden: ${profile.forbidden.length} · allowed-value keys: ${Object.keys(profile.allowed ?? {}).length}`,
   );
 
   const required = requiredIssues(environment);
   const errors = [
     ...required.errors,
     ...forbiddenErrors(environment, committedEnv(environment)),
+    ...allowedErrors(environment),
   ];
   report(environment, errors, required.warnings);
 }

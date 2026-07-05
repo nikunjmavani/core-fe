@@ -325,28 +325,30 @@ import { User } from './contracts';
 
 ## Environment Variables
 
-Env files live at **project root**. `.env.example` is the **only committed** file;
-every other `.env*` is gitignored. Deploys inject env from **GitHub Environments**
-(never from files). There is **no `.env.local`** — `.env.development` is the single
-gitignored local file (behavior flags + machine secrets), scaffolded by
-`pnpm setup:local` and loaded by `pnpm dev` (development mode).
+Two environments only — **development** and **production** — each configured in its
+own gitignored file. `.env.example` is the **only committed** file. Deploys inject env
+from **GitHub Environments** (never from files). No `.env.local`, no shared `.env`, no
+`.env.staging`. `pnpm setup:local` scaffolds `.env.development`; `pnpm dev` loads it.
 
 ```text
 .env.example         # Reference for all env vars — the ONLY committed file
-.env.development     # Local dev file (gitignored): behavior flags + secrets; toggle here
-.env.production      # Local production-build values (gitignored; rare)
-.env                 # Shared local non-secrets (gitignored)
+.env.development     # Local dev file (gitignored): behavior flags + secrets, dev-tooling ON
+.env.production      # Local production-build values (gitignored): dev-tooling OFF (prod-safe)
 ```
 
 - `VITE_` prefix = bundled into the client (public). No prefix = build-time only.
-- Secrets (API keys, auth tokens) go in GitHub Environments (deploy) or the gitignored
-  `.env.development` (local) — never committed. A guardrail blocks agent edits to `.env*`.
+- Secrets go in GitHub Environments (deploy) or the gitignored `.env.development` (local) —
+  never committed. A guardrail blocks agent edits to `.env*` (apply them yourself).
 - **Behavior is env-driven, never mode-sniffed.** No `import.meta.env.DEV/PROD/MODE`
   branching in app code — named schema flags drive it: `VITE_DEBUG_LOGGING`,
   `VITE_DEVTOOLS`, `VITE_E2E_HOOKS`, `VITE_VERSION_CHECK` → read via `platformConfig`.
   The one raw read is the config bootstrap (`env.config.ts`, allowlisted).
-- **Tests are hermetic:** `vitest.config.ts` pins `test.env`, so the suite is identical
-  on every machine and on CI regardless of any local `.env*` file.
+- **Strict allowed values per environment.** `envProfiles.<env>.allowed` in `env-schema.ts`
+  declares the permitted value set per key; `pnpm validate:client-env` **hard-fails** on
+  a value out of range (e.g. production requires the diagnostics flags off, version-check on).
+- **Tests are hermetic by construction:** in `test` mode Vite loads no env files (only dev/prod
+  files exist, each loaded only in its own mode), so the suite runs on schema defaults on every
+  machine and on CI. The i18n-build plugin injects build vars via `test.env` — no manual pinning.
 - **Where to get credentials and optional env:** docs/integrations/credentials-and-env.md
 
 ## Auth & Security

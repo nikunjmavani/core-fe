@@ -93,6 +93,34 @@ describe('envProfiles required keys', () => {
   });
 });
 
+describe('envProfiles allowed values (strict per-environment)', () => {
+  it('production permits only the safe value for each diagnostics flag', () => {
+    const allowed = envProfiles.production.allowed;
+    expect(allowed).toBeDefined();
+    expect(allowed?.VITE_DEBUG_LOGGING).toEqual(['false']);
+    expect(allowed?.VITE_DEVTOOLS).toEqual(['false']);
+    expect(allowed?.VITE_E2E_HOOKS).toEqual(['false']);
+    expect(allowed?.VITE_VERSION_CHECK).toEqual(['true']);
+  });
+
+  it('development permits either boolean value for diagnostics flags', () => {
+    const allowed = envProfiles.development.allowed;
+    expect(allowed?.VITE_DEBUG_LOGGING).toEqual(['true', 'false']);
+    expect(allowed?.VITE_DEVTOOLS).toEqual(['true', 'false']);
+    expect(allowed?.VITE_E2E_HOOKS).toEqual(['true', 'false']);
+    expect(allowed?.VITE_VERSION_CHECK).toEqual(['true', 'false']);
+  });
+
+  it('rejects a disallowed production value (mirrors the validator check)', () => {
+    const debug = envProfiles.production.allowed?.VITE_DEBUG_LOGGING ?? [];
+    expect(debug.includes('true')).toBe(false);
+    expect(debug.includes('false')).toBe(true);
+    const versionCheck = envProfiles.production.allowed?.VITE_VERSION_CHECK ?? [];
+    expect(versionCheck.includes('false')).toBe(false);
+    expect(versionCheck.includes('true')).toBe(true);
+  });
+});
+
 describe('envSchemaKeys', () => {
   it('includes the Stripe publishable key', () => {
     expect(envSchemaKeys).toContain('VITE_STRIPE_PUBLISHABLE_KEY');

@@ -101,7 +101,10 @@ export const clientEnvSchema = z.object({
   VITE_DEVTOOLS: z.string().optional(),
   VITE_E2E_HOOKS: z.string().optional(),
   VITE_VERSION_CHECK: z.string().optional(),
-  MODE: z.enum(['development', 'production', 'staging', 'test']).default('development'),
+  // Two deploy environments only — no 'staging'. 'test' is kept solely because it
+  // is the Vitest runner's Vite mode (not a deploy environment); the deploy axis is
+  // DeployEnvironment = 'development' | 'production'.
+  MODE: z.enum(['development', 'production', 'test']).default('development'),
   DEV: z.boolean().default(false),
   PROD: z.boolean().default(false),
 });
@@ -202,7 +205,18 @@ export interface ForbiddenKeyRule {
 export interface EnvProfile {
   readonly required: readonly RequiredKeyRule[];
   readonly forbidden: readonly ForbiddenKeyRule[];
+  /**
+   * Strict allowed-value sets per key for this environment. If a key listed here
+   * has a configured value outside its set, `validate:client-env` FAILS. This is
+   * the per-environment "allowed values" contract — e.g. production allows only
+   * the safe value for each diagnostics flag. Omitted key = any value allowed
+   * (Zod still enforces enums/types at the schema layer).
+   */
+  readonly allowed?: Readonly<Record<string, readonly string[]>>;
 }
+
+/** Boolean flags whose allowed value differs by environment (dev: either; prod: safe). */
+const BOOL = ['true', 'false'] as const;
 
 /** Local-only tooling secrets that must never land in any committed deploy env. */
 const SONAR_LOCAL_ONLY: readonly ForbiddenKeyRule[] = [
@@ -233,6 +247,13 @@ export const envProfiles: Readonly<Record<DeployEnvironment, EnvProfile>> = {
         reason: 'live Stripe key must not be used in development — use a pk_test_… key',
       },
     ],
+    // Development may toggle diagnostics either way (typos still rejected).
+    allowed: {
+      VITE_DEBUG_LOGGING: BOOL,
+      VITE_DEVTOOLS: BOOL,
+      VITE_E2E_HOOKS: BOOL,
+      VITE_VERSION_CHECK: BOOL,
+    },
   },
   production: {
     required: [
@@ -256,6 +277,13 @@ export const envProfiles: Readonly<Record<DeployEnvironment, EnvProfile>> = {
         reason: 'test Stripe key must not ship to production — use a pk_live_… key',
       },
     ],
+    // Production is strict: diagnostics/devtools/e2e off, version polling on.
+    allowed: {
+      VITE_DEBUG_LOGGING: ['false'],
+      VITE_DEVTOOLS: ['false'],
+      VITE_E2E_HOOKS: ['false'],
+      VITE_VERSION_CHECK: ['true'],
+    },
   },
 };
 

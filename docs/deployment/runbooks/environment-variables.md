@@ -92,15 +92,23 @@ Behavior is env-driven, **never** sniffed from `import.meta.env.DEV/PROD/MODE` i
 code. Each flag is read via `platformConfig`; defaults are production-safe and the local
 `.env.development` flips them on (see `injectLocalDevDefaults` in `tooling/dev/setup-local.ts`):
 
-| Flag                 | Default | Effect                                                       |
-| -------------------- | ------- | ------------------------------------------------------------ |
-| `VITE_DEBUG_LOGGING` | off     | `[Module]` diagnostic console logs                           |
-| `VITE_DEVTOOLS`      | off     | React Query Devtools + localhost debug panel + theme shuffle |
-| `VITE_E2E_HOOKS`     | off     | Playwright hooks on `globalThis` (`navigateInApp`, …)        |
-| `VITE_VERSION_CHECK` | on      | Poll `/version.json` for new deployments (off locally/tests) |
+| Flag                 | Dev | Prod (strict) | Effect                                                       |
+| -------------------- | --- | ------------- | ------------------------------------------------------------ |
+| `VITE_DEBUG_LOGGING` | any | `false` only  | `[Module]` diagnostic console logs                           |
+| `VITE_DEVTOOLS`      | any | `false` only  | React Query Devtools + localhost debug panel + theme shuffle |
+| `VITE_E2E_HOOKS`     | any | `false` only  | Playwright hooks on `globalThis` (`navigateInApp`, …)        |
+| `VITE_VERSION_CHECK` | any | `true` only   | Poll `/version.json` for new deployments (off locally/tests) |
+
+**Strict allowed values (hard fail).** `envProfiles.<env>.allowed` in `env-schema.ts`
+declares the permitted value set per key per environment. `pnpm validate:client-env`
+**fails** if `.env.<env>` (locally) or the injected GitHub Environment (CI) holds a value
+out of range — e.g. `VITE_DEBUG_LOGGING=true` in production is rejected. Development permits
+either boolean (typos still rejected).
 
 The only remaining raw env read is the config bootstrap (`env.config.ts`, allowlisted by
-`pnpm validate:vite-env`). Tests pin `test.env` in `vitest.config.ts` so runs are hermetic.
+`pnpm validate:vite-env`). Tests are **hermetic by construction**: `test` mode loads no env
+files (dev/prod files load only in their own mode, and there is no `.env.local`/`.env`), so
+the suite runs on schema defaults; the i18n-build plugin injects build vars via `test.env`.
 
 ## 3. Build-time deploy (GitHub Actions → Netlify)
 

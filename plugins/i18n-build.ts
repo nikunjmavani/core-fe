@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-import type { Plugin } from 'vite';
+import type { Plugin, UserConfig } from 'vite';
 
 import {
   localeBuildProfileFor,
@@ -81,13 +81,24 @@ export function i18nBuild(options: I18nBuildPluginOptions = {}): Plugin {
           'import.meta.env.VITE_I18N_BUILD_BCP47': JSON.stringify(bcp47),
           'import.meta.env.VITE_I18N_BUILD_UI_LOCALE': JSON.stringify(uiLocale),
         },
+        // Vitest resolves `import.meta.env` from its runtime env object, not
+        // Vite's `define` — so the plugin also injects the build vars into
+        // `test.env`. This lets the plugin own i18n-mode injection under test
+        // (no manual pin in vitest.config), keeping the suite hermetic.
+        test: {
+          env: {
+            VITE_I18N_BUILD_MODE: mode,
+            VITE_I18N_BUILD_BCP47: bcp47,
+            VITE_I18N_BUILD_UI_LOCALE: uiLocale,
+          },
+        },
         resolve: {
           alias:
             mode === 'single'
               ? [{ find: RESOURCES_ENTRY, replacement: VIRTUAL_ID }]
               : [{ find: RESOURCES_ENTRY, replacement: MULTI_RESOURCES }],
         },
-      };
+      } as Omit<UserConfig, 'plugins'>;
     },
     resolveId(source) {
       if (mode === 'single' && source === VIRTUAL_ID) return VIRTUAL_ID;
