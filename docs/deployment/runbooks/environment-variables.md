@@ -108,7 +108,8 @@ either boolean (typos still rejected).
 The only remaining raw env read is the config bootstrap (`env.config.ts`, allowlisted by
 `pnpm validate:vite-env`). Tests are **hermetic by construction**: `test` mode loads no env
 files (dev/prod files load only in their own mode, and there is no `.env.local`/`.env`), so
-the suite runs on schema defaults; the i18n-build plugin injects build vars via `test.env`.
+the suite runs on schema defaults; test-runner env is injected by Vite plugins via `test.env` —
+`i18n-build` (multi-locale) and `test-env` (`VITE_CAPTCHA_DISABLED`).
 
 ## 3. Build-time deploy (GitHub Actions → Netlify)
 

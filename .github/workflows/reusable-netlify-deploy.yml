@@ -130,14 +130,22 @@ jobs:
 
       - uses: ./.github/actions/setup-node-pnpm
 
-      - name: Validate production client env (VITE_*)
-        if: needs.resolve-environment.outputs.environment == 'production'
+      # Runs for BOTH environments so each is checked against its own strict
+      # profile (required + forbidden + allowed value sets). The diagnostics
+      # flags are exposed so the per-environment `allowed` check can enforce them
+      # (e.g. production rejects VITE_DEBUG_LOGGING=true).
+      - name: Validate client env (VITE_*)
         env:
-          NODE_ENV: production
+          DEPLOY_ENV: ${{ needs.resolve-environment.outputs.environment }}
+          NODE_ENV: ${{ needs.resolve-environment.outputs.environment }}
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_CAPTCHA_DISABLED: ${{ vars.VITE_CAPTCHA_DISABLED }}
           VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}
-        run: pnpm validate:client-env --production
+          VITE_DEBUG_LOGGING: ${{ vars.VITE_DEBUG_LOGGING }}
+          VITE_DEVTOOLS: ${{ vars.VITE_DEVTOOLS }}
+          VITE_E2E_HOOKS: ${{ vars.VITE_E2E_HOOKS }}
+          VITE_VERSION_CHECK: ${{ vars.VITE_VERSION_CHECK }}
+        run: pnpm validate:client-env --env "$DEPLOY_ENV"
 
       - name: Resolve app version from release-please manifest
         id: version
