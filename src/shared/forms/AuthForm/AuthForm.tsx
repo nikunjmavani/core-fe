@@ -180,6 +180,7 @@ export function AuthForm() {
 
   const showPasskey = authMethods.passkey;
   const showEmail = authMethods.email;
+  const passkeyLoading = authMethodIsLoading(pending, { method: 'passkey' });
 
   const hasSocialMethods = visibleProviders.length > 0 || showPasskey;
   const isEmailVerify = emailFlowStep === 'verify';
@@ -247,6 +248,13 @@ export function AuthForm() {
           {visibleProviders.map((provider) => {
             const target = { method: 'oauth' as const, provider };
             const loading = authMethodIsLoading(pending, target);
+            // Spin only for THIS method, or while captcha is still minting its
+            // first token and nothing else is in flight. Once any method is
+            // pending, the rest stay disabled without a spinner — a single-use
+            // Turnstile token is consumed on submit, which would otherwise make
+            // every OAuth button spin at once.
+            const nothingElsePending = pending === null;
+            const spinning = loading || (!turnstileReady && nothingElsePending);
             const oauthBlocked = !turnstileReady || authMethodIsDisabled(pending, target);
             return (
               <Button
@@ -255,16 +263,14 @@ export function AuthForm() {
                 variant="outline"
                 className="w-full"
                 disabled={oauthBlocked}
-                isLoading={loading || !turnstileReady}
+                isLoading={spinning}
                 onClick={() => void startOAuth(provider)}
                 data-testid={providerTestId(provider)}
               >
-                <ProviderIcon provider={provider} />
-                {loading
-                  ? t(AUTH_KEYS.auth.continuing)
-                  : t(AUTH_KEYS.auth.continueWithProvider, {
-                      provider: t(AUTH_KEYS.login.oauth.providerKey(provider)),
-                    })}
+                {spinning ? null : <ProviderIcon provider={provider} />}
+                {t(AUTH_KEYS.auth.continueWithProvider, {
+                  provider: t(AUTH_KEYS.login.oauth.providerKey(provider)),
+                })}
               </Button>
             );
           })}
@@ -275,14 +281,12 @@ export function AuthForm() {
               variant="outline"
               className="w-full"
               disabled={authMethodIsDisabled(pending, { method: 'passkey' })}
-              isLoading={authMethodIsLoading(pending, { method: 'passkey' })}
+              isLoading={passkeyLoading}
               onClick={() => void handlePasskey()}
               data-testid={AUTH_FORM_TEST_IDS.continuePasskey}
             >
-              <Fingerprint className="size-4" data-icon="" />
-              {authMethodIsLoading(pending, { method: 'passkey' })
-                ? t(AUTH_KEYS.auth.continuing)
-                : t(AUTH_KEYS.auth.continueWithPasskey)}
+              {passkeyLoading ? null : <Fingerprint className="size-4" data-icon="" />}
+              {t(AUTH_KEYS.auth.continueWithPasskey)}
             </Button>
           ) : null}
         </div>
