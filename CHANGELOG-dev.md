@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0-dev.5](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2026-07-05)
+
+
+### Fixed
+
+* **auth:** stable method-button labels + shared AuthMethodButton (consistent loading/disable) ([#50](https://github.com/nikunjmavani/core-fe/issues/50)) ([659f493](https://github.com/nikunjmavani/core-fe/commit/659f49379f9ea39ae335e0a94e15d2745a5b8500))
+* **security:** MFA token in memory (CodeQL high) + esbuild override (Dependabot) ([#48](https://github.com/nikunjmavani/core-fe/issues/48)) ([ab49965](https://github.com/nikunjmavani/core-fe/commit/ab49965a8a35a8409168e500f0a33f6fa288880a))
+
 ## [1.0.0-dev.4](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.3...v1.0.0-dev.4) (2026-07-04)
 
 
