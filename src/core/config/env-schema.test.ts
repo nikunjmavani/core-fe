@@ -1,4 +1,5 @@
 import {
+  assertAuthPlatformInvariants,
   branchEnvironmentMap,
   type DeployEnvironment,
   environmentForBranch,
@@ -118,6 +119,22 @@ describe('envProfiles allowed values (strict per-environment)', () => {
     const versionCheck = envProfiles.production.allowed?.VITE_VERSION_CHECK ?? [];
     expect(versionCheck.includes('false')).toBe(false);
     expect(versionCheck.includes('true')).toBe(true);
+  });
+});
+
+describe('assertAuthPlatformInvariants', () => {
+  it('does not throw when no auth surface is enabled (runs the warn path)', () => {
+    const allAuthOff = (key: string) => (key.startsWith('AUTH_') ? 'false' : undefined);
+    expect(() => assertAuthPlatformInvariants(allAuthOff)).not.toThrow();
+  });
+
+  it('throws when auto-google is on but google is off', () => {
+    const get = (key: string) => {
+      if (key === 'AUTH_OAUTH_AUTO_GOOGLE') return 'true';
+      if (key === 'AUTH_OAUTH_GOOGLE') return 'false';
+      return undefined;
+    };
+    expect(() => assertAuthPlatformInvariants(get)).toThrow(/AUTO_GOOGLE/);
   });
 });
 
