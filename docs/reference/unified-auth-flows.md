@@ -35,6 +35,34 @@ Email/password tabs are **not** on the unified screen; gate legacy password flow
 
 ---
 
+## Method button states (loading + disable)
+
+Every method button on `/login` — OAuth (Google/GitHub/Apple), passkey, and the email
+**Continue** / **Verify & continue** buttons — renders through one component,
+[`AuthMethodButton`](../../src/shared/forms/AuthForm/components/AuthMethodButton/AuthMethodButton.tsx),
+so they behave identically. **Do not** re-implement per-button loading/disable logic; add the
+new method through `AuthMethodButton` and it inherits these rules:
+
+- **Stable label** — the button text never changes while an action runs. The spinner is the only
+  progress cue (no "Continuing…/Sending…/Verifying…" swaps — a label flicker reads as jank).
+- **Leading icon → spinner** — the method icon is replaced by the spinner while loading, so there
+  is never a double icon.
+- **One spinner at a time** — only the clicked method spins; every other method is **disabled
+  without a spinner**. Exactly one auth action is ever in flight (`AuthContinuePending`).
+- **Captcha coupling is per-method** — pass `captchaGated` only for methods that need a Turnstile
+  token (OAuth, email send/verify — not passkey). A captcha-gated button shows the "minting first
+  token" spinner **only when nothing else is pending**. This matters because the Turnstile token is
+  **single-use**: submitting one method consumes it, and without the guard every OAuth button would
+  spin at once.
+- **Method-specific disables** (invalid form, resend cooldown, incomplete code) go through
+  `extraDisabled` — never a second loading path.
+
+Cross-method state lives in [`auth-form-pending.ts`](../../src/shared/forms/AuthForm/auth-form-pending.ts)
+(`authMethodIsLoading` / `authMethodIsDisabled` / `authEmailPanelIsBlocked`). Non-button surfaces
+(email input, code entry, resend/change links) reuse those same helpers.
+
+---
+
 ## Email OTP flow
 
 ```mermaid

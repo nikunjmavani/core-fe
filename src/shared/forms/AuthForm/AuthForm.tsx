@@ -22,12 +22,9 @@ import { Fingerprint, Github } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 
 import { AUTH_FORM_TEST_IDS, sortOAuthProviders } from './auth-form.constants.ts';
-import {
-  type AuthContinuePending,
-  authMethodIsDisabled,
-  authMethodIsLoading,
-} from './auth-form-pending.ts';
+import type { AuthContinuePending } from './auth-form-pending.ts';
 import { AuthEmailPanel } from './AuthEmailPanel.tsx';
+import { AuthMethodButton } from './components/AuthMethodButton/index.ts';
 import { AuthMethodDivider } from './components/AuthMethodDivider/index.ts';
 import { AuthWelcomeHeader } from './components/AuthWelcomeHeader/index.ts';
 
@@ -84,7 +81,6 @@ function providerTestId(provider: string): string {
  * Unified sign-in / sign-up entry — social methods first, then email OTP.
  * Optional `VITE_AUTH_OAUTH_AUTO_GOOGLE=true` starts Google OAuth after a short delay.
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity -- auth entry fans out over OAuth/passkey/email methods; splitting would scatter one cohesive flow
 export function AuthForm() {
   const { t } = useTranslation(AUTH_NS);
   const authMethods = useAuthMethods();
@@ -180,7 +176,6 @@ export function AuthForm() {
 
   const showPasskey = authMethods.passkey;
   const showEmail = authMethods.email;
-  const passkeyLoading = authMethodIsLoading(pending, { method: 'passkey' });
 
   const hasSocialMethods = visibleProviders.length > 0 || showPasskey;
   const isEmailVerify = emailFlowStep === 'verify';
@@ -245,49 +240,31 @@ export function AuthForm() {
           className="flex flex-col gap-3"
           data-testid={AUTH_FORM_TEST_IDS.socialMethods}
         >
-          {visibleProviders.map((provider) => {
-            const target = { method: 'oauth' as const, provider };
-            const loading = authMethodIsLoading(pending, target);
-            // Spin only for THIS method, or while captcha is still minting its
-            // first token and nothing else is in flight. Once any method is
-            // pending, the rest stay disabled without a spinner — a single-use
-            // Turnstile token is consumed on submit, which would otherwise make
-            // every OAuth button spin at once.
-            const nothingElsePending = pending === null;
-            const spinning = loading || (!turnstileReady && nothingElsePending);
-            const oauthBlocked = !turnstileReady || authMethodIsDisabled(pending, target);
-            return (
-              <Button
-                key={provider}
-                type="button"
-                variant="outline"
-                className="w-full"
-                disabled={oauthBlocked}
-                isLoading={spinning}
-                onClick={() => void startOAuth(provider)}
-                data-testid={providerTestId(provider)}
-              >
-                {spinning ? null : <ProviderIcon provider={provider} />}
-                {t(AUTH_KEYS.auth.continueWithProvider, {
-                  provider: t(AUTH_KEYS.login.oauth.providerKey(provider)),
-                })}
-              </Button>
-            );
-          })}
+          {visibleProviders.map((provider) => (
+            <AuthMethodButton
+              key={provider}
+              target={{ method: 'oauth', provider }}
+              pending={pending}
+              captchaGated
+              turnstileReady={turnstileReady}
+              icon={<ProviderIcon provider={provider} />}
+              label={t(AUTH_KEYS.auth.continueWithProvider, {
+                provider: t(AUTH_KEYS.login.oauth.providerKey(provider)),
+              })}
+              onClick={() => void startOAuth(provider)}
+              testId={providerTestId(provider)}
+            />
+          ))}
 
           {showPasskey ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={authMethodIsDisabled(pending, { method: 'passkey' })}
-              isLoading={passkeyLoading}
+            <AuthMethodButton
+              target={{ method: 'passkey' }}
+              pending={pending}
+              icon={<Fingerprint className="size-4" data-icon="" />}
+              label={t(AUTH_KEYS.auth.continueWithPasskey)}
               onClick={() => void handlePasskey()}
-              data-testid={AUTH_FORM_TEST_IDS.continuePasskey}
-            >
-              {passkeyLoading ? null : <Fingerprint className="size-4" data-icon="" />}
-              {t(AUTH_KEYS.auth.continueWithPasskey)}
-            </Button>
+              testId={AUTH_FORM_TEST_IDS.continuePasskey}
+            />
           ) : null}
         </div>
       ) : null}

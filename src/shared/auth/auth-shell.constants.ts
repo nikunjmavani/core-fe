@@ -28,7 +28,6 @@ export const AUTH_KEYS = {
     sending: 'common.sending',
     sendingEllipsis: 'common.sendingEllipsis',
     verifying: 'common.verifying',
-    verifyingEllipsis: 'common.verifyingEllipsis',
     pleaseWait: 'common.pleaseWait',
   },
   auth: {
