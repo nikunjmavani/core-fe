@@ -26,6 +26,21 @@ export function resolveAuthMethodFlag(
 }
 
 /**
+ * Parse a `0..1` sample rate; omitted/empty/out-of-range/NaN → `defaultValue`.
+ * Lets Sentry sampling be set per environment via env instead of a build-mode
+ * branch. @internal Exported for unit tests.
+ */
+export function resolveSampleRate(
+  flag: string | undefined,
+  defaultValue: number,
+): number {
+  if (flag === undefined || flag === '') return defaultValue;
+  const rate = Number(flag);
+  if (Number.isNaN(rate) || rate < 0 || rate > 1) return defaultValue;
+  return rate;
+}
+
+/**
  * Optional tri-state deployment override: unset → defer to API; `true`/`false` → env wins.
  * @internal Exported for unit tests.
  */

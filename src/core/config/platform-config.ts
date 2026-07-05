@@ -9,6 +9,7 @@ import {
   resolveDisabledModules,
   resolveLayoutWidthForced,
   resolveOAuthProviderFlags,
+  resolveSampleRate,
   resolveThemeLock,
 } from './env-resolvers.ts';
 
@@ -31,6 +32,10 @@ export interface DeploymentEnvOverrides {
 export interface PlatformConfig {
   apiBaseUrl: string;
   sentryDsn: string | undefined;
+  /** Sentry traces sample rate (0..1), env-driven per environment. */
+  sentryTracesSampleRate: number;
+  /** Sentry session-replay sample rate (0..1), env-driven per environment. */
+  sentryReplaysSessionSampleRate: number;
   posthogKey: string | undefined;
   posthogHost: string | undefined;
   privacyPolicyUrl: string | undefined;
@@ -54,9 +59,8 @@ export interface PlatformConfig {
   buildI18nLocale: string;
   appBuildId: string | undefined;
   appVersion: string | undefined;
+  /** Reported deployment name (Sentry/PostHog tag). Never branch on this. */
   environment: string;
-  isDevelopment: boolean;
-  isProduction: boolean;
 }
 
 export type ConfigGet = (key: string) => string | undefined;
@@ -88,6 +92,11 @@ export function resolvePlatformConfig(
     apiBaseUrl,
 
     sentryDsn: get('SENTRY_DSN'),
+    sentryTracesSampleRate: resolveSampleRate(get('SENTRY_TRACES_SAMPLE_RATE'), 0.1),
+    sentryReplaysSessionSampleRate: resolveSampleRate(
+      get('SENTRY_REPLAYS_SESSION_SAMPLE_RATE'),
+      0.1,
+    ),
     posthogKey: get('POSTHOG_KEY'),
     posthogHost: get('POSTHOG_HOST'),
     privacyPolicyUrl: get('PRIVACY_POLICY_URL'),
@@ -123,8 +132,6 @@ export function resolvePlatformConfig(
     appVersion: buildEnv.appVersion,
 
     environment: clientEnv.MODE,
-    isDevelopment: clientEnv.DEV,
-    isProduction: clientEnv.PROD,
   };
 }
 

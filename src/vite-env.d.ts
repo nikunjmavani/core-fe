@@ -3,6 +3,10 @@
 interface ImportMetaEnv {
   readonly VITE_API_BASE_URL: string;
   readonly VITE_SENTRY_DSN: string;
+  /** Sentry traces sample rate (0..1) — set per environment. */
+  readonly VITE_SENTRY_TRACES_SAMPLE_RATE: string;
+  /** Sentry session-replay sample rate (0..1) — set per environment. */
+  readonly VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE: string;
   readonly VITE_POSTHOG_KEY: string;
   readonly VITE_POSTHOG_HOST: string;
   readonly VITE_STRIPE_PUBLISHABLE_KEY: string;

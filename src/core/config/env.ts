@@ -33,16 +33,19 @@ export type { PlatformConfig };
 const clientEnv = getClientEnv();
 export const platformConfig = resolvePlatformConfig(getRuntimeConfigValue, clientEnv);
 
-validatePlatformInvariantsAtBoot(platformConfig.isProduction);
+// The config kernel is the one place a raw production check is legitimate — these
+// are boot-time deploy guards, not app behavior. `platformConfig` no longer exposes
+// isProduction/isDevelopment; read the parsed `clientEnv.PROD` here directly.
+validatePlatformInvariantsAtBoot(clientEnv.PROD);
 
-if (platformConfig.isProduction && !getRuntimeConfigValue('API_BASE_URL')) {
+if (clientEnv.PROD && !getRuntimeConfigValue('API_BASE_URL')) {
   console.warn(
     '[Config] VITE_API_BASE_URL is not set in production — API calls will be relative to origin.',
   );
 }
 
 if (
-  platformConfig.isProduction &&
+  clientEnv.PROD &&
   platformConfig.apiBaseUrl?.startsWith('http://') &&
   !platformConfig.apiBaseUrl.startsWith('http://localhost')
 ) {

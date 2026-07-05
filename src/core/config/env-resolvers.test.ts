@@ -8,6 +8,7 @@ import {
   resolveDeploymentOverride,
   resolveDisabledModules,
   resolveOAuthProviderFlags,
+  resolveSampleRate,
 } from './env-resolvers.ts';
 
 describe('env-resolvers', () => {
@@ -18,6 +19,16 @@ describe('env-resolvers', () => {
     expect(resolveBooleanFlag('false', true)).toBe(false);
     expect(resolveBooleanFlag('true', false)).toBe(true);
     expect(resolveBooleanFlag('1', false)).toBe(true);
+  });
+
+  it('resolveSampleRate: parses 0..1, else falls back to default', () => {
+    expect(resolveSampleRate(undefined, 0.1)).toBeCloseTo(0.1);
+    expect(resolveSampleRate('', 0.1)).toBeCloseTo(0.1);
+    expect(resolveSampleRate('1', 0.1)).toBeCloseTo(1);
+    expect(resolveSampleRate('0.25', 0.1)).toBeCloseTo(0.25);
+    expect(resolveSampleRate('2', 0.1)).toBeCloseTo(0.1); // out of range
+    expect(resolveSampleRate('-0.5', 0.1)).toBeCloseTo(0.1); // out of range
+    expect(resolveSampleRate('abc', 0.1)).toBeCloseTo(0.1); // NaN
   });
 
   it('resolveAuthMethodFlag treats omitted as default', () => {
