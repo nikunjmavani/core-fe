@@ -3,13 +3,18 @@ import path from 'path';
 import { defineConfig } from 'vitest/config';
 
 import { i18nBuild } from './plugins/i18n-build.ts';
+import { coreFeTestEnv } from './plugins/test-env.ts';
 
 export default defineConfig({
   // Deliberately NO react-compiler here (vite.config.ts has it): coverage must
   // measure SOURCE branches, not the compiler's synthetic memo-cache checks
   // (which tripled the branch denominator and made the ratchet meaningless).
   // Compiled output is exercised by the e2e suite and the production build.
-  plugins: [react(), i18nBuild({ modeFlag: 'multi', localeFlag: 'en-US' })],
+  plugins: [
+    react(),
+    i18nBuild({ modeFlag: 'multi', localeFlag: 'en-US' }),
+    coreFeTestEnv(),
+  ],
   resolve: {
     alias: {
       '@/tests': path.resolve(__dirname, './tests'),

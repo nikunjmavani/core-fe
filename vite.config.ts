@@ -12,7 +12,8 @@ import { i18nBuild } from './plugins/i18n-build.ts';
 import { versionJson } from './plugins/version-json.ts';
 
 export default defineConfig(({ mode }) => {
-  // Env files at project root: .env, .env.development, .env.production, .env.local
+  // Env files at project root (gitignored; only .env.example is committed):
+  // .env.development (local dev) · .env.production (local prod build). No .env.local.
   const envDir = path.resolve(__dirname);
   const env = loadEnv(mode, envDir, '');
 
