@@ -36,6 +36,10 @@ export interface PlatformConfig {
   sentryTracesSampleRate: number;
   /** Sentry session-replay sample rate (0..1), env-driven per environment. */
   sentryReplaysSessionSampleRate: number;
+  /** Sentry profiles sample rate (0..1), env-driven (default 1). */
+  sentryProfilesSampleRate: number;
+  /** Sentry replay-on-error sample rate (0..1), env-driven (default 1). */
+  sentryReplaysOnErrorSampleRate: number;
   posthogKey: string | undefined;
   posthogHost: string | undefined;
   privacyPolicyUrl: string | undefined;
@@ -96,6 +100,11 @@ export function resolvePlatformConfig(
     sentryReplaysSessionSampleRate: resolveSampleRate(
       get('SENTRY_REPLAYS_SESSION_SAMPLE_RATE'),
       0.1,
+    ),
+    sentryProfilesSampleRate: resolveSampleRate(get('SENTRY_PROFILES_SAMPLE_RATE'), 1),
+    sentryReplaysOnErrorSampleRate: resolveSampleRate(
+      get('SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE'),
+      1,
     ),
     posthogKey: get('POSTHOG_KEY'),
     posthogHost: get('POSTHOG_HOST'),

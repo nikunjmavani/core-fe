@@ -85,11 +85,11 @@ export async function initSentry(router: AnyRouter): Promise<void> {
     enableLogs: true,
 
     tracesSampleRate: platformConfig.sentryTracesSampleRate,
-    profilesSampleRate: 1.0,
+    profilesSampleRate: platformConfig.sentryProfilesSampleRate,
     tracePropagationTargets: ['localhost', /^https:\/\/api\./, /^\/api\//],
 
     replaysSessionSampleRate: platformConfig.sentryReplaysSessionSampleRate,
-    replaysOnErrorSampleRate: 1.0,
+    replaysOnErrorSampleRate: platformConfig.sentryReplaysOnErrorSampleRate,
 
     ignoreErrors: [/Object \[object Object\] has no method 'updateFrom'/],
 

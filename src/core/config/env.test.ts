@@ -73,6 +73,8 @@ describe('platformConfig', () => {
     for (const rate of [
       platformConfig.sentryTracesSampleRate,
       platformConfig.sentryReplaysSessionSampleRate,
+      platformConfig.sentryProfilesSampleRate,
+      platformConfig.sentryReplaysOnErrorSampleRate,
     ]) {
       expect(typeof rate).toBe('number');
       expect(rate).toBeGreaterThanOrEqual(0);

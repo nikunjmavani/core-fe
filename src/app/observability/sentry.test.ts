@@ -49,6 +49,8 @@ vi.mock('@/core/config/env.ts', () => ({
     appBuildId: 'build_test',
     sentryTracesSampleRate: 0.1,
     sentryReplaysSessionSampleRate: 0.1,
+    sentryProfilesSampleRate: 1,
+    sentryReplaysOnErrorSampleRate: 1,
   },
 }));
 
