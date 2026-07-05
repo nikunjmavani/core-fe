@@ -39,6 +39,7 @@ import {
   authEmailPanelIsBlocked,
   authMethodIsLoading,
 } from './auth-form-pending.ts';
+import { AuthMethodButton } from './components/AuthMethodButton/index.ts';
 
 function formatResendCooldown(remainingMs: number): string {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
@@ -239,19 +240,17 @@ export function AuthEmailPanel({
               ) : null}
             </div>
 
-            <Button
+            <AuthMethodButton
               type="submit"
-              className="w-full"
-              isLoading={emailSendLoading || !turnstileReady}
-              disabled={
-                emailBlocked || emailSendLoading || isSubmitting || !turnstileReady
-              }
-              data-testid={AUTH_FORM_TEST_IDS.emailSubmit}
-            >
-              {emailSendLoading || isSubmitting
-                ? t(AUTH_KEYS.common.sendingEllipsis)
-                : t(AUTH_KEYS.auth.emailContinue)}
-            </Button>
+              variant="default"
+              target={{ method: 'email-send' }}
+              pending={pending}
+              captchaGated
+              turnstileReady={turnstileReady}
+              label={t(AUTH_KEYS.auth.emailContinue)}
+              extraDisabled={isSubmitting}
+              testId={AUTH_FORM_TEST_IDS.emailSubmit}
+            />
           </div>
         </form>
       </div>
@@ -311,23 +310,19 @@ export function AuthEmailPanel({
         />
       </div>
 
-      <Button
-        type="button"
-        className="w-full"
-        isLoading={emailVerifyLoading || !turnstileReady}
-        disabled={
-          emailBlocked ||
-          emailVerifyLoading ||
-          !turnstileReady ||
+      <AuthMethodButton
+        variant="default"
+        target={{ method: 'email-verify' }}
+        pending={pending}
+        captchaGated
+        turnstileReady={turnstileReady}
+        label={t(AUTH_KEYS.auth.email.verifyAndContinue)}
+        extraDisabled={
           verificationCode.trim().length !== AUTH_EMAIL_VERIFICATION_CODE_LENGTH
         }
         onClick={() => void verifyCode()}
-        data-testid={AUTH_FORM_TEST_IDS.emailVerify}
-      >
-        {emailVerifyLoading
-          ? t(AUTH_KEYS.common.verifyingEllipsis)
-          : t(AUTH_KEYS.auth.email.verifyAndContinue)}
-      </Button>
+        testId={AUTH_FORM_TEST_IDS.emailVerify}
+      />
 
       <footer className="flex flex-col gap-2.5 text-center text-sm lg:text-left">
         <p className="text-muted-foreground text-pretty">

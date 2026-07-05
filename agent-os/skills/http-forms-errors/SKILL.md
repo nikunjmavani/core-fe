@@ -98,6 +98,24 @@ Migrated reference panels: Settings org/account panels, dashboard widgets.
 - Inline `isLoading && <Skeleton>` + `isError && <p>` when `QueryBoundary` fits
 - Raw `fetch` for domain APIs (use `apiClient`; auth paths excepted)
 - Storing mutation errors only in Zustand
+- Swapping a submit button's **label** to "…ing" while loading — keep the label stable and let the
+  spinner carry progress (a label flicker reads as jank)
+- A shared multi-action form (several buttons, one action at a time) re-deriving loading/disable per
+  button — model it once and drive every button from the same "which action is pending" state
+
+---
+
+## Multi-action forms (one action in flight)
+
+When a form offers several mutually-exclusive submit actions (e.g. the `/login` auth methods), keep a
+single "which action is pending" value and drive every button from it — only the clicked one shows a
+spinner; the rest disable **without** a spinner. `/login` codifies this in
+[`AuthMethodButton`](../../src/shared/forms/AuthForm/components/AuthMethodButton/AuthMethodButton.tsx)
+
+- `auth-form-pending.ts`; copy that shape (stable label, icon→spinner, per-method captcha gate,
+  `extraDisabled` for form/cooldown conditions). Adding an auth method is one more `<AuthMethodButton>`.
+  Spec: `docs/reference/unified-auth-flows.md` → "Method button states"; rule:
+  `agent-os/rules/component-patterns.mdc` → "Auth Method Buttons".
 
 ---
 

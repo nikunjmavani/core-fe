@@ -139,6 +139,40 @@ export function Component() {
 Register access in `src/app/routes/routeTree.tsx` (`beforeLoad` + `gatewayFromManifest(manifest)`).
 See `agent-os/skills/routing-tenancy/SKILL.md`.
 
+## Auth Method Buttons (`/login`)
+
+Never hand-roll loading/disable logic for a sign-in method button. Every method on the unified
+auth screen — OAuth providers, passkey, email send/verify — renders through the shared
+`AuthMethodButton` (`src/shared/forms/AuthForm/components/AuthMethodButton/`) so they behave
+identically. Adding a new method = one more `<AuthMethodButton>` with its `target`, `label`, `icon`,
+`onClick`, and (if it needs a captcha token) `captchaGated`.
+
+```tsx
+<AuthMethodButton
+  target={{ method: 'oauth', provider }}
+  pending={pending}                 // the single in-flight action (AuthContinuePending | null)
+  captchaGated                      // OAuth + email need a Turnstile token; passkey does not
+  turnstileReady={turnstileReady}
+  icon={<ProviderIcon provider={provider} />}
+  label={t(AUTH_KEYS.auth.continueWithProvider, { provider })}
+  onClick={() => void startOAuth(provider)}
+  extraDisabled={/* form/cooldown/code-length conditions only */}
+  testId={providerTestId(provider)}
+/>
+```
+
+Guarantees enforced by the component (do not re-derive these inline):
+
+- **Stable label** — text never swaps to "…ing" while loading; the spinner is the only cue.
+- **One spinner at a time** — only the clicked method spins; the rest disable without a spinner.
+- **Per-method captcha** — `captchaGated` buttons show the token-minting spinner **only when
+  nothing else is pending** (the Turnstile token is single-use; without the guard one click spins
+  every OAuth button).
+
+Cross-method predicates live in `auth-form-pending.ts` (`authMethodIsLoading` /
+`authMethodIsDisabled` / `authEmailPanelIsBlocked`); non-button surfaces (inputs, links) reuse them.
+Full spec: `docs/reference/unified-auth-flows.md` → "Method button states".
+
 ## Animation Patterns
 
 Use the animation kit from `@/lib/animations/`:
