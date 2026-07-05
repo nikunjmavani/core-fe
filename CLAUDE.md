@@ -325,18 +325,33 @@ import { User } from './contracts';
 
 ## Environment Variables
 
-Env files live at **project root** for clear paths. Vite loads them automatically.
+Two environments only — **development** and **production** — each configured in its
+own gitignored file. `.env.example` is the **only committed** file. Deploys inject env
+from **GitHub Environments** (never from files). No `.env.local`, no shared `.env`, no
+`.env.staging`. `pnpm setup:local` scaffolds `.env.development`; `pnpm dev` loads it.
 
 ```text
-.env                 # Shared defaults (committed)
-.env.development     # Dev overrides (committed)
-.env.production      # Production overrides (committed, no secrets)
-.env.local           # Local secrets (gitignored)
-.env.example         # Reference for all env vars
+.env.example         # Reference for all env vars — the ONLY committed file
+.env.development     # Local dev file (gitignored): behavior flags + secrets, dev-tooling ON
+.env.production      # Local production-build values (gitignored): dev-tooling OFF (prod-safe)
 ```
 
 - `VITE_` prefix = bundled into the client (public). No prefix = build-time only.
-- Secrets (API keys, auth tokens) go in CI env vars or `.env.local`, never committed.
+- Secrets go in GitHub Environments (deploy) or the gitignored `.env.development` (local) —
+  never committed. A guardrail blocks agent edits to `.env*` (apply them yourself).
+- **Behavior is env-driven, never mode-sniffed.** No `import.meta.env.DEV/PROD/MODE`
+  **and no `platformConfig.environment === '<name>'`** branching in app code — named
+  schema flags drive it: `VITE_DEBUG_LOGGING`, `VITE_DEVTOOLS`, `VITE_E2E_HOOKS`,
+  `VITE_VERSION_CHECK`, `VITE_CAPTCHA_DISABLED` → read via `platformConfig`. `environment`
+  is only ever a reported value (Sentry/PostHog tag). The one raw read is the config
+  bootstrap (`env.config.ts`, allowlisted).
+- **Strict allowed values per environment.** `envProfiles.<env>.allowed` in `env-schema.ts`
+  declares the permitted value set per key; `pnpm validate:client-env` **hard-fails** on
+  a value out of range (e.g. production requires the diagnostics flags off, version-check on).
+- **Tests are hermetic by construction:** in `test` mode Vite loads no env files (only dev/prod
+  files exist, each loaded only in its own mode), so the suite runs on schema defaults on every
+  machine and on CI. Genuine test-runner env needs are injected by plugins, not app code or a
+  manual pin: `plugins/i18n-build.ts` (multi-locale) and `plugins/test-env.ts` (captcha off).
 - **Where to get credentials and optional env:** docs/integrations/credentials-and-env.md
 
 ## Auth & Security

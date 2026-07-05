@@ -1,16 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const envRef = vi.hoisted(() => ({
-  environment: 'development' as string,
   captchaDisabled: false,
   turnstileSiteKey: undefined as string | undefined,
 }));
 
 vi.mock('@/core/config/env.ts', () => ({
   platformConfig: {
-    get environment() {
-      return envRef.environment;
-    },
     get captchaDisabled() {
       return envRef.captchaDisabled;
     },
@@ -28,15 +24,8 @@ import {
 
 describe('captcha-config', () => {
   afterEach(() => {
-    envRef.environment = 'development';
     envRef.captchaDisabled = false;
     envRef.turnstileSiteKey = undefined;
-  });
-
-  it('disables captcha in test mode', () => {
-    envRef.environment = 'test';
-    expect(isCaptchaEnabled()).toBe(false);
-    expect(resolveCaptchaProvider()).toBe('disabled');
   });
 
   it('uses dev checkbox when enabled without a Turnstile site key', () => {

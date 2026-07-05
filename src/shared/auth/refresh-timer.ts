@@ -13,6 +13,7 @@
  *   5. On failure, fall back to the 401 interceptor (which will force logout).
  */
 
+import { platformConfig } from '@/core/config/env.ts';
 import { silentRefresh } from '@/shared/auth/service.ts';
 import { getTokenExpiry } from '@/shared/auth/token.ts';
 
@@ -51,7 +52,7 @@ export function scheduleTokenRefresh(): void {
     void doProactiveRefresh();
   }, delay);
 
-  if (import.meta.env.DEV) {
+  if (platformConfig.debugLogging) {
     console.info(
       `[RefreshTimer] Scheduled refresh in ${Math.round(delay / 1000)}s (token expires in ${Math.round((expiresAt - Date.now()) / 1000)}s)`,
     );
@@ -65,7 +66,7 @@ async function doProactiveRefresh(): Promise<void> {
     scheduleTokenRefresh();
   } catch {
     // silentRefresh failed — the 401 interceptor will handle the next request
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.warn('[RefreshTimer] Proactive refresh failed — will retry on next 401');
     }
   }

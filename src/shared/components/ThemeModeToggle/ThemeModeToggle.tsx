@@ -82,7 +82,7 @@ export function ThemeModeToggle({
           <Monitor className="mr-2 h-4 w-4" /> System
         </DropdownMenuItem>
         {/* DEV-only testing shortcut — canonical shuffle lives in Settings → Appearance. */}
-        {import.meta.env.DEV && !platformConfig.themeLock ? (
+        {platformConfig.devtools && !platformConfig.themeLock ? (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={shuffleTheme} data-testid="theme-shuffle-menu">

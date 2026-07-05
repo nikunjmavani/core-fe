@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { reportReactError } from '@/app/observability/sentry.ts';
 import { AppProviders } from '@/app/providers/AppProviders.tsx';
 import { router } from '@/app/routes/routeTree.tsx';
+import { platformConfig } from '@/core/config/env.ts';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import { InvisibleTurnstile } from '@/shared/auth/captcha/InvisibleTurnstile.tsx';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
@@ -32,7 +33,7 @@ function GlobalErrorFallback({
       <p className="text-muted-foreground max-w-md text-center text-sm">
         {t(ERRORS_KEYS.global.message)}
       </p>
-      {import.meta.env.DEV && globalThis.location?.hostname === 'localhost' && (
+      {platformConfig.devtools && globalThis.location?.hostname === 'localhost' && (
         <Card className="max-w-lg gap-0 py-0 shadow-none">
           <CardContent className="overflow-auto p-4 font-mono text-xs">
             {error instanceof Error ? error.message : String(error)}

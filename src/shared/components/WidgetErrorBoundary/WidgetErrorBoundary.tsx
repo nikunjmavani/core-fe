@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { useTranslation } from 'react-i18next';
 
+import { platformConfig } from '@/core/config/env.ts';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Card, CardContent } from '@/shared/components/ui/card.tsx';
@@ -56,7 +57,7 @@ export function SectionErrorBoundary({
         <SectionErrorFallback {...props} title={title} testId={testId} />
       )}
       onError={(error, info) => {
-        if (import.meta.env.DEV) {
+        if (platformConfig.debugLogging) {
           console.error(`[SectionErrorBoundary:${title}]`, error, info);
         }
       }}

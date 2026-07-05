@@ -17,19 +17,21 @@ This skill runs **automatically when the user runs `git commit`** via the Husky 
 
 The pre-commit hook (`.husky/pre-commit`) runs:
 
-| #   | Check                   | Script/Command                              | Purpose                                          |
+| # | Check | Script/Command | Purpose |
 | --- | ----------------------- | ------------------------------------------- | ------------------------------------------------ | ------- | --------------------------- |
-| 1   | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` | Env docs, public assets, lint-staged, type-check |
-| 2   | Gitleaks                | `gitleaks protect --staged`                 | Secret/API key detection (if installed)          |
-| 3   | Merge conflict markers  | `grep -rlE '^(<{7}                          | >{7}                                             | ={7})'` | Reject unresolved conflicts |
-| 4   | Large file check        | `wc -c`                                     | Reject files > 1MB                               |
+| 1 | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` | Env docs, public assets, lint-staged, env/mode-sniffing gate, type-check |
+| 2 | Env-file guard | `git diff --cached` vs `.env*` | Reject committing any `.env*` except `.env.example` |
+| 3 | Gitleaks | `gitleaks protect --staged` | Secret/API key detection (if installed) |
+| 4 | Merge conflict markers | `grep -rlE '^(<{7}                          | >{7}                                             | ={7})'` | Reject unresolved conflicts |
+| 5 | Large file check | `wc -c` | Reject files > 1MB |
 
 ### Inside before-commit-guard.sh
 
 1. **validate:env-example** — `.env.example` documents all keys from `src/core/config/env-schema.ts` (via `pnpm tool:sync-env-example`).
 2. **validate:public** — Required public assets exist: config.js, theme-init.js, vite.svg, manifest.webmanifest, \_headers, offline.html, robots.txt.
 3. **lint-staged** — ESLint --fix + Prettier on staged `.ts`, `.tsx`, `.css`, `.json`, `.md`, `.yaml`, `.yml`.
-4. **type-check** — `tsc --noEmit` for full project.
+4. **validate:vite-env** — env/mode-sniffing gate: no `import.meta.env.DEV/PROD/MODE` or `platformConfig.environment === '<name>'` / `.MODE ===` outside the config-kernel allowlist. Behavior must be driven by named `platformConfig` flags.
+5. **type-check** — `tsc --noEmit` for full project.
 
 ## How to Fix Failures
 
@@ -68,7 +70,7 @@ Run the guard without committing:
 pnpm run before-commit-guard
 ```
 
-This runs only the before-commit-guard checks (env, public, lint-staged, type-check). Gitleaks, conflict markers, and large file checks run only in the actual pre-commit hook.
+This runs only the before-commit-guard checks (env, public, lint-staged, vite-env, type-check). The env-file guard, gitleaks, conflict markers, and large file checks run only in the actual pre-commit hook.
 
 ## Relationship to Full Health Check
 

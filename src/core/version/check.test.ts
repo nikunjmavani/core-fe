@@ -12,31 +12,22 @@ describe('startVersionCheck', () => {
     vi.resetModules();
   });
 
-  it('returns undefined in dev mode', async () => {
-    vi.stubEnv('DEV', true);
-    vi.stubEnv('MODE', 'development');
-    const { startVersionCheck } = await import('./check.ts');
-    expect(startVersionCheck()).toBeUndefined();
-  });
-
-  it('returns undefined in test mode', async () => {
-    vi.stubEnv('DEV', false);
-    vi.stubEnv('MODE', 'test');
+  it('returns undefined when version checking is disabled (VITE_VERSION_CHECK=false)', async () => {
+    vi.stubEnv('VITE_VERSION_CHECK', 'false');
+    vi.stubEnv('VITE_APP_BUILD_ID', 'abc123');
     const { startVersionCheck } = await import('./check.ts');
     expect(startVersionCheck()).toBeUndefined();
   });
 
   it('returns undefined when no build ID is set', async () => {
-    vi.stubEnv('DEV', false);
-    vi.stubEnv('MODE', 'production');
+    vi.stubEnv('VITE_VERSION_CHECK', 'true');
     vi.stubEnv('VITE_APP_BUILD_ID', '');
     const { startVersionCheck } = await import('./check.ts');
     expect(startVersionCheck()).toBeUndefined();
   });
 
   it('returns a cleanup function when properly configured', async () => {
-    vi.stubEnv('DEV', false);
-    vi.stubEnv('MODE', 'production');
+    vi.stubEnv('VITE_VERSION_CHECK', 'true');
     vi.stubEnv('VITE_APP_BUILD_ID', 'abc123');
 
     vi.mocked(globalThis.fetch).mockResolvedValue(
@@ -71,8 +62,7 @@ describe('startVersionCheck', () => {
         value: { ...realLocation, reload },
       });
       setVisibility('visible');
-      vi.stubEnv('DEV', false);
-      vi.stubEnv('MODE', 'production');
+      vi.stubEnv('VITE_VERSION_CHECK', 'true');
       vi.stubEnv('VITE_APP_BUILD_ID', 'build-OLD');
     });
 

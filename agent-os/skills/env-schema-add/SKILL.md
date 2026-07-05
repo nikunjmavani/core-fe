@@ -56,13 +56,18 @@ Every key sits under exactly one half. Sub-sections (`# --- Title ---`) group re
 
 1. **Schema** — add Zod field to `src/core/config/env-schema.ts`.
 2. **Runtime** — wire `env.config.ts` / `platform-config.ts` if app reads it.
-3. **Template** — add to `.env.example` under correct half + sub-section; use `# OPTIONAL — <condition>` when conditionally required.
-4. **Sync** — run `pnpm tool:sync-env-example --fix` then `pnpm tool:sync-env-example`.
-5. **Types** — extend `src/vite-env.d.ts` for new `VITE_*` keys if needed.
-6. **Tests** — colocated tests in `env-schema.test.ts`, `env-resolvers.test.ts`, or `platform-config.test.ts`.
-7. **Docs** — update `docs/deployment/runbooks/environment-variables.md` if operator-facing.
-8. **GitHub** — update local `.env.<environment>`; `pnpm github:sync <env> --dry-run`.
-9. **PR** — include "Environment variable changes" block in description.
+   - **Behavior flag?** Read it via `platformConfig` (never `import.meta.env.DEV/PROD/MODE`).
+3. **Per-environment allowed values (strict)** — if the key's valid set differs by
+   environment (e.g. a diagnostics flag that must be off in production), add it to
+   `envProfiles.<env>.allowed` in `env-schema.ts`. `pnpm validate:client-env` hard-fails
+   on an out-of-range value. Two environments only: `development`, `production`.
+4. **Template** — add to `.env.example` under correct half + sub-section; use `# OPTIONAL — <condition>` when conditionally required.
+5. **Sync** — run `pnpm tool:sync-env-example --fix` then `pnpm tool:sync-env-example`.
+6. **Types** — extend `src/vite-env.d.ts` for new `VITE_*` keys if needed.
+7. **Tests** — colocated tests in `env-schema.test.ts`, `env-resolvers.test.ts`, or `platform-config.test.ts`.
+8. **Docs** — update `docs/deployment/runbooks/environment-variables.md` if operator-facing.
+9. **GitHub** — update local `.env.<environment>`; `pnpm github:sync <env> --dry-run`.
+10. **PR** — include "Environment variable changes" block in description.
 
 ## Remove or rename a key
 

@@ -1,6 +1,6 @@
 # Credentials and Environment Variables (core-fe)
 
-Where to get credentials and environment variables for this frontend repo. Never commit secrets; use `.env.local` or CI/host secrets.
+Where to get credentials and environment variables for this frontend repo. Never commit secrets; use the gitignored `.env.development` locally or GitHub Environments for deploys.
 
 ```mermaid
 flowchart LR
@@ -14,7 +14,7 @@ flowchart LR
   end
   required --> App[App / Build]
   optional --> App
-  App --> Local[.env or .env.local]
+  App --> Local[.env.development gitignored]
   App --> CI[CI / Netlify / GitHub Secrets]
 ```
 
@@ -81,10 +81,10 @@ For deploy via GitHub Actions, set `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY
 
 ## Local development
 
-- Use **`.env.local`** at project root (gitignored). **`pnpm setup:local`** copies from `.env.example` and injects localhost defaults — same pattern as core-be.
-- Vite also loads committed **`.env.development`**; `.env.local` overrides for machine-specific values.
-- For local backend: `VITE_DEV_API_URL` (default `http://localhost:3000`) — Vite proxies `/api` in development.
-- **MCP:** set `CONTEXT7_API_KEY` in `.env.local` for the Context7 MCP (`${CONTEXT7_API_KEY}` in `.mcp.json`).
+- Use **`.env.development`** at project root (gitignored — the single local file; there is no `.env.local`). **`pnpm setup:local`** scaffolds it from `.env.example` and injects localhost defaults; `pnpm dev` runs in development mode and loads it.
+- It holds **both** behavior flags and machine secrets (SONAR_*, tokens). Deploys never read it — they inject env from GitHub Environments.
+- For local backend: `VITE_DEV_API_URL` (default `http://localhost:3000`) — Vite proxies `/api` in development (keep `VITE_API_BASE_URL` empty so the proxy is used).
+- **MCP:** set `CONTEXT7_API_KEY` in `.env.development` for the Context7 MCP (`${CONTEXT7_API_KEY}` in `.mcp.json`).
 
 ### Auth method toggles (build-time, env-only)
 

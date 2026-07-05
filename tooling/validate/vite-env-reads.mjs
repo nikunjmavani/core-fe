@@ -1,20 +1,23 @@
 /**
- * Fail when `import.meta.env.VITE_*` is read outside the allowlisted surfaces.
- * Keeps build-injected env on `lib/i18n/build-env.ts` and runtime overrides on
- * `env.config.ts` instead of scattered direct reads.
+ * Fail on environment/mode SNIFFING in app code. Behavior must be env-driven
+ * (named `platformConfig` flags), never sniffed from the build mode. Flags:
+ *   1. `import.meta.env.VITE_*`            — route reads through the config kernel.
+ *   2. `import.meta.env.DEV/PROD/MODE/SSR` — the config bootstrap is the only reader.
+ *   3. `platformConfig.environment === …` / `.MODE === …` / `=== 'production'` etc.
+ *      — `environment` is a reported value only; never branch on it.
+ *
+ * Allowlisted config-kernel files may read raw env (they PRODUCE the typed config).
+ * Test files are exempt (they stub env via `vi.stubEnv`, not runtime reads).
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 
-/** Paths relative to repo root that may read `import.meta.env.VITE_*`. */
+/** Paths (relative to root) allowed to read raw `import.meta.env`. */
 const ALLOWLIST = new Set(['src/lib/i18n/build-env.ts', 'src/core/config/env.config.ts']);
 
-/**
- * @param {string} dir
- * @param {string[]} files
- */
+/** @param {string} dir @param {string[]} files */
 function walkTs(dir, files = []) {
   for (const name of readdirSync(dir)) {
     const path = join(dir, name);
@@ -22,7 +25,7 @@ function walkTs(dir, files = []) {
     if (stat.isDirectory()) {
       if (name === 'node_modules' || name === 'dist') continue;
       walkTs(path, files);
-    } else if (/\.(ts|tsx)$/.test(name)) {
+    } else if (/\.(ts|tsx)$/.test(name) && !/\.(test|spec)\.(ts|tsx)$/.test(name)) {
       files.push(path);
     }
   }
@@ -30,26 +33,40 @@ function walkTs(dir, files = []) {
 }
 
 const VITE_READ = /import\.meta\.env\.VITE_[A-Z0-9_]+/;
+const RAW_ENV_SNIFF = /import\.meta\.env\.(?:DEV|PROD|MODE|SSR)\b/;
+// Comparing the derived environment (or Vite MODE) to a named environment.
+// Scoped to `.environment ===` / `.MODE ===` so unrelated string comparisons
+// (a domain field that happens to equal 'production', etc.) are not flagged.
+const ENV_COMPARE = /\.(?:environment|MODE)\s*===/;
 
+/** @type {{file: string, kind: string}[]} */
 const violations = [];
 for (const file of walkTs(resolve(ROOT, 'src'))) {
   const rel = relative(ROOT, file);
   const content = readFileSync(file, 'utf8');
-  if (!VITE_READ.test(content)) continue;
-  if (ALLOWLIST.has(rel)) continue;
-  violations.push(rel);
+  const allowlisted = ALLOWLIST.has(rel);
+  if (VITE_READ.test(content) && !allowlisted)
+    violations.push({ file: rel, kind: 'VITE_* read' });
+  if (RAW_ENV_SNIFF.test(content) && !allowlisted)
+    violations.push({ file: rel, kind: 'DEV/PROD/MODE sniff' });
+  // environment/mode comparisons are never allowed — not even in the kernel.
+  if (ENV_COMPARE.test(content))
+    violations.push({ file: rel, kind: 'environment=== compare' });
 }
 
 if (violations.length > 0) {
-  console.error('Direct import.meta.env.VITE_* reads outside allowlist:');
-  for (const file of violations.sort()) {
-    console.error(`  ${file}`);
+  console.error('Environment/mode sniffing outside the config kernel:');
+  for (const { file, kind } of violations.sort((a, b) => a.file.localeCompare(b.file))) {
+    console.error(`  ${file}  [${kind}]`);
   }
   console.error('');
   console.error(
-    'Route reads through lib/i18n/build-env.ts or env.config.ts getRuntimeConfigValue().',
+    'Drive behavior with named platformConfig flags (env-schema.ts). Raw env reads belong',
+  );
+  console.error(
+    'only in build-env.ts / env.config.ts; never compare platformConfig.environment.',
   );
   process.exit(1);
 }
 
-console.log('vite-env-reads: OK (allowlist only)');
+console.log('vite-env-reads: OK (no env/mode sniffing outside the config kernel)');

@@ -167,7 +167,7 @@ function exponentialDelay(attempt: number): number {
 
 /** Dev-only retry trace (kept out of the hot path to bound its complexity). */
 function logRetry(attempt: number, url: string, suffix = ''): void {
-  if (import.meta.env.DEV) {
+  if (platformConfig.debugLogging) {
     console.warn(`[HTTP] Retry attempt ${attempt + 1} for ${url}${suffix}`);
   }
 }

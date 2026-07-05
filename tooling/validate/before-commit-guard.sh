@@ -25,9 +25,14 @@ echo ""
 echo "3. Lint-staged (ESLint --fix + Prettier)..."
 pnpm lint-staged
 
-# ── 4. TypeScript type checking ──
+# ── 4. No env/mode sniffing (import.meta.env.DEV/PROD/MODE, environment===) ──
 echo ""
-echo "4. Type check..."
+echo "4. Env/mode sniffing gate..."
+pnpm run validate:vite-env
+
+# ── 5. TypeScript type checking ──
+echo ""
+echo "5. Type check..."
 pnpm type-check
 
 echo ""

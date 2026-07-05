@@ -6,7 +6,7 @@
  * @property {string} orgName
  * @property {string[]} envs
  * @property {string} nodeVersion
- * @property {Record<string, { apiBaseUrl: string; demoMode: string; siteName: string }>} perEnv
+ * @property {Record<string, { apiBaseUrl: string; siteName: string }>} perEnv
  */
 
 import { readFileSync } from 'node:fs';
@@ -45,7 +45,10 @@ export async function loadConfig() {
   const projectName = env.SETUP_PROJECT_NAME || 'core-fe';
   const orgName = env.SETUP_ORG_NAME || '';
   const envsRaw = env.SETUP_ENVS || 'dev,main';
-  const envs = envsRaw.split(',').map((e) => e.trim()).filter(Boolean);
+  const envs = envsRaw
+    .split(',')
+    .map((e) => e.trim())
+    .filter(Boolean);
   const nodeVersion = env.NODE_VERSION?.trim();
   if (!nodeVersion) {
     throw new Error(
@@ -53,13 +56,12 @@ export async function loadConfig() {
     );
   }
 
-  /** @type {Record<string, { apiBaseUrl: string; demoMode: string; siteName: string }>} */
+  /** @type {Record<string, { apiBaseUrl: string; siteName: string }>} */
   const perEnv = {};
   for (const envKey of envs) {
     const suffix = envKey.toUpperCase().replace('-', '_');
     perEnv[envKey] = {
       apiBaseUrl: env[`VITE_API_BASE_URL_${suffix}`] || env.VITE_API_BASE_URL_PROD || '',
-      demoMode: env[`VITE_DEMO_MODE_${suffix}`] ?? env.VITE_DEMO_MODE_PROD ?? 'false',
       siteName: env[`NETLIFY_SITE_${suffix}`] || `${projectName}-${envKey}`,
     };
   }

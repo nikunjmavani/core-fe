@@ -10,7 +10,7 @@ When you change any matched file:
 
 1. **Read** `agent-os/skills/platform-hygiene/SKILL.md`.
 2. **New/renamed/removed env key?** — also read `agent-os/skills/env-schema-add/SKILL.md` and run `pnpm tool:sync-env-example`.
-3. **App reads** — use `platformConfig` or `build-env.ts` helpers; never add raw `import.meta.env.VITE_*` outside the allowlist.
+3. **App reads** — use named `platformConfig` flags / `build-env.ts` helpers. Never add raw `import.meta.env.VITE_*`/`DEV`/`PROD`/`MODE` outside the allowlist, and never branch on `platformConfig.environment === '<name>'` (it is a reported value only). Test-runner env needs go through Vite plugins (`plugins/i18n-build.ts`, `plugins/test-env.ts`).
 4. **Validators** — run `pnpm validate:vite-env` and `pnpm validate:client-env --production` before finishing.
 5. **Dead code** — run `pnpm knip` after removing exports or dependencies.
 

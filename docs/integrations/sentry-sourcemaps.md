@@ -78,7 +78,7 @@ SENTRY_PROJECT=your-project-slug
 Then run `pnpm build`. The plugin loads this file when present.
 
 **Option C — Environment variables only**  
-Set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` in your shell or in `.env.local` (gitignored) before running `pnpm build`.
+Set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` in your shell or in `.env.development` (gitignored) before running `pnpm build`.
 
 ---
 

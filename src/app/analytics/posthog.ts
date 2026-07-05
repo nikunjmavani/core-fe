@@ -34,7 +34,7 @@ export function initPostHog(router?: AnyRouter): void {
   }
 
   if (!hasAnalyticsConsent()) {
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.info('[PostHog] Analytics consent not granted — not initializing');
     }
     return;
@@ -44,7 +44,7 @@ export function initPostHog(router?: AnyRouter): void {
   const host = platformConfig.posthogHost;
 
   if (!key) {
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.info('[PostHog] No API key — analytics disabled');
     }
     return;
@@ -80,7 +80,7 @@ export function initPostHog(router?: AnyRouter): void {
       hadUser = hasUser;
     });
   } catch (error) {
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.warn('[PostHog] Initialization failed:', error);
     }
   }

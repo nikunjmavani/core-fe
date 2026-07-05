@@ -1,6 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
 import { HTTP } from '@/core/config/constants.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { isUnauthorized } from '@/core/http/fetch-client.ts';
 import { notifyError, reportError } from '@/shared/errors/errorHandler.ts';
 
@@ -30,7 +31,7 @@ export const queryClient = new QueryClient({
     onError: (error, query) => {
       // Only handle non-auth errors here — fetch client owns 401s
       if (!isUnauthorized(error)) {
-        if (import.meta.env.DEV) {
+        if (platformConfig.debugLogging) {
           console.error(`[Query Error] ${query.queryKey.toString()}:`, error.message);
         }
         reportError(error, { queryKey: query.queryKey.toString() });
@@ -46,7 +47,7 @@ export const queryClient = new QueryClient({
     onError: (error, _variables, _context, mutation) => {
       if (!isUnauthorized(error)) {
         const key = mutation.options.mutationKey?.toString() ?? 'unknown';
-        if (import.meta.env.DEV) {
+        if (platformConfig.debugLogging) {
           console.error(`[Mutation Error] ${key}:`, error.message);
         }
         reportError(error, { mutationKey: key });

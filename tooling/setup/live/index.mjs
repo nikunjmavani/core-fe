@@ -18,13 +18,20 @@ import { spawnSync } from 'node:child_process';
 
 const cmd = process.argv[2] || 'live';
 
-const GITHUB_SECRETS_MAIN = ['VITE_API_BASE_URL', 'NODE_VERSION', 'NETLIFY_AUTH_TOKEN', 'NETLIFY_SITE_ID'];
+const GITHUB_SECRETS_MAIN = [
+  'VITE_API_BASE_URL',
+  'NODE_VERSION',
+  'NETLIFY_AUTH_TOKEN',
+  'NETLIFY_SITE_ID',
+];
 
 async function main() {
   const config = await loadConfig();
 
   if (!config.orgName) {
-    console.error('[live] Missing SETUP_ORG_NAME in config.setup.env. Set your Netlify team slug.');
+    console.error(
+      '[live] Missing SETUP_ORG_NAME in config.setup.env. Set your Netlify team slug.',
+    );
     process.exit(1);
   }
 
@@ -64,8 +71,8 @@ function formatConfigSummary(config, envsToShow) {
     '  Per-env:',
   ];
   for (const env of envs) {
-    const { siteName, apiBaseUrl, demoMode } = config.perEnv[env];
-    lines.push(`    ${env}: site=${siteName} api=${apiBaseUrl || '(default)'} demo=${demoMode}`);
+    const { siteName, apiBaseUrl } = config.perEnv[env];
+    lines.push(`    ${env}: site=${siteName} api=${apiBaseUrl || '(default)'}`);
   }
   return lines.join('\n');
 }
@@ -137,7 +144,7 @@ async function runUpdate(config, netlifyToken) {
   }
 
   for (const env of config.envs) {
-    const { siteName, apiBaseUrl, demoMode } = config.perEnv[env];
+    const { siteName, apiBaseUrl } = config.perEnv[env];
     try {
       const site = await netlify.ensureSite(netlifyToken, config.orgName, siteName);
       await netlify.setEnvVars(
@@ -146,10 +153,9 @@ async function runUpdate(config, netlifyToken) {
         site.id,
         {
           VITE_API_BASE_URL: apiBaseUrl || '',
-          VITE_DEMO_MODE: demoMode || 'false',
           NODE_VERSION: config.nodeVersion,
         },
-        'all'
+        'all',
       );
       console.log(`  Netlify ${siteName}: env updated`);
     } catch (e) {
@@ -158,7 +164,9 @@ async function runUpdate(config, netlifyToken) {
     }
   }
 
-  console.log('\n[live] Update complete. Run pnpm run setup:infra:github-secrets to sync GitHub secrets from config.');
+  console.log(
+    '\n[live] Update complete. Run pnpm run setup:infra:github-secrets to sync GitHub secrets from config.',
+  );
 }
 
 async function runRevert(config, netlifyToken) {
@@ -171,17 +179,23 @@ async function runRevert(config, netlifyToken) {
 
   const envsToRevert = choice === 'all' ? config.envs : [choice];
 
-  console.log(`\n[live] Revert ${choice} — will remove for this env across all services:\n`);
+  console.log(
+    `\n[live] Revert ${choice} — will remove for this env across all services:\n`,
+  );
   for (const env of envsToRevert) {
     const { siteName } = config.perEnv[env];
     console.log(`  ${env}: Netlify site "${siteName}"`);
   }
   if (envsToRevert.includes('main')) {
-    console.log('  main: + GitHub secrets (VITE_API_BASE_URL, NODE_VERSION, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID)');
+    console.log(
+      '  main: + GitHub secrets (VITE_API_BASE_URL, NODE_VERSION, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID)',
+    );
   }
   console.log('');
 
-  const ok = await confirm('Proceed? (Only this environment will be reverted — no partial services)');
+  const ok = await confirm(
+    'Proceed? (Only this environment will be reverted — no partial services)',
+  );
   if (!ok) {
     console.log('[live] Aborted.');
     process.exit(0);
@@ -244,7 +258,9 @@ async function runLive(config, netlifyToken) {
     console.log(`  ${env}: Netlify site "${siteName}"`);
   }
   if (envsToSetup.includes('main')) {
-    console.log('  main: + GitHub secrets (VITE_API_BASE_URL, NODE_VERSION, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID)');
+    console.log(
+      '  main: + GitHub secrets (VITE_API_BASE_URL, NODE_VERSION, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID)',
+    );
     console.log('  main: + Deploy (build + netlify deploy --prod)');
   }
   console.log('');
@@ -259,7 +275,8 @@ async function runLive(config, netlifyToken) {
   const conflicts = [];
   for (const env of envsToSetup) {
     const { siteName } = config.perEnv[env];
-    if (existing.some((x) => x.includes(siteName))) conflicts.push(`Netlify site "${siteName}"`);
+    if (existing.some((x) => x.includes(siteName)))
+      conflicts.push(`Netlify site "${siteName}"`);
     if (env === 'main' && existing.some((x) => x.includes('GitHub secret'))) {
       conflicts.push('GitHub secrets');
     }
@@ -283,7 +300,9 @@ async function runLive(config, netlifyToken) {
     }
   }
 
-  const ok4 = await confirm('Final confirmation: proceed with setup? (No partial — full env across all services)');
+  const ok4 = await confirm(
+    'Final confirmation: proceed with setup? (No partial — full env across all services)',
+  );
   if (!ok4) {
     console.log('[live] Aborted.');
     process.exit(0);
@@ -327,7 +346,7 @@ async function runLive(config, netlifyToken) {
     console.log('\n1. Netlify: ensuring sites...');
     const sitesBefore = await netlify.listSites(netlifyToken, config.orgName);
     for (const env of envsToSetup) {
-      const { siteName, apiBaseUrl, demoMode } = config.perEnv[env];
+      const { siteName, apiBaseUrl } = config.perEnv[env];
       const site = await netlify.ensureSite(netlifyToken, config.orgName, siteName);
       const wasNew = !sitesBefore.some((s) => s.id === site.id);
       if (wasNew) createdSites.push(site.id);
@@ -338,10 +357,9 @@ async function runLive(config, netlifyToken) {
         site.id,
         {
           VITE_API_BASE_URL: apiBaseUrl || '',
-          VITE_DEMO_MODE: demoMode || 'false',
           NODE_VERSION: config.nodeVersion,
         },
-        'all'
+        'all',
       );
       console.log(`   - ${siteName}: ${site.url || site.id}`);
     }
@@ -356,9 +374,13 @@ async function runLive(config, netlifyToken) {
       await github.setSecret('NETLIFY_AUTH_TOKEN', netlifyToken);
       await github.setSecret('NETLIFY_SITE_ID', siteIds.main);
       ghSecretsSet = true;
-      console.log('   - VITE_API_BASE_URL, NODE_VERSION, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID: set');
+      console.log(
+        '   - VITE_API_BASE_URL, NODE_VERSION, NETLIFY_AUTH_TOKEN, NETLIFY_SITE_ID: set',
+      );
     } else if (envsToSetup.includes('main')) {
-      console.log('\n2. GitHub: skipping (gh auth login or set manually via setup:infra:github-secrets)');
+      console.log(
+        '\n2. GitHub: skipping (gh auth login or set manually via setup:infra:github-secrets)',
+      );
     }
 
     // 3. Deploy (main only)
@@ -388,8 +410,12 @@ async function runLive(config, netlifyToken) {
       {
         stdio: 'inherit',
         cwd: process.cwd(),
-        env: { ...process.env, NETLIFY_AUTH_TOKEN: netlifyToken, NETLIFY_SITE_ID: siteIds.main },
-      }
+        env: {
+          ...process.env,
+          NETLIFY_AUTH_TOKEN: netlifyToken,
+          NETLIFY_SITE_ID: siteIds.main,
+        },
+      },
     );
     if (deploy.status !== 0) {
       await rollback('Deploy failed');

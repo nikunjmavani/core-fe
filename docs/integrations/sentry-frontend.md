@@ -71,13 +71,13 @@ replay). It is **not** gated by the analytics cookie banner — see
 
 ## Environment variables
 
-| Variable            | Where                                  | Purpose                                             |
-| ------------------- | -------------------------------------- | --------------------------------------------------- |
-| `VITE_SENTRY_DSN`   | Netlify / GitHub Secret / `.env.local` | Client DSN — **required for any events**            |
-| `SENTRY_AUTH_TOKEN` | CI / local build only                  | Upload source maps at build time                    |
-| `SENTRY_ORG`        | CI / local build only                  | Org slug for source map plugin                      |
-| `SENTRY_PROJECT`    | CI / local build only                  | Project slug for source map plugin                  |
-| `VITE_APP_VERSION`  | Build                                  | Release name in Sentry (matches source map release) |
+| Variable            | Where                                   | Purpose                                             |
+| ------------------- | --------------------------------------- | --------------------------------------------------- |
+| `VITE_SENTRY_DSN`   | GitHub Environment / `.env.development` | Client DSN — **required for any events**            |
+| `SENTRY_AUTH_TOKEN` | CI / local build only                   | Upload source maps at build time                    |
+| `SENTRY_ORG`        | CI / local build only                   | Org slug for source map plugin                      |
+| `SENTRY_PROJECT`    | CI / local build only                   | Project slug for source map plugin                  |
+| `VITE_APP_VERSION`  | Build                                   | Release name in Sentry (matches source map release) |
 
 Runtime override: `window.__CONFIG__.SENTRY_DSN` in `public/config.js` (no `VITE_`
 prefix) — same resolution order as other platform keys.

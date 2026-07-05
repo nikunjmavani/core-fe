@@ -6,6 +6,7 @@ import { createRoot } from 'react-dom/client';
 
 import { router } from '@/app/routes/routeTree.tsx';
 import { showUpdateAvailableToast } from '@/app/version/show-update-available-toast.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { bootstrapResources } from '@/core/resources/index.ts';
 import { startVersionCheck } from '@/core/version/check.ts';
 import { afterPaint, dismissAppSplash, onAppSplashDismissed } from '@/lib/app-splash.ts';
@@ -89,8 +90,9 @@ if (themeSeedParam && /^\d+$/.test(themeSeedParam)) {
   window.history.replaceState(null, '', url.toString());
 }
 
-// Dev-only: Playwright E2E hooks (`navigateInApp`, `establishSession`, Turnstile readiness).
-if (import.meta.env.DEV) {
+// Playwright E2E hooks (`navigateInApp`, `establishSession`, Turnstile readiness).
+// Env-gated (VITE_E2E_HOOKS) — on locally, off in every deployed build.
+if (platformConfig.e2eHooks) {
   (
     globalThis as typeof globalThis & {
       __coreFeRouter?: typeof router;

@@ -1,8 +1,8 @@
 /**
  * Application config — exports {@link platformConfig} resolved from validated env.
  *
- * Env files at project root:
- *   .env, .env.development, .env.production, .env.local
+ * Env files at project root (all gitignored except the committed .env.example):
+ *   .env.example (template) · .env.development (single local file) · .env · .env.production
  *
  * Resolution: `window.__CONFIG__[key]` → `import.meta.env.VITE_${key}` → defaults.
  * See docs/deployment/runbooks/environment-variables.md.
@@ -33,21 +33,19 @@ export type { PlatformConfig };
 const clientEnv = getClientEnv();
 export const platformConfig = resolvePlatformConfig(getRuntimeConfigValue, clientEnv);
 
-validatePlatformInvariantsAtBoot(platformConfig.isProduction);
+// Boot invariants — no environment branching (behavior is env-flag-driven; the
+// production Turnstile requirement is enforced at deploy time by validate:client-env).
+validatePlatformInvariantsAtBoot();
 
-if (platformConfig.isProduction && !getRuntimeConfigValue('API_BASE_URL')) {
-  console.warn(
-    '[Config] VITE_API_BASE_URL is not set in production — API calls will be relative to origin.',
-  );
-}
-
+// Reject a non-HTTPS absolute API origin anywhere except localhost. Dev uses ''
+// (Vite proxy) or http://localhost, so this only fires on a genuinely
+// misconfigured http:// origin — no isProduction check needed.
 if (
-  platformConfig.isProduction &&
   platformConfig.apiBaseUrl?.startsWith('http://') &&
   !platformConfig.apiBaseUrl.startsWith('http://localhost')
 ) {
   throw new Error(
-    '[Config] VITE_API_BASE_URL must use HTTPS in production. Received: ' +
+    '[Config] VITE_API_BASE_URL must use HTTPS. Received: ' +
       platformConfig.apiBaseUrl.slice(0, 40),
   );
 }

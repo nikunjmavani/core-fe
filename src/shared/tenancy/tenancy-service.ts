@@ -1,4 +1,5 @@
 import { ORGANIZATION } from '@/core/config/constants.ts';
+import { platformConfig } from '@/core/config/env.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
@@ -27,7 +28,7 @@ export function resolveOrganizationFromSubdomain(): void {
   if (parts.length < 3) {
     // No subdomain detected (e.g., "app.example.com") — seed the fallback so
     // the derived store is never empty before the URL guards take over
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.warn(
         '[Tenancy] No subdomain detected in hostname:',
         hostname,
@@ -46,7 +47,7 @@ export function resolveOrganizationFromSubdomain(): void {
   // eslint-disable-next-line security/detect-unsafe-regex -- [a-z0-9-]{0,61} is bounded, not user-controlled pattern
   const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
   if (!SLUG_RE.test(slug)) {
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.warn('[Tenancy] Invalid subdomain slug:', slug, '— using fallback');
     }
     useOrganizationStore

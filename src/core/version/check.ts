@@ -15,6 +15,7 @@
  * Users get fresh code after a release without a jarring mid-task reload.
  */
 
+import { platformConfig } from '@/core/config/env.ts';
 import { readInjectedAppBuildId } from '@/lib/i18n/build-env.ts';
 
 import {
@@ -126,7 +127,8 @@ function markReloadedFor(buildId: string): void {
 export function startVersionCheck(
   options?: VersionCheckOptions,
 ): (() => void) | undefined {
-  if (initialized || import.meta.env.DEV || import.meta.env.MODE === 'test') return;
+  // Env-gated (VITE_VERSION_CHECK) — on in deployed envs, off locally and in tests.
+  if (initialized || !platformConfig.versionCheckEnabled) return;
 
   const currentBuildId = getCurrentBuildId();
   if (!currentBuildId) return;
@@ -155,7 +157,7 @@ export function startVersionCheck(
     pendingBuildId = null;
     toastShownForBuildId = null;
     stopSafetyWatch();
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.info('[VersionCheck] Applying deferred reload for', buildId);
     }
     window.location.reload();
@@ -209,7 +211,7 @@ export function startVersionCheck(
       });
     }
 
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.info('[VersionCheck] New deployment detected; will reload when idle…');
     }
     startSafetyWatch();

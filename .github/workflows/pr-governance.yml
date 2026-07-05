@@ -93,15 +93,16 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref || github.base_ref || 'main' }}
         run: |
           git fetch origin "${BASE_REF}" --depth=1 2>/dev/null || true
-          # Allowlist = the documented committed set (CLAUDE.md → Environment
-          # Variables: shared defaults + per-env overrides, no secrets). Anything
-          # else (.env.local, .env.*.backup, …) must never reach a PR.
+          # Only .env.example is committed (CLAUDE.md → Environment Variables).
+          # Every other .env* is gitignored — deploys inject env from GitHub
+          # Environments — so none (.env, .env.development, .env.production,
+          # .env.local, .env.*.backup, …) may ever reach a PR diff.
           ENV_FILES=$(git diff --name-only "origin/${BASE_REF}...HEAD" 2>/dev/null \
             | grep -E '^\.env(\.|$)' \
-            | grep -vE '^\.env$|^\.env\.(example|development|production|staging)$' || true)
+            | grep -vE '^\.env\.example$' || true)
           if [ -n "$ENV_FILES" ]; then
             echo "::error::Environment files detected in PR diff: $ENV_FILES"
-            echo "Remove these from the commit. Committed env files are limited to .env, .env.development, .env.production, .env.staging, and .env.example (no secrets)."
+            echo "Remove these from the commit. Only .env.example is committed; every other .env* is gitignored (deploys use GitHub Environments)."
             exit 1
           fi
 
