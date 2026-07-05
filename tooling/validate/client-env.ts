@@ -16,7 +16,7 @@
  * Environment resolution (first match wins):
  *   1. `--env <development|production>`
  *   2. branch → env via `branchEnvironmentMap` (CI `GITHUB_REF_NAME`, else `git`)
- *   3. legacy `--production` flag / `NODE_ENV=production` / `VITE_MODE=production`
+ *   3. legacy `--production` CLI flag (NODE_ENV/VITE_MODE are NOT consulted)
  *   4. otherwise: skip (unmapped feature branch)
  *
  * Usage:
@@ -79,11 +79,8 @@ function resolveEnvironment(): DeployEnvironment | undefined {
   const fromBranch = environmentForBranch(currentBranch());
   if (fromBranch) return fromBranch;
 
-  const legacyProduction =
-    process.argv.includes('--production') ||
-    process.env.NODE_ENV === 'production' ||
-    process.env.VITE_MODE === 'production';
-  if (legacyProduction) return 'production';
+  // Legacy `--production` CLI flag only — no NODE_ENV/VITE_MODE env checks.
+  if (process.argv.includes('--production')) return 'production';
 
   return undefined;
 }

@@ -112,9 +112,10 @@ export const clientEnvSchema = z.object({
   // Two deploy environments only — no 'staging'. 'test' is kept solely because it
   // is the Vitest runner's Vite mode (not a deploy environment); the deploy axis is
   // DeployEnvironment = 'development' | 'production'.
+  // Reported deployment name only (never branched on). `test` = the Vitest
+  // runner's Vite mode. The raw `DEV`/`PROD` booleans are intentionally absent —
+  // behavior is driven by named flags, not the build mode.
   MODE: z.enum(['development', 'production', 'test']).default('development'),
-  DEV: z.boolean().default(false),
-  PROD: z.boolean().default(false),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -122,7 +123,6 @@ export type ClientEnv = z.infer<typeof clientEnvSchema>;
 /** Cross-field invariants for auth platform switches. */
 export function assertAuthPlatformInvariants(
   get: (key: string) => string | undefined,
-  isProduction: boolean,
 ): void {
   const oauthAutoGoogle = get('AUTH_OAUTH_AUTO_GOOGLE') === 'true';
   const oauthGoogleOff = get('AUTH_OAUTH_GOOGLE') === 'false';
@@ -132,12 +132,9 @@ export function assertAuthPlatformInvariants(
     );
   }
 
-  const captchaDisabled = get('CAPTCHA_DISABLED') === 'true';
-  if (isProduction && !captchaDisabled && !get('TURNSTILE_SITE_KEY')) {
-    throw new Error(
-      '[Config] VITE_TURNSTILE_SITE_KEY is required in production when VITE_CAPTCHA_DISABLED is not true.',
-    );
-  }
+  // The production Turnstile requirement is enforced at deploy time by
+  // `validate:client-env` (envProfiles.production.required) — not a runtime
+  // isProduction branch.
 
   const email = get('AUTH_EMAIL') !== 'false';
   const passkey = get('AUTH_PASSKEY') !== 'false';

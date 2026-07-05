@@ -71,8 +71,6 @@ export type ConfigGet = (key: string) => string | undefined;
 
 type ClientEnvSlice = {
   MODE: string;
-  DEV: boolean;
-  PROD: boolean;
 };
 
 /** Build typed platform config from resolved env getters. */

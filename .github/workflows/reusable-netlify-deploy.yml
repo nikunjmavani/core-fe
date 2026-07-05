@@ -137,7 +137,6 @@ jobs:
       - name: Validate client env (VITE_*)
         env:
           DEPLOY_ENV: ${{ needs.resolve-environment.outputs.environment }}
-          NODE_ENV: ${{ needs.resolve-environment.outputs.environment }}
           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_CAPTCHA_DISABLED: ${{ vars.VITE_CAPTCHA_DISABLED }}
           VITE_TURNSTILE_SITE_KEY: ${{ secrets.VITE_TURNSTILE_SITE_KEY }}

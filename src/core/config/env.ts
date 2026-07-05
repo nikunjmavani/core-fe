@@ -33,24 +33,19 @@ export type { PlatformConfig };
 const clientEnv = getClientEnv();
 export const platformConfig = resolvePlatformConfig(getRuntimeConfigValue, clientEnv);
 
-// The config kernel is the one place a raw production check is legitimate — these
-// are boot-time deploy guards, not app behavior. `platformConfig` no longer exposes
-// isProduction/isDevelopment; read the parsed `clientEnv.PROD` here directly.
-validatePlatformInvariantsAtBoot(clientEnv.PROD);
+// Boot invariants — no environment branching (behavior is env-flag-driven; the
+// production Turnstile requirement is enforced at deploy time by validate:client-env).
+validatePlatformInvariantsAtBoot();
 
-if (clientEnv.PROD && !getRuntimeConfigValue('API_BASE_URL')) {
-  console.warn(
-    '[Config] VITE_API_BASE_URL is not set in production — API calls will be relative to origin.',
-  );
-}
-
+// Reject a non-HTTPS absolute API origin anywhere except localhost. Dev uses ''
+// (Vite proxy) or http://localhost, so this only fires on a genuinely
+// misconfigured http:// origin — no isProduction check needed.
 if (
-  clientEnv.PROD &&
   platformConfig.apiBaseUrl?.startsWith('http://') &&
   !platformConfig.apiBaseUrl.startsWith('http://localhost')
 ) {
   throw new Error(
-    '[Config] VITE_API_BASE_URL must use HTTPS in production. Received: ' +
+    '[Config] VITE_API_BASE_URL must use HTTPS. Received: ' +
       platformConfig.apiBaseUrl.slice(0, 40),
   );
 }
