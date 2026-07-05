@@ -4,6 +4,7 @@ import { buildEnv } from '@/lib/i18n/build-env.ts';
 import type { OAuthProviderFlags } from './env-resolvers.ts';
 import {
   resolveAuthMethodFlag,
+  resolveBooleanFlag,
   resolveDeploymentOverride,
   resolveDisabledModules,
   resolveLayoutWidthForced,
@@ -40,6 +41,14 @@ export interface PlatformConfig {
   captchaDisabled: boolean;
   turnstileSiteKey: string | undefined;
   stripePublishableKey: string | undefined;
+  /** Emit `[Module]` diagnostic console logs (off in production; on locally). */
+  debugLogging: boolean;
+  /** Mount dev-only affordances — React Query Devtools, debug panels, theme shuffle. */
+  devtools: boolean;
+  /** Install Playwright E2E hooks (`navigateInApp`, `establishSession`) on `globalThis`. */
+  e2eHooks: boolean;
+  /** Poll `/version.json` for new deployments (on in deployed envs; off locally/tests). */
+  versionCheckEnabled: boolean;
   deploymentOverrides: DeploymentEnvOverrides;
   buildI18nMode: I18nBuildMode;
   buildI18nLocale: string;
@@ -66,11 +75,13 @@ export function resolvePlatformConfig(
   const oauth = resolveOAuthProviderFlags(get);
   const oauthAutoGoogleRaw = resolveAuthMethodFlag(get('AUTH_OAUTH_AUTO_GOOGLE'), false);
 
+  // Purely env-driven — no build-mode branch. Local dev sets VITE_API_BASE_URL=''
+  // (relative, so the Vite proxy handles `/api`); deploys set the absolute origin.
   // Strip trailing slash(es) so joining `${base}/api/...` never yields a double
   // slash (e.g. `https://api.example.com//api/v1/...`), which some proxies/CORS
   // setups 404 or reject on preflight. Done with a loop (not a regex) to avoid
   // the sonarjs super-linear-regex rule and to handle repeated slashes.
-  let apiBaseUrl = clientEnv.MODE === 'development' ? '' : (get('API_BASE_URL') ?? '');
+  let apiBaseUrl = get('API_BASE_URL') ?? '';
   while (apiBaseUrl.endsWith('/')) apiBaseUrl = apiBaseUrl.slice(0, -1);
 
   return {
@@ -95,6 +106,11 @@ export function resolvePlatformConfig(
     captchaDisabled: get('CAPTCHA_DISABLED') === 'true',
     turnstileSiteKey: get('TURNSTILE_SITE_KEY'),
     stripePublishableKey: get('STRIPE_PUBLISHABLE_KEY'),
+
+    debugLogging: resolveBooleanFlag(get('DEBUG_LOGGING'), false),
+    devtools: resolveBooleanFlag(get('DEVTOOLS'), false),
+    e2eHooks: resolveBooleanFlag(get('E2E_HOOKS'), false),
+    versionCheckEnabled: resolveBooleanFlag(get('VERSION_CHECK'), true),
 
     deploymentOverrides: {
       personalOrganizations: resolveDeploymentOverride(get('PERSONAL_ORGANIZATIONS')),

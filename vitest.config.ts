@@ -22,6 +22,28 @@ export default defineConfig({
     setupFiles: ['./tests/utils/setup.ts'],
     exclude: ['node_modules', 'dist', 'tests/e2e'],
     css: true,
+    // Hermetic env: pin every behavior-affecting VITE_ flag to its canonical
+    // value so the suite is identical on every machine and on CI, regardless of
+    // any local `.env*` file. This is what keeps "passes on CI, fails locally"
+    // structurally impossible — tests read platformConfig defaults, never a
+    // developer's machine config. Values here mirror the schema defaults.
+    env: {
+      // Multi-locale so lazy-JSON i18n tests can load every namespace/locale.
+      // Replaces the old `import.meta.env.MODE === 'test'` build-mode sniff.
+      VITE_I18N_BUILD_MODE: 'multi',
+      VITE_API_BASE_URL: '',
+      VITE_LAYOUT_WIDTH: '',
+      VITE_THEME_LOCK: '',
+      VITE_DISABLED_MODULES: '',
+      VITE_PERSONAL_ORGANIZATIONS: '',
+      VITE_TEAM_ORGANIZATIONS: '',
+      VITE_CAPTCHA_DISABLED: '',
+      VITE_TURNSTILE_SITE_KEY: '',
+      VITE_DEBUG_LOGGING: 'false',
+      VITE_DEVTOOLS: 'false',
+      VITE_E2E_HOOKS: 'false',
+      VITE_VERSION_CHECK: 'false',
+    },
     // Projects (core-be pattern): `unit` = colocated src suites; `security` =
     // cross-cutting invariants under tests/security (token storage, redirect
     // safety, header tripwires). `pnpm test` runs all;

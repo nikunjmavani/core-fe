@@ -260,15 +260,17 @@ UI components are **shadcn/ui** style: Radix primitives + Tailwind + `cva` in `s
 
 ## Environment Variables
 
-Env files live at **project root** for clear paths: `.env`, `.env.development`, `.env.production`.
+Env files live at **project root** for clear paths. `.env.example` is the **only committed**
+file; every other `.env*` is gitignored. Deploys inject env from **GitHub Environments** (never
+from files). There is **no `.env.local`** — `.env.development` is the single gitignored local file
+(behavior flags + machine secrets), scaffolded by `pnpm setup:local` and loaded by `pnpm dev`.
 
-| File               | Purpose                                      |
-| ------------------ | -------------------------------------------- |
-| `.env`             | Shared defaults (committed)                  |
-| `.env.development` | Dev overrides (committed)                    |
-| `.env.production`  | Production overrides (committed; no secrets) |
-| `.env.local`       | Local secrets (gitignored)                   |
-| `.env.example`     | Reference for all variables                  |
+| File               | Purpose                                                   |
+| ------------------ | --------------------------------------------------------- |
+| `.env.example`     | Reference for all variables — the **only committed** file |
+| `.env.development` | Local dev file (gitignored): behavior flags + secrets     |
+| `.env.production`  | Local production-build values (gitignored; rare)          |
+| `.env`             | Shared local non-secrets (gitignored)                     |
 
 - **`VITE_`** prefix: exposed to the client (public). No secrets here.
 - **No prefix**: build/CI only (e.g. Sentry auth token).

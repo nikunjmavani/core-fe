@@ -22,11 +22,13 @@ describe('build-runtime', () => {
     expect(isSingleLocaleBuild()).toBe(true);
   });
 
-  it('uses multi in vitest when the build flag is omitted', async () => {
+  it('defaults to single when the build flag is omitted — no build-mode sniffing', async () => {
+    // The mode is purely env-driven now (VITE_I18N_BUILD_MODE); there is no
+    // `MODE === 'test'` special case. The test suite gets `multi` from
+    // vitest.config `test.env`, not from an implicit vitest-detection branch.
     vi.stubEnv('VITE_I18N_BUILD_MODE', '');
-    vi.stubEnv('MODE', 'test');
-    const { isMultiLocaleBuild, I18N_BUILD_MODE } = await import('./build-runtime.ts');
-    expect(I18N_BUILD_MODE).toBe('multi');
-    expect(isMultiLocaleBuild()).toBe(true);
+    const { isSingleLocaleBuild, I18N_BUILD_MODE } = await import('./build-runtime.ts');
+    expect(I18N_BUILD_MODE).toBe('single');
+    expect(isSingleLocaleBuild()).toBe(true);
   });
 });

@@ -8,6 +8,7 @@ import { z } from 'zod';
 import {
   enabledOAuthProviders,
   hasAnyAuthSurface,
+  resolveBooleanFlag,
   resolveOAuthProviderFlags,
 } from './env-resolvers.ts';
 
@@ -48,6 +49,15 @@ export const envSchemaBase = z.object({
   VITE_CAPTCHA_DISABLED: z.string().optional(),
   VITE_TURNSTILE_SITE_KEY: z.string().optional(),
 
+  // --- Platform diagnostics / dev tooling (VITE_* — bundled client) ---
+  // Behavior is env-driven, never sniffed from the build mode: production
+  // defaults are safe (logging/devtools/e2e off, version polling on); the
+  // `.env.development` local file flips them on for dev.
+  VITE_DEBUG_LOGGING: booleanString('false'),
+  VITE_DEVTOOLS: booleanString('false'),
+  VITE_E2E_HOOKS: booleanString('false'),
+  VITE_VERSION_CHECK: booleanString('true'),
+
   // --- Runtime private (CI / build scripts only) ---
   SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
   SENTRY_ORG: z.string().min(1).optional(),
@@ -58,7 +68,7 @@ export const envSchemaBase = z.object({
   CONTEXT7_API_KEY: z.string().min(1).optional(),
 
   // --- Local tooling only (never bundled / never set in CI) ---
-  // SonarQube local quality gate — auto-managed in .env.local by tooling/sonar/sonar-gate.mjs.
+  // SonarQube local quality gate — auto-managed in .env.development by tooling/sonar/sonar-gate.mjs.
   SONAR_ADMIN_PASSWORD: z.string().min(1).optional(),
   SONAR_TOKEN: z.string().min(1).optional(),
 });
@@ -87,6 +97,10 @@ export const clientEnvSchema = z.object({
   VITE_AUTH_PASSKEY: z.string().optional(),
   VITE_CAPTCHA_DISABLED: z.string().optional(),
   VITE_TURNSTILE_SITE_KEY: z.string().optional(),
+  VITE_DEBUG_LOGGING: z.string().optional(),
+  VITE_DEVTOOLS: z.string().optional(),
+  VITE_E2E_HOOKS: z.string().optional(),
+  VITE_VERSION_CHECK: z.string().optional(),
   MODE: z.enum(['development', 'production', 'staging', 'test']).default('development'),
   DEV: z.boolean().default(false),
   PROD: z.boolean().default(false),
@@ -118,7 +132,7 @@ export function assertAuthPlatformInvariants(
   const passkey = get('AUTH_PASSKEY') !== 'false';
   const oauth = resolveOAuthProviderFlags(get);
   if (!hasAnyAuthSurface({ email, passkey, oauth })) {
-    if (import.meta.env.DEV) {
+    if (resolveBooleanFlag(get('DEBUG_LOGGING'), false)) {
       console.warn(
         '[Config] No auth methods enabled (email, oauth providers, passkey). /login will show an empty state.',
       );
@@ -204,8 +218,9 @@ const SONAR_LOCAL_ONLY: readonly ForbiddenKeyRule[] = [
 
 /**
  * Branch-wise env contracts. `required` is checked against the resolved runtime
- * env; `forbidden` is checked against the committed `.env` + `.env.<env>` layer
- * (never `.env.local`), so local secrets never trip a deploy guard.
+ * env; `forbidden` is checked against git-TRACKED `.env` + `.env.<env>` files only
+ * (gitignored local files are skipped), so local secrets in the gitignored
+ * `.env.development` never trip a deploy guard.
  */
 export const envProfiles: Readonly<Record<DeployEnvironment, EnvProfile>> = {
   development: {

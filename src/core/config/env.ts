@@ -1,8 +1,8 @@
 /**
  * Application config — exports {@link platformConfig} resolved from validated env.
  *
- * Env files at project root:
- *   .env, .env.development, .env.production, .env.local
+ * Env files at project root (all gitignored except the committed .env.example):
+ *   .env.example (template) · .env.development (single local file) · .env · .env.production
  *
  * Resolution: `window.__CONFIG__[key]` → `import.meta.env.VITE_${key}` → defaults.
  * See docs/deployment/runbooks/environment-variables.md.

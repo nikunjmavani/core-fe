@@ -4,12 +4,22 @@ import {
   enabledOAuthProviders,
   hasAnyAuthSurface,
   resolveAuthMethodFlag,
+  resolveBooleanFlag,
   resolveDeploymentOverride,
   resolveDisabledModules,
   resolveOAuthProviderFlags,
 } from './env-resolvers.ts';
 
 describe('env-resolvers', () => {
+  it('resolveBooleanFlag: omitted/empty → default; only "false" disables', () => {
+    expect(resolveBooleanFlag(undefined, true)).toBe(true);
+    expect(resolveBooleanFlag('', true)).toBe(true);
+    expect(resolveBooleanFlag(undefined, false)).toBe(false);
+    expect(resolveBooleanFlag('false', true)).toBe(false);
+    expect(resolveBooleanFlag('true', false)).toBe(true);
+    expect(resolveBooleanFlag('1', false)).toBe(true);
+  });
+
   it('resolveAuthMethodFlag treats omitted as default', () => {
     expect(resolveAuthMethodFlag(undefined, true)).toBe(true);
     expect(resolveAuthMethodFlag(undefined, false)).toBe(false);

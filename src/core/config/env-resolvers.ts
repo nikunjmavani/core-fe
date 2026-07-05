@@ -3,13 +3,26 @@ export const OAUTH_PROVIDER_IDS = ['google', 'github', 'apple'] as const;
 
 export type OAuthProviderId = (typeof OAUTH_PROVIDER_IDS)[number];
 
-/** Parse `true`/`false` env flags; omitted → default. @internal Exported for unit tests. */
-export function resolveAuthMethodFlag(
+/**
+ * Parse a boolean env flag: omitted/empty → `defaultValue`; `'false'` is the only
+ * value that disables, everything else enables. The single primitive behind every
+ * boolean platform switch (auth methods, diagnostics, devtools) so the whole app
+ * reads one truth table. @internal Exported for unit tests.
+ */
+export function resolveBooleanFlag(
   flag: string | undefined,
   defaultValue: boolean,
 ): boolean {
   if (flag === undefined || flag === '') return defaultValue;
   return flag !== 'false';
+}
+
+/** Parse `true`/`false` auth-method flags; omitted → default. @internal Exported for unit tests. */
+export function resolveAuthMethodFlag(
+  flag: string | undefined,
+  defaultValue: boolean,
+): boolean {
+  return resolveBooleanFlag(flag, defaultValue);
 }
 
 /**

@@ -325,18 +325,28 @@ import { User } from './contracts';
 
 ## Environment Variables
 
-Env files live at **project root** for clear paths. Vite loads them automatically.
+Env files live at **project root**. `.env.example` is the **only committed** file;
+every other `.env*` is gitignored. Deploys inject env from **GitHub Environments**
+(never from files). There is **no `.env.local`** — `.env.development` is the single
+gitignored local file (behavior flags + machine secrets), scaffolded by
+`pnpm setup:local` and loaded by `pnpm dev` (development mode).
 
 ```text
-.env                 # Shared defaults (committed)
-.env.development     # Dev overrides (committed)
-.env.production      # Production overrides (committed, no secrets)
-.env.local           # Local secrets (gitignored)
-.env.example         # Reference for all env vars
+.env.example         # Reference for all env vars — the ONLY committed file
+.env.development     # Local dev file (gitignored): behavior flags + secrets; toggle here
+.env.production      # Local production-build values (gitignored; rare)
+.env                 # Shared local non-secrets (gitignored)
 ```
 
 - `VITE_` prefix = bundled into the client (public). No prefix = build-time only.
-- Secrets (API keys, auth tokens) go in CI env vars or `.env.local`, never committed.
+- Secrets (API keys, auth tokens) go in GitHub Environments (deploy) or the gitignored
+  `.env.development` (local) — never committed. A guardrail blocks agent edits to `.env*`.
+- **Behavior is env-driven, never mode-sniffed.** No `import.meta.env.DEV/PROD/MODE`
+  branching in app code — named schema flags drive it: `VITE_DEBUG_LOGGING`,
+  `VITE_DEVTOOLS`, `VITE_E2E_HOOKS`, `VITE_VERSION_CHECK` → read via `platformConfig`.
+  The one raw read is the config bootstrap (`env.config.ts`, allowlisted).
+- **Tests are hermetic:** `vitest.config.ts` pins `test.env`, so the suite is identical
+  on every machine and on CI regardless of any local `.env*` file.
 - **Where to get credentials and optional env:** docs/integrations/credentials-and-env.md
 
 ## Auth & Security

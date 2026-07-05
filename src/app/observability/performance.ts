@@ -1,6 +1,7 @@
 import type { Metric } from 'web-vitals';
 import { onCLS, onFCP, onINP, onLCP, onTTFB } from 'web-vitals';
 
+import { platformConfig } from '@/core/config/env.ts';
 import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
 import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 
@@ -17,7 +18,7 @@ import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
  */
 export function initPerformanceMonitoring(): void {
   const reportMetric = (metric: Metric) => {
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.info(
         `[Web Vitals] ${metric.name}:`,
         metric.value.toFixed(2),

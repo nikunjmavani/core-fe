@@ -26,6 +26,14 @@ interface ImportMetaEnv {
   readonly VITE_AUTH_PASSKEY: string;
   readonly VITE_TURNSTILE_SITE_KEY: string;
   readonly VITE_CAPTCHA_DISABLED: string;
+  /** Emit `[Module]` diagnostic console logs — off in production. */
+  readonly VITE_DEBUG_LOGGING: string;
+  /** Mount dev-only affordances (React Query Devtools, debug panels). */
+  readonly VITE_DEVTOOLS: string;
+  /** Install Playwright E2E hooks on `globalThis`. */
+  readonly VITE_E2E_HOOKS: string;
+  /** Poll `/version.json` for new deployments — on in deployed envs. */
+  readonly VITE_VERSION_CHECK: string;
 }
 
 interface ImportMeta {

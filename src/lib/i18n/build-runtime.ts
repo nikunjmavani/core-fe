@@ -2,11 +2,11 @@ import type { I18nBuildMode } from './build-config.ts';
 import { readInjectedI18nMode } from './build-env.ts';
 
 /**
- * Resolve the active i18n build mode at runtime.
- * BUILD_I18N_MODE is injected by the Vite plugin; Vitest uses `multi` so lazy JSON tests work.
+ * Resolve the active i18n build mode at runtime. `BUILD_I18N_MODE` is injected by
+ * the Vite plugin (`vite.config.ts` at build, `vitest.config.ts` with `modeFlag:
+ * 'multi'` under test so lazy JSON tests work) — no build-mode sniffing here.
  */
 export function resolveRuntimeI18nBuildMode(): I18nBuildMode {
-  if (import.meta.env.MODE === 'test') return 'multi';
   return readInjectedI18nMode();
 }
 

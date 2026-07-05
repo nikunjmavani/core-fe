@@ -64,20 +64,20 @@ real, gitignored config is `.mcp.json` (the `.mcp.json` and
 
 ### Quick path — `pnpm setup:local`
 
-One command scaffolds **deps + `.env.local` + full MCP set + CodeGraph index**:
+One command scaffolds **deps + `.env.development` + full MCP set + CodeGraph index**:
 
 ```bash
 pnpm setup:local --no-start   # bootstrap without starting Vite
 ```
 
-Then set `CONTEXT7_API_KEY` in `.env.local` (from [context7.com/dashboard](https://context7.com/dashboard)) and reload Cursor.
+Then set `CONTEXT7_API_KEY` in `.env.development` (from [context7.com/dashboard](https://context7.com/dashboard)) and reload Cursor.
 
-| Command                  | What it scaffolds                                                        |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `pnpm setup:local`       | deps + `.env.local` + CodeGraph index + **all** MCP servers + `pnpm dev` |
-| `pnpm mcp:setup:default` | codegraph + headroom only (subset)                                       |
-| `pnpm mcp:setup`         | full set from `.mcp.example.json` (non-destructive merge)                |
-| `pnpm mcp:setup --list`  | template servers + declared status                                       |
+| Command                  | What it scaffolds                                                              |
+| ------------------------ | ------------------------------------------------------------------------------ |
+| `pnpm setup:local`       | deps + `.env.development` + CodeGraph index + **all** MCP servers + `pnpm dev` |
+| `pnpm mcp:setup:default` | codegraph + headroom only (subset)                                             |
+| `pnpm mcp:setup`         | full set from `.mcp.example.json` (non-destructive merge)                      |
+| `pnpm mcp:setup --list`  | template servers + declared status                                             |
 
 Merges are **non-destructive** — existing `.mcp.json` entries (e.g. your Context7 key) are never overwritten.
 
@@ -107,9 +107,9 @@ pnpm install
 ### 2. Add your Context7 API key (required for context7 MCP)
 
 1. Get an API key from [context7.com/dashboard](https://context7.com/dashboard).
-2. Set `CONTEXT7_API_KEY=` in **`.env.local`** (scaffolded by `pnpm setup:local`). The context7 MCP reads `${CONTEXT7_API_KEY}` from your environment — same pattern as core-be.
+2. Set `CONTEXT7_API_KEY=` in **`.env.development`** (scaffolded by `pnpm setup:local`). The context7 MCP reads `${CONTEXT7_API_KEY}` from your environment — same pattern as core-be.
 
-Do not commit the real key — `.env.local` is gitignored.
+Do not commit the real key — `.env.development` is gitignored.
 
 ### 3. Backend MCP (core-be-api)
 
@@ -135,11 +135,11 @@ After saving `.mcp.json`, reload Cursor (Command Palette → “Developer: Reloa
 
 ## Summary
 
-| Step | Action                                                                 |
-| ---- | ---------------------------------------------------------------------- |
-| 1    | `pnpm setup:local --no-start` (scaffolds `.env.local` + full MCP set)  |
-| 2    | Set `CONTEXT7_API_KEY` in `.env.local`                                 |
-| 3    | (Optional) Start backend with `ENABLE_MCP_SERVER=true` for core-be-api |
-| 4    | Reload Cursor                                                          |
+| Step | Action                                                                      |
+| ---- | --------------------------------------------------------------------------- |
+| 1    | `pnpm setup:local --no-start` (scaffolds `.env.development` + full MCP set) |
+| 2    | Set `CONTEXT7_API_KEY` in `.env.development`                                |
+| 3    | (Optional) Start backend with `ENABLE_MCP_SERVER=true` for core-be-api      |
+| 4    | Reload Cursor                                                               |
 
 These MCPs are for **local development only** and are not required for `pnpm dev` or `pnpm build` to run.

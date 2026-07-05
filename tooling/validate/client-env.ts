@@ -5,8 +5,10 @@
  * `src/core/config/env-schema.ts`:
  *   - `required` keys are checked against the resolved runtime env (process.env,
  *     as loaded/injected for the deploy job).
- *   - `forbidden` keys are checked against the COMMITTED `.env` + `.env.<env>`
- *     layer only (never `.env.local`), so local secrets never trip a guard.
+ *   - `forbidden` keys are checked against git-TRACKED `.env` + `.env.<env>` files
+ *     only; gitignored local files (e.g. `.env.development` with auto-managed
+ *     SONAR_* + machine secrets) are skipped, so local secrets never trip a guard.
+ *     Deploy env comes from GitHub Environments and is covered by `required`.
  *
  * Environment resolution (first match wins):
  *   1. `--env <development|production>`
@@ -89,12 +91,32 @@ function runtimeGet(key: string): string | undefined {
   return value === '' ? undefined : value;
 }
 
-/** Committed `.env` + `.env.<env>` only (never `.env.local`) — for forbidden keys. */
+/** True when `relPath` is gitignored (`git check-ignore` exits 0). */
+function isGitIgnored(relPath: string): boolean {
+  try {
+    // eslint-disable-next-line sonarjs/no-os-command-from-path -- fixed 'git' binary, no user input
+    execFileSync('git', ['check-ignore', '-q', relPath], {
+      cwd: projectRoot,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Git-TRACKED `.env` + `.env.<env>` only — for forbidden-secret checks. Gitignored
+ * local files (e.g. `.env.development` holding auto-managed SONAR_* + machine
+ * secrets) are skipped: they never deploy, and deploy env comes from GitHub
+ * Environments. The guard still catches a secret that is actually committed.
+ */
 function committedEnv(environment: DeployEnvironment): Record<string, string> {
   const merged: Record<string, string> = {};
   for (const file of ['.env', `.env.${environment}`]) {
     const path = resolve(projectRoot, file);
     if (!existsSync(path)) continue;
+    if (isGitIgnored(file)) continue;
     for (const [key, value] of Object.entries(parse(readFileSync(path)))) {
       if (value === '') continue;
       merged[key] = value;

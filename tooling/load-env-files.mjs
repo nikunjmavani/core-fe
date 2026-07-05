@@ -7,8 +7,9 @@
  * Convention:
  *   - Primary: `.env.${NODE_ENV}` (default NODE_ENV=development for scripts)
  *   - Fallback: `.env.development` when primary missing (never in production)
- *   - Layer: `.env.local` on top (override) except when NODE_ENV=production
  *
+ * `.env.development` is the single gitignored local file — there is no `.env.local`.
+ * Deploys inject env from GitHub Environments (process.env), not from files.
  * Empty values (`KEY=`) are stripped so optional Zod fields see `undefined`.
  */
 import { config } from 'dotenv';
@@ -43,13 +44,6 @@ export function loadEnvFiles() {
     if (existsSync(fallback)) {
       applyDotenvFile(fallback);
     }
-  }
-
-  if (nodeEnv === 'production') return;
-
-  const local = resolve(projectRoot, '.env.local');
-  if (existsSync(local) && primary !== local) {
-    applyDotenvFile(local, true);
   }
 }
 

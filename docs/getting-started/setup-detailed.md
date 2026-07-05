@@ -415,7 +415,7 @@ This single command:
 
 ## Step 7 — Set Up Environment Variables
 
-The project includes `.env.development` with sensible defaults. **No changes needed** for basic local development.
+`pnpm setup:local` scaffolds `.env.development` from the committed `.env.example` with sensible defaults (it is gitignored — the single local env file for behavior flags and secrets). **No changes needed** for basic local development.
 
 Default values in `.env.development`:
 
@@ -427,7 +427,7 @@ Default values in `.env.development`:
 | `VITE_POSTHOG_KEY`  | (empty)                 | PostHog analytics (optional)     |
 | `VITE_POSTHOG_HOST` | (empty)                 | PostHog host URL (optional)      |
 
-> **Tip:** If you need custom overrides, create a `.env.local` file (Git-ignored) — Vite loads it with highest priority.
+> **Tip:** Put local overrides and secrets directly in `.env.development` (gitignored) — there is no separate `.env.local`.
 
 ---
 
