@@ -1,0 +1,43 @@
+{
+  "description": "Skill taxonomy — every project skill belongs to exactly one group. Single source for grouped rendering of the skill registry and for group-level operations ('run all docs maintainers'). agent-os/evals/check.ts asserts this stays in sync with the skills on disk (every skill grouped exactly once; no unknown names).",
+  "groups": {
+    "ui-design": [
+      "frontend-design",
+      "shadcn",
+      "ui-ux-pro-max",
+      "impeccable",
+      "web-design-guidelines",
+      "composition-patterns",
+      "theme-axis-audit",
+      "pwa-manifest"
+    ],
+    "routing-pages": [
+      "page-scaffolding",
+      "route-island",
+      "routing-tenancy",
+      "resource-crud",
+      "http-forms-errors"
+    ],
+    "testing": ["test-generation", "e2e-testids", "playwright-e2e"],
+    "quality": [
+      "lint-guard",
+      "code-smells-best-practices",
+      "code-quality-security",
+      "full-code-review",
+      "before-commit-guard",
+      "project-health-check",
+      "react-best-practices",
+      "code-structure",
+      "component-promotion"
+    ],
+    "docs": ["documentation-maintenance", "requirement-format"],
+    "i18n": ["i18n-constants"],
+    "platform": [
+      "env-schema-add",
+      "platform-hygiene",
+      "extension-settings-recommendations"
+    ],
+    "workflow": ["auto-implement", "skill-registry"],
+    "external": ["animejs", "emil-design-eng", "review-animations", "find-skills"]
+  }
+}

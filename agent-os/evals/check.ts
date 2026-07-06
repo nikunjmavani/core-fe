@@ -321,6 +321,38 @@ if (existsSync(targetsRegistryFile)) {
   }
 }
 
+// ── Skill groups ↔ disk: every skill in exactly one group; no unknown names ──
+const groupsFile = join(agentOsDirectory, 'skills', 'groups.json');
+if (existsSync(groupsFile)) {
+  try {
+    const groups =
+      (JSON.parse(readText(groupsFile)) as { groups?: Record<string, string[]> })
+        .groups ?? {};
+    const membership = new Map<string, number>();
+    for (const [group, members] of Object.entries(groups))
+      for (const member of members) {
+        if (!skillDirectoryNames.includes(member))
+          error(
+            'skill-groups',
+            `groups.json group "${group}" lists "${member}" which has no skill directory`,
+          );
+        membership.set(member, (membership.get(member) ?? 0) + 1);
+      }
+    for (const skill of skillDirectoryNames) {
+      const count = membership.get(skill) ?? 0;
+      if (count === 0)
+        error('skill-groups', `skill "${skill}" is in no group in groups.json`);
+      else if (count > 1)
+        error(
+          'skill-groups',
+          `skill "${skill}" is in ${count} groups in groups.json (expected exactly 1)`,
+        );
+    }
+  } catch {
+    error('skill-groups', 'agent-os/skills/groups.json is not valid JSON');
+  }
+}
+
 // ── Skill chains ↔ disk: every step (and optional step) is a real skill ──
 const chainsFile = join(agentOsDirectory, 'skills', 'chains.json');
 if (existsSync(chainsFile)) {
@@ -410,6 +442,7 @@ const checkLabels: Record<string, string> = {
   'referenced-path': 'Referenced paths exist',
   'hooks-manifest': 'Hook manifest scripts exist',
   'targets-registry': 'Capability registry valid',
+  'skill-groups': 'Skill groups ↔ disk',
   'skill-chains': 'Skill chains ↔ disk',
   'agent-pipelines': 'Agent pipelines ↔ disk',
   'requirement-form': 'Requirement intake doc',
