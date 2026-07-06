@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-dev.8](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2026-07-06)
+
+
+### Fixed
+
+* **auth:** gate switch-to-personal on real personal org + land direct after email login ([#59](https://github.com/nikunjmavani/core-fe/issues/59)) ([d54f060](https://github.com/nikunjmavani/core-fe/commit/d54f0600cfda1c515d12b256ec67f9ceea20fae0))
+
 ## [1.0.0-dev.7](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2026-07-06)
 
 
