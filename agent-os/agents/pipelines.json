@@ -15,8 +15,8 @@
       "steps": ["dependency-auditor", "bundle-size-reviewer"],
       "aggregate": "satisfied items, blocking gaps, optional improvements",
       "handoff": {
-        "dependency-auditor": "code-quality-security",
-        "bundle-size-reviewer": "platform-hygiene"
+        "dependency-auditor": "dependency-management",
+        "bundle-size-reviewer": "bundle-performance"
       }
     }
   }

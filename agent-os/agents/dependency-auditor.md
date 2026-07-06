@@ -48,7 +48,10 @@ You are read-only. You produce a report and fix plan; you never edit `package.js
 - **[package]** — [rationale]
 ```
 
-Each finding names the skill that fixes it (agent finds, skill fixes): vulnerabilities and audit policy → `code-quality-security`; bundle-impact and lockfile hygiene → `platform-hygiene`. Return only this report. Do not run updates.
+Each finding names the skill that fixes it (agent finds, skill fixes):
+apply updates/pins and keep the lockfile atomic → `dependency-management`;
+vulnerability/audit policy → `code-quality-security`; bundle-impact →
+`bundle-performance`. Return only this report. Do not run updates.
 
 ## Platform access
 

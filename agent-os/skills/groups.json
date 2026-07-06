@@ -35,7 +35,9 @@
     "platform": [
       "env-schema-add",
       "platform-hygiene",
-      "extension-settings-recommendations"
+      "extension-settings-recommendations",
+      "dependency-management",
+      "bundle-performance"
     ],
     "workflow": ["auto-implement", "skill-registry"],
     "external": ["animejs", "emil-design-eng", "review-animations", "find-skills"]

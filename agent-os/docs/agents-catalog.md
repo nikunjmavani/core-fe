@@ -46,8 +46,8 @@ names the skill that fixes its findings (`verifier → test-generation`,
 [`/prod-readiness`](../commands/prod-readiness.md) command runs the
 `prod-readiness` pipeline — `dependency-auditor` → `bundle-size-reviewer` before
 a release/deploy
-(`dependency-auditor → code-quality-security`,
-`bundle-size-reviewer → platform-hygiene`). `check.ts` gates the manifest —
+(`dependency-auditor → dependency-management`,
+`bundle-size-reviewer → bundle-performance`). `check.ts` gates the manifest —
 every step resolves to an agent file and every handoff to a skill directory.
 
 ## Adding an agent

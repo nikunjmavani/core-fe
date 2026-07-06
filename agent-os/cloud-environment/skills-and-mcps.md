@@ -22,7 +22,7 @@ On-demand servers (`context7`, `core-be-api`, `semgrep`, `shadcn`, `sonarqube`,
 
 ## Skills
 
-The full project skill catalog (37 skills, grouped in
+The full project skill catalog (39 skills, grouped in
 [`agent-os/skills/groups.json`](../skills/groups.json)) starts at the
 [skill registry](../skills/skill-registry/SKILL.md). Chains that sequence them
 live in [`agent-os/skills/chains.json`](../skills/chains.json). Routing by file

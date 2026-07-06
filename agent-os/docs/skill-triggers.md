@@ -67,6 +67,8 @@ Read in order; **project guardrails always win** over skill suggestions.
 | `**/*.test.ts` · `**/*.test.tsx`                                                       | `test-generation`                                                      |
 | `tests/e2e/**`                                                                         | `playwright-e2e`, `e2e-testids`                                        |
 | `.env.example`                                                                         | `platform-hygiene`, `env-schema-add`, `documentation-maintenance`      |
+| `package.json` · `pnpm-lock.yaml` · `pnpm.overrides`                                   | `dependency-management`                                                |
+| `vite.config.ts` · `tooling/ci/run-size-limit.mjs` · size budget                       | `bundle-performance`                                                   |
 | `src/core/config/app-manifest.ts` · `public/manifest.webmanifest` · `app-icon.svg`     | `pwa-manifest`                                                         |
 | `docs/**/*.md` · `**/*.OVERVIEW.md`                                                    | `documentation-maintenance`                                            |
 | `useAnimeCountUp.ts` · animation hooks                                                 | `animejs`, `emil-design-eng`                                           |

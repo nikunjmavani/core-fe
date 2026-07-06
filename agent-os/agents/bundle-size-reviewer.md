@@ -40,7 +40,10 @@ You review the core-fe production bundle and return a concise size-and-splitting
 - [static imports of heavy/deferred modules, if any]
 ```
 
-Each finding names the skill that fixes it (agent finds, skill fixes): splitting/heavy-import and build budgets → `platform-hygiene`; a full build+size+health sweep → `project-health-check`. Return only this report. Do not edit files.
+Each finding names the skill that fixes it (agent finds, skill fixes):
+splitting / heavy-import / size budgets → `bundle-performance`; build env and
+deploy validators → `platform-hygiene`; a full build+size+health sweep →
+`project-health-check`. Return only this report. Do not edit files.
 
 ## Platform access
 

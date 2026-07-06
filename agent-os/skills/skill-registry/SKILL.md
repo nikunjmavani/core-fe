@@ -88,7 +88,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 > If a task has **no** matching row here or in `skill-router.mdc`, use **find-skills** to look for one before building from scratch; if none exists, proceed with general capabilities.
 
-## Skill Inventory (37 skills)
+## Skill Inventory (39 skills)
 
 ### 0a. auto-implement (Master Orchestrator)
 
@@ -709,6 +709,42 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Run knip after removing deps/exports
 
 **Related skills:** env-schema-add, code-quality-security, documentation-maintenance
+
+---
+
+### 11h. dependency-management
+
+**Path:** `agent-os/skills/dependency-management/SKILL.md`
+
+**Purpose:** Safely add / update / remove / pin npm dependencies — atomic `package.json` ↔ `pnpm-lock.yaml` commits, `pnpm.overrides` for transitive pins, `pnpm deps:audit` triage, license and bundle-impact checks. Procedural counterpart to the `dependency-auditor` agent.
+
+**Trigger keywords:** "add dependency", "update package", "pnpm add", "pnpm.overrides", "audit fix", "lockfile", "bump version", "vulnerability", "CVE"
+
+**Key behaviors:**
+
+- One atomic commit for a `package.json` change + regenerated lockfile
+- Pin transitive/vulnerable deps via `pnpm.overrides`, never hand-edit the lockfile
+- `pnpm run validate:lockfile`, `pnpm deps:audit`, `pnpm knip` after changes
+
+**Related skills:** code-quality-security, platform-hygiene, bundle-performance
+
+---
+
+### 11i. bundle-performance
+
+**Path:** `agent-os/skills/bundle-performance/SKILL.md`
+
+**Purpose:** Keep the production bundle within size-limit budgets — dynamic-import heavy/deferred modules off the first-paint path, lazy route-island boundaries, code-splitting, heavy-import triage. Procedural counterpart to the `bundle-size-reviewer` agent.
+
+**Trigger keywords:** "bundle size", "size budget", "code splitting", "dynamic import", "first paint", "chunk too big", "size-limit", "pnpm size"
+
+**Key behaviors:**
+
+- Measure with `pnpm build` + `pnpm size` (never the dev server)
+- Keep `@sentry/react`, `posthog-js`, SettingsModal/CommandPalette dynamic-import only
+- Preserve lazy `<page>.route.tsx` boundaries; split vendor from entry
+
+**Related skills:** platform-hygiene, react-best-practices, dependency-management
 
 ---
 

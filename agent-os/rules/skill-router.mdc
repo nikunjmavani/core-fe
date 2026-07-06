@@ -17,6 +17,8 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 | Backend resource CRUD — list, URL dialogs, `*.resource.ts`, L7 registry | resource-crud | `agent-os/skills/resource-crud/SKILL.md` |
 | Form mutations, 422 field mapping, 429 rate limit, QueryBoundary error UX | http-forms-errors | `agent-os/skills/http-forms-errors/SKILL.md` |
 | Platform config, env read paths, knip, validate:vite-env, validate:client-env | platform-hygiene | `agent-os/skills/platform-hygiene/SKILL.md` |
+| Add/update/remove/pin npm deps, lockfile sync, `pnpm.overrides`, audit fix, vulnerability | dependency-management | `agent-os/skills/dependency-management/SKILL.md` |
+| Bundle size budget, code splitting, dynamic import, first-paint regression, `pnpm size` | bundle-performance | `agent-os/skills/bundle-performance/SKILL.md` |
 | New page, route, scaffold | page-scaffolding | `agent-os/skills/page-scaffolding/SKILL.md` |
 | Move component to shared, promote | component-promotion | `agent-os/skills/component-promotion/SKILL.md` |
 | React performance, re-renders, bundle size | react-best-practices | `agent-os/skills/react-best-practices/SKILL.md` |
