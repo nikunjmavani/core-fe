@@ -55,6 +55,18 @@ There is intentionally **no** `.claude/rules` symlink — Claude Code follows `C
 - **MCP setup:** [agent-os/docs/cursor-mcp-setup.md](agent-os/docs/cursor-mcp-setup.md)
 - **Platform wiring:** [agent-os/docs/platform-access.md](agent-os/docs/platform-access.md)
 
+## Cloud agent sessions
+
+On **Cursor Cloud Agents** or **Claude Code on the web**, read
+**[agent-os/cloud-environment/agents-cloud.md](agent-os/cloud-environment/agents-cloud.md)**
+before browser/e2e or live-backend work. Cached install + Cursor `environment.json`
+live in **[agent-os/cloud-environment/](agent-os/cloud-environment/)** (symlinked at
+[`.cursor/environment.json`](.cursor/environment.json)). core-fe is a Vite SPA — lint,
+type-check, unit tests, `pnpm agent-os:check`, and `pnpm build` run **cold** after
+`install.sh`; only Playwright e2e needs browsers plus core-be on `:3000`. **MCPs, skills,
+and subagents** for cloud sessions:
+**[agent-os/cloud-environment/skills-and-mcps.md](agent-os/cloud-environment/skills-and-mcps.md)**.
+
 ## Adding a new agent skill or rule
 
 1. Place the file directly in `agent-os/skills/<name>/SKILL.md` or `agent-os/rules/<name>.mdc`.
