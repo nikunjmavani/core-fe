@@ -59,7 +59,7 @@ There is intentionally **no** `.claude/rules` symlink — Claude Code follows `C
 
 1. Place the file directly in `agent-os/skills/<name>/SKILL.md` or `agent-os/rules/<name>.mdc`.
 2. Wire it into [agent-os/rules/skill-router.mdc](agent-os/rules/skill-router.mdc) and [agent-os/skills/skill-registry/SKILL.md](agent-os/skills/skill-registry/SKILL.md).
-3. All three agents pick it up automatically via their symlinks — no per-tool duplication.
+3. All three tools (Cursor, Claude, Codex) pick it up automatically via their symlinks — no per-tool duplication.
 
 ## Adding a new AI coding agent
 

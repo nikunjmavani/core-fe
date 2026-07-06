@@ -9,6 +9,15 @@
         "verifier": "test-generation",
         "docs-auditor": "documentation-maintenance"
       }
+    },
+    "prod-readiness": {
+      "description": "Production-readiness sweep before a release/deploy — dependencies and bundle.",
+      "steps": ["dependency-auditor", "bundle-size-reviewer"],
+      "aggregate": "satisfied items, blocking gaps, optional improvements",
+      "handoff": {
+        "dependency-auditor": "code-quality-security",
+        "bundle-size-reviewer": "platform-hygiene"
+      }
     }
   }
 }

@@ -192,6 +192,33 @@ for (const file of agentFiles) {
     error('agent-frontmatter', `agents/${file} missing frontmatter \`description\``);
 }
 
+// ── Read-only agents must enforce read-only via a tools allowlist ──
+// `readonly: true` is honoured only by Cursor; on Claude Code an agent without a
+// `tools` allowlist can still Edit/Write. Require every readonly agent to declare
+// `tools` and to exclude the write tools, so the read-only contract is real on
+// both platforms.
+const writeTools = ['Edit', 'Write', 'MultiEdit', 'NotebookEdit'];
+for (const file of agentFiles) {
+  const text = readText(join(agentOsDirectory, 'agents', file));
+  if (frontmatterField(text, 'readonly') !== 'true') continue;
+  const tools = frontmatterField(text, 'tools');
+  if (!tools)
+    error(
+      'agent-readonly',
+      `agents/${file} is readonly:true but declares no \`tools\` allowlist — read-only is unenforced on Claude`,
+    );
+  else {
+    const offenders = writeTools.filter((tool) =>
+      new RegExp(`\\b${tool}\\b`).test(tools),
+    );
+    if (offenders.length)
+      error(
+        'agent-readonly',
+        `agents/${file} is readonly:true but its \`tools\` allowlist includes write tool(s): ${offenders.join(', ')}`,
+      );
+  }
+}
+
 // ── Hook portability: no hardcoded home paths; referenced scripts exist ──
 const settingsFile = join(agentOsDirectory, 'platforms', 'claude', 'settings.json');
 if (existsSync(settingsFile)) {
@@ -445,6 +472,7 @@ const checkLabels: Record<string, string> = {
   'skill-description': 'Skill descriptions',
   'skills-lock': 'Vendored skill hashes',
   'agent-frontmatter': 'Agent frontmatter',
+  'agent-readonly': 'Read-only agents enforce tools',
   'hook-portability': 'Hook portability',
   'hook-script': 'Hook scripts exist',
   'referenced-path': 'Referenced paths exist',
