@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-dev.6](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2026-07-05)
+
+
+### Changed
+
+* **config:** env-driven, strict two-environment config model ([#52](https://github.com/nikunjmavani/core-fe/issues/52)) ([f032163](https://github.com/nikunjmavani/core-fe/commit/f032163fcd963ff3729a7cf7ad227ab87cae04d2))
+
 ## [1.0.0-dev.5](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.4...v1.0.0-dev.5) (2026-07-05)
 
 
