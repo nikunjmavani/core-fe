@@ -55,6 +55,21 @@
       "file": ".env.example",
       "expectSkills": ["platform-hygiene", "env-schema-add"],
       "why": "Env template changes must stay documented and secret-free."
+    },
+    {
+      "file": "src/pages/login/login.constants.ts",
+      "expectSkills": ["i18n-constants", "code-structure"],
+      "why": "Constants files hold keys/IDs/defaults and route to i18n-constants."
+    },
+    {
+      "file": "src/core/config/app-manifest.ts",
+      "expectSkills": ["pwa-manifest"],
+      "why": "The PWA manifest source of truth routes to pwa-manifest."
+    },
+    {
+      "file": "docs/reference/routes-and-ui.md",
+      "expectSkills": ["documentation-maintenance"],
+      "why": "Docs changes route to documentation-maintenance."
     }
   ]
 }
