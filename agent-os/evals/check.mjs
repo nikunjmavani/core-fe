@@ -284,6 +284,38 @@ if (existsSync(chainsFile)) {
   }
 }
 
+const pipelinesFile = join(agentOsDirectory, 'agents', 'pipelines.json');
+if (existsSync(pipelinesFile)) {
+  const agentNames = new Set(agentFiles.map((file) => basename(file, '.md')));
+  try {
+    const pipelines =
+      JSON.parse(readText(pipelinesFile)).pipelines ??
+      /** @type {Record<string, { steps?: string[]; handoff?: Record<string, string> }>} */ ({});
+    for (const [pipeline, definition] of Object.entries(pipelines)) {
+      for (const step of definition.steps ?? [])
+        if (!agentNames.has(step))
+          error(
+            'agent-pipelines',
+            `pipelines.json pipeline "${pipeline}" references agent "${step}" which has no agent file`,
+          );
+      for (const [step, skill] of Object.entries(definition.handoff ?? {})) {
+        if (!agentNames.has(step))
+          error(
+            'agent-pipelines',
+            `pipelines.json pipeline "${pipeline}" handoff key "${step}" is not an agent`,
+          );
+        if (!skillDirectoryNames.includes(skill))
+          error(
+            'agent-pipelines',
+            `pipelines.json pipeline "${pipeline}" handoff "${step}" → "${skill}" has no skill directory`,
+          );
+      }
+    }
+  } catch {
+    error('agent-pipelines', 'agent-os/agents/pipelines.json is not valid JSON');
+  }
+}
+
 const requirementForm = join(
   repositoryRoot,
   'docs',
@@ -311,6 +343,7 @@ const checkLabels = {
   'hooks-manifest': 'Hook manifest scripts exist',
   'targets-registry': 'Capability registry valid',
   'skill-chains': 'Skill chains ↔ disk',
+  'agent-pipelines': 'Agent pipelines ↔ disk',
   'requirement-form': 'Requirement intake doc',
 };
 

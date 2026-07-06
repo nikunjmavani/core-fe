@@ -30,6 +30,17 @@ symlinks. Agents are read-only validators/investigators — for task instruction
 - Author once under `agent-os/agents/`; both Cursor and Claude pick them up via
   symlink.
 
+## Review pipelines
+
+Named sequences of these read-only agents live in
+[`agent-os/agents/pipelines.json`](../agents/pipelines.json) — the source of
+truth for what the [`/pre-merge-review`](../commands/pre-merge-review.md)
+command runs. The `pre-merge-review` pipeline fans out `verifier` →
+`docs-auditor` and aggregates one prioritized report; each step's `handoff`
+names the skill that fixes its findings (`verifier → test-generation`,
+`docs-auditor → documentation-maintenance`). `check.mjs` gates the manifest —
+every step resolves to an agent file and every handoff to a skill directory.
+
 ## Adding an agent
 
 1. Drop `<agent-name>.md` into [`agent-os/agents/`](../agents/).
