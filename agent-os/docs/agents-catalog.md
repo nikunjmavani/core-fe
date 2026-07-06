@@ -42,8 +42,10 @@ truth for what the [`/pre-merge-review`](../commands/pre-merge-review.md)
 command runs. The `pre-merge-review` pipeline fans out `verifier` →
 `docs-auditor` and aggregates one prioritized report; each step's `handoff`
 names the skill that fixes its findings (`verifier → test-generation`,
-`docs-auditor → documentation-maintenance`). The `prod-readiness` pipeline runs
-`dependency-auditor` → `bundle-size-reviewer` before a release/deploy
+`docs-auditor → documentation-maintenance`). The
+[`/prod-readiness`](../commands/prod-readiness.md) command runs the
+`prod-readiness` pipeline — `dependency-auditor` → `bundle-size-reviewer` before
+a release/deploy
 (`dependency-auditor → code-quality-security`,
 `bundle-size-reviewer → platform-hygiene`). `check.ts` gates the manifest —
 every step resolves to an agent file and every handoff to a skill directory.
