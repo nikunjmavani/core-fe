@@ -24,6 +24,7 @@ import { Loader2 } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
+import type { MeContext } from '@/shared/tenancy/me-context.ts';
 import {
   createOrganization,
   listMyOrganizations,
@@ -151,8 +152,8 @@ async function resolveOrganizationForFinish(input: {
   return { organizationId, organizationSlug };
 }
 
-async function refreshSessionAfterOnboardingFinish(): Promise<void> {
-  await hydrateSessionContext();
+async function refreshSessionAfterOnboardingFinish(): Promise<MeContext> {
+  return hydrateSessionContext();
 }
 
 function isOnboardingDirty(input: {
@@ -178,11 +179,15 @@ function isOnboardingDirty(input: {
 
 async function activateWorkspaceAfterOnboardingFinish(input: {
   organizationId: string | null;
-  personalOrganizations: boolean;
+  personalOrganizationId: string | null;
 }): Promise<void> {
   if (input.organizationId) {
     await switchToOrganization(input.organizationId);
-  } else if (input.personalOrganizations) {
+  } else if (input.personalOrganizationId) {
+    // Gate on the concrete personal-org id from the freshly-hydrated context,
+    // not the deployment flag: personal orgs can be *enabled* yet unprovisioned
+    // for this user, in which case `switch-to-personal` would 404 and block
+    // onboarding. No personal org → fall through to the `/` resolver.
     await switchToPersonal();
   }
 }
@@ -301,10 +306,10 @@ export function OnboardingPage() {
       );
       const failed = results.filter((r) => r.status === 'rejected').length;
 
-      await refreshSessionAfterOnboardingFinish();
+      const refreshedContext = await refreshSessionAfterOnboardingFinish();
       await activateWorkspaceAfterOnboardingFinish({
         organizationId,
-        personalOrganizations: deploymentFlags.personalOrganizations,
+        personalOrganizationId: refreshedContext.personalOrganizationId,
       });
 
       complete();

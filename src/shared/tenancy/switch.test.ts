@@ -134,6 +134,23 @@ describe('tenancy/switch', () => {
     );
   });
 
+  it('skips the POST when the caller has no personal organization (would 404)', async () => {
+    // Personal orgs enabled for the deployment, but this user has none provisioned
+    // (core-be provisions best-effort) → me/context reports `personalOrganizationId:
+    // null`. Firing switch-to-personal here would 404 on the server, so short-circuit.
+    queryClient.setQueryData(meContextQueryKey, {
+      ...structuredClone(BASE_CTX),
+      personalOrganizationId: null,
+    });
+
+    const result = await switchToPersonal();
+
+    expect(result).toBeUndefined();
+    expect(postMock).not.toHaveBeenCalled();
+    expect(setAccessTokenMock).not.toHaveBeenCalled();
+    expect(captureMock).not.toHaveBeenCalled();
+  });
+
   it('switches org context, derives the store, applies the role + analytics (live)', async () => {
     postMock.mockResolvedValue({
       data: {
