@@ -167,6 +167,41 @@ const claudeHooks = buildClaudeHooks();
 const cursorHooks = buildCursorHooks();
 const codexHooks = buildCodexHooks();
 
+// ── hookEvent coverage: targets.json must fully declare what hooks.json uses,
+// and every declared+used event must survive into the generated config. This
+// closes the silent hole where a hook targeting an undeclared event is skipped
+// with no drift (the on-disk config was generated the same way, so it matches).
+function eventsUsedBy(agent: 'claude' | 'cursor' | 'codex'): Set<string> {
+  const used = new Set<string>();
+  for (const entry of manifest.hooks) {
+    const wiring = entry[agent];
+    if (wiring) used.add(wiring.event);
+  }
+  return used;
+}
+
+const generatedEventsByAgent: Record<'claude' | 'cursor' | 'codex', string[]> = {
+  claude: Object.keys(claudeHooks),
+  cursor: Object.keys(cursorHooks),
+  codex: Object.keys(codexHooks),
+};
+
+for (const agent of ['claude', 'cursor', 'codex'] as const) {
+  const declared = new Set(targets.agents[agent]?.capabilities.hookEvents ?? []);
+  const used = eventsUsedBy(agent);
+  const generated = new Set(generatedEventsByAgent[agent]);
+  for (const event of used) {
+    if (!declared.has(event))
+      report(
+        `coverage: ${agent} hooks.json uses event "${event}" not declared in targets.json hookEvents — declare it or the hook is silently dropped`,
+      );
+    else if (!generated.has(event))
+      report(
+        `coverage: ${agent} declared+used event "${event}" is missing from the generated hook config`,
+      );
+  }
+}
+
 const claudeSettingsPath = join(
   repositoryRoot,
   claudeTarget?.hooksTarget ?? 'agent-os/platforms/claude/settings.json',
@@ -256,6 +291,9 @@ if (
   }
 }
 
+// `coverage:` problems are a fault in BOTH modes (they signal a targets.json /
+// hooks.json mismatch, not a re-runnable drift), so they fail even under --write.
+const coverageFaults = problems.filter((message) => message.startsWith('coverage'));
 const drift = problems.filter(
   (message) => message.startsWith('drift') || message.startsWith('missing'),
 );
@@ -266,6 +304,12 @@ console.log(
 );
 for (const message of problems) console.log(`  • ${message}`);
 console.log('');
+if (coverageFaults.length) {
+  console.log(
+    `✗ COVERAGE — ${coverageFaults.length} hookEvent coverage fault(s) between targets.json and hooks.json\n`,
+  );
+  process.exit(1);
+}
 if (!writeMode && drift.length) {
   console.log(
     `✗ DRIFT — ${drift.length} derived artifact(s) out of sync with agent-os/\n`,
