@@ -13,16 +13,19 @@ vi.mock('@/shared/hooks/useMeContext/index.ts', () => ({
   meContextQueryKey: ['auth', 'me-context'],
 }));
 
-vi.mock('@/shared/tenancy/session-context.ts', () => ({
-  hydrateSessionContext: vi.fn().mockResolvedValue({
+const hydratedContextRef = vi.hoisted(() => ({
+  value: {
     user: { id: 'usr_1', email: 'a@b.test', firstName: 'A', lastName: null },
     activeOrganization: null,
     myPermissions: [],
     globalRole: null,
     organizations: [],
     deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
-    personalOrganizationId: null,
-  }),
+    personalOrganizationId: null as string | null,
+  },
+}));
+vi.mock('@/shared/tenancy/session-context.ts', () => ({
+  hydrateSessionContext: vi.fn(() => Promise.resolve(hydratedContextRef.value)),
 }));
 
 const navigate = vi.fn();
@@ -77,6 +80,15 @@ describe('OnboardingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     deploymentFlagsRef.value = { personalOrganizations: false, teamOrganizations: true };
+    hydratedContextRef.value = {
+      user: { id: 'usr_1', email: 'a@b.test', firstName: 'A', lastName: null },
+      activeOrganization: null,
+      myPermissions: [],
+      globalRole: null,
+      organizations: [],
+      deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+      personalOrganizationId: null,
+    };
     switchToOrganization.mockResolvedValue(undefined);
     switchToPersonal.mockResolvedValue(undefined);
     listMyOrganizations.mockResolvedValue([]);
@@ -168,6 +180,11 @@ describe('OnboardingPage', () => {
 
   it('finishes both mode to personal dashboard without creating a team org', async () => {
     deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: true };
+    hydratedContextRef.value.deploymentFlags = {
+      personalOrganizations: true,
+      teamOrganizations: true,
+    };
+    hydratedContextRef.value.personalOrganizationId = 'org_personal_1';
     const user = userEvent.setup();
     const store = useOnboardingStore.getState();
     store.reset();
@@ -180,6 +197,35 @@ describe('OnboardingPage', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
     expect(createOrganization).not.toHaveBeenCalled();
     expect(switchToPersonal).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({ to: '/', replace: true }),
+    );
+  });
+
+  // Regression: personal orgs are *enabled* for the deployment, but this user has
+  // none provisioned (core-be provisions best-effort, so it can be missing).
+  // me/context reports `personalOrganizationId: null` — finishing onboarding must
+  // NOT fire `switch-to-personal` (it would 404 and trap the user), and should
+  // still land on the `/` resolver.
+  it('skips switch-to-personal when the deployment enables personal but the user has none', async () => {
+    deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: true };
+    hydratedContextRef.value.deploymentFlags = {
+      personalOrganizations: true,
+      teamOrganizations: true,
+    };
+    hydratedContextRef.value.personalOrganizationId = null;
+    const user = userEvent.setup();
+    const store = useOnboardingStore.getState();
+    store.reset();
+    store.patch({ fullName: 'Ada Lovelace' });
+    store.setStepIndex(3);
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+    expect(createOrganization).not.toHaveBeenCalled();
+    expect(switchToPersonal).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({ to: '/', replace: true }),
     );

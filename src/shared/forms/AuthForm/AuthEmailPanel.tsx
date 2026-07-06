@@ -83,6 +83,39 @@ function getRedirectPath(location: {
   return undefined;
 }
 
+/**
+ * Send the just-authenticated user straight to their resolved destination.
+ *
+ * We deliberately do NOT navigate to `/` and let the index resolver decide: the
+ * `/` resolver re-runs `hydrateSessionContext()` (a redundant me/context fetch —
+ * `establishSession` populated it moments ago) and then throws a second redirect,
+ * and `/login` stays mounted for that whole round-trip — the "flash of login"
+ * after entering the code. `resolveRootTarget` is the exact decision the resolver
+ * makes, run here on the context we already hold. A fresh signup still routes to
+ * onboarding before any saved `redirect`.
+ */
+function navigateAfterEmailLogin(
+  navigate: ReturnType<typeof useNavigate>,
+  location: ReturnType<typeof useLocation>,
+): void {
+  const ctx = queryClient.getQueryData<MeContext>(meContextQueryKey);
+  const rootTarget = ctx ? resolveRootTarget(ctx) : ({ to: '/' } as const);
+  if (rootTarget.to === '/onboarding') {
+    void navigate({ to: '/onboarding', replace: true });
+    return;
+  }
+  const redirectPath = getRedirectPath(location);
+  if (redirectPath) {
+    void navigate({ to: redirectPath, replace: true });
+    return;
+  }
+  if (rootTarget.to === '/organization/$organizationSlug/dashboard') {
+    void navigate({ to: rootTarget.to, params: rootTarget.params, replace: true });
+    return;
+  }
+  void navigate({ to: rootTarget.to, replace: true });
+}
+
 type AuthEmailPanelProps = {
   pending?: AuthContinuePending | null;
   onPendingChange?: (pending: AuthContinuePending | null) => void;
@@ -176,13 +209,7 @@ export function AuthEmailPanel({
       await establishSession(accessToken);
       captureAnalyticsEvent(ANALYTICS_EVENTS.authEmailCodeVerified);
       captureAnalyticsEvent(ANALYTICS_EVENTS.sessionStarted, { method: 'email_code' });
-      const ctx = queryClient.getQueryData<MeContext>(meContextQueryKey);
-      const rootTarget = ctx ? resolveRootTarget(ctx) : { to: '/' as const };
-      const destination =
-        rootTarget.to === '/onboarding'
-          ? '/onboarding'
-          : (getRedirectPath(location) ?? '/');
-      void navigate({ to: destination, replace: true });
+      navigateAfterEmailLogin(navigate, location);
     } catch (err) {
       if (err instanceof MfaRequiredError) {
         const destination = getRedirectPath(location) ?? '/';
