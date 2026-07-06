@@ -121,16 +121,24 @@ if (existsSync(registryFile)) {
   for (const skill of skillsWithManifest) {
     const expected = `agent-os/skills/${skill}/SKILL.md`;
     if (!registryText.includes(expected))
-      warn(
+      error(
         'skill-registry-coverage',
-        `skill "${skill}" is not referenced in skill-registry inventory`,
+        `skill "${skill}" is not referenced in the skill-registry inventory (add an entry with its \`Path:\`)`,
       );
   }
-  for (const count of new Set(allNumbers(registryText, /(\d{1,4}) project skills/g)))
+  const claimedCounts = new Set(
+    allNumbers(registryText, /Skill Inventory \((\d{1,4}) skills\)/g),
+  );
+  if (claimedCounts.size === 0)
+    error(
+      'skill-registry-count',
+      'skill-registry is missing a gate-able count — the "## Skill Inventory (N skills)" header',
+    );
+  for (const count of claimedCounts)
     if (count !== skillsWithManifest.length)
       error(
         'skill-registry-count',
-        `skill-registry states ${count} project skills; ${skillsWithManifest.length} SKILL.md files exist`,
+        `skill-registry states ${count} skills; ${skillsWithManifest.length} SKILL.md files exist`,
       );
 }
 

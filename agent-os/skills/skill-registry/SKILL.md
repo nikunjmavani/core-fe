@@ -88,7 +88,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 > If a task has **no** matching row here or in `skill-router.mdc`, use **find-skills** to look for one before building from scratch; if none exists, proceed with general capabilities.
 
-## Skill Inventory
+## Skill Inventory (37 skills)
 
 ### 0a. auto-implement (Master Orchestrator)
 
@@ -729,6 +729,23 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Run `app-manifest.test.ts` (drift guard)
 
 **Related skills:** documentation-maintenance, i18n-constants (in-app copy only)
+
+---
+
+### 11g. i18n-constants
+
+**Path:** `agent-os/skills/i18n-constants/SKILL.md`  
+**Purpose:** Extract static values into scoped constants files with react-i18next — one route island or module at a time. User-facing strings go in locale JSON; constants files hold keys, test IDs, analytics events, and non-copy defaults.
+
+**Trigger keywords:** "extract magic strings", "constants file", "i18n", "locale namespace", "user-facing copy", "move test ids", "analytics events", "defaults"
+
+**Key behaviors:**
+
+- Split copy (locale JSON) from keys/IDs/defaults (`*.constants.ts`)
+- Scope per route island; set up the island's locale namespace
+- Keep static values out of components — reference constants and translation keys
+
+**Related skills:** http-forms-errors, resource-crud, documentation-maintenance
 
 ---
 
