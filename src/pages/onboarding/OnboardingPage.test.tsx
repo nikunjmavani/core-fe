@@ -76,6 +76,42 @@ function seedDoneStep(invites: string[] = []) {
   store.setStepIndex(5); // 'done'
 }
 
+const TS = '2026-01-01T00:00:00.000Z';
+
+/**
+ * A switch (to org or personal) re-mints the token and returns the post-switch
+ * context with `activeOrganization` applied — that context is what the
+ * onboarding-finish navigation resolves against. Build it from the current
+ * hydrated context so deployment flags stay consistent per test.
+ */
+function ctxWithActive(active: unknown) {
+  return { ...hydratedContextRef.value, activeOrganization: active };
+}
+function teamOrg(slug: string) {
+  return {
+    id: `org_${slug}`,
+    name: 'Acme Inc.',
+    slug,
+    type: 'TEAM' as const,
+    status: 'ACTIVE' as const,
+    logoUrl: null,
+    createdAt: TS,
+    updatedAt: TS,
+  };
+}
+function personalOrg() {
+  return {
+    id: 'org_personal_1',
+    name: 'Personal',
+    slug: null,
+    type: 'PERSONAL' as const,
+    status: 'ACTIVE' as const,
+    logoUrl: null,
+    createdAt: TS,
+    updatedAt: TS,
+  };
+}
+
 describe('OnboardingPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -89,8 +125,8 @@ describe('OnboardingPage', () => {
       deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
       personalOrganizationId: null,
     };
-    switchToOrganization.mockResolvedValue(undefined);
-    switchToPersonal.mockResolvedValue(undefined);
+    switchToOrganization.mockImplementation(async () => ctxWithActive(teamOrg('acme')));
+    switchToPersonal.mockImplementation(async () => ctxWithActive(personalOrg()));
     listMyOrganizations.mockResolvedValue([]);
     createOrganization.mockImplementation(async () => {
       const org = {
@@ -137,6 +173,9 @@ describe('OnboardingPage', () => {
     // Simulate a prior attempt that already created the org (id + slug stored).
     useOnboardingStore.getState().setCreatedOrganizationId('org_existing');
     useOnboardingStore.getState().setCreatedOrganizationSlug('existing-slug');
+    switchToOrganization.mockImplementationOnce(async () =>
+      ctxWithActive(teamOrg('existing-slug')),
+    );
     renderWithProviders(<OnboardingPage />);
 
     await user.click(await screen.findByTestId('onboarding-finish'));
@@ -188,7 +227,7 @@ describe('OnboardingPage', () => {
     const user = userEvent.setup();
     const store = useOnboardingStore.getState();
     store.reset();
-    store.patch({ fullName: 'Ada Lovelace' });
+    store.patch({ firstName: 'Ada', lastName: 'Lovelace' });
     store.setStepIndex(3);
     renderWithProviders(<OnboardingPage />);
 
@@ -197,8 +236,9 @@ describe('OnboardingPage', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
     expect(createOrganization).not.toHaveBeenCalled();
     expect(switchToPersonal).toHaveBeenCalledTimes(1);
+    // Lands DIRECTLY on the personal dashboard — no bounce through `/`.
     expect(navigate).toHaveBeenCalledWith(
-      expect.objectContaining({ to: '/', replace: true }),
+      expect.objectContaining({ to: '/dashboard', replace: true }),
     );
   });
 
@@ -217,7 +257,7 @@ describe('OnboardingPage', () => {
     const user = userEvent.setup();
     const store = useOnboardingStore.getState();
     store.reset();
-    store.patch({ fullName: 'Ada Lovelace' });
+    store.patch({ firstName: 'Ada', lastName: 'Lovelace' });
     store.setStepIndex(3);
     renderWithProviders(<OnboardingPage />);
 
@@ -228,6 +268,32 @@ describe('OnboardingPage', () => {
     expect(switchToPersonal).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({ to: '/', replace: true }),
+    );
+  });
+
+  // Mode coverage: personal-only never creates a team org; the personal workspace
+  // exists, so finishing lands DIRECTLY on `/dashboard`.
+  it('personal-only mode finishes directly to the personal dashboard', async () => {
+    deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: false };
+    hydratedContextRef.value.deploymentFlags = {
+      personalOrganizations: true,
+      teamOrganizations: false,
+    };
+    hydratedContextRef.value.personalOrganizationId = 'org_personal_1';
+    const user = userEvent.setup();
+    const store = useOnboardingStore.getState();
+    store.reset();
+    store.patch({ firstName: 'Ada', lastName: 'Lovelace' });
+    store.setStepIndex(3);
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+    expect(createOrganization).not.toHaveBeenCalled();
+    expect(switchToPersonal).toHaveBeenCalledTimes(1);
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({ to: '/dashboard', replace: true }),
     );
   });
 });
