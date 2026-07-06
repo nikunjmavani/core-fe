@@ -19,7 +19,7 @@ The pre-commit hook (`.husky/pre-commit`) runs:
 
 | # | Check | Script/Command | Purpose |
 | --- | ----------------------- | ------------------------------------------- | ------------------------------------------------ | ------- | --------------------------- |
-| 1 | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` | Env docs, public assets, lint-staged, env/mode-sniffing gate, type-check |
+| 1 | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` | Env docs, public assets, lint-staged, env/mode-sniffing gate, type-check, lockfile sync |
 | 2 | Env-file guard | `git diff --cached` vs `.env*` | Reject committing any `.env*` except `.env.example` |
 | 3 | Gitleaks | `gitleaks protect --staged` | Secret/API key detection (if installed) |
 | 4 | Merge conflict markers | `grep -rlE '^(<{7}                          | >{7}                                             | ={7})'` | Reject unresolved conflicts |
@@ -32,6 +32,7 @@ The pre-commit hook (`.husky/pre-commit`) runs:
 3. **lint-staged** — ESLint --fix + Prettier on staged `.ts`, `.tsx`, `.css`, `.json`, `.md`, `.yaml`, `.yml`.
 4. **validate:vite-env** — env/mode-sniffing gate: no `import.meta.env.DEV/PROD/MODE` or `platformConfig.environment === '<name>'` / `.MODE ===` outside the config-kernel allowlist. Behavior must be driven by named `platformConfig` flags.
 5. **type-check** — `tsc --noEmit` for full project.
+6. **validate:lockfile** — _only when the commit stages `package.json` or `pnpm-lock.yaml`_ — runs `pnpm install --frozen-lockfile` (the exact check CI runs) to prove the lockfile is in sync. Catches a dependency or `pnpm.overrides` change that forgot to regenerate the lockfile before it can reach dev.
 
 ## How to Fix Failures
 
@@ -62,6 +63,14 @@ See **lint-guard** skill for full fix patterns.
 
 **Fix:** Run `pnpm type-check` to see errors. Fix TypeScript errors (strict mode, no `any`, proper types).
 
+### validate:lockfile fails
+
+**Error:** "`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` … The current "overrides" configuration doesn't match the value found in the lockfile" (or a lockfile-outdated error).
+
+**Cause:** You changed a dependency or `pnpm.overrides` in `package.json` without regenerating `pnpm-lock.yaml`. A frozen install then fails — which reds **every** CI job on the PR, and any open release-please PR inherits the mismatch and goes all-red too.
+
+**Fix:** Run `pnpm install`, then stage `package.json` **and** `pnpm-lock.yaml` in the same commit. **Rule:** a dependency/override change and its lockfile update are one atomic change — a desynced lockfile must never reach dev.
+
 ## Manual Run
 
 Run the guard without committing:
@@ -70,7 +79,7 @@ Run the guard without committing:
 pnpm run before-commit-guard
 ```
 
-This runs only the before-commit-guard checks (env, public, lint-staged, vite-env, type-check). The env-file guard, gitleaks, conflict markers, and large file checks run only in the actual pre-commit hook.
+This runs only the before-commit-guard checks (env, public, lint-staged, vite-env, type-check, and lockfile sync when `package.json`/`pnpm-lock.yaml` are staged). The env-file guard, gitleaks, conflict markers, and large file checks run only in the actual pre-commit hook. Run the lockfile check directly any time with `pnpm run validate:lockfile`.
 
 ## Relationship to Full Health Check
 
@@ -92,10 +101,11 @@ Use `pnpm health` or `pnpm health:fix` for the full path-to-production flow befo
 
 ## Config Files
 
-| File                                      | Purpose                                          |
-| ----------------------------------------- | ------------------------------------------------ |
-| `tooling/validate/before-commit-guard.sh` | Main guard script                                |
-| `.husky/pre-commit`                       | Invokes guard + gitleaks + conflict + large file |
-| `package.json` `lint-staged`              | ESLint + Prettier on staged files                |
-| `src/core/config/env-schema.ts`           | Schema source of truth for env keys              |
-| `tooling/validate/sync-env-example.ts`    | Schema ↔ `.env.example` parity                   |
+| File                                      | Purpose                                                                 |
+| ----------------------------------------- | ----------------------------------------------------------------------- |
+| `tooling/validate/before-commit-guard.sh` | Main guard script                                                       |
+| `tooling/validate/lockfile-sync.sh`       | `validate:lockfile` — frozen-install lockfile ↔ package.json sync check |
+| `.husky/pre-commit`                       | Invokes guard + gitleaks + conflict + large file                        |
+| `package.json` `lint-staged`              | ESLint + Prettier on staged files                                       |
+| `src/core/config/env-schema.ts`           | Schema source of truth for env keys                                     |
+| `tooling/validate/sync-env-example.ts`    | Schema ↔ `.env.example` parity                                          |

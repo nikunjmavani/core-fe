@@ -65,6 +65,7 @@ pnpm knip
 | `pnpm validate:client-env --production` | Production deploy env completeness (e.g. captcha, API URL)                                                                   |
 | `pnpm knip`                             | Unused exports, deps, files (see `knip.jsonc`)                                                                               |
 | `pnpm tool:sync-env-example`            | Schema ↔ `.env.example` parity                                                                                               |
+| `pnpm validate:lockfile`                | `pnpm-lock.yaml` ↔ `package.json` in sync (frozen install; deps + `pnpm.overrides`)                                          |
 
 CI: static-sync lane runs vite-env + client-env; Netlify reusable workflow runs client-env for production builds.
 
@@ -84,6 +85,21 @@ CI: static-sync lane runs vite-env + client-env; Netlify reusable workflow runs 
 
 ---
 
+## Dependencies & the lockfile
+
+**A dependency or `pnpm.overrides` change and its `pnpm-lock.yaml` update are one atomic
+change.** After editing `package.json` deps or overrides, run `pnpm install` and stage
+`package.json` **and** `pnpm-lock.yaml` together.
+
+A desynced lockfile produces `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` on `pnpm install --frozen-lockfile` (what CI runs), which **reds every CI job** on the PR — and any open **release-please** PR inherits the mismatch and goes all-red until it is regenerated. So it **must never reach dev**.
+
+- Enforced locally: `pnpm run validate:lockfile` (frozen install), run by the before-commit
+  guard whenever a commit stages `package.json` or `pnpm-lock.yaml`.
+- Never hand-edit `pnpm-lock.yaml`; let `pnpm install` regenerate it.
+- Fix a mismatch: `pnpm install --no-frozen-lockfile`, then commit the regenerated lockfile.
+
+---
+
 ## Anti-patterns
 
 - `import.meta.env.VITE_FOO` in pages, shared, or core (except allowlist files)
@@ -92,6 +108,7 @@ CI: static-sync lane runs vite-env + client-env; Netlify reusable workflow runs 
 - Adding env to `.env.example` without schema field
 - Skipping `knip` after deleting modules or dependencies
 - Duplicating env parsing outside `env.config.ts`
+- Changing `package.json` deps / `pnpm.overrides` without regenerating `pnpm-lock.yaml` (breaks frozen-install CI — see [Dependencies & the lockfile](#dependencies--the-lockfile))
 
 ---
 

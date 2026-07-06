@@ -37,6 +37,12 @@ budgets, cache cleanup, release-flow guards (branch-ancestry + environment-drift
 and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)
 run as scheduled/event workflows.
 
+**Lockfile discipline:** a `package.json` dependency or `pnpm.overrides` change and its
+`pnpm-lock.yaml` regeneration are **one atomic commit** — run `pnpm install` and stage both.
+A desynced lockfile fails every frozen-install CI job (`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`) and
+also reds any open release-please PR, so it must never reach dev; the before-commit guard blocks
+it locally via `pnpm run validate:lockfile` (see `agent-os/skills/platform-hygiene/SKILL.md`).
+
 ## Documentation
 
 - **Engineering principles (Cursor):** `agent-os/rules/engineering-principles.mdc`
