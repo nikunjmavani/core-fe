@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-dev.7](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.6...v1.0.0-dev.7) (2026-07-06)
+
+
+### Fixed
+
+* **profile:** send snake_case first_name/last_name/job_title to PATCH /users/me ([#57](https://github.com/nikunjmavani/core-fe/issues/57)) ([db2c972](https://github.com/nikunjmavani/core-fe/commit/db2c972732497e3102463ef6ac634939de7c14cd))
+
 ## [1.0.0-dev.6](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.5...v1.0.0-dev.6) (2026-07-05)
 
 
