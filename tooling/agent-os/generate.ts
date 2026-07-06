@@ -1,14 +1,22 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 /**
  * agent-os generator — compiles each agent's native wiring FROM the common
- * agent-os/ sources into agent-os/platforms/ (tool dirs symlink there).
+ * agent-os/ sources into agent-os/platforms/ (tool dirs symlink there), and
+ * (in --check mode) fails when a hand-edited artifact has drifted from that
+ * single source.
  *
- * Single source: agent-os/hooks/hooks.json + agent-os/platforms/targets.json
+ * Single source: agent-os/hooks/hooks.json (hook wiring) + agent-os/platforms/
+ * targets.json (capability registry). Derived artifacts: the `hooks` block of
+ * the Claude settings, the Cursor hooks config, the Codex hooks config, and the
+ * default Codex MCP config. Everything else in those files (Claude
+ * `permissions`, Cursor `$schema`/`version`) is owned by hand and preserved
+ * verbatim. --check compares semantically (parsed, key-order-independent) so
+ * the existing hand-formatted files pass unchanged.
  *
  * Usage:
- *   node tooling/agent-os/generate.mjs            # default: --check
- *   node tooling/agent-os/generate.mjs --check
- *   node tooling/agent-os/generate.mjs --write
+ *   tsx tooling/agent-os/generate.ts            # default: --check (drift gate)
+ *   tsx tooling/agent-os/generate.ts --check    # compare generated vs on-disk; exit 1 on drift
+ *   tsx tooling/agent-os/generate.ts --write     # write the derived artifacts from source
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -17,39 +25,51 @@ const repositoryRoot = process.cwd();
 const agentOsDirectory = join(repositoryRoot, 'agent-os');
 const writeMode = process.argv.includes('--write');
 
-/** @typedef {{ id: string; runtime: 'bash' | 'node'; script: string; claude?: { event: string; matcher?: string }; cursor?: { event: string; matcher?: string }; codex?: { event: string; matcher?: string; statusMessage?: string } }} HookManifestEntry */
-/** @typedef {{ hooks: HookManifestEntry[] }} HookManifest */
-/** @typedef {{ capabilities: { hookEvents: string[]; mcpFormat?: string }; hooksTarget: string | null }} AgentTarget */
-/** @typedef {{ agents: Record<string, AgentTarget> }} TargetsRegistry */
+interface HookManifestEntry {
+  id: string;
+  runtime: 'bash' | 'node';
+  script: string;
+  claude?: { event: string; matcher?: string };
+  cursor?: { event: string; matcher?: string };
+  codex?: { event: string; matcher?: string; statusMessage?: string };
+}
+interface HookManifest {
+  hooks: HookManifestEntry[];
+}
+interface AgentTarget {
+  consumes?: string[];
+  capabilities: { hookEvents: string[]; mcpFormat?: string };
+  hooksTarget: string | null;
+}
+interface TargetsRegistry {
+  agents: Record<string, AgentTarget>;
+}
 
-const readJson = (absolutePath) => JSON.parse(readFileSync(absolutePath, 'utf8'));
+const readJson = (absolutePath: string): unknown =>
+  JSON.parse(readFileSync(absolutePath, 'utf8'));
 
-/** @type {string[]} */
-const problems = [];
-const report = (message) => problems.push(message);
+const problems: string[] = [];
+const report = (message: string) => problems.push(message);
 
-const manifest = /** @type {HookManifest} */ (
-  readJson(join(agentOsDirectory, 'hooks', 'hooks.json'))
-);
-const targets = /** @type {TargetsRegistry} */ (
-  readJson(join(agentOsDirectory, 'platforms', 'targets.json'))
-);
+const manifest = readJson(join(agentOsDirectory, 'hooks', 'hooks.json')) as HookManifest;
+const targets = readJson(
+  join(agentOsDirectory, 'platforms', 'targets.json'),
+) as TargetsRegistry;
 
 const claudeTarget = targets.agents.claude;
 const cursorTarget = targets.agents.cursor;
 const codexTarget = targets.agents.codex;
 
-const claudeCommand = (entry) =>
+const claudeCommand = (entry: HookManifestEntry): string =>
   `${entry.runtime} "$CLAUDE_PROJECT_DIR/agent-os/hooks/${entry.script}"`;
-const cursorCommand = (entry) => `${entry.runtime} ../agent-os/hooks/${entry.script}`;
-const codexCommand = (entry) =>
+const cursorCommand = (entry: HookManifestEntry): string =>
+  `${entry.runtime} ../agent-os/hooks/${entry.script}`;
+const codexCommand = (entry: HookManifestEntry): string =>
   `CLAUDE_PROJECT_DIR="$(git rev-parse --show-toplevel)" ${entry.runtime} "$(git rev-parse --show-toplevel)/agent-os/hooks/${entry.script}"`;
 
-/** @returns {Record<string, unknown[]>} */
-function buildClaudeHooks() {
+function buildClaudeHooks(): Record<string, unknown[]> {
   const supported = new Set(claudeTarget?.capabilities.hookEvents ?? []);
-  /** @type {Record<string, unknown[]>} */
-  const grouped = {};
+  const grouped: Record<string, unknown[]> = {};
   for (const entry of manifest.hooks) {
     if (!entry.claude) continue;
     if (!supported.has(entry.claude.event)) {
@@ -68,11 +88,9 @@ function buildClaudeHooks() {
   return grouped;
 }
 
-/** @returns {Record<string, Array<{ command: string }>>} */
-function buildCursorHooks() {
+function buildCursorHooks(): Record<string, Array<{ command: string }>> {
   const supported = new Set(cursorTarget?.capabilities.hookEvents ?? []);
-  /** @type {Record<string, Array<{ command: string }>>} */
-  const grouped = {};
+  const grouped: Record<string, Array<{ command: string }>> = {};
   for (const entry of manifest.hooks) {
     if (!entry.cursor) continue;
     if (!supported.has(entry.cursor.event)) {
@@ -87,11 +105,9 @@ function buildCursorHooks() {
   return grouped;
 }
 
-/** @returns {Record<string, unknown[]>} */
-function buildCodexHooks() {
+function buildCodexHooks(): Record<string, unknown[]> {
   const supported = new Set(codexTarget?.capabilities.hookEvents ?? []);
-  /** @type {Record<string, unknown[]>} */
-  const grouped = {};
+  const grouped: Record<string, unknown[]> = {};
   for (const entry of manifest.hooks) {
     if (!entry.codex) continue;
     if (!supported.has(entry.codex.event)) {
@@ -100,8 +116,10 @@ function buildCodexHooks() {
       );
       continue;
     }
-    /** @type {{ type: 'command'; command: string; statusMessage?: string }} */
-    const hook = { type: 'command', command: codexCommand(entry) };
+    const hook: { type: 'command'; command: string; statusMessage?: string } = {
+      type: 'command',
+      command: codexCommand(entry),
+    };
     if (entry.codex.statusMessage) hook.statusMessage = entry.codex.statusMessage;
     const hookEntry = entry.codex.matcher
       ? { matcher: entry.codex.matcher, hooks: [hook] }
@@ -112,26 +130,25 @@ function buildCodexHooks() {
   return grouped;
 }
 
-/** @param {unknown} value */
-function canonical(value) {
+function canonical(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === 'object') {
-    /** @type {Record<string, unknown>} */
-    const sorted = {};
+    const sorted: Record<string, unknown> = {};
     for (const key of Object.keys(value).sort())
-      sorted[key] = canonical(/** @type {Record<string, unknown>} */ (value)[key]);
+      sorted[key] = canonical((value as Record<string, unknown>)[key]);
     return sorted;
   }
   return value;
 }
 
-const deepEqual = (left, right) =>
+const deepEqual = (left: unknown, right: unknown): boolean =>
   JSON.stringify(canonical(left)) === JSON.stringify(canonical(right));
 
-/** @param {Record<string, { command?: string; args?: string[] }>} servers */
-function toCodexToml(servers) {
+function toCodexToml(
+  servers: Record<string, { command?: string; args?: string[] }>,
+): string {
   const lines = [
-    '# Generated by tooling/agent-os/generate.mjs from agent-os/mcp/mcp.default.json — do not edit by hand.',
+    '# Generated by tooling/agent-os/generate.ts from agent-os/mcp/mcp.default.json — do not edit by hand.',
     '',
   ];
   for (const [name, definition] of Object.entries(servers)) {
@@ -155,7 +172,7 @@ const claudeSettingsPath = join(
   claudeTarget?.hooksTarget ?? 'agent-os/platforms/claude/settings.json',
 );
 if (existsSync(claudeSettingsPath)) {
-  const settings = readJson(claudeSettingsPath);
+  const settings = readJson(claudeSettingsPath) as { hooks?: unknown };
   if (writeMode) {
     if (!deepEqual(settings.hooks, claudeHooks)) {
       settings.hooks = claudeHooks;
@@ -174,7 +191,7 @@ const cursorHooksPath = join(
   cursorTarget?.hooksTarget ?? 'agent-os/platforms/cursor/hooks.json',
 );
 if (existsSync(cursorHooksPath)) {
-  const cursorConfig = readJson(cursorHooksPath);
+  const cursorConfig = readJson(cursorHooksPath) as { hooks?: unknown };
   if (writeMode) {
     if (!deepEqual(cursorConfig.hooks, cursorHooks)) {
       cursorConfig.hooks = cursorHooks;
@@ -216,8 +233,11 @@ if (
   const codexConfigPath = join(agentOsDirectory, 'platforms', 'codex', 'config.toml');
   if (existsSync(mcpDefaultPath)) {
     const servers =
-      readJson(mcpDefaultPath).mcpServers ??
-      /** @type {Record<string, { command?: string; args?: string[] }>} */ ({});
+      (
+        readJson(mcpDefaultPath) as {
+          mcpServers?: Record<string, { command?: string; args?: string[] }>;
+        }
+      ).mcpServers ?? {};
     const toml = toCodexToml(servers);
     const current = existsSync(codexConfigPath)
       ? readFileSync(codexConfigPath, 'utf8')

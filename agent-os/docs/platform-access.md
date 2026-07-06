@@ -9,7 +9,7 @@ All project agents, skills, rules, hooks, and MCP templates live under [`agent-o
 | `agent-os/skills/`                     | Cursor, Claude, Codex (`.cursor/skills`, `.claude/skills`)                  |
 | `agent-os/agents/`                     | Cursor, Claude agents                                                       |
 | `agent-os/rules/`                      | Cursor rules                                                                |
-| `agent-os/hooks/`                      | Hook scripts; `hooks.json` → `tooling/agent-os/generate.mjs`                |
+| `agent-os/hooks/`                      | Hook scripts; `hooks.json` → `tooling/agent-os/generate.ts`                 |
 | `.mcp.example.json`                    | Full MCP template (committed)                                               |
 | `.mcp.default.json`                    | Default pair: codegraph + headroom (committed)                              |
 | `agent-os/mcp/mcp.*.json`              | Mirrors of root templates                                                   |

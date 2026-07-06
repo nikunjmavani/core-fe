@@ -63,4 +63,4 @@ There is intentionally **no** `.claude/rules` symlink — Claude Code follows `C
 
 ## Adding a new AI coding agent
 
-Add a row to [agent-os/platforms/targets.json](agent-os/platforms/targets.json), extend `agent-os/hooks/hooks.json` with compatible hook entries, add a recipe under `agent-os/platforms/<agent>/` if needed, and extend [tooling/agent-os/generate.mjs](tooling/agent-os/generate.mjs). Symlink the new tool's entrypoint directory into `agent-os/platforms/`.
+Add a row to [agent-os/platforms/targets.json](agent-os/platforms/targets.json), extend `agent-os/hooks/hooks.json` with compatible hook entries, add a recipe under `agent-os/platforms/<agent>/` if needed, and extend [tooling/agent-os/generate.ts](tooling/agent-os/generate.ts). Symlink the new tool's entrypoint directory into `agent-os/platforms/`.

@@ -1,41 +1,54 @@
-#!/usr/bin/env node
+#!/usr/bin/env tsx
 /**
- * agent-os integrity evals — Tier 1 (core-fe).
+ * agent-os integrity evals — Tier 1 (core-fe, deterministic).
+ *
+ * The agent-os/ bundle (skills, rules, agents, docs, hooks) is a large,
+ * cross-referenced surface that silently drifts: stale counts, dead path
+ * references, index/disk divergence, non-portable hook commands. This gate
+ * asserts the structural invariants so drift fails CI instead of being
+ * discovered months later by a human audit.
  *
  * Usage:
- *   node agent-os/evals/check.mjs            # gate
- *   node agent-os/evals/check.mjs --report   # verbose
+ *   tsx agent-os/evals/check.ts            # gate: exits 1 on any ERROR
+ *   tsx agent-os/evals/check.ts --report   # verbose: list every check + WARNs
  */
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { basename, join, relative } from 'node:path';
 
 const repositoryRoot = process.cwd();
 const agentOsDirectory = join(repositoryRoot, 'agent-os');
 const reportMode = process.argv.includes('--report');
 
-/** @typedef {{ level: 'error' | 'warn'; check: string; message: string }} Finding */
+type Level = 'error' | 'warn';
+interface Finding {
+  level: Level;
+  check: string;
+  message: string;
+}
 
-/** @type {Finding[]} */
-const findings = [];
-const error = (check, message) => findings.push({ level: 'error', check, message });
-const warn = (check, message) => findings.push({ level: 'warn', check, message });
+const findings: Finding[] = [];
+const error = (check: string, message: string) =>
+  findings.push({ level: 'error', check, message });
+const warn = (check: string, message: string) =>
+  findings.push({ level: 'warn', check, message });
 
-const readText = (absolutePath) => readFileSync(absolutePath, 'utf8');
+const readText = (absolutePath: string): string => readFileSync(absolutePath, 'utf8');
 
-const listSkillDirectoryNames = (absoluteDirectory) =>
+const listSkillDirectoryNames = (absoluteDirectory: string): string[] =>
   readdirSync(absoluteDirectory, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() || entry.isSymbolicLink())
     .map((entry) => entry.name)
     .sort();
 
-const listFilesWithExtension = (absoluteDirectory, extension) =>
+const listFilesWithExtension = (absoluteDirectory: string, extension: string): string[] =>
   readdirSync(absoluteDirectory, { withFileTypes: true })
     .filter((entry) => entry.isFile() && entry.name.endsWith(extension))
     .map((entry) => entry.name)
     .sort();
 
-/** @param {string} text @param {string} key */
-function frontmatterField(text, key) {
+/** Extract a single frontmatter field, tolerating folded (`>`) / literal (`|`) scalars. */
+function frontmatterField(text: string, key: string): string | undefined {
   const block = text.match(/^---\n([\s\S]*?)\n---/)?.[1];
   if (!block) return undefined;
   const lines = block.split('\n');
@@ -43,7 +56,7 @@ function frontmatterField(text, key) {
   if (index === -1) return undefined;
   const inline = lines[index].slice(key.length + 1).trim();
   if (inline !== '' && !['>', '|', '>-', '|-'].includes(inline)) return inline;
-  const collected = [];
+  const collected: string[] = [];
   for (let cursor = index + 1; cursor < lines.length; cursor++) {
     if (/^\s+\S/.test(lines[cursor])) collected.push(lines[cursor].trim());
     else if (/^\s*$/.test(lines[cursor])) continue;
@@ -52,14 +65,13 @@ function frontmatterField(text, key) {
   return collected.join(' ').trim() || undefined;
 }
 
-/** @param {string} text @param {RegExp} pattern */
-function allNumbers(text, pattern) {
+function allNumbers(text: string, pattern: RegExp): number[] {
   return [...text.matchAll(pattern)].map((match) => Number(match[1]));
 }
 
+// ── Skill frontmatter & names ──
 const skillDirectoryNames = listSkillDirectoryNames(join(agentOsDirectory, 'skills'));
-/** @type {string[]} */
-const skillsWithManifest = [];
+const skillsWithManifest: string[] = [];
 
 for (const skill of skillDirectoryNames) {
   const skillFile = join(agentOsDirectory, 'skills', skill, 'SKILL.md');
@@ -93,6 +105,7 @@ for (const skill of skillDirectoryNames) {
     );
 }
 
+// ── Skill-registry ↔ disk: paths resolve, every skill referenced, count matches ──
 const registryFile = join(agentOsDirectory, 'skills', 'skill-registry', 'SKILL.md');
 if (existsSync(registryFile)) {
   const registryText = readText(registryFile);
@@ -113,7 +126,7 @@ if (existsSync(registryFile)) {
         `skill "${skill}" is not referenced in skill-registry inventory`,
       );
   }
-  for (const count of new Set(allNumbers(registryText, /(\d+)\+?\s+project skills/g)))
+  for (const count of new Set(allNumbers(registryText, /(\d{1,4}) project skills/g)))
     if (count !== skillsWithManifest.length)
       error(
         'skill-registry-count',
@@ -121,6 +134,42 @@ if (existsSync(registryFile)) {
       );
 }
 
+// ── Vendored skills: skills-lock.json hashes match the committed files ──
+// skills-lock.json records the sha256 of every ecosystem skill installed via the
+// skills CLI. Recompute each and fail on mismatch so an unintended edit to a
+// vendored skill (or a stale lock) is caught, not silently accepted.
+const skillsLockFile = join(agentOsDirectory, 'skills-lock.json');
+if (existsSync(skillsLockFile)) {
+  try {
+    const lock = JSON.parse(readText(skillsLockFile)) as {
+      skills?: Record<string, { skillPath?: string; computedHash?: string }>;
+    };
+    for (const [name, entry] of Object.entries(lock.skills ?? {})) {
+      if (!entry.skillPath) {
+        error('skills-lock', `skills-lock entry "${name}" has no skillPath`);
+        continue;
+      }
+      const absolute = join(repositoryRoot, entry.skillPath);
+      if (!existsSync(absolute)) {
+        error(
+          'skills-lock',
+          `skills-lock entry "${name}" → ${entry.skillPath} does not exist`,
+        );
+        continue;
+      }
+      const actual = createHash('sha256').update(readFileSync(absolute)).digest('hex');
+      if (entry.computedHash !== actual)
+        error(
+          'skills-lock',
+          `skills-lock hash mismatch for "${name}" (${entry.skillPath}): expected ${entry.computedHash}, got ${actual}`,
+        );
+    }
+  } catch {
+    error('skills-lock', 'agent-os/skills-lock.json is not valid JSON');
+  }
+}
+
+// ── Agent frontmatter ──
 const agentFiles = listFilesWithExtension(join(agentOsDirectory, 'agents'), '.md').filter(
   (file) => file !== 'README.md',
 );
@@ -135,9 +184,12 @@ for (const file of agentFiles) {
     error('agent-frontmatter', `agents/${file} missing frontmatter \`description\``);
 }
 
+// ── Hook portability: no hardcoded home paths; referenced scripts exist ──
 const settingsFile = join(agentOsDirectory, 'platforms', 'claude', 'settings.json');
 if (existsSync(settingsFile)) {
-  let settings = null;
+  let settings: {
+    hooks?: Record<string, Array<{ hooks?: Array<{ command?: string }> }>>;
+  } | null = null;
   try {
     settings = JSON.parse(readText(settingsFile));
   } catch {
@@ -150,7 +202,7 @@ if (existsSync(settingsFile)) {
     .flat()
     .flatMap((entry) => entry.hooks ?? [])
     .map((hook) => hook.command)
-    .filter((command) => typeof command === 'string');
+    .filter((command): command is string => typeof command === 'string');
   for (const command of commands) {
     if (/\/Users\/|\/home\/|\/root\//.test(command))
       error(
@@ -168,8 +220,9 @@ if (existsSync(settingsFile)) {
   }
 }
 
+// ── Backtick-referenced repo paths in agent-os docs/rules/skills must exist ──
 const ignoreFile = join(agentOsDirectory, 'evals', 'ignore.json');
-const ignored = existsSync(ignoreFile)
+const ignored: string[] = existsSync(ignoreFile)
   ? (JSON.parse(readText(ignoreFile)).paths ?? [])
   : [];
 const pathRoots = [
@@ -197,8 +250,7 @@ const pathExtensions = [
   '.html',
 ];
 
-/** @param {string} token */
-const isPathCandidate = (token) => {
+const isPathCandidate = (token: string): boolean => {
   if (/[*<>:{}\s]|\.\.|^https?/.test(token)) return false;
   if (ignored.some((entry) => token === entry || token.startsWith(entry))) return false;
   const underRoot = pathRoots.some((root) => token.startsWith(root));
@@ -206,11 +258,10 @@ const isPathCandidate = (token) => {
   return underRoot && hasKnownExtension;
 };
 
-/** @param {string} absolutePath */
-const scanOneFile = (absolutePath) => {
+const scanOneFile = (absolutePath: string) => {
   const displayPath = relative(repositoryRoot, absolutePath);
   const text = readText(absolutePath);
-  const seen = new Set();
+  const seen = new Set<string>();
   for (const inline of text.matchAll(/`([^`\n]+)`/g)) {
     const token = inline[1].trim();
     if (seen.has(token) || !isPathCandidate(token)) continue;
@@ -223,8 +274,7 @@ const scanOneFile = (absolutePath) => {
   }
 };
 
-/** @param {string} absoluteDirectory @param {string} extension */
-const scanForPaths = (absoluteDirectory, extension) => {
+const scanForPaths = (absoluteDirectory: string, extension: string) => {
   for (const file of listFilesWithExtension(absoluteDirectory, extension))
     scanOneFile(join(absoluteDirectory, file));
 };
@@ -237,10 +287,13 @@ for (const rootDoc of ['CLAUDE.md', 'AGENTS.md'])
   if (existsSync(join(repositoryRoot, rootDoc)))
     scanOneFile(join(repositoryRoot, rootDoc));
 
+// ── Backbone manifests: hook scripts exist, capability registry well-formed ──
 const hooksManifestFile = join(agentOsDirectory, 'hooks', 'hooks.json');
 if (existsSync(hooksManifestFile)) {
   try {
-    const manifest = JSON.parse(readText(hooksManifestFile));
+    const manifest = JSON.parse(readText(hooksManifestFile)) as {
+      hooks?: Array<{ id?: string; script?: string }>;
+    };
     for (const entry of manifest.hooks ?? []) {
       if (!entry.script)
         error('hooks-manifest', `hooks.json entry "${entry.id ?? '∅'}" has no script`);
@@ -258,7 +311,9 @@ if (existsSync(hooksManifestFile)) {
 const targetsRegistryFile = join(agentOsDirectory, 'platforms', 'targets.json');
 if (existsSync(targetsRegistryFile)) {
   try {
-    const registry = JSON.parse(readText(targetsRegistryFile));
+    const registry = JSON.parse(readText(targetsRegistryFile)) as {
+      agents?: Record<string, unknown>;
+    };
     if (!registry.agents || Object.keys(registry.agents).length === 0)
       error('targets-registry', 'platforms/targets.json declares no agents');
   } catch {
@@ -266,12 +321,16 @@ if (existsSync(targetsRegistryFile)) {
   }
 }
 
+// ── Skill chains ↔ disk: every step (and optional step) is a real skill ──
 const chainsFile = join(agentOsDirectory, 'skills', 'chains.json');
 if (existsSync(chainsFile)) {
   try {
     const chains =
-      JSON.parse(readText(chainsFile)).chains ??
-      /** @type {Record<string, { steps?: string[]; optional?: string[] }>} */ ({});
+      (
+        JSON.parse(readText(chainsFile)) as {
+          chains?: Record<string, { steps?: string[]; optional?: string[] }>;
+        }
+      ).chains ?? {};
     for (const [chain, definition] of Object.entries(chains))
       for (const step of [...(definition.steps ?? []), ...(definition.optional ?? [])])
         if (!skillDirectoryNames.includes(step))
@@ -284,13 +343,20 @@ if (existsSync(chainsFile)) {
   }
 }
 
+// ── Agent pipelines ↔ disk: steps are real agents; handoffs are real skills ──
 const pipelinesFile = join(agentOsDirectory, 'agents', 'pipelines.json');
 if (existsSync(pipelinesFile)) {
   const agentNames = new Set(agentFiles.map((file) => basename(file, '.md')));
   try {
     const pipelines =
-      JSON.parse(readText(pipelinesFile)).pipelines ??
-      /** @type {Record<string, { steps?: string[]; handoff?: Record<string, string> }>} */ ({});
+      (
+        JSON.parse(readText(pipelinesFile)) as {
+          pipelines?: Record<
+            string,
+            { steps?: string[]; handoff?: Record<string, string> }
+          >;
+        }
+      ).pipelines ?? {};
     for (const [pipeline, definition] of Object.entries(pipelines)) {
       for (const step of definition.steps ?? [])
         if (!agentNames.has(step))
@@ -326,16 +392,18 @@ if (!existsSync(requirementForm)) {
   error('requirement-form', 'docs/getting-started/requirement-format.md is missing');
 }
 
+// ── Report ──
 const errors = findings.filter((finding) => finding.level === 'error');
 const warnings = findings.filter((finding) => finding.level === 'warn');
 
-const checkLabels = {
+const checkLabels: Record<string, string> = {
   'skill-frontmatter': 'Skill frontmatter & names',
   'skill-stub': 'Skill stub directories',
   'skill-registry-path': 'Skill-registry paths',
   'skill-registry-coverage': 'Skill-registry coverage',
   'skill-registry-count': 'Skill-registry counts',
   'skill-description': 'Skill descriptions',
+  'skills-lock': 'Vendored skill hashes',
   'agent-frontmatter': 'Agent frontmatter',
   'hook-portability': 'Hook portability',
   'hook-script': 'Hook scripts exist',
@@ -352,11 +420,9 @@ console.log(
   `  skills (SKILL.md): ${skillsWithManifest.length}   skill dirs: ${skillDirectoryNames.length}   agents: ${agentFiles.length}\n`,
 );
 
-/** @param {'error' | 'warn'} level */
-const group = (level) => {
+const group = (level: Level) => {
   const list = findings.filter((finding) => finding.level === level);
-  /** @type {Map<string, string[]>} */
-  const byCheck = new Map();
+  const byCheck = new Map<string, string[]>();
   for (const finding of list)
     byCheck.set(finding.check, [...(byCheck.get(finding.check) ?? []), finding.message]);
   return byCheck;

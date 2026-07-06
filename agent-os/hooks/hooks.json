@@ -1,5 +1,5 @@
 {
-  "description": "Single source of truth for core-fe agent hook wiring. tooling/agent-os/generate.mjs derives agent-os/platforms/claude/settings.json (hooks block), agent-os/platforms/cursor/hooks.json, and agent-os/platforms/codex/hooks.json from this manifest + agent-os/platforms/targets.json. Tool dirs (.claude/, .cursor/, .codex/) symlink into agent-os/platforms/ — edit here only. All hooks FAIL OPEN.",
+  "description": "Single source of truth for core-fe agent hook wiring. tooling/agent-os/generate.ts derives agent-os/platforms/claude/settings.json (hooks block), agent-os/platforms/cursor/hooks.json, and agent-os/platforms/codex/hooks.json from this manifest + agent-os/platforms/targets.json. Tool dirs (.claude/, .cursor/, .codex/) symlink into agent-os/platforms/ — edit here only. All hooks FAIL OPEN.",
   "hooks": [
     {
       "id": "session-start",

@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# Full project health check: format, lint, biome, docs, type-check, tests, build, size, env, public, tsdoc, structure.
+# Full project health check: format, lint, biome, docs, type-check, tests, build, size, env, public, tsdoc, structure, agent-os wiring.
 # Run from project root: pnpm health  or  pnpm health:fix
 # --fix: run pnpm lint:fix and pnpm format before checks (report-only otherwise).
 set -e
@@ -196,6 +196,29 @@ if pnpm validate:structure >/dev/null 2>&1; then
   echo "  $PASS  pnpm validate:structure"
 else
   echo "  $FAIL  pnpm validate:structure"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+echo ""
+echo "Phase 15: agent-os wiring"
+if pnpm agent-os:check >/dev/null 2>&1; then
+  echo "  $PASS  pnpm agent-os:check"
+else
+  echo "  $FAIL  pnpm agent-os:check"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+if pnpm agent-os:triggers:strict >/dev/null 2>&1; then
+  echo "  $PASS  pnpm agent-os:triggers:strict"
+else
+  echo "  $FAIL  pnpm agent-os:triggers:strict"
+  TOTAL_FAILS=$((TOTAL_FAILS + 1))
+fi
+
+if pnpm agent-os:generate:check >/dev/null 2>&1; then
+  echo "  $PASS  pnpm agent-os:generate:check"
+else
+  echo "  $FAIL  pnpm agent-os:generate:check"
   TOTAL_FAILS=$((TOTAL_FAILS + 1))
 fi
 

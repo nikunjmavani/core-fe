@@ -2,10 +2,10 @@
 
 Two-tier integrity gates for the shared `agent-os/` bundle.
 
-| Tier              | Script             | Gates CI?                             |
-| ----------------- | ------------------ | ------------------------------------- |
-| **1 — integrity** | `check.mjs`        | Yes — `pnpm agent-os:check`           |
-| **2 — routing**   | `trigger-eval.mjs` | Yes — `pnpm agent-os:triggers:strict` |
+| Tier              | Script            | Gates CI?                             |
+| ----------------- | ----------------- | ------------------------------------- |
+| **1 — integrity** | `check.ts`        | Yes — `pnpm agent-os:check`           |
+| **2 — routing**   | `trigger-eval.ts` | Yes — `pnpm agent-os:triggers:strict` |
 
 Also run `pnpm agent-os:generate:check` after editing `hooks/hooks.json`.
 

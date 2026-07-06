@@ -5,49 +5,49 @@
       "source": "freshtechbro/claudedesignskills",
       "sourceType": "github",
       "skillPath": "agent-os/skills/animejs/SKILL.md",
-      "computedHash": "1ccd0229d51e46aaa5e0d7033f1160c9f21440af470fbaab25fb68d9190c3edb"
+      "computedHash": "da3b68c004afb5809ea835f0b9c9a73997347cc032978ae144f6baebfef8b6a0"
     },
     "emil-design-eng": {
       "source": "emilkowalski/skill",
       "sourceType": "github",
       "skillPath": "agent-os/skills/emil-design-eng/SKILL.md",
-      "computedHash": "8bdf9e4e6de7a4969147bf4828a4ad2c5aacd9fba4b690b250a85e0467ca387d"
+      "computedHash": "433b5a239cda18e0576e4e558532e7e53512e21fafe5b85db4894c28ec399b72"
     },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "agent-os/skills/find-skills/SKILL.md",
-      "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+      "computedHash": "e39b8b4c73a4e21aabff758bbc87a54022702a7d7e9edac69dc465c988a40bbc"
     },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "agent-os/skills/frontend-design/SKILL.md",
-      "computedHash": "063a0e6448123cd359ad0044cc46b0e490cc7964d45ef4bb9fd842bd2ffbca67"
+      "computedHash": "3dc8886d38b6470dfb70ab037db15a6ce48e167339692475086f73a1c8f2a8ac"
     },
     "impeccable": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",
       "skillPath": "agent-os/skills/impeccable/SKILL.md",
-      "computedHash": "c5c260ee8333b2710285ba484ab92d5abd23cc03d03cbf984bc2f108a8a47d8a"
+      "computedHash": "4ff55c665ec610d7e20a15abe9483e4f8b41ff22b72ef1ab5a0d5e5e6a09f3f5"
     },
     "review-animations": {
       "source": "emilkowalski/skill",
       "sourceType": "github",
       "skillPath": "agent-os/skills/review-animations/SKILL.md",
-      "computedHash": "ca04aaa0a815f05e0910ded8fedbfbdfe0acdec8f52dfbb88277890070d134d4"
+      "computedHash": "da7ffae44f21bc8c5104567256f6c66e5dac69fd7118db639ee3d30e0f9d6ba9"
     },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "agent-os/skills/shadcn/SKILL.md",
-      "computedHash": "ac9d0d69caac7de1d1e5647f3db3bcd2f13af355d6b3a78780fbf7fc80e8dca0"
+      "computedHash": "75e9d038e282bb900e46fa63f10ff4fe8ed3945ef092a8dddf22de9c2546760c"
     },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
       "skillPath": "agent-os/skills/ui-ux-pro-max/SKILL.md",
-      "computedHash": "0a413bf988d06481f69bb81df2070741c3ba12dd9f1be2706d57f259c905992d"
+      "computedHash": "88d7f8208a0f9586c214607d03d3c303b99b7ead14373e94615dba37fa2b73c1"
     }
   }
 }
