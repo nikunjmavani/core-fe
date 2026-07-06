@@ -219,6 +219,34 @@ for (const file of agentFiles) {
   }
 }
 
+// ── Agent catalog ↔ disk: gate-able count matches, every agent catalogued ──
+const catalogFile = join(agentOsDirectory, 'docs', 'agents-catalog.md');
+if (existsSync(catalogFile)) {
+  const catalogText = readText(catalogFile);
+  const claimedAgents = new Set(
+    allNumbers(catalogText, /## Catalog \((\d{1,3}) agents\)/g),
+  );
+  if (claimedAgents.size === 0)
+    error(
+      'agent-catalog',
+      'agents-catalog.md is missing a gate-able count — the "## Catalog (N agents)" header',
+    );
+  for (const count of claimedAgents)
+    if (count !== agentFiles.length)
+      error(
+        'agent-catalog',
+        `agents-catalog states ${count} agents; ${agentFiles.length} agent files exist`,
+      );
+  for (const file of agentFiles) {
+    const agentName = basename(file, '.md');
+    if (!catalogText.includes(agentName))
+      error(
+        'agent-catalog',
+        `agent "${agentName}" is not referenced in agents-catalog.md`,
+      );
+  }
+}
+
 // ── Hook portability: no hardcoded home paths; referenced scripts exist ──
 const settingsFile = join(agentOsDirectory, 'platforms', 'claude', 'settings.json');
 if (existsSync(settingsFile)) {
@@ -459,6 +487,26 @@ if (!existsSync(requirementForm)) {
   error('requirement-form', 'docs/getting-started/requirement-format.md is missing');
 }
 
+// ── Command names are unique and never collide with a skill name ──
+// Commands are workflows; skills are the granular procedures. A command must not
+// shadow a skill (or another command), so routing stays unambiguous across tools.
+const commandsDirectory = join(agentOsDirectory, 'commands');
+if (existsSync(commandsDirectory)) {
+  const seenCommand = new Set<string>();
+  for (const file of listFilesWithExtension(commandsDirectory, '.md')) {
+    const name = basename(file, '.md');
+    if (name === 'README') continue;
+    if (seenCommand.has(name))
+      error('command-uniqueness', `command "${name}" is defined more than once`);
+    seenCommand.add(name);
+    if (skillDirectoryNames.includes(name))
+      error(
+        'command-uniqueness',
+        `command "${name}" collides with a skill of the same name`,
+      );
+  }
+}
+
 // ── Report ──
 const errors = findings.filter((finding) => finding.level === 'error');
 const warnings = findings.filter((finding) => finding.level === 'warn');
@@ -472,6 +520,8 @@ const checkLabels: Record<string, string> = {
   'skill-description': 'Skill descriptions',
   'skills-lock': 'Vendored skill hashes',
   'agent-frontmatter': 'Agent frontmatter',
+  'agent-catalog': 'Agent catalog ↔ disk',
+  'command-uniqueness': 'Command names unique',
   'agent-readonly': 'Read-only agents enforce tools',
   'hook-portability': 'Hook portability',
   'hook-script': 'Hook scripts exist',

@@ -6,7 +6,7 @@ symlinks. Agents are read-only validators/investigators — for task instruction
 (how to build something) see [`agent-os/skills/`](../skills/) and the
 [skill registry](../skills/skill-registry/SKILL.md).
 
-## Catalog
+## Catalog (5 agents)
 
 | Agent                  | Purpose                                                                                                                         | Tools (read-only)      |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
