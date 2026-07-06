@@ -174,9 +174,27 @@ export const authApi = {
     input: { name?: string; jobTitle?: string },
     token: string,
   ): Promise<void> => {
+    // core-be `PATCH /users/me` expects snake_case keys and models the display
+    // name as first_name + last_name (there is no single `name` column). Translate
+    // the UI model here so the rest of the app can keep using `name`/`jobTitle`.
+    const body: {
+      first_name?: string;
+      last_name?: string | null;
+      job_title?: string;
+    } = {};
+    if (input.name !== undefined) {
+      const trimmed = input.name.trim();
+      const firstSpace = trimmed.indexOf(' ');
+      body.first_name = firstSpace === -1 ? trimmed : trimmed.slice(0, firstSpace);
+      // A single-token name clears last_name; the rest (after the first space) is the surname.
+      body.last_name = firstSpace === -1 ? null : trimmed.slice(firstSpace + 1).trim();
+    }
+    if (input.jobTitle !== undefined) {
+      body.job_title = input.jobTitle;
+    }
     const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.ME}`, {
       method: 'PATCH',
-      body: JSON.stringify(input),
+      body: JSON.stringify(body),
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!response.ok) {

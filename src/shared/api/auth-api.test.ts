@@ -153,3 +153,51 @@ describe('authApi.oauthStart redirect URL', () => {
     );
   });
 });
+
+describe('authApi.updateProfile wire mapping', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  async function captureProfileBody(input: {
+    name?: string;
+    jobTitle?: string;
+  }): Promise<Record<string, unknown>> {
+    let body: Record<string, unknown> = {};
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (_url: unknown, init: RequestInit) => {
+        body = JSON.parse(init.body as string) as Record<string, unknown>;
+        return new Response(null, { status: 200 });
+      }),
+    );
+    await authApi.updateProfile(input, 'token');
+    return body;
+  }
+
+  it('splits a full name into first_name/last_name and maps jobTitle → job_title', async () => {
+    expect(await captureProfileBody({ name: 'NIK PATEL', jobTitle: 'CEO' })).toEqual({
+      first_name: 'NIK',
+      last_name: 'PATEL',
+      job_title: 'CEO',
+    });
+  });
+
+  it('keeps a multi-word surname intact after the first space', async () => {
+    expect(await captureProfileBody({ name: 'Nik Vijay Patel' })).toEqual({
+      first_name: 'Nik',
+      last_name: 'Vijay Patel',
+    });
+  });
+
+  it('sends last_name null for a single-token name', async () => {
+    expect(await captureProfileBody({ name: 'Nik' })).toEqual({
+      first_name: 'Nik',
+      last_name: null,
+    });
+  });
+
+  it('omits name fields when only jobTitle is provided', async () => {
+    expect(await captureProfileBody({ jobTitle: 'CEO' })).toEqual({ job_title: 'CEO' });
+  });
+});
