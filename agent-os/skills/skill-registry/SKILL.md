@@ -860,6 +860,20 @@ These Cursor rules are always loaded and do not need to be invoked:
 | env-schema-add-sync   | `agent-os/rules/env-schema-add-sync.mdc`   | Env schema / `.env.example` — read env-schema-add skill                                                   |
 | agent-behavior        | `agent-os/rules/agent-behavior.mdc`        | Complete tests, route reg, RBAC, docs without asking; never ask "Do you want X?"                          |
 
+## Orchestration manifests (machine-readable)
+
+The relationships above are also declared as data, eval-gated by
+`agent-os/evals/check.ts` so they cannot drift:
+
+| Manifest                          | Declares                                                                     |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| `agent-os/skills/chains.json`     | Named ordered skill sequences (page-change, resource-crud, form-mutation, …) |
+| `agent-os/skills/groups.json`     | Every skill in exactly one group (ui-design, quality, platform, …)           |
+| `agent-os/agents/pipelines.json`  | Reviewer-agent pipelines (`pre-merge-review`, `prod-readiness`) + handoffs   |
+| `agent-os/docs/skill-triggers.md` | File-pattern → skill routing (Tier-2 tested via `evals/cases/triggers.json`) |
+
+Read-only reviewer agents are catalogued in `agent-os/docs/agents-catalog.md`.
+
 ## Enterprise Platform Integration
 
 | Tool           | Config File                                                                        | Purpose                                   |
