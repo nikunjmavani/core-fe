@@ -64,21 +64,28 @@ const skillsWithManifest = [];
 for (const skill of skillDirectoryNames) {
   const skillFile = join(agentOsDirectory, 'skills', skill, 'SKILL.md');
   if (!existsSync(skillFile)) {
-    warn('skill-stub', `skills/${skill}/ has no SKILL.md (stub directory — add SKILL.md or remove)`);
+    warn(
+      'skill-stub',
+      `skills/${skill}/ has no SKILL.md (stub directory — add SKILL.md or remove)`,
+    );
     continue;
   }
   skillsWithManifest.push(skill);
   const text = readText(skillFile);
   const name = frontmatterField(text, 'name');
   const description = frontmatterField(text, 'description');
-  if (!name) error('skill-frontmatter', `skills/${skill}/SKILL.md missing frontmatter \`name\``);
+  if (!name)
+    error('skill-frontmatter', `skills/${skill}/SKILL.md missing frontmatter \`name\``);
   else if (name !== skill)
     warn(
       'skill-frontmatter',
       `skills/${skill}/SKILL.md name "${name}" != directory "${skill}" (vendored skill — OK if intentional)`,
     );
   if (!description)
-    error('skill-frontmatter', `skills/${skill}/SKILL.md missing frontmatter \`description\``);
+    error(
+      'skill-frontmatter',
+      `skills/${skill}/SKILL.md missing frontmatter \`description\``,
+    );
   else if (description.length < 80)
     warn(
       'skill-description',
@@ -90,7 +97,9 @@ const registryFile = join(agentOsDirectory, 'skills', 'skill-registry', 'SKILL.m
 if (existsSync(registryFile)) {
   const registryText = readText(registryFile);
   const registryPaths = new Set(
-    [...registryText.matchAll(/\*\*Path:\*\*\s+`([^`]+)`/g)].map((match) => match[1].trim()),
+    [...registryText.matchAll(/\*\*Path:\*\*\s+`([^`]+)`/g)].map((match) =>
+      match[1].trim(),
+    ),
   );
   for (const path of registryPaths) {
     if (!existsSync(join(repositoryRoot, path)))
@@ -99,7 +108,10 @@ if (existsSync(registryFile)) {
   for (const skill of skillsWithManifest) {
     const expected = `agent-os/skills/${skill}/SKILL.md`;
     if (!registryText.includes(expected))
-      warn('skill-registry-coverage', `skill "${skill}" is not referenced in skill-registry inventory`);
+      warn(
+        'skill-registry-coverage',
+        `skill "${skill}" is not referenced in skill-registry inventory`,
+      );
   }
   for (const count of new Set(allNumbers(registryText, /(\d+)\+?\s+project skills/g)))
     if (count !== skillsWithManifest.length)
@@ -119,7 +131,8 @@ for (const file of agentFiles) {
   const description = frontmatterField(text, 'description');
   if (!name || name !== agentName)
     error('agent-frontmatter', `agents/${file} name "${name ?? '∅'}" != "${agentName}"`);
-  if (!description) error('agent-frontmatter', `agents/${file} missing frontmatter \`description\``);
+  if (!description)
+    error('agent-frontmatter', `agents/${file} missing frontmatter \`description\``);
 }
 
 const settingsFile = join(agentOsDirectory, 'platforms', 'claude', 'settings.json');
@@ -128,7 +141,10 @@ if (existsSync(settingsFile)) {
   try {
     settings = JSON.parse(readText(settingsFile));
   } catch {
-    error('hook-portability', 'agent-os/platforms/claude/settings.json is not valid JSON');
+    error(
+      'hook-portability',
+      'agent-os/platforms/claude/settings.json is not valid JSON',
+    );
   }
   const commands = Object.values(settings?.hooks ?? {})
     .flat()
@@ -141,14 +157,21 @@ if (existsSync(settingsFile)) {
         'hook-portability',
         `settings.json hook hardcodes an absolute home path — use "$CLAUDE_PROJECT_DIR": ${command}`,
       );
-    const scriptReference = command.match(/agent-os\/hooks\/[A-Za-z0-9._-]+\.(sh|mjs)/)?.[0];
+    const scriptReference = command.match(
+      /agent-os\/hooks\/[A-Za-z0-9._-]+\.(sh|mjs)/,
+    )?.[0];
     if (scriptReference && !existsSync(join(repositoryRoot, scriptReference)))
-      error('hook-script', `settings.json references hook script ${scriptReference} which does not exist`);
+      error(
+        'hook-script',
+        `settings.json references hook script ${scriptReference} which does not exist`,
+      );
   }
 }
 
 const ignoreFile = join(agentOsDirectory, 'evals', 'ignore.json');
-const ignored = existsSync(ignoreFile) ? JSON.parse(readText(ignoreFile)).paths ?? [] : [];
+const ignored = existsSync(ignoreFile)
+  ? (JSON.parse(readText(ignoreFile)).paths ?? [])
+  : [];
 const pathRoots = [
   'src/',
   'tooling/',
@@ -160,7 +183,19 @@ const pathRoots = [
   'plugins/',
   'public/',
 ];
-const pathExtensions = ['.ts', '.tsx', '.mjs', '.json', '.md', '.mdc', '.yml', '.yaml', '.sh', '.txt', '.html'];
+const pathExtensions = [
+  '.ts',
+  '.tsx',
+  '.mjs',
+  '.json',
+  '.md',
+  '.mdc',
+  '.yml',
+  '.yaml',
+  '.sh',
+  '.txt',
+  '.html',
+];
 
 /** @param {string} token */
 const isPathCandidate = (token) => {
@@ -196,18 +231,24 @@ const scanForPaths = (absoluteDirectory, extension) => {
 
 scanForPaths(join(agentOsDirectory, 'docs'), '.md');
 scanForPaths(join(agentOsDirectory, 'rules'), '.mdc');
-for (const skill of skillsWithManifest) scanForPaths(join(agentOsDirectory, 'skills', skill), '.md');
+for (const skill of skillsWithManifest)
+  scanForPaths(join(agentOsDirectory, 'skills', skill), '.md');
 for (const rootDoc of ['CLAUDE.md', 'AGENTS.md'])
-  if (existsSync(join(repositoryRoot, rootDoc))) scanOneFile(join(repositoryRoot, rootDoc));
+  if (existsSync(join(repositoryRoot, rootDoc)))
+    scanOneFile(join(repositoryRoot, rootDoc));
 
 const hooksManifestFile = join(agentOsDirectory, 'hooks', 'hooks.json');
 if (existsSync(hooksManifestFile)) {
   try {
     const manifest = JSON.parse(readText(hooksManifestFile));
     for (const entry of manifest.hooks ?? []) {
-      if (!entry.script) error('hooks-manifest', `hooks.json entry "${entry.id ?? '∅'}" has no script`);
+      if (!entry.script)
+        error('hooks-manifest', `hooks.json entry "${entry.id ?? '∅'}" has no script`);
       else if (!existsSync(join(agentOsDirectory, 'hooks', entry.script)))
-        error('hooks-manifest', `hooks.json references agent-os/hooks/${entry.script} which does not exist`);
+        error(
+          'hooks-manifest',
+          `hooks.json references agent-os/hooks/${entry.script} which does not exist`,
+        );
     }
   } catch {
     error('hooks-manifest', 'agent-os/hooks/hooks.json is not valid JSON');
@@ -225,7 +266,30 @@ if (existsSync(targetsRegistryFile)) {
   }
 }
 
-const requirementForm = join(repositoryRoot, 'docs', 'getting-started', 'requirement-format.md');
+const chainsFile = join(agentOsDirectory, 'skills', 'chains.json');
+if (existsSync(chainsFile)) {
+  try {
+    const chains =
+      JSON.parse(readText(chainsFile)).chains ??
+      /** @type {Record<string, { steps?: string[]; optional?: string[] }>} */ ({});
+    for (const [chain, definition] of Object.entries(chains))
+      for (const step of [...(definition.steps ?? []), ...(definition.optional ?? [])])
+        if (!skillDirectoryNames.includes(step))
+          error(
+            'skill-chains',
+            `chains.json chain "${chain}" references "${step}" which has no skill directory`,
+          );
+  } catch {
+    error('skill-chains', 'agent-os/skills/chains.json is not valid JSON');
+  }
+}
+
+const requirementForm = join(
+  repositoryRoot,
+  'docs',
+  'getting-started',
+  'requirement-format.md',
+);
 if (!existsSync(requirementForm)) {
   error('requirement-form', 'docs/getting-started/requirement-format.md is missing');
 }
@@ -246,6 +310,7 @@ const checkLabels = {
   'referenced-path': 'Referenced paths exist',
   'hooks-manifest': 'Hook manifest scripts exist',
   'targets-registry': 'Capability registry valid',
+  'skill-chains': 'Skill chains ↔ disk',
   'requirement-form': 'Requirement intake doc',
 };
 
@@ -285,7 +350,9 @@ if (reportMode) {
 
 console.log('');
 if (errors.length) {
-  console.log(`✗ FAILED — ${errors.length} integrity error(s), ${warnings.length} warning(s)\n`);
+  console.log(
+    `✗ FAILED — ${errors.length} integrity error(s), ${warnings.length} warning(s)\n`,
+  );
   process.exit(1);
 }
 console.log(`✓ PASSED — 0 errors, ${warnings.length} warning(s)\n`);

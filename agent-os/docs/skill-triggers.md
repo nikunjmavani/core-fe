@@ -59,6 +59,7 @@ Read in order; **project guardrails always win** over skill suggestions.
 | `**/*.api.ts` · `**/hooks/use*/**`                                                     | `react-best-practices`                                                 |
 | `**/components/ui/*`                                                                   | `shadcn`                                                               |
 | `**/components/**/*.tsx` · `**/forms/**/*`                                             | `shadcn`, `composition-patterns`, `frontend-design`, `test-generation` |
+| `src/shared/components/**/*.tsx` (promoted from a page)                                | `component-promotion`, `composition-patterns`                          |
 | `src/index.css` · `**/*.css`                                                           | `frontend-design`, `theme-axis-audit` (if axis work)                   |
 | `**/*.test.ts` · `**/*.test.tsx`                                                       | `test-generation`                                                      |
 | `tests/e2e/**`                                                                         | `playwright-e2e`, `e2e-testids`                                        |
