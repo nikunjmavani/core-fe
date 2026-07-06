@@ -55,12 +55,24 @@ There is intentionally **no** `.claude/rules` symlink — Claude Code follows `C
 - **MCP setup:** [agent-os/docs/cursor-mcp-setup.md](agent-os/docs/cursor-mcp-setup.md)
 - **Platform wiring:** [agent-os/docs/platform-access.md](agent-os/docs/platform-access.md)
 
+## Cloud agent sessions
+
+On **Cursor Cloud Agents** or **Claude Code on the web**, read
+**[agent-os/cloud-environment/agents-cloud.md](agent-os/cloud-environment/agents-cloud.md)**
+before browser/e2e or live-backend work. Cached install + Cursor `environment.json`
+live in **[agent-os/cloud-environment/](agent-os/cloud-environment/)** (symlinked at
+[`.cursor/environment.json`](.cursor/environment.json)). core-fe is a Vite SPA — lint,
+type-check, unit tests, `pnpm agent-os:check`, and `pnpm build` run **cold** after
+`install.sh`; only Playwright e2e needs browsers plus core-be on `:3000`. **MCPs, skills,
+and subagents** for cloud sessions:
+**[agent-os/cloud-environment/skills-and-mcps.md](agent-os/cloud-environment/skills-and-mcps.md)**.
+
 ## Adding a new agent skill or rule
 
 1. Place the file directly in `agent-os/skills/<name>/SKILL.md` or `agent-os/rules/<name>.mdc`.
 2. Wire it into [agent-os/rules/skill-router.mdc](agent-os/rules/skill-router.mdc) and [agent-os/skills/skill-registry/SKILL.md](agent-os/skills/skill-registry/SKILL.md).
-3. All three agents pick it up automatically via their symlinks — no per-tool duplication.
+3. All three tools (Cursor, Claude, Codex) pick it up automatically via their symlinks — no per-tool duplication.
 
 ## Adding a new AI coding agent
 
-Add a row to [agent-os/platforms/targets.json](agent-os/platforms/targets.json), extend `agent-os/hooks/hooks.json` with compatible hook entries, add a recipe under `agent-os/platforms/<agent>/` if needed, and extend [tooling/agent-os/generate.mjs](tooling/agent-os/generate.mjs). Symlink the new tool's entrypoint directory into `agent-os/platforms/`.
+Add a row to [agent-os/platforms/targets.json](agent-os/platforms/targets.json), extend `agent-os/hooks/hooks.json` with compatible hook entries, add a recipe under `agent-os/platforms/<agent>/` if needed, and extend [tooling/agent-os/generate.ts](tooling/agent-os/generate.ts). Symlink the new tool's entrypoint directory into `agent-os/platforms/`.

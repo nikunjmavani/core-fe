@@ -17,6 +17,8 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
 | Backend resource CRUD — list, URL dialogs, `*.resource.ts`, L7 registry | resource-crud | `agent-os/skills/resource-crud/SKILL.md` |
 | Form mutations, 422 field mapping, 429 rate limit, QueryBoundary error UX | http-forms-errors | `agent-os/skills/http-forms-errors/SKILL.md` |
 | Platform config, env read paths, knip, validate:vite-env, validate:client-env | platform-hygiene | `agent-os/skills/platform-hygiene/SKILL.md` |
+| Add/update/remove/pin npm deps, lockfile sync, `pnpm.overrides`, audit fix, vulnerability | dependency-management | `agent-os/skills/dependency-management/SKILL.md` |
+| Bundle size budget, code splitting, dynamic import, first-paint regression, `pnpm size` | bundle-performance | `agent-os/skills/bundle-performance/SKILL.md` |
 | New page, route, scaffold | page-scaffolding | `agent-os/skills/page-scaffolding/SKILL.md` |
 | Move component to shared, promote | component-promotion | `agent-os/skills/component-promotion/SKILL.md` |
 | React performance, re-renders, bundle size | react-best-practices | `agent-os/skills/react-best-practices/SKILL.md` |
@@ -117,5 +119,29 @@ When a task matches a pattern below, read the corresponding SKILL.md **before** 
     - **Full redesign / audit / “impeccable”** (user explicitly asks): add **`impeccable`** after `shadcn`, still within project guardrails (`ui-sources.mdc`, tokens, route-island).
     - **Motion implementation:** **`animejs`** (this repo’s animation library). Read **`emil-design-eng`** for when/why motion; **`review-animations`** for PR review of motion code only.
     - **Removed / do not invoke:** `high-end-visual-design`, `redesign-existing-projects`, `shadcn-ui-blocks`, `image-to-code`, `motion-framer`, `full-output-enforcement` — they conflict with core-fe guardrails or duplicate `shadcn` / `frontend-design`.
+
+## Orchestration manifests (machine-readable cross-refs)
+
+The routes above are the human-readable map; the same relationships are declared
+as data for tooling and the eval gates:
+
+- **Skill chains** — `agent-os/skills/chains.json`: named, ordered sequences for
+  multi-skill work (`page-change`, `component-promotion`, `resource-crud`,
+  `ui-review`, `form-mutation`, `data-hook`, `styling`, `env-change`). Each
+  `trigger` mirrors a row in `agent-os/docs/skill-triggers.md`.
+- **Skill groups** — `agent-os/skills/groups.json`: every skill in exactly one
+  group (ui-design, routing-pages, testing, quality, docs, i18n, platform,
+  workflow, external).
+- **Review pipelines** — `agent-os/agents/pipelines.json`: read-only reviewer
+  agents run by `/pre-merge-review` (`verifier` → `docs-auditor`) and
+  `/prod-readiness` (`dependency-auditor` → `bundle-size-reviewer`); each
+  finding hands off to the skill that fixes it. Catalog:
+  `agent-os/docs/agents-catalog.md`.
+- **File-pattern routing** — `agent-os/docs/skill-triggers.md` is the source for
+  "which skill(s) when file X changes"; add a row (and a `triggers.json` case)
+  when wiring a new route.
+
+`agent-os/evals/check.ts` asserts every chain step, group member, pipeline step,
+and handoff resolves to a real skill/agent, so these manifests cannot drift.
 
 If multiple skills match, read the most specific one first.

@@ -1,5 +1,5 @@
 {
-  "description": "Capability registry — one row per AI coding agent. tooling/agent-os/generate.mjs iterates this to compile each agent's native wiring FROM the common agent-os/ dirs (skills, agents, rules, hooks, mcp, docs). Onboarding a new agent = add a row here; the generator emits only the capabilities the agent supports.",
+  "description": "Capability registry — one row per AI coding agent. tooling/agent-os/generate.ts iterates this to compile each agent's native wiring FROM the common agent-os/ dirs (skills, agents, rules, hooks, mcp, docs). Onboarding a new agent = add a row here; the generator emits only the capabilities the agent supports.",
   "agents": {
     "claude": {
       "label": "Claude Code",

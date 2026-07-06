@@ -41,6 +41,8 @@ Read in order; **project guardrails always win** over skill suggestions.
 | tests / test ids / Playwright E2E              | `test-generation` → `e2e-testids` → `playwright-e2e`                  |
 | an a11y / UX review                            | `web-design-guidelines` (+ `ui-ux-pro-max` for checklist hints)       |
 | docs / README / overview                       | `documentation-maintenance`                                           |
+| extract constants / copy / locale namespace    | `i18n-constants` → `code-structure`                                   |
+| PWA manifest / app icon / favicon              | `pwa-manifest`                                                        |
 | where does this code go?                       | `code-structure` / `component-promotion`                              |
 | lint / quality cleanup                         | `lint-guard` / `code-smells-best-practices`                           |
 | full project check                             | `project-health-check` (`pnpm health`)                                |
@@ -56,13 +58,19 @@ Read in order; **project guardrails always win** over skill suggestions.
 | `src/core/config/env-schema.ts` · `platform-config.ts` · `build-env.ts` · `knip.jsonc` | `platform-hygiene`, `env-schema-add` (if env key changed)              |
 | `src/pages/**/`                                                                        | `page-scaffolding`, `route-island`                                     |
 | `**/*.contracts.ts`                                                                    | `code-structure`                                                       |
+| `**/*.constants.ts` · new user-facing copy / locale namespace                          | `i18n-constants`, `code-structure`                                     |
 | `**/*.api.ts` · `**/hooks/use*/**`                                                     | `react-best-practices`                                                 |
 | `**/components/ui/*`                                                                   | `shadcn`                                                               |
 | `**/components/**/*.tsx` · `**/forms/**/*`                                             | `shadcn`, `composition-patterns`, `frontend-design`, `test-generation` |
+| `src/shared/components/**/*.tsx` (promoted from a page)                                | `component-promotion`, `composition-patterns`                          |
 | `src/index.css` · `**/*.css`                                                           | `frontend-design`, `theme-axis-audit` (if axis work)                   |
 | `**/*.test.ts` · `**/*.test.tsx`                                                       | `test-generation`                                                      |
 | `tests/e2e/**`                                                                         | `playwright-e2e`, `e2e-testids`                                        |
 | `.env.example`                                                                         | `platform-hygiene`, `env-schema-add`, `documentation-maintenance`      |
+| `package.json` · `pnpm-lock.yaml` · `pnpm.overrides`                                   | `dependency-management`                                                |
+| `vite.config.ts` · `tooling/ci/run-size-limit.mjs` · size budget                       | `bundle-performance`                                                   |
+| `src/core/config/app-manifest.ts` · `public/manifest.webmanifest` · `app-icon.svg`     | `pwa-manifest`                                                         |
+| `docs/**/*.md` · `**/*.OVERVIEW.md`                                                    | `documentation-maintenance`                                            |
 | `useAnimeCountUp.ts` · animation hooks                                                 | `animejs`, `emil-design-eng`                                           |
 
 ## Gates (definition of done)

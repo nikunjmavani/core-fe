@@ -88,7 +88,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 > If a task has **no** matching row here or in `skill-router.mdc`, use **find-skills** to look for one before building from scratch; if none exists, proceed with general capabilities.
 
-## Skill Inventory
+## Skill Inventory (39 skills)
 
 ### 0a. auto-implement (Master Orchestrator)
 
@@ -712,6 +712,42 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
+### 11h. dependency-management
+
+**Path:** `agent-os/skills/dependency-management/SKILL.md`
+
+**Purpose:** Safely add / update / remove / pin npm dependencies — atomic `package.json` ↔ `pnpm-lock.yaml` commits, `pnpm.overrides` for transitive pins, `pnpm deps:audit` triage, license and bundle-impact checks. Procedural counterpart to the `dependency-auditor` agent.
+
+**Trigger keywords:** "add dependency", "update package", "pnpm add", "pnpm.overrides", "audit fix", "lockfile", "bump version", "vulnerability", "CVE"
+
+**Key behaviors:**
+
+- One atomic commit for a `package.json` change + regenerated lockfile
+- Pin transitive/vulnerable deps via `pnpm.overrides`, never hand-edit the lockfile
+- `pnpm run validate:lockfile`, `pnpm deps:audit`, `pnpm knip` after changes
+
+**Related skills:** code-quality-security, platform-hygiene, bundle-performance
+
+---
+
+### 11i. bundle-performance
+
+**Path:** `agent-os/skills/bundle-performance/SKILL.md`
+
+**Purpose:** Keep the production bundle within size-limit budgets — dynamic-import heavy/deferred modules off the first-paint path, lazy route-island boundaries, code-splitting, heavy-import triage. Procedural counterpart to the `bundle-size-reviewer` agent.
+
+**Trigger keywords:** "bundle size", "size budget", "code splitting", "dynamic import", "first paint", "chunk too big", "size-limit", "pnpm size"
+
+**Key behaviors:**
+
+- Measure with `pnpm build` + `pnpm size` (never the dev server)
+- Keep `@sentry/react`, `posthog-js`, SettingsModal/CommandPalette dynamic-import only
+- Preserve lazy `<page>.route.tsx` boundaries; split vendor from entry
+
+**Related skills:** platform-hygiene, react-best-practices, dependency-management
+
+---
+
 ### 11f. pwa-manifest
 
 **Path:** `agent-os/skills/pwa-manifest/SKILL.md`  
@@ -729,6 +765,23 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Run `app-manifest.test.ts` (drift guard)
 
 **Related skills:** documentation-maintenance, i18n-constants (in-app copy only)
+
+---
+
+### 11g. i18n-constants
+
+**Path:** `agent-os/skills/i18n-constants/SKILL.md`  
+**Purpose:** Extract static values into scoped constants files with react-i18next — one route island or module at a time. User-facing strings go in locale JSON; constants files hold keys, test IDs, analytics events, and non-copy defaults.
+
+**Trigger keywords:** "extract magic strings", "constants file", "i18n", "locale namespace", "user-facing copy", "move test ids", "analytics events", "defaults"
+
+**Key behaviors:**
+
+- Split copy (locale JSON) from keys/IDs/defaults (`*.constants.ts`)
+- Scope per route island; set up the island's locale namespace
+- Keep static values out of components — reference constants and translation keys
+
+**Related skills:** http-forms-errors, resource-crud, documentation-maintenance
 
 ---
 
@@ -842,6 +895,20 @@ These Cursor rules are always loaded and do not need to be invoked:
 | pwa-manifest-sync     | `agent-os/rules/pwa-manifest-sync.mdc`     | PWA manifest/icon — read pwa-manifest skill                                                               |
 | env-schema-add-sync   | `agent-os/rules/env-schema-add-sync.mdc`   | Env schema / `.env.example` — read env-schema-add skill                                                   |
 | agent-behavior        | `agent-os/rules/agent-behavior.mdc`        | Complete tests, route reg, RBAC, docs without asking; never ask "Do you want X?"                          |
+
+## Orchestration manifests (machine-readable)
+
+The relationships above are also declared as data, eval-gated by
+`agent-os/evals/check.ts` so they cannot drift:
+
+| Manifest                          | Declares                                                                     |
+| --------------------------------- | ---------------------------------------------------------------------------- |
+| `agent-os/skills/chains.json`     | Named ordered skill sequences (page-change, resource-crud, form-mutation, …) |
+| `agent-os/skills/groups.json`     | Every skill in exactly one group (ui-design, quality, platform, …)           |
+| `agent-os/agents/pipelines.json`  | Reviewer-agent pipelines (`pre-merge-review`, `prod-readiness`) + handoffs   |
+| `agent-os/docs/skill-triggers.md` | File-pattern → skill routing (Tier-2 tested via `evals/cases/triggers.json`) |
+
+Read-only reviewer agents are catalogued in `agent-os/docs/agents-catalog.md`.
 
 ## Enterprise Platform Integration
 
