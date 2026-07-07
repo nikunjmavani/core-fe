@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/nikunjmavani/core-fe/compare/v1.2.0...v1.2.1) (2026-07-07)
+
+
+### Documentation
+
+* branch-protection table matches the strict-up-to-date ruleset ([#85](https://github.com/nikunjmavani/core-fe/issues/85)) ([7e556d6](https://github.com/nikunjmavani/core-fe/commit/7e556d6cf29547465429c68cd5e7b8449aab597c))
+
 ## [1.2.0](https://github.com/nikunjmavani/core-fe/compare/v1.1.2...v1.2.0) (2026-07-07)
 
 
