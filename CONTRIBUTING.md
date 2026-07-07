@@ -150,9 +150,9 @@ Full matrix: **[docs/reference/testing.md](docs/reference/testing.md)** and **[t
 
 ## Branches, Commits, and Releases
 
-- **Branches:** `feat/`, `fix/`, `chore/`, `docs/`, `ci/` prefixes.
+- **Branches:** trunk-based — short-lived `feat/`, `fix/`, `chore/`, `docs/`, `ci/` branches off `main`, squash-merged back (branch auto-deletes). Unfinished work ships behind a feature flag, not a branch.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) with **lower-case subjects** (commitlint-enforced).
-- **Releases:** Release Please ([post-merge-ci.yml](.github/workflows/post-merge-ci.yml) on `dev` and `main`) — config in `.github/release-please/` (`config.json` + `config.dev.json`). PR titles must also be conventional — the PR Governance workflow validates them and auto-applies size/path labels.
+- **Releases:** single-channel Release Please ([post-merge-ci.yml](.github/workflows/post-merge-ci.yml) on `main`) — config in `.github/release-please/` (`config.json` + `manifest.json`). Merging the standing "chore: release X.Y.Z" PR is the ship button → tag + prod deploy (one approval). PR titles must be conventional — PR Governance validates them and auto-applies size/path labels.
 
 ---
 

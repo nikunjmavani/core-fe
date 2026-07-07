@@ -137,11 +137,11 @@ pages/<name>/
 
 ## Git branch & PR workflow
 
-We use the same branch strategy as the backend (core-be):
+Trunk-based development on a single branch:
 
-- **Long-lived branches:** `main` (production / GitHub env `production`), `dev` (integration / GitHub env `development`). Default branch: `dev`.
-- **Short-lived branches:** `feature/...`, `fix/...`, `refactor/...`, `docs/...`, `test/...`, `chore/...`, `hotfix/...` (created from `dev`; hotfix from `main`).
-- **PR flow:** feature/fix → `dev` → `main`. CI runs on PRs to `main` and `dev`.
+- **One long-lived branch:** `main` (default + trunk). Every push to `main` deploys the `development` alias; a release deploys `production`. Unfinished work ships behind a feature flag, not a branch.
+- **Short-lived branches:** `feat/...`, `fix/...`, `refactor/...`, `docs/...`, `test/...`, `chore/...` (created from `main`). Hotfix an old version on a `release/<major>.<minor>` line cut from the tag.
+- **PR flow:** feat/fix → `main` (squash-merge, branch auto-deletes). CI runs on PRs to `main` (and `release/**`). Ship by merging the standing release-please Release PR.
 
 See **[docs/process/git-workflow.md](docs/process/git-workflow.md)** for the full workflow: branch naming, step-by-step PR flow, conventional commits, and hotfix process.
 
@@ -474,7 +474,7 @@ Structured guides for setup, deployment, and contributing.
 | **Cursor MCP (onboarding)** — set up Context7, shadcn, Tailwind, backend API locally | [agent-os/docs/cursor-mcp-setup.md](agent-os/docs/cursor-mcp-setup.md)                                                                                                                                                                                            |
 | Cursor multi-repo / agent environments                                               | [agent-os/docs/cursor-agent-environments.md](agent-os/docs/cursor-agent-environments.md)                                                                                                                                                                          |
 | Submitting a requirement (format + intake)                                           | [docs/getting-started/requirement-intake.md](docs/getting-started/requirement-intake.md) → template [requirement-format.md](docs/getting-started/requirement-format.md), example [sample-requirement.md](docs/getting-started/requirements/sample-requirement.md) |
-| Runbook: dev → production                                                            | [docs/deployment/runbook-dev-to-production.md](docs/deployment/runbook-dev-to-production.md)                                                                                                                                                                      |
+| Trunk workflow + release                                                             | [docs/process/git-workflow.md](docs/process/git-workflow.md) (single-trunk PR flow, release-please ship, hotfix)                                                                                                                                                  |
 | CI/CD and Netlify deploy                                                             | [docs/deployment/cicd-and-netlify.md](docs/deployment/cicd-and-netlify.md)                                                                                                                                                                                        |
 | Full deployment and pre-launch                                                       | [docs/deployment/deployment-and-pre-launch.md](docs/deployment/deployment-and-pre-launch.md)                                                                                                                                                                      |
 | Path to production (gate)                                                            | [docs/deployment/path-to-production.md](docs/deployment/path-to-production.md)                                                                                                                                                                                    |

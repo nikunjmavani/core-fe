@@ -52,13 +52,13 @@ Granular procedures live in **skills** (invoked by name); these commands are **w
 
 **PR lifecycle**
 
-| Command                              | Purpose                                                                                                                                                                                |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/open-pr [title]`                   | Push the branch + open a PR to **`dev`** (explicit PR opt-in).                                                                                                                         |
-| `/watch-pr <n>`                      | Triage CI + review comments until **`quality-gate`** is green.                                                                                                                         |
-| `/merge-pr <n>`                      | Squash-merge once CI and approvals are in.                                                                                                                                             |
-| `/ship [title]`                      | Full flow: open-pr → watch-pr → merge-pr.                                                                                                                                              |
-| `/release-dev-to-production [title]` | Promote **`dev` → `main`**, ancestry repair, PR governance, Netlify production deploy cascade. See [runbook-dev-to-production.md](../../docs/deployment/runbook-dev-to-production.md). |
+| Command            | Purpose                                                                                                                                                               |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/open-pr [title]` | Push the branch + open a PR to **`main`** (explicit PR opt-in).                                                                                                       |
+| `/watch-pr <n>`    | Triage CI + review comments until **`quality-gate`** is green.                                                                                                        |
+| `/merge-pr <n>`    | Squash-merge once CI is green.                                                                                                                                        |
+| `/ship [title]`    | Full flow: open-pr → watch-pr → merge-pr.                                                                                                                             |
+| _Release_          | Trunk-based (single `main`): merge the standing release-please **Release PR** to ship → tag + prod deploy. See [git-workflow.md](../../docs/process/git-workflow.md). |
 
 **Maintenance**
 
