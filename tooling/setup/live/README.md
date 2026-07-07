@@ -31,7 +31,7 @@ One-command deployment: create all environments (Netlify, GitHub secrets) and go
 3. **Confirmation** — Type "yes" to proceed
 4. **Existing check** (setup only) — If conflicts, recommend revert first
 5. **Netlify** — Create sites per env, set env vars
-6. **GitHub** — Set secrets on GitHub Environments (`development` for `dev`, `production` for `main`): `VITE_API_BASE_URL`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`
+6. **GitHub** — Set secrets on GitHub Environments (`development` and `production`, both from `main`): `VITE_API_BASE_URL`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`
 7. **Deploy** — `pnpm build` + `netlify deploy --prod`
 
 **On failure:** Rollback removes created resources (no partial state). Run `setup:revert:all` and choose env to revert.

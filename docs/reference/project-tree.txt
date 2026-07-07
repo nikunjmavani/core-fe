@@ -21,7 +21,7 @@ src/shared/    UI, auth, api, errors, forms, hooks, layouts, store (Zustand)
 src/lib/       Pure utilities, animations, route-island helpers
 tests/         E2E, utils (project root)
 
-Stats: ~465 src files · ~239 tests in src/ · 21 E2E specs · 24 shadcn UI primitives
+Stats: ~533 src files · ~291 tests in src/ · 36 E2E specs · 24 shadcn UI primitives
 
 ================================================================================
 §2  FULL DIRECTORY TREE
@@ -180,14 +180,13 @@ core-fe/
 │           └── SKILL.md
 ├── .codegraph/
 │   ├── .gitignore
-│   └── codegraph.db
+│   ├── codegraph.db
+│   └── daemon.log
 ├── .codex/
 │   ├── config.toml
 │   └── hooks.json
 ├── .github/
 │   ├── actions/
-│   │   ├── setup-core-be/
-│   │   │   └── action.yml
 │   │   └── setup-node-pnpm/
 │   │       └── action.yml
 │   ├── codeql/
@@ -204,6 +203,8 @@ core-fe/
 │   ├── workflows/
 │   │   ├── cleanup-cache.yml
 │   │   ├── codeql.yml
+│   │   ├── cross-browser.yml
+│   │   ├── dependabot-auto-merge.yml
 │   │   ├── dependabot-ci-triage.yml
 │   │   ├── lighthouse.yml
 │   │   ├── mutation-test.yml
@@ -212,11 +213,12 @@ core-fe/
 │   │   ├── pr-docs-lane.yml
 │   │   ├── pr-governance.yml
 │   │   ├── preview.yml
+│   │   ├── release-deploy.yml
 │   │   ├── reusable-netlify-deploy.yml
 │   │   ├── reusable-unit-gate.yml
-│   │   ├── reusable-vitest-e2e.yml
 │   │   ├── reusable-vitest-unit-only.yml
-│   │   └── scheduled-fe-be-integration.yml
+│   │   ├── rollback-deploy.yml
+│   │   └── scheduled-release-guards.yml
 │   ├── CODEOWNERS
 │   ├── dependabot.yml
 │   ├── labeler.yml
@@ -229,15 +231,1125 @@ core-fe/
 │   └── pre-push
 ├── .netlify/
 │   └── netlify.toml
+├── .stryker-tmp/
+│   └── sandbox-gcugmu/
+│       ├── .agents/
+│       │   └── skills/
+│       │       ├── animejs/
+│       │       │   ├── assets/
+│       │       │   │   └── README.md
+│       │       │   ├── references/
+│       │       │   │   ├── api_reference.md
+│       │       │   │   ├── stagger_guide.md
+│       │       │   │   └── timeline_guide.md
+│       │       │   ├── scripts/
+│       │       │   │   ├── animation_generator.py
+│       │       │   │   └── timeline_builder.py
+│       │       │   └── SKILL.md
+│       │       ├── emil-design-eng/
+│       │       │   └── SKILL.md
+│       │       ├── impeccable/
+│       │       │   ├── agents/
+│       │       │   │   ├── impeccable_asset_producer.toml
+│       │       │   │   ├── impeccable_manual_edit_applier.toml
+│       │       │   │   └── openai.yaml
+│       │       │   ├── reference/
+│       │       │   │   ├── adapt.md
+│       │       │   │   ├── animate.md
+│       │       │   │   ├── audit.md
+│       │       │   │   ├── bolder.md
+│       │       │   │   ├── brand.md
+│       │       │   │   ├── clarify.md
+│       │       │   │   ├── codex.md
+│       │       │   │   ├── colorize.md
+│       │       │   │   ├── craft.md
+│       │       │   │   ├── critique.md
+│       │       │   │   ├── delight.md
+│       │       │   │   ├── distill.md
+│       │       │   │   ├── document.md
+│       │       │   │   ├── extract.md
+│       │       │   │   ├── harden.md
+│       │       │   │   ├── hooks.md
+│       │       │   │   ├── init.md
+│       │       │   │   ├── interaction-design.md
+│       │       │   │   ├── layout.md
+│       │       │   │   ├── live.md
+│       │       │   │   ├── onboard.md
+│       │       │   │   ├── optimize.md
+│       │       │   │   ├── overdrive.md
+│       │       │   │   ├── polish.md
+│       │       │   │   ├── product.md
+│       │       │   │   ├── quieter.md
+│       │       │   │   ├── shape.md
+│       │       │   │   └── typeset.md
+│       │       │   ├── scripts/
+│       │       │   │   ├── detector/
+│       │       │   │   ├── lib/
+│       │       │   │   ├── live/
+│       │       │   │   ├── command-metadata.json
+│       │       │   │   ├── context-signals.mjs
+│       │       │   │   ├── context.mjs
+│       │       │   │   ├── critique-storage.mjs
+│       │       │   │   ├── detect-csp.mjs
+│       │       │   │   ├── detect.mjs
+│       │       │   │   ├── hook-admin.mjs
+│       │       │   │   ├── hook-before-edit.mjs
+│       │       │   │   ├── hook-lib.mjs
+│       │       │   │   ├── hook.mjs
+│       │       │   │   ├── live-accept.mjs
+│       │       │   │   ├── live-browser-dom.js
+│       │       │   │   ├── live-browser-session.js
+│       │       │   │   ├── live-browser.js
+│       │       │   │   ├── live-commit-manual-edits.mjs
+│       │       │   │   ├── live-complete.mjs
+│       │       │   │   ├── live-copy-edit-agent.mjs
+│       │       │   │   ├── live-discard-manual-edits.mjs
+│       │       │   │   ├── live-inject.mjs
+│       │       │   │   ├── live-insert.mjs
+│       │       │   │   ├── live-manual-edit-evidence.mjs
+│       │       │   │   ├── live-poll.mjs
+│       │       │   │   ├── live-resume.mjs
+│       │       │   │   ├── live-server.mjs
+│       │       │   │   ├── live-status.mjs
+│       │       │   │   ├── live-target.mjs
+│       │       │   │   ├── live-wrap.mjs
+│       │       │   │   ├── live.mjs
+│       │       │   │   ├── modern-screenshot.umd.js
+│       │       │   │   ├── palette.mjs
+│       │       │   │   └── pin.mjs
+│       │       │   └── SKILL.md
+│       │       ├── review-animations/
+│       │       │   ├── SKILL.md
+│       │       │   └── STANDARDS.md
+│       │       └── shadcn/
+│       │           ├── agents/
+│       │           │   └── openai.yml
+│       │           ├── assets/
+│       │           │   ├── shadcn-small.png
+│       │           │   └── shadcn.png
+│       │           ├── evals/
+│       │           │   └── evals.json
+│       │           ├── rules/
+│       │           │   ├── base-vs-radix.md
+│       │           │   ├── composition.md
+│       │           │   ├── forms.md
+│       │           │   ├── icons.md
+│       │           │   └── styling.md
+│       │           ├── cli.md
+│       │           ├── customization.md
+│       │           ├── mcp.md
+│       │           ├── registry.md
+│       │           └── SKILL.md
+│       ├── .codegraph/
+│       │   ├── .gitignore
+│       │   ├── codegraph.db
+│       │   ├── codegraph.db-shm
+│       │   ├── codegraph.db-wal
+│       │   ├── daemon.log
+│       │   └── daemon.pid
+│       ├── .codex/
+│       │   ├── config.toml
+│       │   └── hooks.json
+│       ├── .github/
+│       │   ├── actions/
+│       │   │   ├── setup-core-be/
+│       │   │   │   └── action.yml
+│       │   │   └── setup-node-pnpm/
+│       │   │       └── action.yml
+│       │   ├── codeql/
+│       │   │   └── codeql-config.yml
+│       │   ├── environments/
+│       │   │   ├── development.json
+│       │   │   ├── production.json
+│       │   │   └── README.md
+│       │   ├── release-please/
+│       │   │   ├── config.dev.json
+│       │   │   ├── config.json
+│       │   │   ├── manifest.dev.json
+│       │   │   └── manifest.json
+│       │   ├── rulesets/
+│       │   │   ├── dev.json
+│       │   │   └── main.json
+│       │   ├── workflows/
+│       │   │   ├── cleanup-cache.yml
+│       │   │   ├── codeql.yml
+│       │   │   ├── cross-browser.yml
+│       │   │   ├── dependabot-ci-triage.yml
+│       │   │   ├── lighthouse.yml
+│       │   │   ├── mutation-test.yml
+│       │   │   ├── post-merge-ci.yml
+│       │   │   ├── post-release-backmerge.yml
+│       │   │   ├── pr-ci.yml
+│       │   │   ├── pr-docs-lane.yml
+│       │   │   ├── pr-governance.yml
+│       │   │   ├── preview.yml
+│       │   │   ├── reusable-netlify-deploy.yml
+│       │   │   ├── reusable-unit-gate.yml
+│       │   │   ├── reusable-vitest-e2e.yml
+│       │   │   ├── reusable-vitest-unit-only.yml
+│       │   │   └── scheduled-fe-be-integration.yml
+│       │   ├── CODEOWNERS
+│       │   ├── dependabot.yml
+│       │   ├── labeler.yml
+│       │   ├── labels.yml
+│       │   ├── PULL_REQUEST_TEMPLATE.md
+│       │   └── README.md
+│       ├── .husky/
+│       │   ├── commit-msg
+│       │   ├── pre-commit
+│       │   └── pre-push
+│       ├── .vscode/
+│       │   ├── extensions.json
+│       │   └── settings.json
+│       ├── plugins/
+│       │   ├── csp-api-origin.ts
+│       │   ├── i18n-build.ts
+│       │   └── version-json.ts
+│       ├── public/
+│       │   ├── _headers
+│       │   ├── app-icon.svg
+│       │   ├── config.js
+│       │   ├── manifest.webmanifest
+│       │   ├── offline.html
+│       │   ├── pwa-192x192.png
+│       │   ├── pwa-512x512.png
+│       │   ├── README.md
+│       │   ├── robots.txt
+│       │   ├── theme-init.js
+│       │   └── vite.svg
+│       ├── scripts/
+│       │   └── README.md
+│       ├── src/
+│       │   ├── app/
+│       │   │   ├── analytics/
+│       │   │   │   ├── FeatureFlagProvider.tsx
+│       │   │   │   ├── posthog.ts
+│       │   │   │   └── [2 test files]
+│       │   │   ├── guards/
+│       │   │   │   ├── GUARDS.OVERVIEW.md
+│       │   │   │   ├── org-gates.ts
+│       │   │   │   ├── RBACGuard.tsx
+│       │   │   │   ├── route-guards.ts
+│       │   │   │   └── [3 test files]
+│       │   │   ├── observability/
+│       │   │   │   ├── performance.ts
+│       │   │   │   ├── sentry.ts
+│       │   │   │   └── [2 test files]
+│       │   │   ├── providers/
+│       │   │   │   ├── AppProviders.tsx
+│       │   │   │   ├── I18nProvider.tsx
+│       │   │   │   └── QueryProvider.tsx
+│       │   │   ├── routes/
+│       │   │   │   ├── ErrorBoundary.tsx
+│       │   │   │   ├── NotFoundPage.tsx
+│       │   │   │   ├── routeTree.tsx
+│       │   │   │   ├── UnauthorizedPage.tsx
+│       │   │   │   └── [3 test files]
+│       │   │   └── version/
+│       │   │       ├── index.ts
+│       │   │       ├── show-update-available-toast.ts
+│       │   │       ├── version-update.constants.ts
+│       │   │       └── [1 test file]
+│       │   ├── core/
+│       │   │   ├── config/
+│       │   │   │   ├── app-manifest.ts
+│       │   │   │   ├── auth-methods.ts
+│       │   │   │   ├── constants.ts
+│       │   │   │   ├── env-resolvers.ts
+│       │   │   │   ├── env-schema.ts
+│       │   │   │   ├── env.config.ts
+│       │   │   │   ├── env.ts
+│       │   │   │   ├── platform-config.ts
+│       │   │   │   └── [7 test files]
+│       │   │   ├── data-provider/
+│       │   │   │   ├── http-data-provider/
+│       │   │   │   │   ├── http-data-provider.ts
+│       │   │   │   │   └── index.ts
+│       │   │   │   ├── dataProvider.ts
+│       │   │   │   └── index.ts
+│       │   │   ├── http/
+│       │   │   │   ├── fetch-client.ts
+│       │   │   │   ├── pagination.ts
+│       │   │   │   ├── queryClient.ts
+│       │   │   │   └── [3 test files]
+│       │   │   ├── rbac/
+│       │   │   │   ├── guards.ts
+│       │   │   │   ├── policies.ts
+│       │   │   │   └── [2 test files]
+│       │   │   ├── resources/
+│       │   │   │   ├── bootstrap.ts
+│       │   │   │   ├── index.ts
+│       │   │   │   ├── members.resource.ts
+│       │   │   │   ├── resource-registry.ts
+│       │   │   │   ├── types.ts
+│       │   │   │   └── [2 test files]
+│       │   │   ├── security/
+│       │   │   │   ├── gates/
+│       │   │   │   │   ├── require-module.ts
+│       │   │   │   │   ├── require-permission.ts
+│       │   │   │   │   ├── require-session.ts
+│       │   │   │   │   └── [3 test files]
+│       │   │   │   ├── gate-context.ts
+│       │   │   │   ├── gate.types.ts
+│       │   │   │   ├── gateway.ts
+│       │   │   │   ├── index.ts
+│       │   │   │   └── [2 test files]
+│       │   │   ├── types/
+│       │   │   │   ├── branded.ts
+│       │   │   │   ├── permissions.ts
+│       │   │   │   ├── wire.ts
+│       │   │   │   └── [3 test files]
+│       │   │   └── version/
+│       │   │       ├── check.ts
+│       │   │       ├── version-check.constants.ts
+│       │   │       ├── version-update-snooze.ts
+│       │   │       └── [2 test files]
+│       │   ├── lib/
+│       │   │   ├── animations/
+│       │   │   │   ├── AnimatedSection.tsx
+│       │   │   │   ├── index.ts
+│       │   │   │   ├── LayoutGroup.tsx
+│       │   │   │   ├── PageTransition.tsx
+│       │   │   │   ├── prefers-reduced-motion.ts
+│       │   │   │   ├── Skeleton.tsx
+│       │   │   │   ├── StaggerList.tsx
+│       │   │   │   ├── useAnimeCountUp.ts
+│       │   │   │   ├── useAutoAnimate.ts
+│       │   │   │   ├── useCountUp.ts
+│       │   │   │   └── [5 test files]
+│       │   │   ├── billing/
+│       │   │   │   ├── stripe-return.ts
+│       │   │   │   └── [1 test file]
+│       │   │   ├── i18n/
+│       │   │   │   ├── apply-document-locale.ts
+│       │   │   │   ├── build-config.ts
+│       │   │   │   ├── build-env.ts
+│       │   │   │   ├── build-runtime.ts
+│       │   │   │   ├── errors.constants.ts
+│       │   │   │   ├── format.ts
+│       │   │   │   ├── i18n-resources.multi.ts
+│       │   │   │   ├── i18n-resources.ts
+│       │   │   │   ├── i18n.ts
+│       │   │   │   ├── index.ts
+│       │   │   │   ├── intl-config.ts
+│       │   │   │   ├── load-namespace.ts
+│       │   │   │   ├── locale.constants.ts
+│       │   │   │   ├── locales.ts
+│       │   │   │   ├── namespaces.ts
+│       │   │   │   ├── translate-form-message.ts
+│       │   │   │   └── [6 test files]
+│       │   │   ├── routes/
+│       │   │   │   ├── builders.ts
+│       │   │   │   ├── index.ts
+│       │   │   │   ├── page-head.ts
+│       │   │   │   ├── page-manifest.ts
+│       │   │   │   ├── params.ts
+│       │   │   │   └── [4 test files]
+│       │   │   ├── app-splash.ts
+│       │   │   ├── appearance-surface.ts
+│       │   │   ├── chunk-prefetch.ts
+│       │   │   ├── csp-api-origin.ts
+│       │   │   ├── css-safe.ts
+│       │   │   ├── csv.ts
+│       │   │   ├── icon-surface.ts
+│       │   │   ├── onboarding-defaults.ts
+│       │   │   ├── parse-list-tolerant.ts
+│       │   │   ├── password-breach.ts
+│       │   │   ├── password-strength.ts
+│       │   │   ├── responsive-grid.ts
+│       │   │   ├── sensitive-clipboard.ts
+│       │   │   ├── telemetry-scrub.ts
+│       │   │   ├── utils.ts
+│       │   │   └── [15 test files]
+│       │   ├── locales/
+│       │   │   ├── ar/
+│       │   │   │   └── common.json
+│       │   │   ├── de/
+│       │   │   │   └── common.json
+│       │   │   ├── en/
+│       │   │   │   ├── auth.json
+│       │   │   │   ├── common.json
+│       │   │   │   ├── dashboard.json
+│       │   │   │   ├── errors.json
+│       │   │   │   ├── layout.json
+│       │   │   │   ├── onboarding.json
+│       │   │   │   └── settings.json
+│       │   │   ├── es/
+│       │   │   │   ├── auth.json
+│       │   │   │   ├── common.json
+│       │   │   │   ├── dashboard.json
+│       │   │   │   ├── errors.json
+│       │   │   │   ├── layout.json
+│       │   │   │   ├── onboarding.json
+│       │   │   │   └── settings.json
+│       │   │   ├── fr/
+│       │   │   │   └── common.json
+│       │   │   ├── hi/
+│       │   │   │   └── common.json
+│       │   │   ├── it/
+│       │   │   │   └── common.json
+│       │   │   ├── ja/
+│       │   │   │   └── common.json
+│       │   │   ├── ko/
+│       │   │   │   └── common.json
+│       │   │   ├── pt/
+│       │   │   │   └── common.json
+│       │   │   └── zh/
+│       │   │       ├── auth.json
+│       │   │       ├── common.json
+│       │   │       ├── dashboard.json
+│       │   │       ├── errors.json
+│       │   │       ├── layout.json
+│       │   │       ├── onboarding.json
+│       │   │       └── settings.json
+│       │   ├── pages/
+│       │   │   ├── accept-invite/
+│       │   │   │   ├── accept-invite.constants.ts
+│       │   │   │   ├── accept-invite.manifest.ts
+│       │   │   │   ├── accept-invite.route.tsx
+│       │   │   │   ├── ACCEPT_INVITE.OVERVIEW.md
+│       │   │   │   ├── AcceptInvitePage.tsx
+│       │   │   │   └── [1 test file]
+│       │   │   ├── callback/
+│       │   │   │   ├── callback.constants.ts
+│       │   │   │   ├── callback.manifest.ts
+│       │   │   │   ├── CALLBACK.OVERVIEW.md
+│       │   │   │   ├── callback.route.tsx
+│       │   │   │   ├── CallbackPage.tsx
+│       │   │   │   └── [1 test file]
+│       │   │   ├── login/
+│       │   │   │   ├── login.constants.ts
+│       │   │   │   ├── login.manifest.ts
+│       │   │   │   ├── LOGIN.OVERVIEW.md
+│       │   │   │   ├── login.route.tsx
+│       │   │   │   ├── LoginPage.tsx
+│       │   │   │   └── [1 test file]
+│       │   │   ├── mfa/
+│       │   │   │   ├── forms/
+│       │   │   │   │   └── MfaForm/
+│       │   │   │   ├── mfa.constants.ts
+│       │   │   │   ├── mfa.manifest.ts
+│       │   │   │   ├── MFA.OVERVIEW.md
+│       │   │   │   ├── mfa.route.tsx
+│       │   │   │   ├── MfaPage.tsx
+│       │   │   │   └── [1 test file]
+│       │   │   ├── onboarding/
+│       │   │   │   ├── components/
+│       │   │   │   │   ├── DoneStep/
+│       │   │   │   │   ├── InviteStep/
+│       │   │   │   │   ├── ProfileStep/
+│       │   │   │   │   ├── QuestionsStep/
+│       │   │   │   │   ├── StepIndicator/
+│       │   │   │   │   ├── WelcomeStep/
+│       │   │   │   │   └── WorkspaceStep/
+│       │   │   │   ├── hooks/
+│       │   │   │   │   └── useOnboardingStepMotion/
+│       │   │   │   ├── onboarding-flow.ts
+│       │   │   │   ├── onboarding.constants.ts
+│       │   │   │   ├── onboarding.manifest.ts
+│       │   │   │   ├── ONBOARDING.OVERVIEW.md
+│       │   │   │   ├── onboarding.route.tsx
+│       │   │   │   ├── OnboardingPage.tsx
+│       │   │   │   └── [2 test files]
+│       │   │   └── organization/
+│       │   │       ├── $organizationSlug/
+│       │   │       │   ├── dashboard/
+│       │   │       │   ├── suspended/
+│       │   │       │   ├── organization-slug.manifest.ts
+│       │   │       │   ├── organization-slug.route.tsx
+│       │   │       │   ├── ORGANIZATION_SLUG.OVERVIEW.md
+│       │   │       │   ├── OrganizationLayout.tsx
+│       │   │       │   └── [1 test file]
+│       │   │       ├── organization.manifest.ts
+│       │   │       ├── ORGANIZATION.OVERVIEW.md
+│       │   │       ├── organization.route.tsx
+│       │   │       ├── OrganizationPickerPage.tsx
+│       │   │       └── [1 test file]
+│       │   ├── shared/
+│       │   │   ├── analytics/
+│       │   │   │   ├── analytics.constants.ts
+│       │   │   │   ├── capture-consent-decision.ts
+│       │   │   │   ├── capture.ts
+│       │   │   │   └── [2 test files]
+│       │   │   ├── api/
+│       │   │   │   ├── API.OVERVIEW.md
+│       │   │   │   ├── auth-api.ts
+│       │   │   │   ├── auth-contracts.ts
+│       │   │   │   ├── billing-api.ts
+│       │   │   │   ├── billing-contracts.ts
+│       │   │   │   ├── billing-query-keys.ts
+│       │   │   │   ├── fetch-all-pages.ts
+│       │   │   │   ├── mfa-api.ts
+│       │   │   │   ├── notification-contracts.ts
+│       │   │   │   ├── notification-query-keys.ts
+│       │   │   │   ├── notifications-api.ts
+│       │   │   │   ├── organization-api.ts
+│       │   │   │   ├── organization-contracts.ts
+│       │   │   │   ├── organization-query-keys.ts
+│       │   │   │   ├── passkey-contracts.ts
+│       │   │   │   ├── passkeys-api.ts
+│       │   │   │   ├── session-contracts.ts
+│       │   │   │   ├── sessions-api.ts
+│       │   │   │   ├── webhook-contracts.ts
+│       │   │   │   ├── webhooks-api.ts
+│       │   │   │   └── [12 test files]
+│       │   │   ├── auth/
+│       │   │   │   ├── captcha/
+│       │   │   │   │   ├── useTurnstileReady/
+│       │   │   │   │   ├── auth-captcha-headers.ts
+│       │   │   │   │   ├── captcha-config.ts
+│       │   │   │   │   ├── captcha.constants.ts
+│       │   │   │   │   ├── InvisibleTurnstile.tsx
+│       │   │   │   │   ├── turnstile-token-store.ts
+│       │   │   │   │   └── [4 test files]
+│       │   │   │   ├── auth-channel.ts
+│       │   │   │   ├── auth-shell.constants.ts
+│       │   │   │   ├── AUTH.OVERVIEW.md
+│       │   │   │   ├── auto-google-sign-in.ts
+│       │   │   │   ├── idle-timeout.ts
+│       │   │   │   ├── mfa-handoff.ts
+│       │   │   │   ├── passkey-sign-in.ts
+│       │   │   │   ├── redirect-safety.ts
+│       │   │   │   ├── refresh-timer.ts
+│       │   │   │   ├── service.ts
+│       │   │   │   ├── session-lifetime.ts
+│       │   │   │   ├── token.ts
+│       │   │   │   ├── types.ts
+│       │   │   │   └── [10 test files]
+│       │   │   ├── billing/
+│       │   │   │   ├── load-stripe.ts
+│       │   │   │   ├── stripe-config.ts
+│       │   │   │   └── [1 test file]
+│       │   │   ├── components/
+│       │   │   │   ├── AppearanceDialog/
+│       │   │   │   │   ├── appearance-look.ts
+│       │   │   │   │   ├── AppearanceDialog.tsx
+│       │   │   │   │   ├── AppearanceDialogLazy.tsx
+│       │   │   │   │   ├── AppearancePanel.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [4 test files]
+│       │   │   │   ├── CommandPalette/
+│       │   │   │   │   ├── CommandPalette.tsx
+│       │   │   │   │   ├── CommandPaletteItem.tsx
+│       │   │   │   │   ├── CommandPaletteLazy.tsx
+│       │   │   │   │   ├── CommandPaletteOrgGroup.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── preload-command-palette.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── ConfirmDialog/
+│       │   │   │   │   ├── ConfirmDialog.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── ConsentBanner/
+│       │   │   │   │   ├── ConsentBanner.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── CreateOrganizationDialog/
+│       │   │   │   │   ├── CreateOrganizationDialog.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── Dashboard/
+│       │   │   │   │   ├── AnalyticsChart/
+│       │   │   │   │   ├── DashboardActionCard/
+│       │   │   │   │   ├── DashboardHero/
+│       │   │   │   │   ├── DashboardNextSteps/
+│       │   │   │   │   ├── DashboardStatCard/
+│       │   │   │   │   ├── HighlightsCarousel/
+│       │   │   │   │   ├── MembersTable/
+│       │   │   │   │   ├── ScheduleCalendar/
+│       │   │   │   │   ├── dashboard-quick-actions.ts
+│       │   │   │   │   ├── dashboard.constants.ts
+│       │   │   │   │   ├── Dashboard.deferred.tsx
+│       │   │   │   │   ├── dashboard.placeholder-data.ts
+│       │   │   │   │   ├── Dashboard.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [3 test files]
+│       │   │   │   ├── data-table/
+│       │   │   │   │   ├── DataTable.tsx
+│       │   │   │   │   ├── DataTableColumnHeader.tsx
+│       │   │   │   │   ├── DataTablePagination.tsx
+│       │   │   │   │   ├── DataTableToolbar.tsx
+│       │   │   │   │   └── [4 test files]
+│       │   │   │   ├── EmailVerificationBanner/
+│       │   │   │   │   ├── EmailVerificationBanner.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── EmptyState/
+│       │   │   │   │   ├── EmptyState.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── FloatingEdgeControls/
+│       │   │   │   │   ├── floating-edge-button.ts
+│       │   │   │   │   ├── FloatingEdgeControls.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── FloatingLanguageButton/
+│       │   │   │   │   ├── FloatingLanguageButton.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── FloatingSettingsButton/
+│       │   │   │   │   ├── FloatingSettingsButton.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── FormattedDate/
+│       │   │   │   │   ├── FormattedDate.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── FullPageSpinner/
+│       │   │   │   │   ├── FullPageSpinner.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── Gate/
+│       │   │   │   │   ├── Gate.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── InvitationsTable/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── InvitationsTable.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── InviteMemberDialog/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── InviteMemberDialog.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── KeyboardShortcutsDialog/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── KeyboardShortcutsDialog.tsx
+│       │   │   │   │   ├── KeyboardShortcutsLazy.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── LanguageDialog/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── LanguageDialog.tsx
+│       │   │   │   │   ├── LanguageDialogLazy.tsx
+│       │   │   │   │   ├── LanguagePanel.tsx
+│       │   │   │   │   └── [3 test files]
+│       │   │   │   ├── MembersTable/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── members-table.constants.ts
+│       │   │   │   │   ├── MembersTable.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── NotificationCenter/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── NotificationCenter.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── OfflineIndicator/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── OfflineIndicator.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── OptimizedImage/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── OptimizedImage.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── OrganizationBadges/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── OrganizationBadges.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── OrganizationSwitcher/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── OrganizationSwitcher.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── PasswordStrengthMeter/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── PasswordStrengthMeter.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── PermissionGuard/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── PermissionGuard.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── QrCode/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── QrCode.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── QueryBoundary/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── QueryBoundary.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── RateLimitNotice/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── RateLimitNotice.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── RecoveryCodesPanel/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── RecoveryCodesPanel.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── RetryError/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── RetryError.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── RouteAnnouncer/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── RouteAnnouncer.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── RouteErrorBoundary/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── RouteErrorBoundary.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── RouteProgressBar/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── RouteProgressBar.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── SecurityOverviewCard/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── SecurityOverviewCard.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── SessionTimeoutDialog/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── SessionTimeoutDialog.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── SettingsModal/
+│       │   │   │   │   ├── account/
+│       │   │   │   │   ├── organization/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── settings-dirty.tsx
+│       │   │   │   │   ├── settings-hash.ts
+│       │   │   │   │   ├── settings-modules.ts
+│       │   │   │   │   ├── settings-nav-visibility.ts
+│       │   │   │   │   ├── settings-permissions.ts
+│       │   │   │   │   ├── settings-resolve.ts
+│       │   │   │   │   ├── settings-route-policy.ts
+│       │   │   │   │   ├── settings-sections.ts
+│       │   │   │   │   ├── settings.constants.ts
+│       │   │   │   │   ├── SettingsModal.tsx
+│       │   │   │   │   ├── SettingsModalLazy.tsx
+│       │   │   │   │   ├── SettingsNav.tsx
+│       │   │   │   │   ├── SettingsPanelShell.tsx
+│       │   │   │   │   └── [12 test files]
+│       │   │   │   ├── StripePaymentForm/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── StripePaymentForm.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── Surface/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── Surface.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── ThemeModeToggle/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── ThemeModeToggle.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── ThemeShowcase/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── ThemeShowcase.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── TotpCodeInput/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── TotpCodeInput.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── ui/
+│       │   │   │   └── WidgetErrorBoundary/
+│       │   │   │       ├── index.ts
+│       │   │   │       ├── WidgetErrorBoundary.tsx
+│       │   │   │       └── [1 test file]
+│       │   │   ├── errors/
+│       │   │   │   ├── AppError.ts
+│       │   │   │   ├── errorHandler.ts
+│       │   │   │   ├── frontend-error-codes.ts
+│       │   │   │   ├── HttpError.ts
+│       │   │   │   ├── map-frontend-error.ts
+│       │   │   │   ├── map-validation-errors.ts
+│       │   │   │   ├── rate-limit.ts
+│       │   │   │   └── [6 test files]
+│       │   │   ├── forms/
+│       │   │   │   ├── AuthForm/
+│       │   │   │   │   ├── components/
+│       │   │   │   │   ├── auth-form-pending.ts
+│       │   │   │   │   ├── auth-form.constants.ts
+│       │   │   │   │   ├── AuthEmailPanel.tsx
+│       │   │   │   │   ├── AuthForm.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [4 test files]
+│       │   │   │   ├── FormError/
+│       │   │   │   │   ├── FormError.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── FormField/
+│       │   │   │   │   ├── FormField.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   └── ProfileForm/
+│       │   │   │       ├── contracts.ts
+│       │   │   │       ├── index.ts
+│       │   │   │       ├── ProfileForm.tsx
+│       │   │   │       └── [2 test files]
+│       │   │   ├── hooks/
+│       │   │   │   ├── useApiKeys/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useApiKeys.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useAppMutation/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useAppMutation.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useAuthMethods/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useAuthMethods.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useBillingInvoices/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useBillingInvoices.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useBillingPaymentMethods/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useBillingPaymentMethods.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useCan/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useCan.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useConsumedSearchToken/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useConsumedSearchToken.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useCooldownClock/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useCooldownClock.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useCreate/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useCreate.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useDataTableUrlState/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useDataTableUrlState.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useDelete/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useDelete.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useDeploymentFlags/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useDeploymentFlags.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useInvitations/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useInvitations.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useList/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useList.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useLocaleFormat/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useLocaleFormat.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useMeContext/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useMeContext.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useMembers/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useMembers.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useMfa/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useMfa.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useNotifications/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useNotifications.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useOne/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useOne.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useOrgBrand/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useOrgBrand.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── usePasskeys/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── usePasskeys.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useRBAC/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useRBAC.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useRoles/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useRoles.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useSessions/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useSessions.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useSubscription/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useSubscription.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useUnsavedChangesGuard/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useUnsavedChangesGuard.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useUpdate/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useUpdate.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useUpdateOrganization/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useUpdateOrganization.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   └── useWebhooks/
+│       │   │   │       ├── index.ts
+│       │   │   │       ├── useWebhooks.ts
+│       │   │   │       └── [1 test file]
+│       │   │   ├── icons/
+│       │   │   │   ├── icon-names.ts
+│       │   │   │   ├── icon-registry.ts
+│       │   │   │   ├── icon-types.ts
+│       │   │   │   ├── iconset-phosphor.ts
+│       │   │   │   ├── iconset-tabler.ts
+│       │   │   │   ├── index.ts
+│       │   │   │   └── [2 test files]
+│       │   │   ├── layouts/
+│       │   │   │   ├── AppLayout/
+│       │   │   │   │   ├── components/
+│       │   │   │   │   ├── variants/
+│       │   │   │   │   ├── AppLayout.shared.tsx
+│       │   │   │   │   ├── AppLayout.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── resolve-app-shell.ts
+│       │   │   │   │   └── [2 test files]
+│       │   │   │   ├── AuthLayout/
+│       │   │   │   │   ├── variants/
+│       │   │   │   │   ├── AuthLayout.shared.tsx
+│       │   │   │   │   ├── AuthLayout.tsx
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── LayoutVariantFallback/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   └── LayoutVariantFallback.tsx
+│       │   │   │   ├── PublicLayout/
+│       │   │   │   │   ├── variants/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── PublicLayout.shared.tsx
+│       │   │   │   │   ├── PublicLayout.tsx
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   └── layout.constants.ts
+│       │   │   ├── notifications/
+│       │   │   │   ├── desktop.ts
+│       │   │   │   └── [1 test file]
+│       │   │   ├── notify/
+│       │   │   │   ├── AppToaster.tsx
+│       │   │   │   ├── CustomToast.tsx
+│       │   │   │   ├── index.ts
+│       │   │   │   ├── notify-deferred.ts
+│       │   │   │   ├── notify.ts
+│       │   │   │   └── [5 test files]
+│       │   │   ├── store/
+│       │   │   │   ├── useAuthStore/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useAuthStore.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useConsentStore/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useConsentStore.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useLocaleStore/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useLocaleStore.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useOnboardingStore/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useOnboardingStore.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useOrganizationStore/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useOrganizationStore.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   ├── useThemeStore/
+│       │   │   │   │   ├── index.ts
+│       │   │   │   │   ├── useThemeStore.ts
+│       │   │   │   │   └── [1 test file]
+│       │   │   │   └── useUIStore/
+│       │   │   │       ├── index.ts
+│       │   │   │       ├── useUIStore.ts
+│       │   │   │       └── [1 test file]
+│       │   │   ├── tenancy/
+│       │   │   │   ├── deployment-mode.ts
+│       │   │   │   ├── me-context.ts
+│       │   │   │   ├── my-organizations.ts
+│       │   │   │   ├── organization-context.ts
+│       │   │   │   ├── organization-membership.ts
+│       │   │   │   ├── organization-resolver.ts
+│       │   │   │   ├── session-context.ts
+│       │   │   │   ├── switch.ts
+│       │   │   │   ├── tenancy-service.ts
+│       │   │   │   ├── TENANCY.OVERVIEW.md
+│       │   │   │   └── [12 test files]
+│       │   │   └── theme/
+│       │   │       ├── catalog-doc.ts
+│       │   │       ├── index.ts
+│       │   │       ├── layout-width.ts
+│       │   │       ├── org-brand.ts
+│       │   │       ├── presets.ts
+│       │   │       └── [4 test files]
+│       │   ├── App.tsx
+│       │   ├── index.css
+│       │   ├── main.tsx
+│       │   ├── sw.ts
+│       │   └── vite-env.d.ts
+│       ├── tests/
+│       │   ├── cross-browser/
+│       │   │   └── [2 test files]
+│       │   ├── factories/
+│       │   │   └── README.md
+│       │   ├── fixtures/
+│       │   │   └── notification-fixtures.ts
+│       │   ├── performance/
+│       │   │   └── README.md
+│       │   ├── security/
+│       │   │   ├── README.md
+│       │   │   └── [8 test files]
+│       │   ├── utils/
+│       │   │   ├── auth-api-paths.ts
+│       │   │   ├── axe-for-dialog.ts
+│       │   │   ├── e2e-api-retry.ts
+│       │   │   ├── e2e-auth.ts
+│       │   │   ├── e2e-captcha.ts
+│       │   │   ├── e2e-deployment-mode.ts
+│       │   │   ├── e2e-faker.ts
+│       │   │   ├── e2e-hybrid.ts
+│       │   │   ├── e2e-session.ts
+│       │   │   ├── e2e-tenancy.ts
+│       │   │   ├── README.md
+│       │   │   ├── renderWithProviders.tsx
+│       │   │   └── setup.ts
+│       │   └── README.md
+│       ├── tooling/
+│       │   ├── ci/
+│       │   │   ├── check-api-contract-drift.mjs
+│       │   │   ├── check-patch-coverage.mjs
+│       │   │   ├── check-preload-graph.mjs
+│       │   │   ├── contract-drift-allowlist.json
+│       │   │   ├── coverage-summary.mjs
+│       │   │   ├── lint-changed-markdown.sh
+│       │   │   └── run-size-limit.mjs
+│       │   ├── dev/
+│       │   │   ├── mcp-config.ts
+│       │   │   ├── screenshot-auth-pages.mjs
+│       │   │   ├── setup-local.ts
+│       │   │   ├── setup-mcp.ts
+│       │   │   └── [1 test file]
+│       │   ├── setup/
+│       │   │   ├── github/
+│       │   │   │   ├── check-environments-drift.mjs
+│       │   │   │   ├── environments-util.mjs
+│       │   │   │   ├── github-shared.mjs
+│       │   │   │   ├── parse-env-file.mjs
+│       │   │   │   ├── scaffold-env-files.mjs
+│       │   │   │   ├── setup-config.mjs
+│       │   │   │   ├── sync-env-secrets.mjs
+│       │   │   │   ├── sync-environments.mjs
+│       │   │   │   ├── sync-rulesets.mjs
+│       │   │   │   ├── sync.mjs
+│       │   │   │   ├── validate-github-env.mjs
+│       │   │   │   └── [1 test file]
+│       │   │   ├── live/
+│       │   │   │   ├── config.mjs
+│       │   │   │   ├── github.mjs
+│       │   │   │   ├── index.mjs
+│       │   │   │   ├── netlify.mjs
+│       │   │   │   ├── prompts.mjs
+│       │   │   │   └── README.md
+│       │   │   ├── github-secrets.sh
+│       │   │   ├── netlify.sh
+│       │   │   └── setup.config.json
+│       │   ├── sonar/
+│       │   │   └── sonar-gate.mjs
+│       │   ├── tsdoc-coverage/
+│       │   │   ├── budget.json
+│       │   │   └── check-coverage.mjs
+│       │   ├── validate/
+│       │   │   ├── before-commit-guard.sh
+│       │   │   ├── client-env.ts
+│       │   │   ├── design-tokens.sh
+│       │   │   ├── env-example.sh
+│       │   │   ├── health-check.sh
+│       │   │   ├── i18n-keys.mjs
+│       │   │   ├── public-assets.sh
+│       │   │   ├── route-islands.sh
+│       │   │   ├── sync-env-example.ts
+│       │   │   ├── test-ids-allowlist.txt
+│       │   │   ├── test-ids.mjs
+│       │   │   ├── theme-axis-allowlist.txt
+│       │   │   ├── theme-axis.sh
+│       │   │   ├── theme-catalog.mjs
+│       │   │   ├── vite-env-reads.mjs
+│       │   │   └── [1 test file]
+│       │   ├── load-env-files.mjs
+│       │   └── README.md
+│       ├── .commitlintrc.json
+│       ├── .cursorignore
+│       ├── .editorconfig
+│       ├── .env
+│       ├── .env.development
+│       ├── .env.example
+│       ├── .env.local
+│       ├── .env.production
+│       ├── .env.staging
+│       ├── .gitignore
+│       ├── .gitleaks.toml
+│       ├── .lighthouserc.cjs
+│       ├── .markdownlint-cli2.jsonc
+│       ├── .markdownlint.json
+│       ├── .mcp.default.json
+│       ├── .mcp.example.json
+│       ├── .mcp.json
+│       ├── .node-version
+│       ├── .npmrc
+│       ├── .nvmrc
+│       ├── .prettierignore
+│       ├── .prettierrc
+│       ├── .semgrepignore
+│       ├── .size-limit.generated.json
+│       ├── .size-limit.json
+│       ├── AGENTS.md
+│       ├── biome.json
+│       ├── catalog-info.yaml
+│       ├── CLAUDE.md
+│       ├── CODE_OF_CONDUCT.md
+│       ├── components.json
+│       ├── config.setup.env
+│       ├── context7.json
+│       ├── CONTRIBUTING.md
+│       ├── docker-compose.sonar.yml
+│       ├── eslint.config.mjs
+│       ├── index.html
+│       ├── knip.jsonc
+│       ├── LICENSE
+│       ├── Makefile
+│       ├── netlify.toml
+│       ├── package.json
+│       ├── playwright.config.ts
+│       ├── playwright.cross-browser.config.ts
+│       ├── playwright.integration-cross-browser.config.ts
+│       ├── README.md
+│       ├── SECURITY.md
+│       ├── SETUP.md
+│       ├── skills-lock.json
+│       ├── sonar-project.properties
+│       ├── stryker.config.json
+│       ├── stryker.config.mjs
+│       ├── tsconfig.app.json
+│       ├── tsconfig.json
+│       ├── tsconfig.node.json
+│       ├── vite.config.ts
+│       └── vitest.config.ts
 ├── .vscode/
 │   ├── extensions.json
 │   └── settings.json
 ├── agent-os/
 │   ├── agents/
+│   │   ├── bundle-size-reviewer.md
 │   │   ├── ci-investigator.md
+│   │   ├── dependency-auditor.md
 │   │   ├── docs-auditor.md
+│   │   ├── pipelines.json
 │   │   ├── README.md
 │   │   └── verifier.md
+│   ├── cloud-environment/
+│   │   ├── agents-cloud.md
+│   │   ├── environment.json
+│   │   ├── install.sh
+│   │   └── skills-and-mcps.md
 │   ├── commands/
 │   │   ├── agent-os-sync.md
 │   │   ├── build-requirement.md
@@ -245,6 +1357,7 @@ core-fe/
 │   │   ├── merge-pr.md
 │   │   ├── open-pr.md
 │   │   ├── pre-merge-review.md
+│   │   ├── prod-readiness.md
 │   │   ├── README.md
 │   │   ├── routes-sync.md
 │   │   ├── ship.md
@@ -263,10 +1376,10 @@ core-fe/
 │   ├── evals/
 │   │   ├── cases/
 │   │   │   └── triggers.json
-│   │   ├── check.mjs
+│   │   ├── check.ts
 │   │   ├── ignore.json
 │   │   ├── README.md
-│   │   └── trigger-eval.mjs
+│   │   └── trigger-eval.ts
 │   ├── hooks/
 │   │   ├── cursor-shell-guard.mjs
 │   │   ├── format-edits.sh
@@ -302,18 +1415,26 @@ core-fe/
 │   │   ├── component-patterns.mdc
 │   │   ├── context7-libraries.mdc
 │   │   ├── engineering-principles.mdc
+│   │   ├── env-schema-add-sync.mdc
 │   │   ├── file-structure.mdc
+│   │   ├── platform-hygiene-sync.mdc
 │   │   ├── preset-product-design.mdc
 │   │   ├── project-conventions.mdc
+│   │   ├── pwa-manifest-sync.mdc
+│   │   ├── routing-tenancy-sync.mdc
 │   │   ├── skill-router.mdc
 │   │   ├── tailwind-styling.mdc
 │   │   ├── testing-requirements.mdc
 │   │   ├── theme-axis-audit.mdc
 │   │   └── ui-sources.mdc
-│   ├── skills/  (31 skills: auto-implement, shadcn, route-island, …)
+│   ├── skills/  (39 skills: auto-implement, shadcn, route-island, …)
 │   └── skills-lock.json
 ├── docs/
 │   ├── deployment/
+│   │   ├── runbooks/
+│   │   │   ├── csp-trusted-types-production.md
+│   │   │   ├── environment-variables.md
+│   │   │   └── README.md
 │   │   ├── branch-protection.md
 │   │   ├── cicd-and-netlify.md
 │   │   ├── deployment-and-pre-launch.md
@@ -332,26 +1453,34 @@ core-fe/
 │   │   └── setup.md
 │   ├── integrations/
 │   │   ├── credentials-and-env.md
+│   │   ├── posthog-frontend.md
+│   │   ├── sentry-frontend.md
 │   │   └── sentry-sourcemaps.md
 │   ├── process/
-│   │   ├── git-workflow.md
 │   │   ├── organization-deployment-modes.md
 │   │   ├── pr-review.md
-│   │   └── release-versioning.md
+│   │   ├── release-versioning.md
+│   │   └── trunk-based-workflow.md
 │   ├── reference/
 │   │   ├── api/
 │   │   │   └── core-be-sample-responses.json
 │   │   ├── quality/
 │   │   │   ├── sonarqube-local.md
 │   │   │   └── test-coverage.md
+│   │   ├── backend-list-pagination-spec.md
 │   │   ├── constants-and-i18n.md
+│   │   ├── cross-browser-support.md
 │   │   ├── csrf-mitigation.md
+│   │   ├── data-mutations.md
 │   │   ├── dependency-upgrades.md
 │   │   ├── design.md
 │   │   ├── e2e-testids-inventory.md
+│   │   ├── frontend-platform.md
 │   │   ├── internationalization.md
+│   │   ├── local-production-perf.md
 │   │   ├── preset-product-design-rules.md
 │   │   ├── project-tree.txt
+│   │   ├── pwa-manifest-and-app-icon.md
 │   │   ├── route-island-structure.md
 │   │   ├── routes-and-ui.md
 │   │   ├── routing-and-tenancy.md
@@ -365,13 +1494,17 @@ core-fe/
 │   │   ├── ui-components-sourcing.md
 │   │   └── unified-auth-flows.md
 │   ├── reviews/
+│   │   ├── codebase-audit-loop.md
 │   │   └── README.md
 │   └── README.md
 ├── plugins/
 │   ├── csp-api-origin.ts
+│   ├── i18n-build.ts
+│   ├── test-env.ts
 │   └── version-json.ts
 ├── public/
 │   ├── _headers
+│   ├── app-icon.svg
 │   ├── config.js
 │   ├── manifest.webmanifest
 │   ├── offline.html
@@ -382,8 +1515,10 @@ core-fe/
 │   ├── theme-init.js
 │   └── vite.svg
 ├── reports/
-│   └── code-review/
-│       └── full-code-review-report.md
+│   ├── code-review/
+│   │   └── full-code-review-report.md
+│   └── mutation/
+│       └── mutation-report.json
 ├── scripts/
 │   └── README.md
 ├── src/
@@ -406,18 +1541,28 @@ core-fe/
 │   │   │   ├── AppProviders.tsx
 │   │   │   ├── I18nProvider.tsx
 │   │   │   └── QueryProvider.tsx
-│   │   └── routes/
-│   │       ├── ErrorBoundary.tsx
-│   │       ├── NotFoundPage.tsx
-│   │       ├── routeTree.tsx
-│   │       ├── UnauthorizedPage.tsx
-│   │       └── [3 test files]
+│   │   ├── routes/
+│   │   │   ├── ErrorBoundary.tsx
+│   │   │   ├── NotFoundPage.tsx
+│   │   │   ├── routeTree.tsx
+│   │   │   ├── UnauthorizedPage.tsx
+│   │   │   └── [3 test files]
+│   │   └── version/
+│   │       ├── index.ts
+│   │       ├── show-update-available-toast.ts
+│   │       ├── version-update.constants.ts
+│   │       └── [1 test file]
 │   ├── core/
 │   │   ├── config/
+│   │   │   ├── app-manifest.ts
 │   │   │   ├── auth-methods.ts
 │   │   │   ├── constants.ts
+│   │   │   ├── env-resolvers.ts
+│   │   │   ├── env-schema.ts
+│   │   │   ├── env.config.ts
 │   │   │   ├── env.ts
-│   │   │   └── [2 test files]
+│   │   │   ├── platform-config.ts
+│   │   │   └── [7 test files]
 │   │   ├── data-provider/
 │   │   │   ├── http-data-provider/
 │   │   │   │   ├── http-data-provider.ts
@@ -434,20 +1579,23 @@ core-fe/
 │   │   │   ├── policies.ts
 │   │   │   └── [2 test files]
 │   │   ├── resources/
+│   │   │   ├── bootstrap.ts
 │   │   │   ├── index.ts
+│   │   │   ├── members.resource.ts
 │   │   │   ├── resource-registry.ts
 │   │   │   ├── types.ts
-│   │   │   └── [1 test file]
+│   │   │   └── [2 test files]
 │   │   ├── security/
 │   │   │   ├── gates/
 │   │   │   │   ├── require-module.ts
 │   │   │   │   ├── require-permission.ts
 │   │   │   │   ├── require-session.ts
 │   │   │   │   └── [3 test files]
+│   │   │   ├── gate-context.ts
 │   │   │   ├── gate.types.ts
 │   │   │   ├── gateway.ts
 │   │   │   ├── index.ts
-│   │   │   └── [1 test file]
+│   │   │   └── [2 test files]
 │   │   ├── types/
 │   │   │   ├── branded.ts
 │   │   │   ├── permissions.ts
@@ -455,7 +1603,9 @@ core-fe/
 │   │   │   └── [3 test files]
 │   │   └── version/
 │   │       ├── check.ts
-│   │       └── [1 test file]
+│   │       ├── version-check.constants.ts
+│   │       ├── version-update-snooze.ts
+│   │       └── [2 test files]
 │   ├── lib/
 │   │   ├── animations/
 │   │   │   ├── AnimatedSection.tsx
@@ -469,10 +1619,18 @@ core-fe/
 │   │   │   ├── useAutoAnimate.ts
 │   │   │   ├── useCountUp.ts
 │   │   │   └── [5 test files]
+│   │   ├── billing/
+│   │   │   ├── stripe-return.ts
+│   │   │   └── [1 test file]
 │   │   ├── i18n/
 │   │   │   ├── apply-document-locale.ts
+│   │   │   ├── build-config.ts
+│   │   │   ├── build-env.ts
+│   │   │   ├── build-runtime.ts
 │   │   │   ├── errors.constants.ts
 │   │   │   ├── format.ts
+│   │   │   ├── i18n-resources.multi.ts
+│   │   │   ├── i18n-resources.ts
 │   │   │   ├── i18n.ts
 │   │   │   ├── index.ts
 │   │   │   ├── intl-config.ts
@@ -481,7 +1639,7 @@ core-fe/
 │   │   │   ├── locales.ts
 │   │   │   ├── namespaces.ts
 │   │   │   ├── translate-form-message.ts
-│   │   │   └── [3 test files]
+│   │   │   └── [6 test files]
 │   │   ├── routes/
 │   │   │   ├── builders.ts
 │   │   │   ├── index.ts
@@ -491,18 +1649,20 @@ core-fe/
 │   │   │   └── [4 test files]
 │   │   ├── app-splash.ts
 │   │   ├── appearance-surface.ts
+│   │   ├── chunk-prefetch.ts
 │   │   ├── csp-api-origin.ts
+│   │   ├── css-safe.ts
 │   │   ├── csv.ts
 │   │   ├── icon-surface.ts
-│   │   ├── layout-width.ts
 │   │   ├── onboarding-defaults.ts
+│   │   ├── parse-list-tolerant.ts
 │   │   ├── password-breach.ts
 │   │   ├── password-strength.ts
 │   │   ├── responsive-grid.ts
 │   │   ├── sensitive-clipboard.ts
 │   │   ├── telemetry-scrub.ts
 │   │   ├── utils.ts
-│   │   └── [13 test files]
+│   │   └── [15 test files]
 │   ├── locales/
 │   │   ├── ar/
 │   │   │   └── common.json
@@ -647,12 +1807,19 @@ core-fe/
 │   │       └── [1 test file]
 │   ├── shared/
 │   │   ├── analytics/
+│   │   │   ├── analytics.constants.ts
 │   │   │   ├── capture-consent-decision.ts
-│   │   │   └── [1 test file]
+│   │   │   ├── capture.ts
+│   │   │   └── [2 test files]
 │   │   ├── api/
 │   │   │   ├── API.OVERVIEW.md
 │   │   │   ├── auth-api.ts
 │   │   │   ├── auth-contracts.ts
+│   │   │   ├── billing-api.ts
+│   │   │   ├── billing-contracts.ts
+│   │   │   ├── billing-query-keys.ts
+│   │   │   ├── fetch-all-pages.ts
+│   │   │   ├── fetch-list-page.ts
 │   │   │   ├── mfa-api.ts
 │   │   │   ├── notification-contracts.ts
 │   │   │   ├── notification-query-keys.ts
@@ -666,17 +1833,25 @@ core-fe/
 │   │   │   ├── sessions-api.ts
 │   │   │   ├── webhook-contracts.ts
 │   │   │   ├── webhooks-api.ts
-│   │   │   └── [8 test files]
+│   │   │   └── [13 test files]
 │   │   ├── auth/
 │   │   │   ├── captcha/
+│   │   │   │   ├── useTurnstileReady/
+│   │   │   │   │   ├── index.ts
+│   │   │   │   │   ├── useTurnstileReady.ts
+│   │   │   │   │   └── [1 test file]
+│   │   │   │   ├── auth-captcha-headers.ts
 │   │   │   │   ├── captcha-config.ts
 │   │   │   │   ├── captcha.constants.ts
-│   │   │   │   └── [1 test file]
+│   │   │   │   ├── InvisibleTurnstile.tsx
+│   │   │   │   ├── turnstile-token-store.ts
+│   │   │   │   └── [4 test files]
 │   │   │   ├── auth-channel.ts
 │   │   │   ├── auth-shell.constants.ts
 │   │   │   ├── AUTH.OVERVIEW.md
 │   │   │   ├── auto-google-sign-in.ts
 │   │   │   ├── idle-timeout.ts
+│   │   │   ├── mfa-handoff.ts
 │   │   │   ├── passkey-sign-in.ts
 │   │   │   ├── redirect-safety.ts
 │   │   │   ├── refresh-timer.ts
@@ -684,14 +1859,19 @@ core-fe/
 │   │   │   ├── session-lifetime.ts
 │   │   │   ├── token.ts
 │   │   │   ├── types.ts
-│   │   │   └── [9 test files]
+│   │   │   └── [10 test files]
+│   │   ├── billing/
+│   │   │   ├── load-stripe.ts
+│   │   │   ├── stripe-config.ts
+│   │   │   └── [1 test file]
 │   │   ├── components/
 │   │   │   ├── AppearanceDialog/
+│   │   │   │   ├── appearance-look.ts
 │   │   │   │   ├── AppearanceDialog.tsx
 │   │   │   │   ├── AppearanceDialogLazy.tsx
 │   │   │   │   ├── AppearancePanel.tsx
 │   │   │   │   ├── index.ts
-│   │   │   │   └── [3 test files]
+│   │   │   │   └── [4 test files]
 │   │   │   ├── CommandPalette/
 │   │   │   │   ├── CommandPalette.tsx
 │   │   │   │   ├── CommandPaletteItem.tsx
@@ -747,10 +1927,11 @@ core-fe/
 │   │   │   │   │   └── [1 test file]
 │   │   │   │   ├── dashboard-quick-actions.ts
 │   │   │   │   ├── dashboard.constants.ts
+│   │   │   │   ├── Dashboard.deferred.tsx
 │   │   │   │   ├── dashboard.placeholder-data.ts
 │   │   │   │   ├── Dashboard.tsx
 │   │   │   │   ├── index.ts
-│   │   │   │   └── [2 test files]
+│   │   │   │   └── [3 test files]
 │   │   │   ├── data-table/
 │   │   │   │   ├── DataTable.tsx
 │   │   │   │   ├── DataTableColumnHeader.tsx
@@ -850,6 +2031,10 @@ core-fe/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── QueryBoundary.tsx
 │   │   │   │   └── [1 test file]
+│   │   │   ├── RateLimitNotice/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── RateLimitNotice.tsx
+│   │   │   │   └── [1 test file]
 │   │   │   ├── RecoveryCodesPanel/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── RecoveryCodesPanel.tsx
@@ -880,6 +2065,18 @@ core-fe/
 │   │   │   │   └── [1 test file]
 │   │   │   ├── SettingsModal/
 │   │   │   │   ├── account/
+│   │   │   │   │   ├── BillingCancellationSection/
+│   │   │   │   │   │   ├── BillingCancellationSection.tsx
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   └── [1 test file]
+│   │   │   │   │   ├── BillingInvoicesTable/
+│   │   │   │   │   │   ├── BillingInvoicesTable.tsx
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   └── [1 test file]
+│   │   │   │   │   ├── BillingPaymentMethods/
+│   │   │   │   │   │   ├── BillingPaymentMethods.tsx
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   └── [1 test file]
 │   │   │   │   │   ├── AccountBillingPanel.tsx
 │   │   │   │   │   ├── AccountNotificationsPanel.tsx
 │   │   │   │   │   ├── AccountPanel.tsx
@@ -888,15 +2085,18 @@ core-fe/
 │   │   │   │   │   ├── AccountSessionsPanel.tsx
 │   │   │   │   │   └── [6 test files]
 │   │   │   │   ├── organization/
+│   │   │   │   │   ├── org-list-sort.ts
 │   │   │   │   │   ├── OrganizationBranchesPanel.tsx
 │   │   │   │   │   ├── OrganizationGeneralPanel.tsx
 │   │   │   │   │   ├── OrganizationIntegrationsPanel.tsx
 │   │   │   │   │   ├── OrganizationMembersPanel.tsx
 │   │   │   │   │   ├── OrganizationRolesPanel.tsx
-│   │   │   │   │   └── [5 test files]
+│   │   │   │   │   ├── OrgListControls.tsx
+│   │   │   │   │   └── [7 test files]
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── settings-dirty.tsx
 │   │   │   │   ├── settings-hash.ts
+│   │   │   │   ├── settings-modules.ts
 │   │   │   │   ├── settings-nav-visibility.ts
 │   │   │   │   ├── settings-permissions.ts
 │   │   │   │   ├── settings-resolve.ts
@@ -907,7 +2107,11 @@ core-fe/
 │   │   │   │   ├── SettingsModalLazy.tsx
 │   │   │   │   ├── SettingsNav.tsx
 │   │   │   │   ├── SettingsPanelShell.tsx
-│   │   │   │   └── [11 test files]
+│   │   │   │   └── [12 test files]
+│   │   │   ├── StripePaymentForm/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── StripePaymentForm.tsx
+│   │   │   │   └── [1 test file]
 │   │   │   ├── Surface/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── Surface.tsx
@@ -935,10 +2139,16 @@ core-fe/
 │   │   │   ├── frontend-error-codes.ts
 │   │   │   ├── HttpError.ts
 │   │   │   ├── map-frontend-error.ts
-│   │   │   └── [4 test files]
+│   │   │   ├── map-validation-errors.ts
+│   │   │   ├── rate-limit.ts
+│   │   │   └── [6 test files]
 │   │   ├── forms/
 │   │   │   ├── AuthForm/
 │   │   │   │   ├── components/
+│   │   │   │   │   ├── AuthMethodButton/
+│   │   │   │   │   │   ├── AuthMethodButton.tsx
+│   │   │   │   │   │   ├── index.ts
+│   │   │   │   │   │   └── [1 test file]
 │   │   │   │   │   ├── AuthMethodDivider/
 │   │   │   │   │   │   ├── AuthMethodDivider.tsx
 │   │   │   │   │   │   ├── index.ts
@@ -979,6 +2189,14 @@ core-fe/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useAuthMethods.ts
 │   │   │   │   └── [1 test file]
+│   │   │   ├── useBillingInvoices/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useBillingInvoices.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useBillingPaymentMethods/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useBillingPaymentMethods.ts
+│   │   │   │   └── [1 test file]
 │   │   │   ├── useCan/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useCan.ts
@@ -995,9 +2213,17 @@ core-fe/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useCreate.ts
 │   │   │   │   └── [1 test file]
+│   │   │   ├── useCursorList/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useCursorList.ts
+│   │   │   │   └── [1 test file]
 │   │   │   ├── useDataTableUrlState/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useDataTableUrlState.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── useDebouncedValue/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useDebouncedValue.ts
 │   │   │   │   └── [1 test file]
 │   │   │   ├── useDelete/
 │   │   │   │   ├── index.ts
@@ -1063,6 +2289,10 @@ core-fe/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useSubscription.ts
 │   │   │   │   └── [1 test file]
+│   │   │   ├── useUnsavedChangesGuard/
+│   │   │   │   ├── index.ts
+│   │   │   │   ├── useUnsavedChangesGuard.tsx
+│   │   │   │   └── [1 test file]
 │   │   │   ├── useUpdate/
 │   │   │   │   ├── index.ts
 │   │   │   │   ├── useUpdate.ts
@@ -1076,13 +2306,14 @@ core-fe/
 │   │   │       ├── useWebhooks.ts
 │   │   │       └── [1 test file]
 │   │   ├── icons/
+│   │   │   ├── github-mark.tsx
 │   │   │   ├── icon-names.ts
 │   │   │   ├── icon-registry.ts
 │   │   │   ├── icon-types.ts
 │   │   │   ├── iconset-phosphor.ts
 │   │   │   ├── iconset-tabler.ts
 │   │   │   ├── index.ts
-│   │   │   └── [1 test file]
+│   │   │   └── [2 test files]
 │   │   ├── layouts/
 │   │   │   ├── AppLayout/
 │   │   │   │   ├── components/
@@ -1135,7 +2366,7 @@ core-fe/
 │   │   │   ├── index.ts
 │   │   │   ├── notify-deferred.ts
 │   │   │   ├── notify.ts
-│   │   │   └── [4 test files]
+│   │   │   └── [5 test files]
 │   │   ├── store/
 │   │   │   ├── useAuthStore/
 │   │   │   │   ├── index.ts
@@ -1172,29 +2403,40 @@ core-fe/
 │   │   │   ├── organization-context.ts
 │   │   │   ├── organization-membership.ts
 │   │   │   ├── organization-resolver.ts
+│   │   │   ├── session-context.ts
 │   │   │   ├── switch.ts
 │   │   │   ├── tenancy-service.ts
 │   │   │   ├── TENANCY.OVERVIEW.md
-│   │   │   └── [8 test files]
+│   │   │   └── [12 test files]
 │   │   └── theme/
 │   │       ├── catalog-doc.ts
 │   │       ├── index.ts
+│   │       ├── layout-width.ts
 │   │       ├── org-brand.ts
 │   │       ├── presets.ts
-│   │       └── [3 test files]
+│   │       └── [4 test files]
 │   ├── App.tsx
 │   ├── index.css
 │   ├── main.tsx
 │   ├── sw.ts
 │   └── vite-env.d.ts
 ├── tests/
+│   ├── ci/
+│   │   └── [9 test files]
+│   ├── cross-browser/
+│   │   └── [2 test files]
 │   ├── e2e/
+│   │   ├── storage/
+│   │   │   └── e2e-init.json
 │   │   ├── visual.e2e.test.ts-snapshots/
 │   │   │   ├── dashboard-chromium-darwin.png
 │   │   │   ├── login-dark-chromium-darwin.png
-│   │   │   └── login-light-chromium-darwin.png
+│   │   │   ├── login-dark-glass-hairline-chromium-darwin.png
+│   │   │   ├── login-light-chromium-darwin.png
+│   │   │   └── login-theme-extremes-chromium-darwin.png
+│   │   ├── .e2e-auth-headers.json
 │   │   ├── global-setup.ts
-│   │   └── [17 test files]
+│   │   └── [28 test files]
 │   ├── factories/
 │   │   └── README.md
 │   ├── fixtures/
@@ -1203,26 +2445,33 @@ core-fe/
 │   │   └── README.md
 │   ├── security/
 │   │   ├── README.md
-│   │   └── [5 test files]
+│   │   └── [8 test files]
 │   ├── utils/
 │   │   ├── auth-api-paths.ts
 │   │   ├── axe-for-dialog.ts
+│   │   ├── e2e-api-retry.ts
 │   │   ├── e2e-auth.ts
+│   │   ├── e2e-captcha.ts
+│   │   ├── e2e-deployment-mode.ts
+│   │   ├── e2e-faker.ts
 │   │   ├── e2e-hybrid.ts
+│   │   ├── e2e-session.ts
+│   │   ├── e2e-tenancy.ts
 │   │   ├── README.md
 │   │   ├── renderWithProviders.tsx
 │   │   └── setup.ts
 │   └── README.md
 ├── tooling/
 │   ├── agent-os/
-│   │   └── generate.mjs
+│   │   └── generate.ts
 │   ├── ci/
 │   │   ├── check-api-contract-drift.mjs
 │   │   ├── check-patch-coverage.mjs
 │   │   ├── check-preload-graph.mjs
 │   │   ├── contract-drift-allowlist.json
 │   │   ├── coverage-summary.mjs
-│   │   └── lint-changed-markdown.sh
+│   │   ├── lint-changed-markdown.sh
+│   │   └── run-size-limit.mjs
 │   ├── dev/
 │   │   ├── mcp-config.ts
 │   │   ├── screenshot-auth-pages.mjs
@@ -1240,12 +2489,13 @@ core-fe/
 │   │   │   ├── parse-env-file.mjs
 │   │   │   ├── scaffold-env-files.mjs
 │   │   │   ├── setup-config.mjs
+│   │   │   ├── sync-consistency.mjs
 │   │   │   ├── sync-env-secrets.mjs
 │   │   │   ├── sync-environments.mjs
 │   │   │   ├── sync-rulesets.mjs
 │   │   │   ├── sync.mjs
 │   │   │   ├── validate-github-env.mjs
-│   │   │   └── [1 test file]
+│   │   │   └── [3 test files]
 │   │   ├── live/
 │   │   │   ├── config.mjs
 │   │   │   ├── github.mjs
@@ -1263,29 +2513,30 @@ core-fe/
 │   │   └── check-coverage.mjs
 │   ├── validate/
 │   │   ├── before-commit-guard.sh
+│   │   ├── client-env.ts
 │   │   ├── design-tokens.sh
 │   │   ├── env-example.sh
 │   │   ├── health-check.sh
+│   │   ├── i18n-keys.mjs
+│   │   ├── lockfile-sync.sh
 │   │   ├── public-assets.sh
 │   │   ├── route-islands.sh
+│   │   ├── sync-env-example.ts
 │   │   ├── test-ids-allowlist.txt
 │   │   ├── test-ids.mjs
 │   │   ├── theme-axis-allowlist.txt
 │   │   ├── theme-axis.sh
 │   │   ├── theme-catalog.mjs
+│   │   ├── vite-env-reads.mjs
 │   │   └── [1 test file]
-│   ├── README.md
-│   ├── sync-env-example.ts   # Schema ↔ .env.example parity
-│   └── load-env-files.mjs    # Node script env loader (via tooling/)
+│   ├── load-env-files.mjs
+│   └── README.md
 ├── .commitlintrc.json
 ├── .cursorignore
 ├── .editorconfig
-├── .env
 ├── .env.development
 ├── .env.example
-├── .env.local
 ├── .env.production
-├── .env.staging
 ├── .gitignore
 ├── .gitleaks.toml
 ├── .lighthouserc.cjs
@@ -1300,10 +2551,12 @@ core-fe/
 ├── .prettierignore
 ├── .prettierrc
 ├── .semgrepignore
+├── .size-limit.generated.json
 ├── .size-limit.json
 ├── AGENTS.md
 ├── biome.json
 ├── catalog-info.yaml
+├── CHANGELOG.md
 ├── CLAUDE.md
 ├── CODE_OF_CONDUCT.md
 ├── components.json
@@ -1319,6 +2572,8 @@ core-fe/
 ├── netlify.toml
 ├── package.json
 ├── playwright.config.ts
+├── playwright.cross-browser.config.ts
+├── playwright.integration-cross-browser.config.ts
 ├── README.md
 ├── SECURITY.md
 ├── SETUP.md

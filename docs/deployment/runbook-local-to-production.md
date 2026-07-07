@@ -1,9 +1,9 @@
 # Runbook: Local Development to Production
 
-> **Single-trunk model.** "Development" here means your **local dev machine**, not a
-> `dev` branch. core-fe is trunk-based: feature branches squash-merge to `main`; a
+> **Single-trunk model.** "Development" here means your **local machine**, not a branch.
+> core-fe is trunk-based: feature branches squash-merge to `main`; a
 > release ships by merging the standing release-please Release PR (then approving the
-> one production gate). See [../process/git-workflow.md](../process/git-workflow.md).
+> one production gate). See [../process/trunk-based-workflow.md](../process/trunk-based-workflow.md).
 > This runbook covers the local → validate → build → deploy path.
 
 Step-by-step path from local development to production deployment.

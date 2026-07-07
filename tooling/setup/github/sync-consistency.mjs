@@ -9,7 +9,7 @@
  *      catches.
  *   2. Single-trunk branches — git.protectedBranches ↔ the branches actually
  *      targeted by .github/rulesets/*.json, and git.defaultBranch is among them.
- *      A protectedBranches entry with no committed ruleset (a leftover `dev`) or a
+ *      A protectedBranches entry with no committed ruleset (a deleted branch) or a
  *      defaultBranch that nothing protects fails here.
  */
 import { readFileSync, readdirSync } from 'node:fs';

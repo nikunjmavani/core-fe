@@ -215,7 +215,7 @@ function main(): void {
   const environment = resolveEnvironment();
   if (!environment) {
     console.log(
-      'client-env: skipped (no deploy environment — pass --env, --production, or run on dev/main)',
+      'client-env: skipped (no deploy environment — pass --env, --production, or run on `main`)',
     );
     return;
   }

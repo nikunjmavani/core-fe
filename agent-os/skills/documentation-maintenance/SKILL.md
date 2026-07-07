@@ -41,7 +41,7 @@ All paths are under **`docs/`**. Index: **`docs/README.md`**.
 | **Env schema / runbook**    | `docs/deployment/runbooks/environment-variables.md`       | Schema keys, auth switches, deploy overrides, troubleshooting. |
 | **Sentry source maps**      | `docs/integrations/sentry-sourcemaps.md`                  | Sentry plugin or credential steps.                             |
 | **Cursor ↔ backend MCP**    | `agent-os/docs/cursor-backend-mcp.md`                     | MCP endpoint or Cursor config.                                 |
-| **Git workflow**            | `docs/process/git-workflow.md`                            | Branch strategy or PR flow.                                    |
+| **Git workflow**            | `docs/process/trunk-based-workflow.md`                    | Branch strategy or PR flow.                                    |
 | **Tools/dependencies**      | `docs/reference/tools-and-usage.md`                       | New package or usage change.                                   |
 | **i18n**                    | `docs/reference/internationalization.md`                  | Client-side i18n plan or backend message contract.             |
 

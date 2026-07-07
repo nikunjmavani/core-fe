@@ -7,7 +7,7 @@
 #
 # Usage:
 #   tooling/ci/lint-changed-markdown.sh                 # vs origin/main (default)
-#   LINT_BASE=origin/dev tooling/ci/lint-changed-markdown.sh
+#   LINT_BASE=<ref> tooling/ci/lint-changed-markdown.sh
 #
 # Exits 0 when no markdown files changed or all changed files lint clean.
 # Compatible with bash 3.2 (default macOS shell).
