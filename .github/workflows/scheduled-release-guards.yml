@@ -1,6 +1,5 @@
 # Release-flow guards — scheduled canaries that catch release-cycle drift while it
-# is still a notification, not a blocked release (ported from core-be's 4.8.0
-# release retrospective).
+# is still a notification, not a blocked release.
 #
 # Single-trunk model: there is no second branch to diverge from, so the former
 # "main ⊆ dev" branch-ancestry canary is gone. What remains:
@@ -57,3 +56,60 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN || github.token }}
         run: node tooling/setup/github/sync-rulesets.mjs --check
+
+  pat-canary:
+    # RELEASE_PLEASE_TOKEN expiry canary — the PAT is what makes a merged Release
+    # PR re-trigger post-merge CI (cut the tag/Release, deploy prod). A fine-grained
+    # PAT expires; an expired/revoked one degrades SILENTLY (the release job falls
+    # back to github.token, which cannot create releases). Probe it weekly so an
+    # imminent/actual expiry is a Monday ping, not a stuck release day.
+    name: RELEASE_PLEASE_TOKEN expiry canary
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 6 * * 1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # secrets.* is not readable in step `if:` — hoist presence to job env.
+      HAS_PAT: ${{ secrets.RELEASE_PLEASE_TOKEN != '' }}
+    steps:
+      - name: Tripwire — RELEASE_PLEASE_TOKEN not provisioned
+        if: env.HAS_PAT != 'true'
+        run: |
+          echo "::warning title=RELEASE_PLEASE_TOKEN not provisioned::No PAT set — release automation runs on the github.token fallback, which cannot cut tags/Releases. Add a PAT (repo + workflow scopes) as the RELEASE_PLEASE_TOKEN repository secret."
+
+      - name: Probe PAT validity + expiry
+        if: env.HAS_PAT == 'true'
+        env:
+          GH_PAT: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          # A valid token → 200 on /user; an expired/revoked one → 401.
+          code=$(curl -sS -D /tmp/pat-headers -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer ${GH_PAT}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/user || echo 000)
+          if [ "$code" = "401" ]; then
+            echo "::error title=RELEASE_PLEASE_TOKEN invalid::The PAT returned 401 (expired or revoked). Merged Release PRs will stop cutting tags/Releases and production will not deploy. Rotate the RELEASE_PLEASE_TOKEN repository secret."
+            exit 1
+          fi
+          if [ "$code" != "200" ]; then
+            echo "::warning title=RELEASE_PLEASE_TOKEN probe inconclusive::GitHub API returned HTTP ${code} (transient?). Not failing the canary."
+            exit 0
+          fi
+          # Fine-grained PATs return their expiry in this response header.
+          exp=$(grep -i '^github-authentication-token-expiration:' /tmp/pat-headers \
+            | sed -E 's/^[^:]+:[[:space:]]*//; s/[[:space:]]*$//' || true)
+          if [ -z "$exp" ]; then
+            echo "PAT valid (HTTP 200); no expiry header (classic PAT or non-expiring)."
+            exit 0
+          fi
+          exp_epoch=$(date -u -d "$exp" +%s 2>/dev/null || echo 0)
+          now_epoch=$(date -u +%s)
+          if [ "$exp_epoch" -gt 0 ]; then
+            days_left=$(( (exp_epoch - now_epoch) / 86400 ))
+            echo "PAT valid; expires ${exp} (${days_left} days left)."
+            if [ "$days_left" -lt 14 ]; then
+              echo "::warning title=RELEASE_PLEASE_TOKEN expiring soon::The PAT expires in ${days_left} day(s) (${exp}). Rotate it before it lapses to avoid a stuck release."
+            fi
+          else
+            echo "PAT valid; expiry header present but unparseable: ${exp}"
+          fi
