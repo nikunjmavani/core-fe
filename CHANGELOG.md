@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/nikunjmavani/core-fe/compare/v1.2.1...v1.2.2) (2026-07-07)
+
+
+### Documentation
+
+* document repository vs environment secret placement ([#87](https://github.com/nikunjmavani/core-fe/issues/87)) ([75dbe43](https://github.com/nikunjmavani/core-fe/commit/75dbe43d24c5138279044f05bd9a4b8f39c94993))
+
 ## [1.2.1](https://github.com/nikunjmavani/core-fe/compare/v1.2.0...v1.2.1) (2026-07-07)
 
 
