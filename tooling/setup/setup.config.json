@@ -13,7 +13,7 @@
       "name": "development",
       "label": "Development",
       "viteMode": "development",
-      "branch": "dev",
+      "branch": "main",
       "protected": true,
       "isDefault": true,
       "cookieBanner": {
