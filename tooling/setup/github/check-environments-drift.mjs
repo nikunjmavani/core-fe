@@ -1,9 +1,10 @@
 /**
  * Validate GitHub Environment protection drift (committed JSON ↔ GitHub UI).
  *
- * Usage:
- *   pnpm validate:github-environments
- *   SKIP_GITHUB_ENV=1 pnpm validate:github-environments
+ * Usage — folded into the aggregate `pnpm github:sync --check`; runnable directly
+ * for the CI protection-drift check in scheduled-release-guards.yml:
+ *   node tooling/setup/github/check-environments-drift.mjs
+ *   SKIP_GITHUB_ENV=1 node tooling/setup/github/check-environments-drift.mjs
  */
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -39,7 +40,9 @@ export function validateGitHubEnvironmentsDrift(options = {}) {
 
   console.log('Validating GitHub environment protection (config ↔ UI)');
   console.log(`  Repository: ${repository}`);
-  console.log(`  Environments: ${selectedConfigs.map((config) => config.name).join(', ')}`);
+  console.log(
+    `  Environments: ${selectedConfigs.map((config) => config.name).join(', ')}`,
+  );
   console.log('');
 
   /** @type {Array<{ environment: string, configPath: string, issues: ReturnType<typeof compareGitHubEnvironmentToConfig> }>} */
@@ -47,7 +50,10 @@ export function validateGitHubEnvironmentsDrift(options = {}) {
 
   for (const config of selectedConfigs) {
     const configPath = join(config.filePath);
-    const apiResponse = runGhJson(['api', `repos/${repository}/environments/${config.name}`]);
+    const apiResponse = runGhJson([
+      'api',
+      `repos/${repository}/environments/${config.name}`,
+    ]);
     const live = parseGitHubEnvironmentApiResponse(apiResponse);
     const issues = compareGitHubEnvironmentToConfig(config, live);
     results.push({ environment: config.name, configPath, issues });
@@ -71,16 +77,23 @@ function main() {
   const argumentsList = process.argv.slice(2);
 
   if (argumentsList.includes('--help') || argumentsList.includes('-h')) {
-    console.log('Usage: pnpm validate:github-environments [--check]');
+    console.log(
+      'Usage: node tooling/setup/github/check-environments-drift.mjs [--check]  (or `pnpm github:sync --check`)',
+    );
     console.log('');
-    console.log('  --check   Compare .github/environments/*.json vs GitHub API (default)');
+    console.log(
+      '  --check   Compare .github/environments/*.json vs GitHub API (default)',
+    );
     console.log('  SKIP_GITHUB_ENV=1   Skip API calls');
     process.exit(0);
   }
 
-  const skipGitHub = process.env.SKIP_GITHUB_ENV === '1' || process.env.SKIP_GITHUB_ENV === 'true';
+  const skipGitHub =
+    process.env.SKIP_GITHUB_ENV === '1' || process.env.SKIP_GITHUB_ENV === 'true';
   if (skipGitHub) {
-    console.log('SKIP_GITHUB_ENV set — skipping GitHub environment protection drift check.');
+    console.log(
+      'SKIP_GITHUB_ENV set — skipping GitHub environment protection drift check.',
+    );
     process.exit(0);
   }
 
@@ -88,7 +101,9 @@ function main() {
   const results = validateGitHubEnvironmentsDrift();
 
   if (!driftResultsHaveIssues(results)) {
-    console.log('GitHub environment protection: OK (committed config matches GitHub UI).');
+    console.log(
+      'GitHub environment protection: OK (committed config matches GitHub UI).',
+    );
     process.exit(0);
   }
 

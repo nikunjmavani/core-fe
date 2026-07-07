@@ -23,7 +23,7 @@ Related: [git-workflow.md](git-workflow.md) · [../deployment/cicd-and-netlify.m
 | Versions            | `dev` = `1.0.0-dev.9` (tags `v1.0.0-dev.1…9`) · `main` manifest seeded `1.0.0`, **no stable tag ever cut**                                                |
 | release-please      | `config.dev.json`/`manifest.dev.json` (prerelease channel) + `config.json`/`manifest.json` (stable) — selected by `CHANNEL_SUFFIX` in `post-merge-ci.yml` |
 | Changelogs          | `CHANGELOG-dev.md` + `CHANGELOG.md`                                                                                                                       |
-| Branch protection   | as code — `.github/rulesets/dev.json` + `main.json`, `pnpm gh:rulesets:sync`                                                                              |
+| Branch protection   | as code — `.github/rulesets/dev.json` + `main.json`, `pnpm github:sync`                                                                                   |
 | Environments        | as code — `.github/environments/development.json` (ungated) + `production.json` (required reviewer)                                                       |
 | Deploy              | ONE Netlify project: `main` → `--prod` (core-fe.netlify.app), `dev` → `--alias dev` (dev--core-fe.netlify.app)                                            |
 | Known gap           | `RELEASE_PLEASE_TOKEN` PAT not provisioned — tripwire warns on every run; release-PR auto-merge cannot re-trigger post-merge CI                           |
@@ -369,7 +369,7 @@ PostHog-side flag only **after** the code-removal PR ships.
 | `.github/release-please/config.dev.json` + `manifest.dev.json`   | DELETE                                                                                                     |
 | `CHANGELOG-dev.md`                                               | Fold history into `CHANGELOG.md` (as the `1.0.0` section), then delete                                     |
 | `package.json` `version`                                         | `1.0.0-dev.9` → `1.0.0`                                                                                    |
-| `.github/rulesets/dev.json`                                      | DELETE, then `pnpm gh:rulesets:sync`                                                                       |
+| `.github/rulesets/dev.json`                                      | DELETE, then `pnpm github:sync`                                                                            |
 | `.github/rulesets/main.json`                                     | Require quality-gate, squash-only, linear history                                                          |
 | `.github/environments/*.json`                                    | Unchanged shape; `production.json` keeps the reviewer — it now gates only real ships                       |
 | Repo settings                                                    | Default branch `dev` → `main` · provision `RELEASE_PLEASE_TOKEN` as **repo secret**                        |
@@ -497,7 +497,8 @@ statement.
 
 ### Phase 2 — Retire `dev` _(1 PR + settings)_
 
-- Rulesets: delete `dev.json`, tighten `main.json`, run `pnpm gh:rulesets:sync`.
+- Rulesets: delete `dev.json`, tighten `main.json`, run `pnpm github:sync --prune --yes`
+  (upserts `main`; `--prune` deletes the now-orphaned remote `dev` ruleset).
 - Repo settings: default branch → `main`.
 - Sweep branch filters: `pr-ci`, `pr-docs-lane`, `preview`, `codeql`, `cleanup-cache`,
   dependabot files.
@@ -778,9 +779,9 @@ Branch `chore/retire-dev-branch` → PR title
      `gh api -X PATCH repos/nikunjmavani/core-fe -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=PR_BODY`.
      Enable auto-delete of merged branches: `gh repo edit --delete-branch-on-merge`
      (§5.3 #6).
-  3. [agent] `pnpm gh:rulesets:sync` updates `main`; then delete the remote dev ruleset by
-     id — sync only upserts (§5.1): `gh api repos/nikunjmavani/core-fe/rulesets` → find the
-     dev ruleset id → `gh api -X DELETE repos/nikunjmavani/core-fe/rulesets/<id>`.
+  3. [agent] `pnpm github:sync --prune --yes` updates `main` AND deletes the orphaned
+     remote dev ruleset in one step — sync upserts committed rulesets, and `--prune`
+     removes any remote branch ruleset not in `.github/rulesets/*.json`.
   4. [agent] `git tag archive/dev origin/dev && git push origin archive/dev`.
   5. [agent] `git push origin --delete dev`.
   6. [agent] `gh workflow enable scheduled-release-guards.yml` (disabled in 12.1; the

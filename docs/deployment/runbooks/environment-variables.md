@@ -14,7 +14,7 @@ Related: [`docs/integrations/credentials-and-env.md`](../../integrations/credent
 | Auto-append missing keys to template  | `pnpm tool:sync-env-example --fix`             |
 | Pre-commit / CI parity gate           | `pnpm validate:env-example`                    |
 | Bootstrap local env files             | `pnpm github:sync`                             |
-| Verify GitHub Environment secrets     | `CONFIG=<env> pnpm validate:github-env`        |
+| Verify GitHub Environment secrets     | `CONFIG=<env> pnpm validate:deploy-env`        |
 | Add a new env var (skill)             | read `agent-os/skills/env-schema-add/SKILL.md` |
 
 ## 1. Mental model

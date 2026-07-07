@@ -17,15 +17,18 @@ name: Post-merge CI
 #     HEAD; a lone merge deploys by itself.
 #   • deploy-development is decoupled from release-please — the development alias tracks
 #     trunk HEAD even if release-please has a transient failure.
-# release-please and deploy-production are serialized and NEVER cancelled, so a
-# release is never lost to a following merge.
+# release-please is serialized and NEVER cancelled, so a release is never lost to
+# a following merge. The production deploy is a separate workflow, release-deploy.yml
+# (on `release: published`, pinned to the tag).
 #
 # Deploy split (deploy-per-purpose, not deploy-per-branch):
 #   deploy-development → src pushes to main → Netlify --alias development (ungated)
-#   deploy-production  → releases only → Netlify --prod (production reviewer gate)
+#   production deploy  → MOVED to release-deploy.yml (on `release: published`,
+#                        pinned to the tag) — this workflow no longer deploys prod.
 #
-# Rollback / redeploy an old tag: reusable-netlify-deploy.yml via workflow_dispatch
-# (target=production, ref=vX.Y.Z) — same production approval, no CI rerun.
+# Rollback: rollback-deploy.yml (instant restore of the previous deploy). Redeploy
+# an old tag: release-deploy.yml via workflow_dispatch{tag}. Both keep the
+# production reviewer gate.
 
 on:
   push:
@@ -95,7 +98,8 @@ jobs:
       cancel-in-progress: false
     # UNGATED — the PAT is a repository secret (RELEASE_PLEASE_TOKEN), so this job
     # no longer selects an environment to read it. Refreshing the standing Release
-    # PR is harmless; the ONE human gate lives at deploy-production, nowhere else.
+    # PR is harmless; the ONE human gate lives at the production deploy
+    # (release-deploy.yml), nowhere else.
     permissions:
       contents: write
       pull-requests: write
@@ -121,6 +125,31 @@ jobs:
         if: env.HAS_RELEASE_PLEASE_TOKEN != 'true'
         run: |
           echo "::warning title=RELEASE_PLEASE_TOKEN not provisioned::Release Please is running on the default GITHUB_TOKEN fallback. Release-PR auto-merge will NOT re-trigger post-merge CI, so no tag/GitHub Release is created on the merge commit. Add a PAT (repo + workflow scopes) as the RELEASE_PLEASE_TOKEN repository secret."
+
+      # When the PAT IS set, probe it actively: an expired/revoked PAT still lets
+      # release-please fall back to github.token and run green, but the merged
+      # Release PR then never re-triggers this workflow → no tag/Release/prod
+      # deploy. A 401 is deterministic (bad token), so fail loud on it; treat other
+      # non-200 (5xx/network) as transient and continue.
+      - name: Verify RELEASE_PLEASE_TOKEN is valid
+        if: env.HAS_RELEASE_PLEASE_TOKEN == 'true'
+        env:
+          GH_PAT: ${{ secrets.RELEASE_PLEASE_TOKEN }}
+        run: |
+          set -euo pipefail
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer ${GH_PAT}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/user || echo 000)
+          if [ "$code" = "401" ]; then
+            echo "::error title=RELEASE_PLEASE_TOKEN invalid::The PAT returned 401 (expired or revoked). A merged Release PR will not cut a tag/Release and production will not deploy. Rotate the RELEASE_PLEASE_TOKEN repository secret."
+            exit 1
+          fi
+          if [ "$code" != "200" ]; then
+            echo "::warning title=RELEASE_PLEASE_TOKEN probe inconclusive::GitHub API returned HTTP ${code} probing the PAT (transient?). Continuing."
+          else
+            echo "RELEASE_PLEASE_TOKEN valid."
+          fi
 
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         id: release
@@ -290,43 +319,83 @@ jobs:
     with:
       github_environment: development
 
-  deploy-production:
-    name: Deploy (production)
-    needs: [release-please, release-sbom]
-    # ONLY when release-please cut a release, only from the default branch. The
-    # production environment's required reviewer is the ONE human gate in the
-    # whole model. Concurrency (never-cancel prod) lives in the reusable.
-    if: |
-      always() &&
-      inputs.skip_deploy != true &&
-      github.ref_name == github.event.repository.default_branch &&
-      needs.release-please.outputs.releases_created == 'true' &&
-      (needs.release-sbom.result == 'success' || needs.release-sbom.result == 'skipped')
-    uses: ./.github/workflows/reusable-netlify-deploy.yml
-    secrets: inherit
-    with:
-      github_environment: production
-      upload-release-artifact: true
-
   notify-failure:
     name: Notify failure
-    needs: [release-please, deploy-development, deploy-production]
+    needs: [release-please, deploy-development]
     if: |
       always() &&
       (
         needs.release-please.result == 'failure' ||
-        needs.deploy-development.result == 'failure' ||
-        needs.deploy-production.result == 'failure'
+        needs.deploy-development.result == 'failure'
       )
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    # `issues: write` to open/update the tracked `ci-failure` issue; the
+    # workflow default is `contents: read`, so widen it here only.
+    permissions:
+      contents: read
+      issues: write
     steps:
       - name: Emit post-merge failure notice
         env:
           RELEASE_RESULT: ${{ needs.release-please.result }}
           DEV_DEPLOY_RESULT: ${{ needs.deploy-development.result }}
-          PROD_DEPLOY_RESULT: ${{ needs.deploy-production.result }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          echo "::error title=Post-merge CI failed::release=${RELEASE_RESULT} deploy-dev=${DEV_DEPLOY_RESULT} deploy-prod=${PROD_DEPLOY_RESULT} — ${WORKFLOW_URL}"
+          echo "::error title=Post-merge CI failed::release=${RELEASE_RESULT} deploy-dev=${DEV_DEPLOY_RESULT} — ${WORKFLOW_URL}"
+
+      # A run-scoped ::error annotation dies with the run. Persist a tracked issue
+      # (find-or-create by a hidden marker, labelled `ci-failure`) so a broken
+      # release/deploy stays visible until someone acts on it. Idempotent: reuses
+      # the open issue and appends a comment rather than spamming new ones.
+      - name: Open or update the ci-failure issue
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+        env:
+          RELEASE_RESULT: ${{ needs.release-please.result }}
+          DEV_DEPLOY_RESULT: ${{ needs.deploy-development.result }}
+        with:
+          script: |
+            const marker = '<!-- post-merge-ci-failure -->';
+            const { owner, repo } = context.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const body = [
+              marker,
+              `Post-merge CI failed on \`${context.sha}\`.`,
+              '',
+              '| Job | Result |',
+              '| --- | --- |',
+              `| release-please | ${process.env.RELEASE_RESULT} |`,
+              `| deploy-development | ${process.env.DEV_DEPLOY_RESULT} |`,
+              '',
+              `Run: ${runUrl}`,
+            ].join('\n');
+
+            const open = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              labels: 'ci-failure',
+              per_page: 100,
+            });
+            const existing = open.find((issue) => (issue.body || '').includes(marker));
+
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body,
+              });
+              core.notice(`Updated ci-failure issue #${existing.number}`);
+            } else {
+              // `labels` auto-creates the `ci-failure` label if it does not exist.
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title: 'Post-merge CI failing',
+                labels: ['ci-failure'],
+                body,
+              });
+              core.notice(`Opened ci-failure issue #${created.data.number}`);
+            }

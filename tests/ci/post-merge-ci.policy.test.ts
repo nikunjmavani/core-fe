@@ -69,6 +69,24 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(workflow).toContain('RELEASE_PLEASE_TOKEN not provisioned');
   });
 
+  it('actively probes the PAT and fails loud on a 401 (expired/revoked, not just unset)', () => {
+    // A silently-degraded PAT still runs green via the github.token fallback but
+    // stops release-PR merges from re-triggering the workflow. Fail the run on a
+    // deterministic 401 so it surfaces on the merge, not at release time.
+    expect(workflow).toContain('Verify RELEASE_PLEASE_TOKEN is valid');
+    expect(workflow).toContain('The PAT returned 401');
+  });
+
+  it('persists a tracked ci-failure issue on post-merge failure (not just a run ::error)', () => {
+    const notifyBlock = jobBlock(workflow, 'notify-failure');
+    expect(notifyBlock).not.toBe('');
+    // widened perms + github-script upsert of a labelled, marker-deduped issue.
+    expect(notifyBlock).toContain('issues: write');
+    expect(notifyBlock).toContain('actions/github-script@');
+    expect(notifyBlock).toContain("labels: ['ci-failure']");
+    expect(notifyBlock).toContain('post-merge-ci-failure');
+  });
+
   it('does NOT auto-merge release PRs — release on cadence (manual merge is the ship button)', () => {
     // release-please keeps the standing Release PR fresh; a human merges it to ship.
     expect(workflow).not.toMatch(/gh pr merge[^\n]*--auto/);
@@ -105,17 +123,11 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(devBlock).not.toContain('cancel-in-progress');
   });
 
-  it('deploy-production is release-gated and default-branch only', () => {
-    const prodBlock = jobBlock(workflow, 'deploy-production');
-    expect(prodBlock).not.toBe('');
-    expect(prodBlock).toContain('github_environment: production');
-    expect(prodBlock).toContain(
-      "needs.release-please.outputs.releases_created == 'true'",
-    );
-    expect(prodBlock).toContain(
-      'github.ref_name == github.event.repository.default_branch',
-    );
-    expect(prodBlock).not.toContain('cancel-in-progress');
+  it('no longer deploys production — that moved to release-deploy.yml', () => {
+    // Prod deploy is decoupled: release-deploy.yml on `release: published`,
+    // pinned to the tag. post-merge must NOT reference the production environment.
+    expect(jobBlock(workflow, 'deploy-production')).toBe('');
+    expect(workflow).not.toContain('github_environment: production');
   });
 
   it('the reusable deploy owns concurrency: never-cancel production, batch everything else', () => {

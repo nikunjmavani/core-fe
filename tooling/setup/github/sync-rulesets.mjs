@@ -6,10 +6,14 @@
  *   - If a ruleset with the same `name` does not exist on the repo, it is POSTed.
  *   - If one with the same `name` already exists, it is PUT (full replace).
  *
+ * Single trunk: the only committed ruleset targets `main` (`.github/rulesets/main.json`).
+ *
  * Modes:
  *   - default      : create-or-update each committed ruleset on the remote.
  *   - --check      : compare local files vs remote, report drift, exit non-zero on drift.
  *   - --dry-run    : show what would be created or updated without calling write APIs.
+ *   - --prune      : flag branch rulesets on the remote that are NOT in config
+ *                    (e.g. a leftover `dev` ruleset); DELETE them when combined with --yes.
  *
  * Required status checks on protected branches:
  *   - "Quality gate" (PR CI aggregate)
@@ -23,14 +27,17 @@
  * "Upgrade to GitHub Pro or make this repository public to enable this feature."
  * The script surfaces that message verbatim and exits non-zero.
  *
- * Usage:
- *   pnpm gh:rulesets:sync
- *   pnpm gh:rulesets:sync:dry-run
- *   pnpm gh:rulesets:check
+ * Usage — normally invoked via `pnpm github:sync`; runnable directly for the CI
+ * drift check in scheduled-release-guards.yml:
+ *   node tooling/setup/github/sync-rulesets.mjs             # create-or-update
+ *   node tooling/setup/github/sync-rulesets.mjs --check     # drift, exit non-zero
+ *   node tooling/setup/github/sync-rulesets.mjs --dry-run   # preview
+ *   node tooling/setup/github/sync-rulesets.mjs --prune --yes  # delete stale rulesets
  */
-import { execSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { GitHubApiError, getRepositoryIdentifier, runGhJson } from './github-shared.mjs';
 
@@ -61,6 +68,34 @@ function listRemoteRulesets(repository) {
   return runGhJson(['api', `repos/${repository}/rulesets`, '--paginate']);
 }
 
+/**
+ * Remote branch-target rulesets whose name is not among the committed files —
+ * i.e. rulesets for branches no longer in config (e.g. a leftover `dev` ruleset
+ * after moving to a single `main` trunk). Tag/push rulesets are never touched.
+ * @param {Array<{ id: number, name: string, target?: string }>} remote
+ * @param {Set<string>} localNames
+ */
+export function findStaleBranchRulesets(remote, localNames) {
+  return remote.filter(
+    (entry) => entry.target === 'branch' && !localNames.has(entry.name),
+  );
+}
+
+/**
+ * DELETE a remote ruleset. Returns 204 No Content (empty body), so it cannot use
+ * runGhJson (which JSON.parses stdout) — call gh directly and let a non-zero exit
+ * throw.
+ * @param {string} repository
+ * @param {number} id
+ */
+function deleteRemoteRuleset(repository, id) {
+  execFileSync(
+    'gh',
+    ['api', '--method', 'DELETE', `repos/${repository}/rulesets/${id}`],
+    { stdio: ['pipe', 'pipe', 'pipe'], timeout: 30_000 },
+  );
+}
+
 function explainPlanBlocker(message) {
   if (!/Upgrade to GitHub Pro/i.test(message)) return message;
   return [
@@ -72,9 +107,21 @@ function explainPlanBlocker(message) {
 }
 
 /**
- * @param {{ repository: string, locals: ReturnType<typeof loadLocalRulesets>, mode: 'sync' | 'check' | 'dry-run' }} args
+ * @param {{
+ *   repository: string,
+ *   locals: ReturnType<typeof loadLocalRulesets>,
+ *   mode: 'sync' | 'check' | 'dry-run',
+ *   prune?: boolean,
+ *   skipConfirmation?: boolean,
+ * }} args
  */
-function syncRulesets({ repository, locals, mode }) {
+function syncRulesets({
+  repository,
+  locals,
+  mode,
+  prune = false,
+  skipConfirmation = false,
+}) {
   let remote;
   try {
     remote = listRemoteRulesets(repository);
@@ -156,6 +203,53 @@ function syncRulesets({ repository, locals, mode }) {
     }
   }
 
+  if (prune) {
+    const localNames = new Set(locals.map((file) => file.name));
+    const stale = findStaleBranchRulesets(remote, localNames);
+
+    if (stale.length === 0) {
+      console.log(
+        '  Prune: no stale branch rulesets — every remote branch ruleset is in config.',
+      );
+    } else if (mode === 'check') {
+      for (const entry of stale) {
+        console.error(
+          `  ${entry.name} (id ${entry.id}): extra branch ruleset not in config`,
+        );
+      }
+      drift += stale.length;
+    } else if (mode === 'dry-run') {
+      for (const entry of stale) {
+        console.log(
+          `  ${entry.name} (id ${entry.id}): would DELETE (branch not in config)`,
+        );
+      }
+    } else if (!skipConfirmation) {
+      console.warn(
+        '  Prune: stale branch rulesets not in config (flagged, not removed):',
+      );
+      for (const entry of stale) {
+        console.warn(`    - ${entry.name} (id ${entry.id})`);
+      }
+      console.warn('  Re-run `pnpm github:sync --prune --yes` to DELETE them.');
+    } else {
+      for (const entry of stale) {
+        try {
+          deleteRemoteRuleset(repository, entry.id);
+          console.log(`  ${entry.name} (id ${entry.id}): pruned (deleted)`);
+        } catch (deleteError) {
+          failures += 1;
+          const apiError =
+            deleteError instanceof GitHubApiError
+              ? deleteError
+              : new GitHubApiError(null, String(deleteError));
+          console.error(`  ${entry.name} (id ${entry.id}): prune FAILED`);
+          console.error(explainPlanBlocker(apiError.message));
+        }
+      }
+    }
+  }
+
   return { failures, drift, listError: undefined };
 }
 
@@ -163,28 +257,53 @@ function parseArguments() {
   const argumentsList = process.argv.slice(2);
 
   if (argumentsList.includes('--help') || argumentsList.includes('-h')) {
-    console.log('Usage: pnpm gh:rulesets:sync [--check | --dry-run]');
+    console.log(
+      'Usage: node tooling/setup/github/sync-rulesets.mjs [--check | --dry-run] [--prune] [--yes]',
+    );
     console.log('');
+    console.log(
+      '  Normally invoked via `pnpm github:sync`; runnable directly for CI drift checks.',
+    );
     console.log(
       '  (default)   Create-or-update each .github/rulesets/*.json on the repo',
     );
     console.log('  --check     Report drift between local files and remote rulesets');
-    console.log('  --dry-run   Show what would be created or updated without writing');
+    console.log(
+      '  --dry-run   Show what would be created/updated/deleted without writing',
+    );
+    console.log(
+      '  --prune     Flag branch rulesets not in config (DELETE them with --yes)',
+    );
+    console.log(
+      '  --yes, -y   With --prune in sync mode, actually delete the stale rulesets',
+    );
     process.exit(0);
   }
 
-  if (argumentsList.includes('--check')) return { mode: /** @type {const} */ ('check') };
-  if (argumentsList.includes('--dry-run'))
-    return { mode: /** @type {const} */ ('dry-run') };
-  if (argumentsList.length === 0) return { mode: /** @type {const} */ ('sync') };
+  const allowed = new Set(['--check', '--dry-run', '--prune', '--yes', '-y']);
+  for (const argument of argumentsList) {
+    if (!allowed.has(argument)) {
+      throw new Error(`Unknown argument "${argument}". Use --help for options.`);
+    }
+  }
+  if (argumentsList.includes('--check') && argumentsList.includes('--dry-run')) {
+    throw new Error('Use either --check or --dry-run, not both.');
+  }
 
-  throw new Error(
-    `Unknown argument(s): ${argumentsList.join(' ')}. Use --help for options.`,
-  );
+  const mode = argumentsList.includes('--check')
+    ? /** @type {const} */ ('check')
+    : argumentsList.includes('--dry-run')
+      ? /** @type {const} */ ('dry-run')
+      : /** @type {const} */ ('sync');
+  const prune = argumentsList.includes('--prune');
+  const skipConfirmation =
+    argumentsList.includes('--yes') || argumentsList.includes('-y');
+
+  return { mode, prune, skipConfirmation };
 }
 
 function main() {
-  const { mode } = parseArguments();
+  const { mode, prune, skipConfirmation } = parseArguments();
 
   if (mode !== 'dry-run') {
     try {
@@ -201,22 +320,20 @@ function main() {
   console.log(`Repository:  ${repository}`);
   console.log(`Source dir:  ${RULESETS_DIRECTORY}`);
   console.log(`Local files: ${locals.map((file) => file.fileName).join(', ')}`);
-  console.log(`Mode:        ${mode}`);
+  console.log(`Mode:        ${mode}${prune ? ' (+prune)' : ''}`);
   console.log('');
 
-  const result = syncRulesets({ repository, locals, mode });
+  const result = syncRulesets({ repository, locals, mode, prune, skipConfirmation });
   console.log('');
 
   if (mode === 'check') {
     if (result.drift === 0 && !result.listError) {
-      console.log('Rulesets in sync: every local file is present on remote.');
+      console.log('Rulesets in sync: every local file is present on remote (no extras).');
       return;
     }
     if (!result.listError) {
-      console.error(
-        `Drift detected: ${result.drift} local ruleset(s) missing on remote.`,
-      );
-      console.error('Run `pnpm gh:rulesets:sync` to apply them.');
+      console.error(`Drift detected: ${result.drift} ruleset(s) out of sync.`);
+      console.error('Run `pnpm github:sync` to apply them.');
     }
     process.exit(1);
   }
@@ -234,4 +351,9 @@ function main() {
   console.log('Sync complete.');
 }
 
-main();
+// Only run when executed directly (node …/sync-rulesets.mjs). Importing the
+// module (e.g. from tests or sync.mjs) must NOT trigger a live gh sync.
+const isMainModule = process.argv[1] === fileURLToPath(import.meta.url);
+if (isMainModule) {
+  main();
+}

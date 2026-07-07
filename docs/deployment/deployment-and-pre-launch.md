@@ -60,17 +60,20 @@ Single trunk (`main`) drives both GitHub environments by **purpose**, not by bra
 
 - **Shipping to production (a release)**
   - Merge the standing release-please **Release PR** by hand (squash) — this is the ship button.
-  - It creates a **tagged GitHub Release**, bumps the version, updates `CHANGELOG.md`, attaches the SBOM, and runs the **production** deploy (Netlify `--prod`, `core-fe.netlify.app`) gated by one reviewer approval.
+  - It creates a **tagged GitHub Release**, bumps the version, updates `CHANGELOG.md`, and attaches the SBOM. Publishing the release then triggers **`release-deploy.yml`**, which deploys that **tag** to production (Netlify `--prod`, `core-fe.netlify.app`) gated by one reviewer approval.
 
 ### Hotfix flow (patch an already-released version)
 
 1. **Create a release branch** from the tag you need to patch, e.g. `release/1.4` from `v1.4.0`.
 2. **Open a PR into that `release/<major>.<minor>` branch** using **conventional commits** (e.g. `fix: handle null user on login`) so `release-please` can infer a patch bump. PR CI and Preview run on the PR.
-3. **Cut the hotfix release** by merging the release-please Release PR on that branch — same tag → SBOM → gated production deploy path as a normal release.
+3. **Cut the hotfix release** by merging the release-please Release PR on that branch — same tag → GitHub Release → `release-deploy.yml` gated production deploy, as a normal release.
 
 ### Rollback
 
-Redeploy an older tag via the reusable Netlify deploy workflow (`reusable-netlify-deploy.yml`) `workflow_dispatch`.
+Two paths, both behind the `production` reviewer:
+
+- **Instant** (no rebuild): run **`rollback-deploy.yml`** (`workflow_dispatch`) — restores the previous published Netlify deploy, or an explicit `deploy_id`.
+- **Rebuild a tag**: run **`release-deploy.yml`** (`workflow_dispatch`) with `tag=vX.Y.Z`.
 
 ## Production build
 
