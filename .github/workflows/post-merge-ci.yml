@@ -1,8 +1,8 @@
 name: Post-merge CI
 
-# Trunk post-merge pipeline — runs on every push to `main` (and the `release/**`
-# hotfix lines). Single-channel: one release-please config, one manifest, one
-# changelog.
+# Trunk post-merge pipeline — runs on every push to `main` (the single trunk;
+# hotfixes are fix-forward on `main`, no release branches). Single-channel: one
+# release-please config, one manifest, one changelog.
 #
 # NO redundant testing: pr-ci.yml is the merge gate and already ran lint, types,
 # unit + security tests, build, and the security scans on this exact SHA behind
@@ -32,7 +32,7 @@ name: Post-merge CI
 
 on:
   push:
-    branches: [main, 'release/**']
+    branches: [main]
   workflow_dispatch:
     inputs:
       skip_deploy:

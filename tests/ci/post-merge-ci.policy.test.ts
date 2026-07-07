@@ -26,11 +26,13 @@ function jobBlock(workflow: string, name: string): string {
 describe('post-merge CI policy (single trunk)', () => {
   const workflow = readFileSync(POST_MERGE_WORKFLOW, 'utf8');
 
-  it('runs on pushes to main + release/** (plus manual dispatch), never dev', () => {
+  it('runs on pushes to the single trunk (main only, plus manual dispatch)', () => {
     expect(workflow).toContain('push:');
-    expect(workflow).toContain("branches: [main, 'release/**']");
+    expect(workflow).toContain('branches: [main]');
     expect(workflow).toContain('workflow_dispatch:');
     expect(workflow).not.toContain('pull_request:');
+    // fix-forward hotfixes on main — no release/** lane, no dev.
+    expect(workflow).not.toContain("'release/**'");
     expect(workflow).not.toMatch(/branches:\s*\[dev,\s*main\]/);
   });
 

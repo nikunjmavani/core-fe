@@ -23,7 +23,7 @@ The user normally gives a direct task, not the whole form. Build the document fo
 - **UI / Behavior** — shadcn components (see `agent-os/skills/shadcn/SKILL.md`) · forms (react-hook-form + Zod) · empty/loading/error states · `data-testid` naming
 - **Tests** — unit/component (colocated `*.test.tsx`) · page integration (`__tests__/integration/`) · E2E (`tests/e2e/*.e2e.test.ts`) when user-facing flow warrants it
 - **Non-functionals** — a11y (vitest-axe) · bundle/preload (no static imports of heavy deferred modules) · semantic tokens only
-- **Delivery** — feature branch off `main` (hotfix → `release/<major>.<minor>`) · PR after build (no · yes → `/ship`)
+- **Delivery** — feature branch off `main` (hotfix → fix-forward on `main`) · PR after build (no · yes → `/ship`)
 
 Anything not ★ you may infer and tag `[assumed]`. This catalog is curatable — trim or extend it freely.
 

@@ -49,7 +49,7 @@ Single trunk (`main`) drives both GitHub environments by **purpose**, not by bra
 
 - **Feature branches**
   - Branch from `main`, open a PR back into `main`, squash-merge (auto-deletes the branch on merge).
-  - The **PR CI workflow** (`.github/workflows/pr-ci.yml`) runs on PRs to `main` / `release/**` (lint, type-check, tests, build, security).
+  - The **PR CI workflow** (`.github/workflows/pr-ci.yml`) runs on PRs to `main` (lint, type-check, tests, build, security).
   - The **Preview workflow** (`.github/workflows/preview.yml`) uploads a `dist/` artifact for manual testing.
 
 - **After merge to `main`**
@@ -64,9 +64,12 @@ Single trunk (`main`) drives both GitHub environments by **purpose**, not by bra
 
 ### Hotfix flow (patch an already-released version)
 
-1. **Create a release branch** from the tag you need to patch, e.g. `release/1.4` from `v1.4.0`.
-2. **Open a PR into that `release/<major>.<minor>` branch** using **conventional commits** (e.g. `fix: handle null user on login`) so `release-please` can infer a patch bump. PR CI and Preview run on the PR.
-3. **Cut the hotfix release** by merging the release-please Release PR on that branch — same tag → GitHub Release → `release-deploy.yml` gated production deploy, as a normal release.
+Fix-forward on the trunk — no release branches:
+
+1. **Open a `fix:` PR to `main`** using conventional commits (e.g. `fix: handle null user on login`). PR CI + Preview run; squash-merge.
+2. **Merge the standing release-please Release PR** — the `fix:` bumps a patch; publishing it triggers `release-deploy.yml` → gated production deploy, exactly like any release.
+
+Because `main` deploys continuously, ship or flag any in-progress work first so a hotfix release doesn't carry it.
 
 ### Rollback
 
@@ -241,7 +244,7 @@ Select your team and the site. After that, `deploy:netlify` / `deploy:netlify:pr
 
 ## Release workflow (CI)
 
-On **push to `main`** (and `release/**` for hotfixes), **Post-merge CI** (`.github/workflows/post-merge-ci.yml`):
+On **push to `main`**, **Post-merge CI** (`.github/workflows/post-merge-ci.yml`):
 
 1. Runs single-channel **release-please** (`release-please` job):
    - `.github/release-please/config.json` + `manifest.json` → stable releases (`CHANGELOG.md`).

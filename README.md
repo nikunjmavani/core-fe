@@ -140,8 +140,8 @@ pages/<name>/
 Trunk-based development on a single branch:
 
 - **One long-lived branch:** `main` (default + trunk). Every push to `main` deploys the `development` alias; a release deploys `production`. Unfinished work ships behind a feature flag, not a branch.
-- **Short-lived branches:** `feat/...`, `fix/...`, `refactor/...`, `docs/...`, `test/...`, `chore/...` (created from `main`). Hotfix an old version on a `release/<major>.<minor>` line cut from the tag.
-- **PR flow:** feat/fix → `main` (squash-merge, branch auto-deletes). CI runs on PRs to `main` (and `release/**`). Ship by merging the standing release-please Release PR.
+- **Short-lived branches:** `feat/...`, `fix/...`, `refactor/...`, `docs/...`, `test/...`, `chore/...` (created from `main`). Hotfixes are fix-forward on `main`.
+- **PR flow:** feat/fix → `main` (squash-merge, branch auto-deletes). CI runs on PRs to `main`. Ship by merging the standing release-please Release PR.
 
 See **[docs/process/trunk-based-workflow.md](docs/process/trunk-based-workflow.md)** for the full workflow: branch naming, step-by-step PR flow, conventional commits, and hotfix process.
 

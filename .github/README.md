@@ -8,9 +8,9 @@ Workflow _file names_ describe _what_ runs; the YAML `name:` field is what appea
 
 | What it does                                              | File                                                 | When it runs                          |
 | --------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------- |
-| PR merge gate (lint, typecheck, unit, build)              | [pr-ci.yml](workflows/pr-ci.yml)                     | `pull_request` → `main`, `release/**` |
+| PR merge gate (lint, typecheck, unit, build)              | [pr-ci.yml](workflows/pr-ci.yml)                     | `pull_request` → `main`               |
 | PR title, labels, `.env` guard                            | [pr-governance.yml](workflows/pr-governance.yml)     | Every PR event                        |
-| Post-merge pipeline (release-please + development deploy) | [post-merge-ci.yml](workflows/post-merge-ci.yml)     | push to `main` / `release/**`         |
+| Post-merge pipeline (release-please + development deploy) | [post-merge-ci.yml](workflows/post-merge-ci.yml)     | push to `main`                        |
 | Production deploy (tag-pinned, reviewer-gated)            | [release-deploy.yml](workflows/release-deploy.yml)   | `release: published` + manual `{tag}` |
 | Instant production rollback (restore, no rebuild)         | [rollback-deploy.yml](workflows/rollback-deploy.yml) | Manual `workflow_dispatch`            |
 | Weekly Lighthouse budgets                                 | [lighthouse.yml](workflows/lighthouse.yml)           | Wed 03:00 UTC                         |
