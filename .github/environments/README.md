@@ -28,6 +28,30 @@ These must be present or post-merge Netlify deploy **fails** (no silent skip):
 
 Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POLICY_URL`.
 
+## Secret placement (repository vs environment)
+
+A secret's **scope must match how the job that reads it is triggered**:
+
+| A secret read by a job that…   | Scope           | Managed by                                                |
+| ------------------------------ | --------------- | --------------------------------------------------------- |
+| declares `environment: <name>` | **Environment** | `pnpm github:sync` (from `.env.<environment>`)            |
+| declares **no** `environment:` | **Repository**  | **manual** — `gh secret set <NAME> --repo …` (no `--env`) |
+
+Deploy/build values (`NETLIFY_*`, `VITE_*`) are read by the environment-gated
+deploy job → **environment secrets** (github:sync uploads them). CI/automation
+tokens read by **ungated** jobs → **repository secrets** (set by hand).
+
+Today the only repository secret is **`RELEASE_PLEASE_TOKEN`** — read ungated by
+`release-please`, the `pat-canary`, and `dependabot-auto-merge`:
+
+```bash
+gh secret set RELEASE_PLEASE_TOKEN --repo nikunjmavani/core-fe   # NO --env
+```
+
+Use a fine-grained PAT scoped to this repo (Contents + Pull requests + Workflows,
+read/write). `github:sync` does **not** manage repository secrets — add any future
+ones (Slack webhook, Codecov/Stryker/npm token, …) the same manual way.
+
 ## Commands
 
 | Command                           | Purpose                                                                     |
