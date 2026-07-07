@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0-dev.9](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.8...v1.0.0-dev.9) (2026-07-07)
+
+
+### Fixed
+
+* **onboarding:** land directly on dashboard + collect first/last name ([#61](https://github.com/nikunjmavani/core-fe/issues/61)) ([82829cc](https://github.com/nikunjmavani/core-fe/commit/82829cc0dfb131962c3d4f1b21e0a6ade00621fd))
+
 ## [1.0.0-dev.8](https://github.com/nikunjmavani/core-fe/compare/v1.0.0-dev.7...v1.0.0-dev.8) (2026-07-06)
 
 
