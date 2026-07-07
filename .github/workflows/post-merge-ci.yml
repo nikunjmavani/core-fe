@@ -278,17 +278,13 @@ jobs:
     name: Deploy (development alias)
     needs: [changes]
     # Decoupled from release-please: the development alias tracks trunk HEAD regardless of
-    # release health. Src pushes to main only (docs/chore-only merges skip the
-    # rebuild). Batched — see the concurrency group.
+    # release health. Src pushes to the default branch only (docs/chore-only merges
+    # skip the rebuild). Concurrency (batch non-prod) lives in the reusable.
     if: |
       always() &&
       inputs.skip_deploy != true &&
       github.ref_name == github.event.repository.default_branch &&
       needs.changes.outputs.src-code == 'true'
-    # Batch: a burst of merges collapses to ONE deploy of the final HEAD.
-    concurrency:
-      group: post-merge-deploy-development
-      cancel-in-progress: true
     uses: ./.github/workflows/reusable-netlify-deploy.yml
     secrets: inherit
     with:
@@ -297,18 +293,15 @@ jobs:
   deploy-production:
     name: Deploy (production)
     needs: [release-please, release-sbom]
-    # ONLY when release-please cut a release, only from main. The production
-    # environment's required reviewer is the ONE human gate in the whole model.
-    # Never cancelled — a prod deploy must complete.
+    # ONLY when release-please cut a release, only from the default branch. The
+    # production environment's required reviewer is the ONE human gate in the
+    # whole model. Concurrency (never-cancel prod) lives in the reusable.
     if: |
       always() &&
       inputs.skip_deploy != true &&
       github.ref_name == github.event.repository.default_branch &&
       needs.release-please.outputs.releases_created == 'true' &&
       (needs.release-sbom.result == 'success' || needs.release-sbom.result == 'skipped')
-    concurrency:
-      group: post-merge-deploy-production
-      cancel-in-progress: false
     uses: ./.github/workflows/reusable-netlify-deploy.yml
     secrets: inherit
     with:
