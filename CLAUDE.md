@@ -49,7 +49,7 @@ it locally via `pnpm run validate:lockfile` (see `agent-os/skills/platform-hygie
 - **Index by use case:** docs/README.md
 - **Local setup:** docs/getting-started/setup.md
 - **Requirement intake (format, types, skills, rules):** docs/getting-started/requirement-intake.md — template: docs/getting-started/requirement-format.md, example: docs/getting-started/requirements/sample-requirement.md
-- **Deploy / runbook:** docs/deployment/runbook-dev-to-production.md, docs/deployment/cicd-and-netlify.md, docs/deployment/deployment-and-pre-launch.md
+- **Deploy / CI-CD:** docs/deployment/cicd-and-netlify.md, docs/deployment/deployment-and-pre-launch.md; **release + versioning:** docs/process/release-versioning.md
 - **Path to production (gate):** docs/deployment/path-to-production.md
 - **Netlify CLI setup:** docs/deployment/netlify-cli-setup.md
 - **Credentials / env:** docs/integrations/credentials-and-env.md; **env runbook:** docs/deployment/runbooks/environment-variables.md; Sentry: docs/integrations/sentry-sourcemaps.md
