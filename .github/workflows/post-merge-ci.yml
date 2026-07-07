@@ -186,60 +186,10 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Enable auto-merge on release PRs
-        # Use the PAT (not github.token) so the eventual auto-merge of the release
-        # PR is attributed to the PAT and its push to main RE-TRIGGERS this
-        # workflow. A merge performed with the default GITHUB_TOKEN starts no
-        # workflow run, so the tag / GitHub Release would never be created.
-        # Squash-only: the main ruleset allows only `squash`, so auto-merge (and
-        # manual merges of the release PR) use --squash. release-please tracks the
-        # release via the manifest + squash commit.
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
-          RELEASE_PR: ${{ steps.release.outputs.pr }}
-          RELEASE_PRS: ${{ steps.release.outputs.prs }}
-          TARGET_BRANCH: ${{ github.ref_name }}
-          GH_REPOSITORY: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-
-          pr_numbers_from_outputs="$(
-            jq -rn --arg pr "${RELEASE_PR}" --arg prs "${RELEASE_PRS}" '
-              def parse_object($raw):
-                try ($raw | fromjson) catch null;
-              def parse_array($raw):
-                try ($raw | fromjson) catch [];
-              (
-                [parse_object($pr) | .number // empty] +
-                [parse_array($prs)[] | .number // empty]
-              )
-              | map(select(. != null))
-              | unique
-              | .[]
-            '
-          )"
-
-          pr_numbers_from_api="$(
-            gh pr list \
-              --repo "${GH_REPOSITORY}" \
-              --state open \
-              --base "${TARGET_BRANCH}" \
-              --search 'head:release-please--branches--' \
-              --json number \
-              --jq '.[].number'
-          )"
-
-          pr_numbers="$(printf '%s\n%s\n' "${pr_numbers_from_outputs}" "${pr_numbers_from_api}" | awk 'NF' | sort -u)"
-
-          if [ -z "${pr_numbers}" ]; then
-            echo "No open release PRs to auto-merge."
-            exit 0
-          fi
-
-          for pr_number in ${pr_numbers}; do
-            echo "Enabling auto-merge for release PR #${pr_number}"
-            gh pr merge "${pr_number}" --auto --squash --delete-branch=false
-          done
+      # NO auto-merge of the Release PR — release on cadence. release-please keeps
+      # the standing "chore: release X.Y.Z" PR up to date; MERGING it (squash, by
+      # hand) is the ship button. That merge re-triggers this workflow, which cuts
+      # the tag + GitHub Release + SBOM and gates the production deploy.
 
   sbom:
     name: SBOM
