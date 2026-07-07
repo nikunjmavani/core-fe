@@ -34,6 +34,6 @@ One config, one manifest, one changelog — all on `main`:
    post-merge CI, which cuts the tag `vX.Y.Z` + GitHub Release, attaches the SBOM,
    and gates the **production** Netlify deploy behind the one reviewer approval.
 3. Meanwhile every `main` push already deploys the **development alias**
-   (`dev--core-fe.netlify.app`) — no release needed.
+   (`development--core-fe.netlify.app`) — no release needed.
 
 `chore`/`docs`/`ci`/etc. commits do not bump the version, so they never open a release.

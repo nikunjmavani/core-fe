@@ -267,7 +267,7 @@ Single trunk (`main`) drives both GitHub Environments by **purpose**, not by bra
 
 | Trigger                        | GitHub Environment | Release channel                  | Netlify deploy                                      |
 | ------------------------------ | ------------------ | -------------------------------- | --------------------------------------------------- |
-| every push to `main`           | `development`      | —                                | Alias deploy: `dev--core-fe.netlify.app`            |
+| every push to `main`           | `development`      | —                                | Alias deploy: `development--core-fe.netlify.app`    |
 | a release (`vX.Y.Z`) on `main` | `production`       | Stable releases (`CHANGELOG.md`) | Production deploy (`--prod`): `core-fe.netlify.app` |
 
 **One Netlify project (`core-fe`) serves both** on the same site via deploy contexts. Both GitHub Environments carry the same `NETLIFY_SITE_ID`; only `VITE_API_BASE_URL` differs.

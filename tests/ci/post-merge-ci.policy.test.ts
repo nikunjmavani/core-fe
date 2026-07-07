@@ -91,15 +91,17 @@ describe('post-merge CI policy (single trunk)', () => {
   it('deploy-development is decoupled from release-please and batched (cancel-in-progress)', () => {
     const devBlock = jobBlock(workflow, 'deploy-development');
     expect(devBlock).not.toBe('');
-    // decoupled: depends on `changes`, NOT release-please (dev alias tracks HEAD
-    // even on a release failure).
+    // decoupled: depends on `changes`, NOT release-please (development alias tracks
+    // HEAD even on a release failure).
     expect(devBlock).toContain('needs: [changes]');
     expect(devBlock).not.toContain('needs.release-please');
     expect(devBlock).not.toMatch(/needs:\s*\[[^\]]*release-please/);
     // batched: rapid merges collapse to one deploy.
     expect(devBlock).toContain('cancel-in-progress: true');
     expect(devBlock).toContain('github_environment: development');
-    expect(devBlock).toContain("github.ref_name == 'main'");
+    expect(devBlock).toContain(
+      'github.ref_name == github.event.repository.default_branch',
+    );
     expect(devBlock).toContain("needs.changes.outputs.src-code == 'true'");
   });
 
@@ -110,7 +112,9 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(prodBlock).toContain(
       "needs.release-please.outputs.releases_created == 'true'",
     );
-    expect(prodBlock).toContain("github.ref_name == 'main'");
+    expect(prodBlock).toContain(
+      'github.ref_name == github.event.repository.default_branch',
+    );
     expect(prodBlock).toContain('cancel-in-progress: false');
   });
 

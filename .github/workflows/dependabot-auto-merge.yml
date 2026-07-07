@@ -55,5 +55,5 @@ jobs:
           # PAT (falling back to github.token) so the eventual merge is
           # PAT-attributed and its push to main TRIGGERS post-merge CI. A
           # GITHUB_TOKEN merge produces no post-merge run — no SBOM, no release,
-          # no dev-alias deploy for that commit. Same fix as the release PRs.
+          # no development-alias deploy for that commit. Same fix as the release PRs.
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
