@@ -69,11 +69,11 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(workflow).toContain('RELEASE_PLEASE_TOKEN not provisioned');
   });
 
-  it('auto-merges release PRs with a merge commit, never squash (PR C flips this with the ruleset)', () => {
+  it('auto-merges release PRs with squash (single trunk — the main ruleset is squash-only)', () => {
     expect(workflow).toMatch(
-      /gh pr merge "\$\{pr_number\}" --auto --merge --delete-branch=false/,
+      /gh pr merge "\$\{pr_number\}" --auto --squash --delete-branch=false/,
     );
-    expect(workflow).not.toMatch(/gh pr merge "\$\{pr_number\}" --auto --squash/);
+    expect(workflow).not.toMatch(/gh pr merge "\$\{pr_number\}" --auto --merge\b/);
   });
 
   it('generates the SBOM ONLY when a release is cut (not on every merge)', () => {
