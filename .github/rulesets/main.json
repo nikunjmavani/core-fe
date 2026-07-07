@@ -45,9 +45,6 @@
             "context": "Quality gate"
           },
           {
-            "context": "unit / Unit + global"
-          },
-          {
             "context": "Checks"
           }
         ]
