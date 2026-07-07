@@ -64,7 +64,7 @@ When path filters detect **docs-only markdown** (`docs-only-md`), most PR CI job
 ## `Protect main` ruleset (solo phase)
 
 Committed ruleset: [main.json](../../.github/rulesets/main.json). Sync to GitHub with
-`pnpm gh:rulesets:sync`.
+`pnpm github:sync`.
 
 | Rule                            | `main`                                                                                           |
 | ------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -98,8 +98,8 @@ deploy (the one human approval in the model). `development` is ungated.
 
 Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POLICY_URL`.
 
-| Command                             | Purpose                                                    |
-| ----------------------------------- | ---------------------------------------------------------- |
-| `pnpm github:sync`                  | Unified IaC: rulesets + env shells + secrets from `.env.*` |
-| `pnpm validate:github-env`          | Fail loud if required secrets missing                      |
-| `pnpm validate:github-environments` | Protection drift vs committed JSON                         |
+| Command                    | Purpose                                                    |
+| -------------------------- | ---------------------------------------------------------- |
+| `pnpm github:sync`         | Unified IaC: rulesets + env shells + secrets from `.env.*` |
+| `pnpm validate:deploy-env` | Fail loud if required secrets missing                      |
+| `pnpm github:sync --check` | Protection drift vs committed JSON                         |

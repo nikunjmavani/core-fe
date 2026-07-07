@@ -30,21 +30,21 @@ Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POL
 
 ## Commands
 
-| Command                             | Purpose                                                           |
-| ----------------------------------- | ----------------------------------------------------------------- |
-| `pnpm github:sync`                  | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets |
-| `pnpm github:sync --check`          | Read-only drift (rulesets, shells, protection, secret names)      |
-| `pnpm github:sync --dry-run`        | Preview changes                                                   |
-| `pnpm validate:github-env`          | Fail if required deploy secrets missing (local, uses GitHub API)  |
-| `pnpm validate:github-environments` | Fail if protection drift vs committed JSON                        |
-| `pnpm setup:infra:github-secrets`   | Legacy: push from `config.setup.env`                              |
+| Command                           | Purpose                                                           |
+| --------------------------------- | ----------------------------------------------------------------- |
+| `pnpm github:sync`                | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets |
+| `pnpm github:sync --check`        | Read-only drift (rulesets, shells, protection, secret names)      |
+| `pnpm github:sync --dry-run`      | Preview changes                                                   |
+| `pnpm validate:deploy-env`        | Fail if required deploy secrets missing (local, uses GitHub API)  |
+| `pnpm github:sync --check`        | Fail if protection drift vs committed JSON                        |
+| `pnpm setup:infra:github-secrets` | Legacy: push from `config.setup.env`                              |
 
 ## Protection drift
 
 GitHub does not expose a full “apply protection from JSON” API for all fields.
 When [`production.json`](production.json) specifies required reviewers or branch
 policies, apply them in **Settings → Environments → production** to match the
-committed file, then run `pnpm validate:github-environments`.
+committed file, then run `pnpm github:sync --check`.
 
 ## CI
 

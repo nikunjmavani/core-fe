@@ -37,7 +37,7 @@ The frontend **shell** is solid:
       `VITE_SENTRY_DSN`, `VITE_POSTHOG_KEY`/`HOST`, `VITE_CSP_REPORT_URI`,
       `VITE_PRIVACY_POLICY_URL`, and `config.js` runtime injection per environment.
 - [ ] **Create the git remote + push** if not done — activates CI/CD, CodeQL, Dependabot,
-      branch-protection rulesets (`pnpm gh:rulesets:sync`).
+      branch-protection rulesets (`pnpm github:sync`).
 - [ ] **DNS / TLS / host.** Netlify config exists (`netlify.toml`, `_headers`);
       confirm HTTPS, security headers, and multi-tenant subdomains (if used).
 - [ ] **SRI for `config.js`** — deploy entrypoint must hash the generated file and inject

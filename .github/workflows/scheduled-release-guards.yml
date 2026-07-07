@@ -10,7 +10,7 @@
 #      on the remote (presence check — a deleted/renamed "Protect main" ruleset
 #      becomes a Monday ping instead of an unprotected branch).
 #      (Ruleset PARAMETER drift and secret-NAME drift stay local-only via
-#      `pnpm github:sync:check` — the Actions GITHUB_TOKEN has no `secrets`
+#      `pnpm github:sync --check` — the Actions GITHUB_TOKEN has no `secrets`
 #      permission, and sync-rulesets --check compares presence, not content.)
 
 name: Release-flow guards

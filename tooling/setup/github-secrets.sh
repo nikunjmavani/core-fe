@@ -36,5 +36,5 @@ echo "$NODE_VERSION" | gh secret set NODE_VERSION
 node tooling/setup/github/sync-env-secrets.mjs --all --from-config-setup
 
 echo "[setup-github-secrets] Done."
-echo "[setup-github-secrets] Verify: pnpm validate:github-env"
+echo "[setup-github-secrets] Verify: pnpm validate:deploy-env"
 echo "[setup-github-secrets] Full IaC sync: pnpm github:sync --yes --from-config-setup"

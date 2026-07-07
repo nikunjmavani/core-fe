@@ -112,7 +112,7 @@ Further gates, all mirroring core-be:
 - **PR governance** (`.github/workflows/pr-governance.yml`) — conventional PR title, size labels,
   path labels (`.github/labeler.yml` / `labels.yml`), and a committed-env-file guard. The
   Dependency review CI lane blocks high-severity/GPL-AGPL dependency changes.
-- **Branch protection as code** (`.github/rulesets/main.json`, `pnpm gh:rulesets:sync`) — `main`
+- **Branch protection as code** (`.github/rulesets/main.json`, `pnpm github:sync`) — `main`
   requires only the aggregate `Quality gate` + governance `Checks`; adding a CI lane never touches
   branch protection.
 - **SBOM** (`pnpm sbom:generate`) — CycloneDX inventory via cdxgen (reads `pnpm-lock.yaml`);

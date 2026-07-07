@@ -24,10 +24,10 @@ Playwright E2E is local-only (`pnpm test:e2e` against a live core-be on `:3000`)
 
 ## Repo config
 
-| Path                           | Purpose                                             |
-| ------------------------------ | --------------------------------------------------- |
-| [environments/](environments/) | GitHub Environment docs + drift checks              |
-| [rulesets/](rulesets/)         | Branch protection as code (`pnpm gh:rulesets:sync`) |
-| [workflows/](workflows/)       | CI/CD YAML                                          |
+| Path                           | Purpose                                        |
+| ------------------------------ | ---------------------------------------------- |
+| [environments/](environments/) | GitHub Environment docs + drift checks         |
+| [rulesets/](rulesets/)         | Branch protection as code (`pnpm github:sync`) |
+| [workflows/](workflows/)       | CI/CD YAML                                     |
 
 Canonical deploy manifest: [`tooling/setup/setup.config.json`](../tooling/setup/setup.config.json).

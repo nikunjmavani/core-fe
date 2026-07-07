@@ -1,24 +1,31 @@
 /**
- * Unified GitHub IaC sync — rulesets, environment shells, protection drift, deploy secrets.
+ * Unified GitHub IaC sync — the SINGLE entry point for rulesets, environment
+ * shells, protection drift, and deploy secrets. One command, flag-driven.
  *
- * Order:
- *   1. Scaffold missing `.env.<environment>` files (sync mode only)
- *   2. Sync branch rulesets (`.github/rulesets/*.json`)
+ * Order (sync mode):
+ *   1. Scaffold missing `.env.<environment>` files
+ *   2. Sync branch rulesets (`.github/rulesets/*.json`) — branch: `main` only
  *   3. Ensure GitHub Environment shells exist
- *   4. Reconcile deploy secrets from `.env.<environment>` (sync mode only)
+ *   4. Reconcile deploy secrets from `.env.<environment>`
  *
- * Modes:
- *   default    — scaffold + rulesets + environments + secrets push
- *   --check    — read-only drift (rulesets, env shells, protection, secret names)
- *   --dry-run  — preview without writes
- *   --yes      — skip secrets push confirmation
- *   --from-config-setup — read secrets from config.setup.env instead of .env.*
+ * Modes / flags:
+ *   (default)            scaffold + rulesets + environments + secrets, all environments
+ *   <env>                scope the secrets reconcile to one environment (positional)
+ *   --check              read-only: consistency + remote drift, no writes
+ *   --dry-run            preview remote + values push, no writes
+ *   --yes | -y           skip the secrets-push confirmation (automation)
+ *   --prune              also flag/remove rulesets for branches not in config
+ *                          (flags by default; removes when combined with --yes)
+ *   --from-config-setup  read secrets from config.setup.env instead of .env.*
+ *   --help | -h          usage
  *
  * Usage:
  *   pnpm github:sync
+ *   pnpm github:sync production
  *   pnpm github:sync --check
  *   pnpm github:sync --dry-run
- *   pnpm github:sync production --yes
+ *   pnpm github:sync --yes
+ *   pnpm github:sync --prune --yes
  */
 import { spawnSync } from 'node:child_process';
 import { createInterface } from 'node:readline/promises';
@@ -37,10 +44,14 @@ import { syncEnvironmentSecrets } from './sync-env-secrets.mjs';
  * @param {string[]} args
  */
 function runNodeScript(scriptName, args) {
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL(scriptName, import.meta.url)), ...args], {
-    stdio: 'inherit',
-    cwd: process.cwd(),
-  });
+  const result = spawnSync(
+    process.execPath,
+    [fileURLToPath(new URL(scriptName, import.meta.url)), ...args],
+    {
+      stdio: 'inherit',
+      cwd: process.cwd(),
+    },
+  );
   return result.status ?? 1;
 }
 
@@ -48,18 +59,52 @@ function parseArguments() {
   const argumentsList = process.argv.slice(2);
 
   if (argumentsList.includes('--help') || argumentsList.includes('-h')) {
-    console.log('Usage: pnpm github:sync [environment...] [--check | --dry-run] [--yes] [--from-config-setup]');
+    console.log(
+      'Usage: pnpm github:sync [environment...] [--check | --dry-run] [--yes] [--prune]',
+    );
     console.log('');
-    console.log('  (default)   All environments: scaffold + rulesets + env shells + secrets');
-    console.log('  --check     Read-only drift checks (no writes)');
-    console.log('  --dry-run   Preview remote changes (no writes)');
-    console.log('  --yes       Skip secrets push confirmation');
-    console.log('  --from-config-setup  Read secrets from config.setup.env (legacy path)');
+    console.log(
+      '  (default)   All environments: scaffold + branch (main) rulesets + env shells + secrets',
+    );
+    console.log('  environment Optional environment name(s), e.g. production');
+    console.log('  --check     Read-only consistency + remote drift (no writes)');
+    console.log('  --dry-run   Preview remote and values push (no writes)');
+    console.log('  --yes, -y   Skip the secrets-push confirmation prompt');
+    console.log(
+      '  --prune     Flag/remove rulesets for branches not in config (removes with --yes)',
+    );
+    console.log(
+      '  --from-config-setup  Read secrets from config.setup.env (legacy path)',
+    );
     process.exit(0);
   }
 
   if (argumentsList.includes('--check') && argumentsList.includes('--dry-run')) {
     throw new Error('Use either --check or --dry-run, not both.');
+  }
+
+  // Strict parse: every non-flag token must be a valid environment name, and any
+  // unknown --flag is a hard error (a typo'd flag must never silently no-op).
+  const allowedFlags = new Set([
+    '--check',
+    '--dry-run',
+    '--yes',
+    '-y',
+    '--prune',
+    '--from-config-setup',
+  ]);
+  const environments = [];
+  for (const argument of argumentsList) {
+    if (allowedFlags.has(argument)) continue;
+    if (argument.startsWith('-')) {
+      throw new Error(`Unknown argument "${argument}". Use --help for options.`);
+    }
+    if (!/^[a-z][a-z0-9-]*$/.test(argument)) {
+      throw new Error(
+        `Invalid environment "${argument}". Use lowercase letters, digits, dashes.`,
+      );
+    }
+    environments.push(argument);
   }
 
   const mode = argumentsList.includes('--check')
@@ -69,38 +114,47 @@ function parseArguments() {
       : 'sync';
 
   const fromConfigSetup = argumentsList.includes('--from-config-setup');
-  const skipConfirmation = argumentsList.includes('--yes') || argumentsList.includes('-y');
-  const environments = argumentsList.filter(
-    (argument) => !argument.startsWith('--') && /^[a-z][a-z0-9-]*$/.test(argument),
-  );
+  const skipConfirmation =
+    argumentsList.includes('--yes') || argumentsList.includes('-y');
+  const prune = argumentsList.includes('--prune');
 
-  /** @type {string[]} */
-  let selectedEnvironments = environments;
-  if (selectedEnvironments.length === 0) {
-    selectedEnvironments = getConfiguredEnvironmentNames();
-  }
+  const selectedEnvironments =
+    environments.length === 0 ? getConfiguredEnvironmentNames() : environments;
 
-  return { mode, fromConfigSetup, skipConfirmation, environments: selectedEnvironments };
+  return {
+    mode,
+    fromConfigSetup,
+    skipConfirmation,
+    prune,
+    environments: selectedEnvironments,
+  };
 }
 
 /**
  * @param {string} mode
+ * @param {{ prune: boolean, skipConfirmation: boolean }} options
  */
-function syncRulesets(mode) {
-  const args =
-    mode === 'check' ? ['--check'] : mode === 'dry-run' ? ['--dry-run'] : [];
+function syncRulesets(mode, { prune, skipConfirmation }) {
+  const args = mode === 'check' ? ['--check'] : mode === 'dry-run' ? ['--dry-run'] : [];
+  // --prune flags/removes rulesets for branches not in config; the child only
+  // DELETES when --yes is also passed (otherwise it flags them).
+  if (prune) args.push('--prune');
+  if (skipConfirmation) args.push('--yes');
   return runNodeScript('./sync-rulesets.mjs', args);
 }
 
 async function confirmSecretsPush() {
   const readline = createInterface({ input: process.stdin, output: process.stdout });
-  const answer = await readline.question('Push deploy secrets to GitHub Environments? [y/N] ');
+  const answer = await readline.question(
+    'Push deploy secrets to GitHub Environments? [y/N] ',
+  );
   readline.close();
   return answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes';
 }
 
 async function main() {
-  const { mode, fromConfigSetup, skipConfirmation, environments } = parseArguments();
+  const { mode, fromConfigSetup, skipConfirmation, prune, environments } =
+    parseArguments();
 
   if (mode !== 'dry-run') {
     requireGhAuth();
@@ -117,7 +171,7 @@ async function main() {
   }
 
   console.log(`Step ${mode === 'sync' ? '2' : '1'}/4 — Branch rulesets`);
-  const rulesetStatus = syncRulesets(mode);
+  const rulesetStatus = syncRulesets(mode, { prune, skipConfirmation });
   if (rulesetStatus !== 0) {
     process.exit(rulesetStatus);
   }
@@ -146,7 +200,9 @@ async function main() {
       console.warn(
         'Protection drift detected — update GitHub UI to match .github/environments/*.json.',
       );
-      console.warn('Secrets will still be pushed; protection must be applied manually in GitHub.');
+      console.warn(
+        'Secrets will still be pushed; protection must be applied manually in GitHub.',
+      );
     }
   }
   console.log('');
@@ -155,7 +211,9 @@ async function main() {
   if (mode === 'check') {
     let totalDrift = 0;
     for (const environmentName of environments) {
-      const result = syncEnvironmentSecrets(environmentName, 'check', { fromConfigSetup });
+      const result = syncEnvironmentSecrets(environmentName, 'check', {
+        fromConfigSetup,
+      });
       totalDrift += result.drift;
     }
     if (totalDrift > 0) {
@@ -193,7 +251,7 @@ async function main() {
 
   console.log('');
   console.log('GitHub sync complete.');
-  console.log('Verify: pnpm validate:github-env');
+  console.log('Verify: pnpm validate:deploy-env');
 }
 
 main().catch((error) => {

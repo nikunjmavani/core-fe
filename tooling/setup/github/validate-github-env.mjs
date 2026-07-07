@@ -2,14 +2,14 @@
  * Fail-loud validation for GitHub Environment deploy secrets.
  *
  * Validates required secrets from tooling/setup/setup.config.json against either:
- *   - GitHub API (default, local `pnpm validate:github-env`)
+ *   - GitHub API (default, local `pnpm validate:deploy-env`)
  *   - Runtime env (CI: GITHUB_ENV_VALIDATION_SOURCE=runtime)
  *
  * Also checks protection drift unless SKIP_GITHUB_ENV=1.
  *
  * Usage:
- *   pnpm validate:github-env
- *   CONFIG=production pnpm validate:github-env
+ *   pnpm validate:deploy-env
+ *   CONFIG=production pnpm validate:deploy-env
  *   GITHUB_ENV_VALIDATION_SOURCE=runtime CONFIG=development node tooling/setup/github/validate-github-env.mjs
  */
 import { fileURLToPath } from 'node:url';
@@ -77,7 +77,7 @@ function validateProtectionDrift(environment) {
 function main() {
   const argumentsList = process.argv.slice(2);
   if (argumentsList.includes('--help') || argumentsList.includes('-h')) {
-    console.log('Usage: pnpm validate:github-env');
+    console.log('Usage: pnpm validate:deploy-env');
     console.log('');
     console.log(
       '  CONFIG=<environment|branch>   Target environment (default: development)',
