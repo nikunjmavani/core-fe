@@ -36,6 +36,21 @@ const personalOnlyCtx = {
   permissions: ['organization:read'] as const,
 };
 
+// personal-and-team deployment (teams ARE enabled), but the ACTIVE workspace is
+// the user's PERSONAL org — organization settings must still be hidden.
+const personalWorkspaceInTeamDeploymentCtx = {
+  hasOrganizationContext: true,
+  orgType: 'PERSONAL' as const,
+  teamOrganizations: true,
+  role: 'user' as const,
+  permissions: [
+    'organization:read',
+    'membership:read',
+    'role:read',
+    'webhook:read',
+  ] as const,
+};
+
 describe('visibleSettingsNavGroups', () => {
   beforeEach(() => {
     disabledModulesRef.value = new Set();
@@ -50,6 +65,15 @@ describe('visibleSettingsNavGroups', () => {
   it('omits the organization group in personal-only deployments', () => {
     const groups = visibleSettingsNavGroups(personalOnlyCtx);
     expect(groups.some((g) => g.scope === 'organization')).toBe(false);
+    expect(groups.some((g) => g.items.some((i) => i.section === 'billing'))).toBe(true);
+  });
+
+  it('hides organization settings while in a PERSONAL workspace even when teams are enabled', () => {
+    const groups = visibleSettingsNavGroups(personalWorkspaceInTeamDeploymentCtx);
+    // No organization group surfaces for a personal workspace…
+    expect(groups.some((g) => g.scope === 'organization')).toBe(false);
+    // …but account settings (incl. billing) remain available.
+    expect(groups.some((g) => g.scope === 'account')).toBe(true);
     expect(groups.some((g) => g.items.some((i) => i.section === 'billing'))).toBe(true);
   });
 
