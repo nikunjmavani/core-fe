@@ -29,7 +29,43 @@ All specs live in `tests/e2e/*.e2e.test.ts`. One command: `pnpm test:e2e`.
 
 **Prerequisite:** **core-be** running on `:3000` (`GET /readyz` must succeed). `tests/e2e/global-setup.ts` fails fast if core-be is down — there is no skip path.
 
-**Rate-limit caps (required for E2E):** boot core-be with **`RATE_LIMIT_RELAXED_CAPS=true`** (it's in core-be's `.env.example`; defaults to `false`/hardened). Public-auth routes (`send-code`, login) are capped at **5 requests/min per IP** when hardened, so a loopback suite that loops these routes floods into `429 send-code failed` and most authenticated flows fail. Relaxed lifts the ceiling to 5000/min. CI boots core-be with `NODE_ENV=test`, which relaxes the caps automatically.
+### Local run — required env & steps (authoritative)
+
+Run the suites this way; do not improvise other env. **All values live in each repo's
+`.env.development`** (the gitignored dev file) — **never** a plain `.env`, `.env.local`, or an
+ad-hoc shell prefix. `pnpm dev` / `pnpm test:e2e` then work with no extra flags. CI does the
+equivalent with `NODE_ENV=test`.
+
+**1. core-be `.env.development`** (in the core-be repo) — required to boot against local Docker
+Postgres/Redis and to survive a loopback test flood:
+
+| Key                                                           | Value    | Why                                                                                                                                                                                                                   |
+| ------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RATE_LIMIT_RELAXED_CAPS`                                     | `true`   | Public-auth routes (`send-code`, login) cap at **5 req/min per IP** when `false` (hardened default) → a loopback E2E flood produces `429 send-code failed` and authenticated flows fail. `true` lifts it to 5000/min. |
+| `DATABASE_TLS_ENFORCED`                                       | `false`  | Local Docker Postgres is plaintext; the TLS guard is fail-closed for hosted only (its own message: acceptable for local docker).                                                                                      |
+| `DATABASE_RLS_SAFETY_ENFORCED`                                | `false`  | The Docker `core` role is a superuser (BYPASSRLS); the RLS guard is fail-closed for hosted only.                                                                                                                      |
+| `PERSONAL_ORGANIZATION_ENABLED` / `TEAM_ORGANIZATION_ENABLED` | per mode | Pick the deployment mode to exercise (see the matrix below). At least one must be `true`.                                                                                                                             |
+
+**2. core-fe `.env.development`** (this repo):
+
+| Key                       | Value                      | Why                                                                                                 |
+| ------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------- |
+| `VITE_DEV_API_URL`        | `http://localhost:3000`    | Vite proxies `/api` → local core-be.                                                                |
+| `VITE_TURNSTILE_SITE_KEY` | `1x00000000000000000000AA` | Cloudflare always-pass **test** key (already shipped). Do **not** set `VITE_CAPTCHA_DISABLED=true`. |
+
+**3. Run:**
+
+```bash
+# terminal 1 — core-be repo (values above are in its .env.development)
+pnpm dev                       # boots on :3000; wait for GET /readyz → 200
+
+# terminal 2 — core-fe repo
+pnpm test:e2e                  # full Playwright suite (Chrome) against live core-be
+```
+
+To swap deployment mode: change the two `*_ORGANIZATION_ENABLED` values in core-be's
+`.env.development`, restart core-be (env loads once at boot), and re-run. The
+`deployment-*.e2e.test.ts` specs auto-skip unless `me/context` matches their required pair.
 
 **CAPTCHA (manual dev + E2E):** core-fe mounts invisible Cloudflare Turnstile when `VITE_TURNSTILE_SITE_KEY` is set (`.env.development` ships the always-pass test key `1x00000000000000000000AA`; do **not** set `VITE_CAPTCHA_DISABLED=true`). Pair with core-be `CAPTCHA_PROVIDER=turnstile` and the matching test secret. Auth buttons wait for a Turnstile token before POST (`useTurnstileReady`). `global-setup` probes core-be and caches working auth headers for E2E (typically `X-Captcha-Bypass: true` in local/test `NODE_ENV`).
 
