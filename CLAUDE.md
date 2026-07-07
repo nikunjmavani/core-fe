@@ -33,14 +33,14 @@ structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/ac
 behind a single aggregate `quality-gate` required check (branch protection as code:
 `.github/rulesets/`, `pnpm gh:rulesets:sync`). Playwright E2E is local-only (needs
 core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
-budgets, cache cleanup, release-flow guards (branch-ancestry + environment-drift canaries),
+budgets, cache cleanup, release-flow guards (environment-drift canary),
 and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)
 run as scheduled/event workflows.
 
 **Lockfile discipline:** a `package.json` dependency or `pnpm.overrides` change and its
 `pnpm-lock.yaml` regeneration are **one atomic commit** — run `pnpm install` and stage both.
 A desynced lockfile fails every frozen-install CI job (`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`) and
-also reds any open release-please PR, so it must never reach dev; the before-commit guard blocks
+also reds any open release-please PR, so it must never reach main; the before-commit guard blocks
 it locally via `pnpm run validate:lockfile` (see `agent-os/skills/platform-hygiene/SKILL.md`).
 
 ## Documentation
