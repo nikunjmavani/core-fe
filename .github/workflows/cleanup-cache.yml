@@ -93,7 +93,7 @@ jobs:
               elif [ -n "${WF_RUN_BRANCH:-}" ]; then
                 ref="refs/heads/${WF_RUN_BRANCH}"
                 case "$WF_RUN_BRANCH" in
-                  main|dev)
+                  main)
                     mode="lru"
                     if [ "$WF_RUN_CONCLUSION" = "failure" ]; then
                       keep_count="${KEEP_FAILED_RUNS}"
@@ -196,7 +196,7 @@ jobs:
           done
           echo "LRU prune complete for $REF - kept $kept, deleted $deleted."
 
-      - name: Scheduled safety-net LRU for main and dev
+      - name: Scheduled safety-net LRU for main
         if: steps.scope.outputs.mode == 'scheduled'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -204,7 +204,7 @@ jobs:
           KEEP_PER_BRANCH: ${{ env.KEEP_PER_BRANCH }}
         run: |
           set -euo pipefail
-          for branch in main dev; do
+          for branch in main; do
             ref="refs/heads/${branch}"
             mapfile -t entries < <(
               gh actions-cache list --repo "$REPO" --ref "$ref" --limit 100 \

@@ -7,9 +7,9 @@ name: CodeQL
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main]
   pull_request:
-    branches: [main, dev]
+    branches: [main]
   schedule:
     # Weekly full scan (Monday 04:27 UTC) so advisories that land between pushes
     # are still surfaced.

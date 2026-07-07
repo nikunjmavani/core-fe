@@ -2,7 +2,7 @@ name: Preview Deploy
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [main, 'release/**']
 
 concurrency:
   group: preview-${{ github.head_ref }}
