@@ -2,7 +2,10 @@
  * Unified GitHub IaC sync — the SINGLE entry point for rulesets, environment
  * shells, protection drift, and deploy secrets. One command, flag-driven.
  *
- * Order (sync mode):
+ * Order:
+ *   0. Consistency pre-flight (all modes) — committed IaC must agree with itself
+ *      (setup.config ↔ environments JSON ↔ deploy workflow ↔ rulesets). See
+ *      sync-consistency.mjs.
  *   1. Scaffold missing `.env.<environment>` files
  *   2. Sync branch rulesets (`.github/rulesets/*.json`) — branch: `main` only
  *   3. Ensure GitHub Environment shells exist
@@ -36,6 +39,7 @@ import { driftResultsHaveIssues } from './environments-util.mjs';
 import { requireGhAuth } from './github-shared.mjs';
 import { scaffoldGithubEnvFiles } from './scaffold-env-files.mjs';
 import { getConfiguredEnvironmentNames } from './setup-config.mjs';
+import { checkSyncConsistency } from './sync-consistency.mjs';
 import { ensureGitHubEnvironments } from './sync-environments.mjs';
 import { syncEnvironmentSecrets } from './sync-env-secrets.mjs';
 
@@ -162,6 +166,23 @@ async function main() {
 
   console.log(`GitHub sync — mode: ${mode}`);
   console.log(`Environments: ${environments.join(', ')}`);
+  console.log('');
+
+  // Pre-flight: the committed IaC must agree with itself before we touch GitHub.
+  const consistencyIssues = checkSyncConsistency();
+  if (consistencyIssues.length > 0) {
+    console.error('Consistency check FAILED — committed IaC disagrees with itself:');
+    for (const issue of consistencyIssues) {
+      console.error(`  [${issue.dimension}] ${issue.detail}`);
+    }
+    console.error('');
+    console.error('Fix tooling/setup/setup.config.json, .github/environments/*.json,');
+    console.error(
+      '.github/rulesets/*.json, or reusable-netlify-deploy.yml, then re-run.',
+    );
+    process.exit(1);
+  }
+  console.log('Consistency check: OK');
   console.log('');
 
   if (mode === 'sync') {

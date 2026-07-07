@@ -5,8 +5,8 @@
     "organization": "albetrios"
   },
   "git": {
-    "protectedBranches": ["dev", "main"],
-    "defaultBranch": "dev"
+    "protectedBranches": ["main"],
+    "defaultBranch": "main"
   },
   "environments": [
     {

@@ -40,6 +40,12 @@ Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POL
 | `pnpm validate:deploy-env`        | Fail if required deploy secrets missing (local, uses GitHub API)            |
 | `pnpm setup:infra:github-secrets` | Legacy: push from `config.setup.env`                                        |
 
+Every `github:sync` (all modes) runs a **consistency pre-flight** first: the
+environments in `setup.config.json`, `.github/environments/*.json`, and the
+reusable deploy workflow must agree, and `git.protectedBranches` / `defaultBranch`
+must match the committed `.github/rulesets/*.json` (single trunk = `main` only).
+It fails fast on drift before touching GitHub.
+
 ## Protection drift
 
 GitHub does not expose a full “apply protection from JSON” API for all fields.
