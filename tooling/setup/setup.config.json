@@ -13,7 +13,6 @@
       "name": "development",
       "label": "Development",
       "viteMode": "development",
-      "branch": "main",
       "protected": true,
       "isDefault": true,
       "cookieBanner": {
@@ -38,7 +37,6 @@
       "name": "production",
       "label": "Production",
       "viteMode": "production",
-      "branch": "main",
       "protected": true,
       "cookieBanner": {
         "captureConsentEvents": true,
