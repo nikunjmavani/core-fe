@@ -61,19 +61,18 @@ describe('post-merge CI policy (single trunk)', () => {
   it('runs release-please with the PAT (github.token fallback) so release-PR merges re-trigger it', () => {
     const tokenPattern =
       /\$\{\{\s*secrets\.RELEASE_PLEASE_TOKEN \|\| github\.token\s*\}\}/g;
-    // action token + lint-fix GH_TOKEN + auto-merge GH_TOKEN.
-    expect(workflow.match(tokenPattern)?.length ?? 0).toBeGreaterThanOrEqual(3);
+    // action token + lint-fix GH_TOKEN (no auto-merge step — release on cadence).
+    expect(workflow.match(tokenPattern)?.length ?? 0).toBeGreaterThanOrEqual(2);
   });
 
   it('keeps the tripwire that warns when RELEASE_PLEASE_TOKEN is not provisioned', () => {
     expect(workflow).toContain('RELEASE_PLEASE_TOKEN not provisioned');
   });
 
-  it('auto-merges release PRs with squash (single trunk — the main ruleset is squash-only)', () => {
-    expect(workflow).toMatch(
-      /gh pr merge "\$\{pr_number\}" --auto --squash --delete-branch=false/,
-    );
-    expect(workflow).not.toMatch(/gh pr merge "\$\{pr_number\}" --auto --merge\b/);
+  it('does NOT auto-merge release PRs — release on cadence (manual merge is the ship button)', () => {
+    // release-please keeps the standing Release PR fresh; a human merges it to ship.
+    expect(workflow).not.toMatch(/gh pr merge[^\n]*--auto/);
+    expect(workflow).not.toContain('Enable auto-merge on release PRs');
   });
 
   it('generates the SBOM ONLY when a release is cut (not on every merge)', () => {
