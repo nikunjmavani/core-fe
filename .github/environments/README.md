@@ -30,14 +30,15 @@ Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POL
 
 ## Commands
 
-| Command                           | Purpose                                                           |
-| --------------------------------- | ----------------------------------------------------------------- |
-| `pnpm github:sync`                | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets |
-| `pnpm github:sync --check`        | Read-only drift (rulesets, shells, protection, secret names)      |
-| `pnpm github:sync --dry-run`      | Preview changes                                                   |
-| `pnpm validate:deploy-env`        | Fail if required deploy secrets missing (local, uses GitHub API)  |
-| `pnpm github:sync --check`        | Fail if protection drift vs committed JSON                        |
-| `pnpm setup:infra:github-secrets` | Legacy: push from `config.setup.env`                              |
+| Command                           | Purpose                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm github:sync`                | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets           |
+| `pnpm github:sync --check`        | Read-only drift (rulesets, shells, protection, secret names) — fails on any |
+| `pnpm github:sync --dry-run`      | Preview changes, no writes                                                  |
+| `pnpm github:sync --yes`          | Skip the secrets-push confirmation (automation)                             |
+| `pnpm github:sync --prune`        | Flag rulesets for branches not in config (`--prune --yes` to delete)        |
+| `pnpm validate:deploy-env`        | Fail if required deploy secrets missing (local, uses GitHub API)            |
+| `pnpm setup:infra:github-secrets` | Legacy: push from `config.setup.env`                                        |
 
 ## Protection drift
 

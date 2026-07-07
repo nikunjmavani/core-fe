@@ -98,8 +98,9 @@ deploy (the one human approval in the model). `development` is ungated.
 
 Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POLICY_URL`.
 
-| Command                    | Purpose                                                    |
-| -------------------------- | ---------------------------------------------------------- |
-| `pnpm github:sync`         | Unified IaC: rulesets + env shells + secrets from `.env.*` |
-| `pnpm validate:deploy-env` | Fail loud if required secrets missing                      |
-| `pnpm github:sync --check` | Protection drift vs committed JSON                         |
+| Command                    | Purpose                                                        |
+| -------------------------- | -------------------------------------------------------------- |
+| `pnpm github:sync`         | Unified IaC: rulesets + env shells + secrets from `.env.*`     |
+| `pnpm github:sync --check` | Read-only drift (rulesets + protection + secret names)         |
+| `pnpm github:sync --prune` | Flag branch rulesets not in config (`--prune --yes` to delete) |
+| `pnpm validate:deploy-env` | Fail loud if required secrets missing                          |
