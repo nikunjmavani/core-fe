@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/nikunjmavani/core-fe/compare/v1.2.3...v1.2.4) (2026-07-07)
+
+
+### Documentation
+
+* complete single-trunk cleanup — delete migration plan, rename workflow doc ([#93](https://github.com/nikunjmavani/core-fe/issues/93)) ([c2f2c3f](https://github.com/nikunjmavani/core-fe/commit/c2f2c3f477056f8b4addcc165b2a4d03a68d9281))
+
 ## [1.2.3](https://github.com/nikunjmavani/core-fe/compare/v1.2.2...v1.2.3) (2026-07-07)
 
 
