@@ -8,10 +8,13 @@ path).
 
 ## Mapping
 
-| Branch | GitHub Environment | Local secrets file |
-| ------ | ------------------ | ------------------ |
-| `dev`  | `development`      | `.env.development` |
-| `main` | `production`       | `.env.production`  |
+Single-trunk model — one branch (`main`) drives both environments by **purpose**,
+not by branch:
+
+| Trigger                        | GitHub Environment | Deploy        | Local secrets file |
+| ------------------------------ | ------------------ | ------------- | ------------------ |
+| every push to `main`           | `development`      | `--alias dev` | `.env.development` |
+| a release (`vX.Y.Z`) on `main` | `production`       | `--prod`      | `.env.production`  |
 
 Canonical manifest: [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
 
