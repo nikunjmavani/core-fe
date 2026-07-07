@@ -320,7 +320,7 @@ core-fe/
 │   │   ├── netlify-cli-setup.md
 │   │   ├── path-to-production.md
 │   │   ├── production-readiness.md
-│   │   └── runbook-dev-to-production.md
+│   │   └── runbook-local-to-production.md
 │   ├── getting-started/
 │   │   ├── requirements/
 │   │   │   ├── sample-requirement.md

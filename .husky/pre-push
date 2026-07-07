@@ -8,7 +8,7 @@ pnpm build:check
 
 # Markdown lint on the pushed diff (mirrors the Docs lint CI lane). lint-staged
 # only formats staged markdown; this lints every changed file in the push.
-# Default base is origin/main; override with LINT_BASE=origin/dev.
+# Default base is origin/main; override with LINT_BASE=<ref>.
 PUSHED_MD=$(git diff --name-only @{u}...HEAD 2>/dev/null | grep -E '\.md$' || true)
 if [ -n "$PUSHED_MD" ]; then
   pnpm docs:lint:changed

@@ -454,7 +454,7 @@ pnpm build
 
 Output is in `dist/`. **Build runs on GitHub** (CI and Release workflows). Deploy to any static host (Netlify, Vercel, S3+CloudFront, Nginx, etc.).
 
-- **Step-by-step runbook:** [docs/deployment/runbook-dev-to-production.md](docs/deployment/runbook-dev-to-production.md).
+- **Step-by-step runbook:** [docs/deployment/runbook-local-to-production.md](docs/deployment/runbook-local-to-production.md).
 - **CLI setup (connect and go):** [docs/deployment/netlify-cli-setup.md](docs/deployment/netlify-cli-setup.md) — all steps via CLI; run `pnpm run setup:infra:netlify` after link. One-time connect repo in Netlify UI for push-to-deploy.
 - **CI/CD & Deployment runbook:** [docs/deployment/cicd-and-netlify.md](docs/deployment/cicd-and-netlify.md) — production API (`https://core-api.albetrios.com`), Netlify env vars, deploy commands, and GitHub Actions summary.
 - **Full path-to-production guide:** [docs/deployment/deployment-and-pre-launch.md](docs/deployment/deployment-and-pre-launch.md) — build, env vars, Netlify + GitHub, release workflow, Sentry source maps, and pre-launch checklist.

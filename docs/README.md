@@ -15,7 +15,7 @@ flowchart TB
   end
   subgraph deployment["Deployment"]
     direction TB
-    d1[runbook-dev-to-production]
+    d1[runbook-local-to-production]
     d2[cicd-and-netlify]
     d3[deployment-and-pre-launch]
     d4[path-to-production]
@@ -57,7 +57,7 @@ flowchart TB
 
 | Doc                                                                                             | Purpose                                                               |
 | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [runbook-dev-to-production.md](deployment/runbook-dev-to-production.md)                         | Step-by-step: local dev → validate → build → deploy                   |
+| [runbook-local-to-production.md](deployment/runbook-local-to-production.md)                     | Step-by-step: local dev → validate → build → deploy                   |
 | [cicd-and-netlify.md](deployment/cicd-and-netlify.md)                                           | CI/CD, Netlify env, deploy commands, GitHub Actions                   |
 | [deployment-and-pre-launch.md](deployment/deployment-and-pre-launch.md)                         | Full deployment guide and pre-launch checklist                        |
 | [path-to-production.md](deployment/path-to-production.md)                                       | Gate: run runbook + checklist before release                          |
