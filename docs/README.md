@@ -88,7 +88,8 @@ flowchart TB
 
 | Doc                                                                          | Purpose                                                                                     |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| [git-workflow.md](process/git-workflow.md)                                   | Branch naming, PR flow, conventional commits, hotfix                                        |
+| [git-workflow.md](process/git-workflow.md)                                   | **Trunk-based** branch naming, squash-merge PR flow, release-please ship, hotfix            |
+| [delivery-model-migration-plan.md](process/delivery-model-migration-plan.md) | **Trunk migration** — dual-channel → single trunk on `main`, CI/CD redesign, feature flags  |
 | [organization-deployment-modes.md](process/organization-deployment-modes.md) | Personal / team / both deployment toggles — signup, onboarding, switcher, **env-only auth** |
 | [pr-review.md](process/pr-review.md)                                         | PR review rubric                                                                            |
 | [release-versioning.md](process/release-versioning.md)                       | Release and versioning process                                                              |

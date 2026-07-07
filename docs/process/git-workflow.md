@@ -1,156 +1,156 @@
 # Git Branch Naming and PR Workflow
 
-Professional branch strategy and pull-request flow for core-fe. For setup see [setup.md](../getting-started/setup.md) and [netlify-cli-setup.md](../deployment/netlify-cli-setup.md). For CI/CD and deployment (including tokens), see [cicd-and-netlify.md](../deployment/cicd-and-netlify.md).
+Trunk-based workflow for core-fe. For setup see [setup.md](../getting-started/setup.md)
+and [netlify-cli-setup.md](../deployment/netlify-cli-setup.md). For CI/CD and deployment,
+see [cicd-and-netlify.md](../deployment/cicd-and-netlify.md). The full migration rationale is
+[delivery-model-migration-plan.md](delivery-model-migration-plan.md).
 
 ---
 
-## Primary long-lived branches
+## One long-lived branch: `main`
 
-These branches represent environments and use simple, standard names.
+core-fe is **trunk-based** — there is a single long-lived branch, `main`, and short-lived
+working branches off it. Unfinished or risky work ships **behind a feature flag, never behind
+a long-lived branch** (see [feature-flags.md](../reference/feature-flags.md)).
 
-| Branch   | GitHub Environment | Purpose                           | Contains                   |
-| -------- | ------------------ | --------------------------------- | -------------------------- |
-| **main** | `production`       | Production-ready code             | Stable, fully tested code  |
-| **dev**  | `development`      | Integration branch for developers | Latest development changes |
+| Branch   | GitHub Environment      | Purpose                                                |
+| -------- | ----------------------- | ------------------------------------------------------ |
+| **main** | `production` (releases) | The trunk. Every PR merges here; releases cut from it. |
 
-Canonical mapping lives in [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
+`main` also drives the `development` environment — **every push to `main` deploys the dev
+alias** (`dev--core-fe.netlify.app`), so the alias always serves trunk HEAD. Production
+(`core-fe.netlify.app`) serves the latest **release tag** only.
+
+> The former `dev` integration branch is retired. The dev→main dual-channel model, the
+> back-merge loop, and the promote ceremony are gone.
 
 ---
 
-## Short-lived working branches (created from dev)
+## Short-lived working branches (created from `main`)
 
-Use the format: **type/short-description**
+Use the format **type/short-description**.
 
 ### Branch type prefixes
 
-| Type     | Use for               | Example                    |
-| -------- | --------------------- | -------------------------- |
-| feature  | New feature           | feature/ai-stream-response |
-| fix      | Bug fix               | fix/login-error            |
-| refactor | Code improvement      | refactor/auth-module       |
-| docs     | Documentation         | docs/readme-update         |
-| test     | Adding tests          | test/user-service          |
-| chore    | Maintenance           | chore/update-dependencies  |
-| hotfix   | Urgent production fix | hotfix/payment-crash       |
-
-### Examples
-
-- feature/user-authentication
-- feature/ai-stream-response
-- fix/token-expiry
-- refactor/user-service
-- docs/api-documentation
-
-### Enterprise format (with ticket ID)
-
-**type/ticket-description**
-
-- feature/AI-101-stream-response
-- fix/API-205-login-error
-- refactor/SYS-88-clean-architecture
+| Type     | Use for          | Example                   |
+| -------- | ---------------- | ------------------------- |
+| feat     | New feature      | feat/ai-stream-response   |
+| fix      | Bug fix          | fix/login-error           |
+| refactor | Code improvement | refactor/auth-module      |
+| docs     | Documentation    | docs/readme-update        |
+| test     | Adding tests     | test/user-service         |
+| chore    | Maintenance      | chore/update-dependencies |
+| perf     | Performance      | perf/list-virtualization  |
 
 ### Accepted type prefixes
 
-`feature` · `feat` · `fix` · `hotfix` · `refactor` · `docs` · `test` · `chore` · `ci` · `perf` · `build` · `style` · `revert`
+`feature` · `feat` · `fix` · `refactor` · `docs` · `test` · `chore` · `ci` · `perf` ·
+`build` · `style` · `revert`
+
+Hotfixes to an already-shipped version use a short-lived `release/<major>.<minor>` line — see
+below.
 
 ---
 
-## Full workflow: merge flow
+## Full workflow
 
 ```mermaid
 flowchart TB
-  subgraph prod [Production]
+  subgraph work [Working branches]
+    feature[feat/...]
+    fix[fix/...]
+  end
+  subgraph trunk [Trunk]
     main[main]
   end
-
-  subgraph dev_env [Development]
-    dev[dev]
-  end
-
-  subgraph work [Working branches]
-    feature[feature/...]
-    fix[fix/...]
-    hotfix[hotfix/...]
-  end
-
-  feature --> dev
-  fix --> dev
-  dev --> main
-  hotfix --> main
+  releasepr["Release PR (chore: release X.Y.Z)"]
+  feature -->|squash-merge| main
+  fix -->|squash-merge| main
+  main -->|release-please refreshes| releasepr
+  releasepr -->|merge = ship ★| main
 ```
 
-**Merge order:** feature/... → dev → main
+**Integrate often** (merge to `main`), **release on cadence** (merge the Release PR).
+A feature merge is not a release — it refreshes the preview + the dev alias only.
 
 ---
 
 ## Step-by-step PR workflow
 
-### 1. Create feature branch from dev
+### 1. Create a branch from `main`
 
 ```bash
-git checkout dev
-git pull origin dev
-git checkout -b feature/ai-stream-response
+git switch main && git pull
+git switch -c feat/ai-stream-response
 ```
 
 ### 2. Work and commit
 
-Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages (enforced in PR checks):
+Use [Conventional Commits](https://www.conventionalcommits.org/) (enforced in PR checks) —
+the PR title becomes the squash commit, so it must be conventional too:
 
 ```bash
 git add .
 git commit -m "feat: add AI streaming response"
 ```
 
-### 3. Push branch
+Unfinished? Put it behind a `VITE_FF_*` flag and merge anyway — do **not** hold it on a
+long-lived branch ([feature-flags.md](../reference/feature-flags.md)).
+
+### 3. Push and open a PR to `main`
 
 ```bash
-git push origin feature/ai-stream-response
+git push -u origin feat/ai-stream-response
 ```
 
-### 4. Open pull request
+- **Target branch:** `main`.
+- **PR title = conventional commit** (it becomes the squash commit message subject).
+- CI runs the single `quality-gate` (lint, format, types, unit + security tests, build,
+  security scans). All must pass.
+- **Merge = squash**, and the branch **auto-deletes** on merge.
 
-- **Target branch:** `dev` (for feature/fix/refactor branches).
-- PR title must follow conventional commits (e.g. `feat: add AI streaming response`).
-- CI runs automatically (lint, format, type-check, tests, build, security, E2E). All must pass.
-- **Protected branches:** Required checks and merge rules for `main` and `dev` are documented in [branch-protection.md](../deployment/branch-protection.md).
+### 4. Release (on your cadence)
 
-### 5. Promote to production
+release-please keeps **one standing Release PR** open (`chore: release X.Y.Z`), recomputing
+the next version + changelog from all unreleased commits. **Merging it is the ship button:**
 
-- Open a PR **dev → main** when changes are ready for production.
-- After merge, post-merge CI deploys to Netlify (`development` on push to `dev`, `production` on push to `main`).
+- version bump + `CHANGELOG.md` + tag `vX.Y.Z` + GitHub Release + SBOM attach, then
+- the **one human gate** — approve the `production` deploy → prod serves `vX.Y.Z`.
 
-### Hotfix (production fix)
+Bump rules (highest wins): `fix:` → patch, `feat:` → minor, `feat!:`/`BREAKING CHANGE:` →
+major; `chore/docs/refactor/ci/test/build/style/perf` → changelog only.
 
-- Branch from **main**: `git checkout main && git pull && git checkout -b hotfix/payment-crash`.
-- Fix, commit, push. Open PR **hotfix/... → main**.
-- After merge, deploy to production. Post-merge CI dispatches a back-merge PR to sync **main → dev**.
+### Rollback / redeploy an old tag (rare)
+
+No CI rerun — dispatch the Netlify deploy with a tag:
+
+- Actions → **Reusable — Netlify deploy** → Run workflow → `target=production`,
+  `ref=v1.0.0` → same production approval.
+
+### Hotfix an already-shipped version
+
+```bash
+git switch -c release/1.0 v1.0.0     # short-lived; NEVER merged back
+# fix, commit, push → post-merge CI on release/** cuts v1.0.1
+# deploy via the Lane-4 dispatch (target=production, ref=v1.0.1) ⛔ approval
+# cherry-pick to main if the bug exists there too (one-way)
+```
 
 ---
 
 ## Golden rules
 
-**DO:**
+**DO:** integrate often; squash-merge to `main`; use lowercase hyphenated `type/short`
+branch names; hide unfinished work behind flags.
 
-- Use lowercase
-- Use hyphens in branch names
-- Keep names short and clear
-- Use prefixes (feature/, fix/, refactor/, docs/, test/, chore/, hotfix/)
-
-**DO NOT:**
-
-- Use spaces in branch names
-- Use very long sentences
-- Use random or personal branch names
+**DO NOT:** create long-lived branches; use spaces or long sentences in branch names; hold
+work on a branch instead of a flag.
 
 ---
 
 ## Summary
 
-**Long-lived branches:** main, dev
-
-**GitHub environments:** `production` (main), `development` (dev)
-
-**Short-lived branches:** feature/short-description, fix/short-description, refactor/short-description, docs/..., test/..., chore/..., hotfix/...
-
-**PR flow:** feature → dev → main. CI runs on every PR to `main` or `dev`; Netlify deploys run from post-merge CI on push to `dev` (development) and `main` (production).
+- **One trunk:** `main`. Feature branches squash-merge to it and auto-delete.
+- **Deploys:** every `main` push → dev alias; releases only → production (one approval).
+- **Ship:** merge the standing `chore: release X.Y.Z` Release PR.
+- **Rollback:** dispatch a Netlify deploy of an older tag.
