@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/nikunjmavani/core-fe/compare/v1.1.1...v1.1.2) (2026-07-07)
+
+
+### Documentation
+
+* sweep all docs + agent-os commands to the single-trunk model ([#78](https://github.com/nikunjmavani/core-fe/issues/78)) ([53e3268](https://github.com/nikunjmavani/core-fe/commit/53e3268f4d4d12e55330b2a3716e14ca88c916de))
+
 ## [1.1.1](https://github.com/nikunjmavani/core-fe/compare/v1.1.0...v1.1.1) (2026-07-07)
 
 
