@@ -20,4 +20,17 @@ describe('deploy workflows policy', () => {
     // Shares the production concurrency group so it can't race a forward deploy.
     expect(rollback).toContain('group: netlify-deploy-production');
   });
+
+  it('release-deploy.yml deploys production on release publish, pinned to the tag', () => {
+    const release = workflow('release-deploy.yml');
+    // event-driven, and re-runnable for the same tag
+    expect(release).toContain('release:');
+    expect(release).toMatch(/types:\s*\[published\]/);
+    expect(release).toContain('workflow_dispatch:');
+    // production reviewer gate (via the reusable) + tag pin, never github.sha
+    expect(release).toContain('github_environment: production');
+    expect(release).toContain('ref: ${{ needs.resolve.outputs.tag }}');
+    expect(release).not.toContain('github.sha');
+    expect(release).toContain('reusable-netlify-deploy.yml');
+  });
 });

@@ -123,17 +123,11 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(devBlock).not.toContain('cancel-in-progress');
   });
 
-  it('deploy-production is release-gated and default-branch only', () => {
-    const prodBlock = jobBlock(workflow, 'deploy-production');
-    expect(prodBlock).not.toBe('');
-    expect(prodBlock).toContain('github_environment: production');
-    expect(prodBlock).toContain(
-      "needs.release-please.outputs.releases_created == 'true'",
-    );
-    expect(prodBlock).toContain(
-      'github.ref_name == github.event.repository.default_branch',
-    );
-    expect(prodBlock).not.toContain('cancel-in-progress');
+  it('no longer deploys production — that moved to release-deploy.yml', () => {
+    // Prod deploy is decoupled: release-deploy.yml on `release: published`,
+    // pinned to the tag. post-merge must NOT reference the production environment.
+    expect(jobBlock(workflow, 'deploy-production')).toBe('');
+    expect(workflow).not.toContain('github_environment: production');
   });
 
   it('the reusable deploy owns concurrency: never-cancel production, batch everything else', () => {

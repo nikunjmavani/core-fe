@@ -17,15 +17,18 @@ name: Post-merge CI
 #     HEAD; a lone merge deploys by itself.
 #   • deploy-development is decoupled from release-please — the development alias tracks
 #     trunk HEAD even if release-please has a transient failure.
-# release-please and deploy-production are serialized and NEVER cancelled, so a
-# release is never lost to a following merge.
+# release-please is serialized and NEVER cancelled, so a release is never lost to
+# a following merge. The production deploy is a separate workflow, release-deploy.yml
+# (on `release: published`, pinned to the tag).
 #
 # Deploy split (deploy-per-purpose, not deploy-per-branch):
 #   deploy-development → src pushes to main → Netlify --alias development (ungated)
-#   deploy-production  → releases only → Netlify --prod (production reviewer gate)
+#   production deploy  → MOVED to release-deploy.yml (on `release: published`,
+#                        pinned to the tag) — this workflow no longer deploys prod.
 #
-# Rollback / redeploy an old tag: reusable-netlify-deploy.yml via workflow_dispatch
-# (target=production, ref=vX.Y.Z) — same production approval, no CI rerun.
+# Rollback: rollback-deploy.yml (instant restore of the previous deploy). Redeploy
+# an old tag: release-deploy.yml via workflow_dispatch{tag}. Both keep the
+# production reviewer gate.
 
 on:
   push:
@@ -95,7 +98,8 @@ jobs:
       cancel-in-progress: false
     # UNGATED — the PAT is a repository secret (RELEASE_PLEASE_TOKEN), so this job
     # no longer selects an environment to read it. Refreshing the standing Release
-    # PR is harmless; the ONE human gate lives at deploy-production, nowhere else.
+    # PR is harmless; the ONE human gate lives at the production deploy
+    # (release-deploy.yml), nowhere else.
     permissions:
       contents: write
       pull-requests: write
@@ -315,33 +319,14 @@ jobs:
     with:
       github_environment: development
 
-  deploy-production:
-    name: Deploy (production)
-    needs: [release-please, release-sbom]
-    # ONLY when release-please cut a release, only from the default branch. The
-    # production environment's required reviewer is the ONE human gate in the
-    # whole model. Concurrency (never-cancel prod) lives in the reusable.
-    if: |
-      always() &&
-      inputs.skip_deploy != true &&
-      github.ref_name == github.event.repository.default_branch &&
-      needs.release-please.outputs.releases_created == 'true' &&
-      (needs.release-sbom.result == 'success' || needs.release-sbom.result == 'skipped')
-    uses: ./.github/workflows/reusable-netlify-deploy.yml
-    secrets: inherit
-    with:
-      github_environment: production
-      upload-release-artifact: true
-
   notify-failure:
     name: Notify failure
-    needs: [release-please, deploy-development, deploy-production]
+    needs: [release-please, deploy-development]
     if: |
       always() &&
       (
         needs.release-please.result == 'failure' ||
-        needs.deploy-development.result == 'failure' ||
-        needs.deploy-production.result == 'failure'
+        needs.deploy-development.result == 'failure'
       )
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -355,11 +340,10 @@ jobs:
         env:
           RELEASE_RESULT: ${{ needs.release-please.result }}
           DEV_DEPLOY_RESULT: ${{ needs.deploy-development.result }}
-          PROD_DEPLOY_RESULT: ${{ needs.deploy-production.result }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          echo "::error title=Post-merge CI failed::release=${RELEASE_RESULT} deploy-dev=${DEV_DEPLOY_RESULT} deploy-prod=${PROD_DEPLOY_RESULT} — ${WORKFLOW_URL}"
+          echo "::error title=Post-merge CI failed::release=${RELEASE_RESULT} deploy-dev=${DEV_DEPLOY_RESULT} — ${WORKFLOW_URL}"
 
       # A run-scoped ::error annotation dies with the run. Persist a tracked issue
       # (find-or-create by a hidden marker, labelled `ci-failure`) so a broken
@@ -370,7 +354,6 @@ jobs:
         env:
           RELEASE_RESULT: ${{ needs.release-please.result }}
           DEV_DEPLOY_RESULT: ${{ needs.deploy-development.result }}
-          PROD_DEPLOY_RESULT: ${{ needs.deploy-production.result }}
         with:
           script: |
             const marker = '<!-- post-merge-ci-failure -->';
@@ -384,7 +367,6 @@ jobs:
               '| --- | --- |',
               `| release-please | ${process.env.RELEASE_RESULT} |`,
               `| deploy-development | ${process.env.DEV_DEPLOY_RESULT} |`,
-              `| deploy-production | ${process.env.PROD_DEPLOY_RESULT} |`,
               '',
               `Run: ${runUrl}`,
             ].join('\n');
