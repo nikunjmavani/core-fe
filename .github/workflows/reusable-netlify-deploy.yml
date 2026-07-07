@@ -60,11 +60,14 @@ permissions:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: ${{ vars.FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 || 'true' }}
 
-# Serialize deploys per environment so a manual (workflow_dispatch) deploy can
-# never clobber an in-flight release deploy to the same target — it queues.
+# Concurrency policy per environment (single source — callers don't repeat it):
+#   - production   → NEVER cancel: a prod deploy must complete; a manual
+#                    (workflow_dispatch) deploy queues behind an in-flight one.
+#   - every other  → BATCH: a burst of pushes collapses to one deploy of the
+#                    final HEAD (cancel the superseded in-flight deploy).
 concurrency:
   group: netlify-deploy-${{ inputs.target || inputs.github_environment }}
-  cancel-in-progress: false
+  cancel-in-progress: ${{ (inputs.target || inputs.github_environment) != 'production' }}
 
 jobs:
   resolve-environment:

@@ -88,7 +88,7 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(releaseSbomBlock).toContain('name: sbom.cyclonedx.json');
   });
 
-  it('deploy-development is decoupled from release-please and batched (cancel-in-progress)', () => {
+  it('deploy-development is decoupled from release-please, default-branch + src gated', () => {
     const devBlock = jobBlock(workflow, 'deploy-development');
     expect(devBlock).not.toBe('');
     // decoupled: depends on `changes`, NOT release-please (development alias tracks
@@ -96,16 +96,16 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(devBlock).toContain('needs: [changes]');
     expect(devBlock).not.toContain('needs.release-please');
     expect(devBlock).not.toMatch(/needs:\s*\[[^\]]*release-please/);
-    // batched: rapid merges collapse to one deploy.
-    expect(devBlock).toContain('cancel-in-progress: true');
     expect(devBlock).toContain('github_environment: development');
     expect(devBlock).toContain(
       'github.ref_name == github.event.repository.default_branch',
     );
     expect(devBlock).toContain("needs.changes.outputs.src-code == 'true'");
+    // concurrency (batching) now lives in the reusable — the caller does not repeat it.
+    expect(devBlock).not.toContain('cancel-in-progress');
   });
 
-  it('deploy-production is release-gated and never cancelled', () => {
+  it('deploy-production is release-gated and default-branch only', () => {
     const prodBlock = jobBlock(workflow, 'deploy-production');
     expect(prodBlock).not.toBe('');
     expect(prodBlock).toContain('github_environment: production');
@@ -115,7 +115,19 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(prodBlock).toContain(
       'github.ref_name == github.event.repository.default_branch',
     );
-    expect(prodBlock).toContain('cancel-in-progress: false');
+    expect(prodBlock).not.toContain('cancel-in-progress');
+  });
+
+  it('the reusable deploy owns concurrency: never-cancel production, batch everything else', () => {
+    const reusable = readFileSync(
+      join(process.cwd(), '.github/workflows/reusable-netlify-deploy.yml'),
+      'utf8',
+    );
+    expect(reusable).toContain('group: netlify-deploy-');
+    // env-driven cancel-in-progress: prod → false, any other env → true.
+    expect(reusable).toMatch(
+      /cancel-in-progress:\s*\$\{\{[^}]*!=\s*'production'[^}]*\}\}/,
+    );
   });
 
   it('no longer dispatches a post-release back-merge (single trunk — nothing to back-merge)', () => {
