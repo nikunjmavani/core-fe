@@ -2,8 +2,8 @@
 # once a maintainer APPROVES it — the approval is the manual gate. The PR then merges
 # automatically when the required PR CI checks pass.
 #
-# Why approval-triggered (and not a required approval): dev is solo-maintained with
-# 0 required approvals (.github/rulesets/dev.json) because an author can't approve
+# Why approval-triggered (and not a required approval): main is solo-maintained with
+# 0 required approvals (.github/rulesets/main.json) because an author can't approve
 # their own PRs. A maintainer CAN approve Dependabot's PRs, so we use that approval
 # as the opt-in signal to arm auto-merge — no branch-protection change needed.
 # Majors / security / github-actions stay fully manual.
@@ -36,10 +36,8 @@ jobs:
     name: Enable auto-merge for approved low-risk Dependabot updates
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Dependabot PRs target dev, so the development environment is always the
-    # right scope. Selected only to read RELEASE_PLEASE_TOKEN (an environment
-    # secret); development has no protection rules, so this does not gate the run.
-    environment: development
+    # No environment selection: RELEASE_PLEASE_TOKEN is a repository secret now
+    # (single-trunk migration), readable without selecting an environment.
     # Maintainer approved + Dependabot-authored + the non-major npm group only.
     # `npm-major` does not contain the substring `npm-non-major`, so majors never match.
     if: >-
@@ -55,8 +53,7 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           # PAT (falling back to github.token) so the eventual merge is
-          # PAT-attributed and its push to dev TRIGGERS post-merge CI. PR #27's
-          # GITHUB_TOKEN merge produced no post-merge run — no SBOM, no
-          # post-merge tests, no dev deploy for that commit (healed only
-          # because a later push covered it). Same fix as the release PRs.
+          # PAT-attributed and its push to main TRIGGERS post-merge CI. A
+          # GITHUB_TOKEN merge produces no post-merge run — no SBOM, no release,
+          # no dev-alias deploy for that commit. Same fix as the release PRs.
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
