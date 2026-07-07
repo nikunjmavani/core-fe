@@ -56,8 +56,8 @@ src/lib/i18n/build-env.ts         — allowlisted Vite build injections (buildId
 | Build metadata          | `VITE_APP_BUILD_ID`, `VITE_APP_VERSION`, `VITE_I18N_BUILD_*` (Vite plugins)       | Read via `build-env.ts` only              |
 
 **Tooling:** `pnpm tool:sync-env-example` keeps `.env.example` in sync with the schema.
-**Validators:** `pnpm validate:vite-env` (no stray `import.meta.env.VITE_*`),
-`pnpm validate:client-env --production` (deploy conditional keys).
+**Validators:** `pnpm validate:vite-env` (no env/mode sniffing — `import.meta.env.VITE_*`/`DEV`/`PROD`/`MODE` outside the allowlist, or `.environment`/`.MODE ===` compares),
+`pnpm validate:client-env --env <development|production>` (per-environment required + forbidden + strict `allowed` value sets).
 **Operators:** [environment-variables runbook](../deployment/runbooks/environment-variables.md).
 **Adding keys:** `agent-os/skills/env-schema-add/SKILL.md`.  
 **Platform read paths & validators:** `agent-os/skills/platform-hygiene/SKILL.md`.

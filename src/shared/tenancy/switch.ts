@@ -108,6 +108,17 @@ export async function switchToOrganization(
 }
 
 export async function switchToPersonal(): Promise<MeContext | undefined> {
+  // `POST /auth/switch-to-personal` resolves the personal org from the token and
+  // 404s when the caller has none — a real, reachable state even when personal
+  // orgs are *enabled* for the deployment: core-be provisions the personal org
+  // best-effort at first verification, so a failed/skipped provision leaves the
+  // user permanently flag-on-but-org-missing. me/context models exactly this as
+  // `personalOrganizationId: null`. Gate on that concrete id (not the deployment
+  // flag) so we never fire a switch we know will 404; callers treat `undefined`
+  // as "no personal workspace to switch to".
+  const cached = queryClient.getQueryData<MeContext>(meContextQueryKey);
+  if (cached && !cached.personalOrganizationId) return undefined;
+
   const result = await liveSwitch('/auth/switch-to-personal', {});
   if (result) {
     deriveOrgContext(result);

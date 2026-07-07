@@ -1,4 +1,5 @@
 import {
+  assertAuthPlatformInvariants,
   branchEnvironmentMap,
   type DeployEnvironment,
   environmentForBranch,
@@ -90,6 +91,50 @@ describe('envProfiles required keys', () => {
     for (const entry of envSchemaConditionallyRequiredKeys) {
       expect(entry.condition.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('envProfiles allowed values (strict per-environment)', () => {
+  it('production permits only the safe value for each diagnostics flag', () => {
+    const allowed = envProfiles.production.allowed;
+    expect(allowed).toBeDefined();
+    expect(allowed?.VITE_DEBUG_LOGGING).toEqual(['false']);
+    expect(allowed?.VITE_DEVTOOLS).toEqual(['false']);
+    expect(allowed?.VITE_E2E_HOOKS).toEqual(['false']);
+    expect(allowed?.VITE_VERSION_CHECK).toEqual(['true']);
+  });
+
+  it('development permits either boolean value for diagnostics flags', () => {
+    const allowed = envProfiles.development.allowed;
+    expect(allowed?.VITE_DEBUG_LOGGING).toEqual(['true', 'false']);
+    expect(allowed?.VITE_DEVTOOLS).toEqual(['true', 'false']);
+    expect(allowed?.VITE_E2E_HOOKS).toEqual(['true', 'false']);
+    expect(allowed?.VITE_VERSION_CHECK).toEqual(['true', 'false']);
+  });
+
+  it('rejects a disallowed production value (mirrors the validator check)', () => {
+    const debug = envProfiles.production.allowed?.VITE_DEBUG_LOGGING ?? [];
+    expect(debug.includes('true')).toBe(false);
+    expect(debug.includes('false')).toBe(true);
+    const versionCheck = envProfiles.production.allowed?.VITE_VERSION_CHECK ?? [];
+    expect(versionCheck.includes('false')).toBe(false);
+    expect(versionCheck.includes('true')).toBe(true);
+  });
+});
+
+describe('assertAuthPlatformInvariants', () => {
+  it('does not throw when no auth surface is enabled (runs the warn path)', () => {
+    const allAuthOff = (key: string) => (key.startsWith('AUTH_') ? 'false' : undefined);
+    expect(() => assertAuthPlatformInvariants(allAuthOff)).not.toThrow();
+  });
+
+  it('throws when auto-google is on but google is off', () => {
+    const get = (key: string) => {
+      if (key === 'AUTH_OAUTH_AUTO_GOOGLE') return 'true';
+      if (key === 'AUTH_OAUTH_GOOGLE') return 'false';
+      return undefined;
+    };
+    expect(() => assertAuthPlatformInvariants(get)).toThrow(/AUTO_GOOGLE/);
   });
 });
 

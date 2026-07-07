@@ -9,7 +9,6 @@ import { installE2eCaptchaHeadersOnAuthApi } from '@/tests/utils/e2e-captcha.ts'
 export const AUTH_LABELS = {
   email: /^email$/i,
   continue: /^continue$/i,
-  continuing: /^continuing/i,
   verifyAndContinue: /verify & continue/i,
   enterVerificationCode: /enter verification code/i,
 } as const;

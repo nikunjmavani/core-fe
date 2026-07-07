@@ -20,13 +20,10 @@ export function getClientEnv(): ClientEnv {
 
   const parsed = clientEnvSchema.safeParse(import.meta.env);
   if (!parsed.success) {
+    // Fail-closed in every environment — invalid config is a real error, not a
+    // per-mode branch. No `import.meta.env.PROD` / NODE_ENV check.
     const detail = JSON.stringify(z.flattenError(parsed.error));
-    if (import.meta.env.PROD) {
-      throw new Error(`[Config] Invalid environment configuration: ${detail}`);
-    }
-    console.warn('[Config] Invalid env (dev continues):', detail);
-    _clientEnv = clientEnvSchema.parse({});
-    return _clientEnv;
+    throw new Error(`[Config] Invalid environment configuration: ${detail}`);
   }
 
   _clientEnv = parsed.data;
@@ -56,6 +53,6 @@ export function getRuntimeConfigValue(key: string): string | undefined {
 }
 
 /** Run cross-field auth/platform invariant checks once at boot. */
-export function validatePlatformInvariantsAtBoot(isProduction: boolean): void {
-  assertAuthPlatformInvariants(getRuntimeConfigValue, isProduction);
+export function validatePlatformInvariantsAtBoot(): void {
+  assertAuthPlatformInvariants(getRuntimeConfigValue);
 }

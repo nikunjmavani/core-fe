@@ -14,7 +14,7 @@ git push           # the pre-push hook runs the same gate automatically
 pnpm quality       # full local quality story: pnpm health (all phases) + the Sonar gate
 ```
 
-First run provisions an analysis token into `.env.local` (gitignored); after that a scan is
+First run provisions an analysis token into `.env.development` (gitignored); after that a scan is
 ~60–90s. The pre-push gate auto-starts the server if it is down.
 
 ## Commands (`sonar:*` namespace)
@@ -27,14 +27,16 @@ First run provisions an analysis token into `.env.local` (gitignored); after tha
 | `pnpm sonar:reset` | Wipe the volume and start fresh (`down -v`). Use if auth/state gets stuck.                              |
 
 The server UI is at <http://localhost:9000>. Admin credentials are generated on first run and
-stored in `.env.local` as `SONAR_ADMIN_PASSWORD` / `SONAR_TOKEN`.
+stored in `.env.development` as `SONAR_ADMIN_PASSWORD` / `SONAR_TOKEN` (gitignored — and the
+forbidden-secret validator `pnpm validate:client-env` checks only git-tracked env files, so these
+`SONAR_*` keys never trip it).
 
 ### Sharing port 9000 with core-be
 
 Both repos use `localhost:9000`. If core-be's SonarQube is already running, the gate **reuses it**
 (one server, two projects — `core-fe` appears next to `core-be` in the same UI). For the gate to
 mint a `core-fe` token there, copy `SONAR_ADMIN_PASSWORD` from `core-be/.env.local` into this
-repo's `.env.local`. The scanner container always targets the host port (`host.docker.internal:9000`),
+repo's `.env.development`. The scanner container always targets the host port (`host.docker.internal:9000`),
 so it reaches whichever server owns it.
 
 ## How the pre-push gate works
@@ -49,18 +51,17 @@ port of core-be's `tooling/sonar/sonar-gate.ts`):
 
 1. **Auto-starts** the SonarQube container if it is not already up, and waits for it to be ready.
 2. **Provisions a token** on first run (changes the default `admin/admin` password to a generated
-   one, mints a token, saves both to `.env.local`). Idempotent afterwards.
+   one, mints a token, saves both to `.env.development`). Idempotent afterwards.
 3. **Scans** via the `sonar-scanner-cli` container.
 4. **Waits** for the server to finish processing the report.
 5. **Reports** every unresolved issue + hotspot and **exits 1** (blocking the push) if there is at
    least one; exits 0 when clean.
 
-### Escape hatches
+### No bypass
 
-```bash
-SKIP_SONAR=1 git push    # skip only the Sonar gate (still runs biome/typecheck/build/tests)
-git push --no-verify     # skip all pre-push hooks
-```
+There is **no per-gate skip** for Sonar: a red gate must be fixed, not dodged. (`git push
+--no-verify` skips _all_ pre-push hooks — build, tests, everything — so it is not a Sonar
+escape hatch and must not be used to route around a red gate.)
 
 ## What SonarQube analyzes
 
@@ -83,9 +84,9 @@ So a clean gate means **zero issues in the code that ships to production**.
   core-be's server). Copy `SONAR_ADMIN_PASSWORD` from `core-be/.env.local`, or run
   `pnpm sonar:reset` to start fresh.
 - **Server swapped under stored credentials** (core-be's instance went away and the gate booted a
-  fresh one while `.env.local` still held the old password) — the gate self-heals: a 401 during
+  fresh one while `.env.development` still held the old password) — the gate self-heals: a 401 during
   token minting triggers re-provisioning from the fresh instance's `admin/admin` default.
 - **Port 9000 already in use when `sonar:up` fails** — core-be's server owns the port; that is
   fine, see [Sharing port 9000](#sharing-port-9000-with-core-be).
 - **Server slow / stuck after an upgrade** — `pnpm sonar:reset`.
-- **Need to bypass once** — `SKIP_SONAR=1 git push` (see above), then fix and re-push.
+- **Gate is red** — fix the reported issues, then re-push. There is no per-gate bypass.

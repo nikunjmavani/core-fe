@@ -86,8 +86,8 @@ export function ProfileStep() {
   const { t } = useTranslation(ONBOARDING_NS);
   return (
     <Input
-      placeholder={t(ONBOARDING_KEYS.profile.fullNamePlaceholder)}
-      data-testid={ONBOARDING_TEST_IDS.fullName}
+      placeholder={t(ONBOARDING_KEYS.profile.firstNamePlaceholder)}
+      data-testid={ONBOARDING_TEST_IDS.firstName}
     />
   );
 }

@@ -8,6 +8,12 @@ import {
   hasPermission,
 } from './policies.ts';
 
+// The empty-list footgun warning is gated on platformConfig.debugLogging
+// (env-driven, off by default) — turn it on so the warn path is exercised.
+vi.mock('@/core/config/env.ts', () => ({
+  platformConfig: { debugLogging: true },
+}));
+
 const ctx = (over: Partial<AccessContext> = {}): AccessContext => ({
   role: 'user',
   permissions: [],
@@ -55,7 +61,7 @@ describe('hasAllPermissions', () => {
     ).toBe(false);
   });
 
-  it('returns true for an empty list but warns about the footgun in dev (2.4)', () => {
+  it('returns true for an empty list but warns about the footgun when debug logging is on (2.4)', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     expect(hasAllPermissions(ctx(), [])).toBe(true);
     expect(warn).toHaveBeenCalled();

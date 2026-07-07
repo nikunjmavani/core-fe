@@ -39,6 +39,7 @@ import {
   authEmailPanelIsBlocked,
   authMethodIsLoading,
 } from './auth-form-pending.ts';
+import { AuthMethodButton } from './components/AuthMethodButton/index.ts';
 
 function formatResendCooldown(remainingMs: number): string {
   const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
@@ -80,6 +81,39 @@ function getRedirectPath(location: {
     return state.from.pathname;
   }
   return undefined;
+}
+
+/**
+ * Send the just-authenticated user straight to their resolved destination.
+ *
+ * We deliberately do NOT navigate to `/` and let the index resolver decide: the
+ * `/` resolver re-runs `hydrateSessionContext()` (a redundant me/context fetch —
+ * `establishSession` populated it moments ago) and then throws a second redirect,
+ * and `/login` stays mounted for that whole round-trip — the "flash of login"
+ * after entering the code. `resolveRootTarget` is the exact decision the resolver
+ * makes, run here on the context we already hold. A fresh signup still routes to
+ * onboarding before any saved `redirect`.
+ */
+function navigateAfterEmailLogin(
+  navigate: ReturnType<typeof useNavigate>,
+  location: ReturnType<typeof useLocation>,
+): void {
+  const ctx = queryClient.getQueryData<MeContext>(meContextQueryKey);
+  const rootTarget = ctx ? resolveRootTarget(ctx) : ({ to: '/' } as const);
+  if (rootTarget.to === '/onboarding') {
+    void navigate({ to: '/onboarding', replace: true });
+    return;
+  }
+  const redirectPath = getRedirectPath(location);
+  if (redirectPath) {
+    void navigate({ to: redirectPath, replace: true });
+    return;
+  }
+  if (rootTarget.to === '/organization/$organizationSlug/dashboard') {
+    void navigate({ to: rootTarget.to, params: rootTarget.params, replace: true });
+    return;
+  }
+  void navigate({ to: rootTarget.to, replace: true });
 }
 
 type AuthEmailPanelProps = {
@@ -175,13 +209,7 @@ export function AuthEmailPanel({
       await establishSession(accessToken);
       captureAnalyticsEvent(ANALYTICS_EVENTS.authEmailCodeVerified);
       captureAnalyticsEvent(ANALYTICS_EVENTS.sessionStarted, { method: 'email_code' });
-      const ctx = queryClient.getQueryData<MeContext>(meContextQueryKey);
-      const rootTarget = ctx ? resolveRootTarget(ctx) : { to: '/' as const };
-      const destination =
-        rootTarget.to === '/onboarding'
-          ? '/onboarding'
-          : (getRedirectPath(location) ?? '/');
-      void navigate({ to: destination, replace: true });
+      navigateAfterEmailLogin(navigate, location);
     } catch (err) {
       if (err instanceof MfaRequiredError) {
         const destination = getRedirectPath(location) ?? '/';
@@ -239,19 +267,17 @@ export function AuthEmailPanel({
               ) : null}
             </div>
 
-            <Button
+            <AuthMethodButton
               type="submit"
-              className="w-full"
-              isLoading={emailSendLoading || !turnstileReady}
-              disabled={
-                emailBlocked || emailSendLoading || isSubmitting || !turnstileReady
-              }
-              data-testid={AUTH_FORM_TEST_IDS.emailSubmit}
-            >
-              {emailSendLoading || isSubmitting
-                ? t(AUTH_KEYS.common.sendingEllipsis)
-                : t(AUTH_KEYS.auth.emailContinue)}
-            </Button>
+              variant="default"
+              target={{ method: 'email-send' }}
+              pending={pending}
+              captchaGated
+              turnstileReady={turnstileReady}
+              label={t(AUTH_KEYS.auth.emailContinue)}
+              extraDisabled={isSubmitting}
+              testId={AUTH_FORM_TEST_IDS.emailSubmit}
+            />
           </div>
         </form>
       </div>
@@ -311,23 +337,19 @@ export function AuthEmailPanel({
         />
       </div>
 
-      <Button
-        type="button"
-        className="w-full"
-        isLoading={emailVerifyLoading || !turnstileReady}
-        disabled={
-          emailBlocked ||
-          emailVerifyLoading ||
-          !turnstileReady ||
+      <AuthMethodButton
+        variant="default"
+        target={{ method: 'email-verify' }}
+        pending={pending}
+        captchaGated
+        turnstileReady={turnstileReady}
+        label={t(AUTH_KEYS.auth.email.verifyAndContinue)}
+        extraDisabled={
           verificationCode.trim().length !== AUTH_EMAIL_VERIFICATION_CODE_LENGTH
         }
         onClick={() => void verifyCode()}
-        data-testid={AUTH_FORM_TEST_IDS.emailVerify}
-      >
-        {emailVerifyLoading
-          ? t(AUTH_KEYS.common.verifyingEllipsis)
-          : t(AUTH_KEYS.auth.email.verifyAndContinue)}
-      </Button>
+        testId={AUTH_FORM_TEST_IDS.emailVerify}
+      />
 
       <footer className="flex flex-col gap-2.5 text-center text-sm lg:text-left">
         <p className="text-muted-foreground text-pretty">

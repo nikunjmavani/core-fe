@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import i18n from '@/lib/i18n/i18n.ts';
-import { organizationDashboard } from '@/lib/routes/index.ts';
 import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
 import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
@@ -24,10 +23,12 @@ import { Loader2 } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
+import type { MeContext } from '@/shared/tenancy/me-context.ts';
 import {
   createOrganization,
   listMyOrganizations,
 } from '@/shared/tenancy/my-organizations.ts';
+import { resolveRootTarget } from '@/shared/tenancy/organization-resolver.ts';
 import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
 import { switchToOrganization, switchToPersonal } from '@/shared/tenancy/switch.ts';
 
@@ -76,27 +77,30 @@ function getStepMetaKeys(step: OnboardingStep): {
  * Persist the collected profile + fire a segmentation event. Best-effort by
  * contract — every failure is swallowed so it can never strand the user on
  * the onboarding screen. The survey answers are analytics only (not PII we
- * store server-side); name + job title update the user's profile.
+ * store server-side); first + last name update the user's profile.
  */
 async function persistOnboardingResult(input: {
-  fullName: string;
-  jobTitle: string;
+  firstName: string;
+  lastName: string;
   teamSize: string;
   primaryUseCase: string;
   referralSource: string;
   invitedCount: number;
 }): Promise<void> {
-  const fullName = input.fullName.trim();
-  const jobTitle = input.jobTitle.trim();
+  const firstName = input.firstName.trim();
+  const lastName = input.lastName.trim();
   const token = getAccessToken();
-  if (token && (fullName || jobTitle)) {
+  if (token && (firstName || lastName)) {
     try {
       await authApi.updateProfile(
-        { name: fullName || undefined, jobTitle: jobTitle || undefined },
+        { firstName: firstName || undefined, lastName: lastName || undefined },
         token,
       );
       const user = useAuthStore.getState().user;
-      if (user && fullName) useAuthStore.getState().setUser({ ...user, name: fullName });
+      const displayName = [firstName, lastName].filter(Boolean).join(' ');
+      if (user && displayName) {
+        useAuthStore.getState().setUser({ ...user, name: displayName });
+      }
     } catch {
       /* profile update is best-effort */
     }
@@ -151,16 +155,16 @@ async function resolveOrganizationForFinish(input: {
   return { organizationId, organizationSlug };
 }
 
-async function refreshSessionAfterOnboardingFinish(): Promise<void> {
-  await hydrateSessionContext();
+async function refreshSessionAfterOnboardingFinish(): Promise<MeContext> {
+  return hydrateSessionContext();
 }
 
 function isOnboardingDirty(input: {
   completed: boolean;
   stepIndex: number;
   data: {
-    fullName: string;
-    jobTitle: string;
+    firstName: string;
+    lastName: string;
     organizationName: string;
     invites: string[];
   };
@@ -169,22 +173,60 @@ function isOnboardingDirty(input: {
   if (input.stepIndex > 0) return true;
   const d = input.data;
   return Boolean(
-    d.fullName.trim() ||
-    d.jobTitle.trim() ||
+    d.firstName.trim() ||
+    d.lastName.trim() ||
     d.organizationName.trim() ||
     d.invites.length > 0,
   );
 }
 
+/**
+ * Activate the workspace the user just finished onboarding into and return the
+ * post-switch context (active org applied). Switching re-mints the token and
+ * writes `activeOrganization` into the me/context cache, so the returned context
+ * is what the destination resolver should read.
+ *
+ * Gate the personal switch on the concrete `personalOrganizationId`, not the
+ * deployment flag: personal orgs can be *enabled* yet unprovisioned for a user
+ * (core-be self-heals this, but the FE stays defensive), in which case
+ * `switch-to-personal` would 404 and trap onboarding. No workspace → return
+ * `undefined` and let the caller defer to the `/` resolver.
+ */
 async function activateWorkspaceAfterOnboardingFinish(input: {
   organizationId: string | null;
-  personalOrganizations: boolean;
-}): Promise<void> {
+  personalOrganizationId: string | null;
+}): Promise<MeContext | undefined> {
   if (input.organizationId) {
-    await switchToOrganization(input.organizationId);
-  } else if (input.personalOrganizations) {
-    await switchToPersonal();
+    return switchToOrganization(input.organizationId);
   }
+  if (input.personalOrganizationId) {
+    return switchToPersonal();
+  }
+  return undefined;
+}
+
+/**
+ * Land the user directly on their resolved workspace after onboarding — no hop
+ * through the `/` resolver (which would re-fetch me/context and add a second
+ * redirect). `resolveRootTarget` is the same decision `/` makes, run on the
+ * post-switch context we already hold. Only when no workspace resolves (should
+ * not happen once a switch succeeded) do we defer to `/` rather than self-loop
+ * back into onboarding.
+ */
+function navigateAfterOnboarding(
+  navigate: ReturnType<typeof useNavigate>,
+  ctx: MeContext,
+): void {
+  const target = resolveRootTarget(ctx);
+  if (target.to === '/organization/$organizationSlug/dashboard') {
+    void navigate({ to: target.to, params: target.params, replace: true });
+    return;
+  }
+  if (target.to === '/dashboard' || target.to === '/organization') {
+    void navigate({ to: target.to, replace: true });
+    return;
+  }
+  void navigate({ to: '/', replace: true });
 }
 
 function renderStep(step: ReturnType<typeof stepAtIndex>) {
@@ -264,7 +306,7 @@ export function OnboardingPage() {
 
   const canProceed =
     (step !== 'workspace' || data.organizationName.trim().length > 0) &&
-    (step !== 'profile' || data.fullName.trim().length > 0);
+    (step !== 'profile' || data.firstName.trim().length > 0);
 
   const finish = async () => {
     setSubmitting(true);
@@ -273,7 +315,7 @@ export function OnboardingPage() {
         deploymentFlags,
         meContext ?? null,
       );
-      const { organizationId, organizationSlug } = await resolveOrganizationForFinish({
+      const { organizationId } = await resolveOrganizationForFinish({
         needsCreate,
         createdOrganizationId,
         createdOrganizationSlug,
@@ -284,8 +326,8 @@ export function OnboardingPage() {
       });
 
       void persistOnboardingResult({
-        fullName: data.fullName,
-        jobTitle: data.jobTitle,
+        firstName: data.firstName,
+        lastName: data.lastName,
         teamSize: data.teamSize,
         primaryUseCase: data.primaryUseCase,
         referralSource: data.referralSource,
@@ -301,10 +343,10 @@ export function OnboardingPage() {
       );
       const failed = results.filter((r) => r.status === 'rejected').length;
 
-      await refreshSessionAfterOnboardingFinish();
-      await activateWorkspaceAfterOnboardingFinish({
+      const refreshedContext = await refreshSessionAfterOnboardingFinish();
+      const activatedContext = await activateWorkspaceAfterOnboardingFinish({
         organizationId,
-        personalOrganizations: deploymentFlags.personalOrganizations,
+        personalOrganizationId: refreshedContext.personalOrganizationId,
       });
 
       complete();
@@ -320,11 +362,7 @@ export function OnboardingPage() {
           i18n.t(ONBOARDING_KEYS.toast.finishSuccess, { ns: ONBOARDING_NS }),
         );
       }
-      if (organizationSlug) {
-        void navigate({ ...organizationDashboard(organizationSlug), replace: true });
-      } else {
-        void navigate({ to: '/', replace: true });
-      }
+      navigateAfterOnboarding(navigate, activatedContext ?? refreshedContext);
     } catch {
       notify.error(i18n.t(ONBOARDING_KEYS.toast.finishError, { ns: ONBOARDING_NS }));
     } finally {

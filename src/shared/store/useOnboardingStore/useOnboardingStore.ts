@@ -15,8 +15,9 @@ export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 /** Data collected across the onboarding wizard (persisted so it is resumable). */
 interface OnboardingData {
-  fullName: string;
-  jobTitle: string;
+  /** Profile name — split fields mirror core-be `first_name` / `last_name`. */
+  firstName: string;
+  lastName: string;
   /** Qualifying questions — drive segmentation + smart defaults. */
   teamSize: string;
   primaryUseCase: string;
@@ -56,8 +57,8 @@ interface OnboardingStore {
 }
 
 const INITIAL_DATA: OnboardingData = {
-  fullName: '',
-  jobTitle: '',
+  firstName: '',
+  lastName: '',
   teamSize: '',
   primaryUseCase: '',
   referralSource: '',

@@ -15,8 +15,9 @@ import { signInWithPasskey } from '@/shared/auth/passkey-sign-in.ts';
 
 import { AuthForm } from './AuthForm.tsx';
 
+const turnstileReadyRef = vi.hoisted(() => ({ value: true }));
 vi.mock('@/shared/auth/captcha/useTurnstileReady/index.ts', () => ({
-  useTurnstileReady: () => true,
+  useTurnstileReady: () => turnstileReadyRef.value,
 }));
 
 vi.mock('@/core/config/auth-methods.ts', () => ({
@@ -72,6 +73,7 @@ describe('AuthForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    turnstileReadyRef.value = true;
   });
 
   it('opens the email panel by default', async () => {
@@ -164,6 +166,62 @@ describe('AuthForm', () => {
 
     resolvePasskey?.();
     await waitFor(() => expect(signInWithPasskey).toHaveBeenCalledOnce());
+  });
+
+  it('keeps the provider label while OAuth is in flight and isolates the clicked method', async () => {
+    const user = userEvent.setup();
+    let resolveOauth: ((url: string) => void) | undefined;
+    const { authApi } = await import('@/shared/api/auth-api.ts');
+    vi.mocked(authApi.oauthStart).mockImplementation(
+      () =>
+        new Promise<string>((resolve) => {
+          resolveOauth = resolve;
+        }),
+    );
+
+    renderForm();
+    await user.click(await screen.findByTestId('auth-continue-google'));
+
+    await waitFor(() => {
+      const google = screen.getByTestId('auth-continue-google');
+      // Label stays put — no swap to "Continuing…" (the spinner conveys progress).
+      expect(google).toHaveTextContent(/continue with google/i);
+      expect(google).not.toHaveTextContent(/continuing/i);
+      expect(google).toHaveAttribute('aria-busy', 'true');
+      // Only the clicked method processes; everything else is disabled.
+      expect(screen.getByTestId('auth-continue-github')).toBeDisabled();
+      expect(screen.getByTestId('auth-continue-passkey')).toBeDisabled();
+      expect(screen.getByTestId('auth-email')).toBeDisabled();
+    });
+
+    resolveOauth?.('https://oauth.example/redirect');
+  });
+
+  it('does not spin idle OAuth buttons once another method is pending (single-use captcha)', async () => {
+    // Captcha token not yet minted (or consumed by the in-flight method).
+    turnstileReadyRef.value = false;
+    const user = userEvent.setup();
+    vi.mocked(signInWithPasskey).mockImplementation(
+      () => new Promise<void>(() => {}), // stays pending
+    );
+
+    renderForm();
+    await user.click(await screen.findByTestId('auth-continue-passkey'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('auth-continue-passkey')).toHaveAttribute(
+        'aria-busy',
+        'true',
+      );
+    });
+
+    // Every other method is disabled but MUST NOT show a spinner.
+    for (const id of ['auth-continue-google', 'auth-continue-github']) {
+      const btn = screen.getByTestId(id);
+      expect(btn).toBeDisabled();
+      expect(btn).toHaveAttribute('aria-busy', 'false');
+      expect(btn.querySelector('.animate-spin')).toBeNull();
+    }
   });
 
   it('has no accessibility violations', async () => {

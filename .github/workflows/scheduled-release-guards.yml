@@ -1,11 +1,10 @@
 # Release-flow guards — scheduled canaries that catch release-cycle drift while it
 # is still a notification, not a blocked release (ported from core-be's 4.8.0
-# release retrospective):
-#   1. Branch ancestry (daily): `main` must be an ancestor of `dev`. A failed or
-#      missed post-release back-merge silently diverges the branches; the next
-#      dev → main promote then needs a manual ancestry-repair PR. Fix by merging
-#      the open `release/backmerge-v*` PR or re-running "Post-release back-merge".
-#   2. GitHub environment protection + branch ruleset drift (weekly): the
+# release retrospective).
+#
+# Single-trunk model: there is no second branch to diverge from, so the former
+# "main ⊆ dev" branch-ancestry canary is gone. What remains:
+#   • GitHub environment protection + branch ruleset drift (weekly): the
 #      committed `.github/environments/*.json` must match the GitHub UI
 #      (full protection diff — the Netlify deploy refuses to deploy on this
 #      drift), and every committed `.github/rulesets/*.json` must still EXIST
@@ -19,7 +18,6 @@ name: Release-flow guards
 
 on:
   schedule:
-    - cron: '30 5 * * *' # daily — branch ancestry
     - cron: '30 6 * * 1' # weekly (Monday) — environment protection drift
   workflow_dispatch:
 
@@ -34,30 +32,6 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  branch-ancestry:
-    name: Branch ancestry (main contained in dev)
-    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 5 * * *'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-
-      - name: Verify origin/main is an ancestor of origin/dev
-        run: |
-          set -euo pipefail
-          git fetch origin main dev
-          if git merge-base --is-ancestor origin/main origin/dev; then
-            echo "OK: origin/main is contained in origin/dev — no back-merge pending."
-          else
-            missing_count="$(git rev-list --count origin/dev..origin/main)"
-            echo "::error::origin/dev is missing ${missing_count} commit(s) from origin/main. A post-release back-merge did not complete — merge the open release/backmerge-v* PR (merge commit, never squash) or re-run the 'Post-release back-merge' workflow. Left unfixed, the next dev → main promote requires a manual ancestry-repair PR."
-            git log --oneline origin/dev..origin/main | head -10
-            exit 1
-          fi
-
   environment-drift:
     name: GitHub environment + ruleset drift
     if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 6 * * 1'

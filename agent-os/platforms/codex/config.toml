@@ -1,2 +1,2 @@
 # Codex does not use project MCP servers — configure integrations in the Codex UI if needed.
-# Generated/maintained by tooling/agent-os/generate.mjs (no [mcp_servers.*] block).
+# Generated/maintained by tooling/agent-os/generate.ts (no [mcp_servers.*] block).

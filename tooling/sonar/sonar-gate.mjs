@@ -2,7 +2,7 @@
  * Local SonarQube quality gate (used by the pre-push hook and `pnpm sonar:scan`).
  *
  * Ensures the local SonarQube server is running (auto-starts it if not), provisions an analysis
- * token on first run (stored in the gitignored `.env.local`), runs a scan, waits for the server
+ * token on first run (stored in the gitignored `.env.development`), runs a scan, waits for the server
  * to finish processing, and then prints any unresolved issues and FAILS (exit 1) if there is at
  * least one — so every Sonar finding on the deployed-app surface must be cleared before code is
  * pushed. Exits 0 when the project is clean.
@@ -18,7 +18,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
 const SONAR_URL = process.env.SONAR_HOST_URL ?? 'http://localhost:9000';
 const PROJECT_KEY = 'core-fe';
 const COMPOSE_FILE = 'docker-compose.sonar.yml';
-const ENV_LOCAL = '.env.local';
+// The single gitignored local env file. There is no `.env.local` anymore — the
+// local dev file `.env.development` holds behavior flags and machine secrets
+// (SONAR_* are auto-managed here and skipped by the client-env forbidden guard).
+const ENV_LOCAL = '.env.development';
 const TOKEN_NAME = 'core-fe-local-gate';
 const ADMIN_LOGIN = 'admin';
 const SERVER_READY_TIMEOUT_MS = 240_000;
@@ -39,7 +42,7 @@ function die(message) {
   process.exit(1);
 }
 
-/** Parses `.env.local` into a key→value map (quotes stripped); returns {} when absent. */
+/** Parses `.env.development` into a key→value map (quotes stripped); returns {} when absent. */
 function readEnvLocal() {
   if (!existsSync(ENV_LOCAL)) return {};
   /** @type {Record<string, string>} */
@@ -52,7 +55,7 @@ function readEnvLocal() {
 }
 
 /**
- * Inserts/updates the given keys in `.env.local`, preserving all other lines.
+ * Inserts/updates the given keys in `.env.development`, preserving all other lines.
  * @param {Record<string, string>} updates
  */
 function upsertEnvLocal(updates) {
@@ -153,7 +156,7 @@ function generateLocalAdminPassword() {
 
 /**
  * Returns a valid analysis token, provisioning one on first run: changes the default `admin/admin`
- * password to a generated one (stored in `.env.local`) and mints a token. Idempotent thereafter.
+ * password to a generated one (stored in `.env.development`) and mints a token. Idempotent thereafter.
  */
 async function ensureToken() {
   const env = readEnvLocal();
@@ -171,9 +174,9 @@ async function ensureToken() {
     const defaultValid = defaultWorks.ok && (await defaultWorks.json()).valid === true;
     if (!defaultValid) {
       die(
-        'SonarQube admin password is unknown (not the default and not in .env.local).\n' +
+        'SonarQube admin password is unknown (not the default and not in .env.development).\n' +
           "  If core-be's SonarQube owns port 9000, copy SONAR_ADMIN_PASSWORD from core-be/.env.local\n" +
-          "  into this repo's .env.local. Otherwise reset the instance with `pnpm sonar:reset`.",
+          "  into this repo's .env.development. Otherwise reset the instance with `pnpm sonar:reset`.",
       );
     }
     adminPassword = generateLocalAdminPassword();
@@ -226,7 +229,7 @@ async function ensureToken() {
   if (!token) die('SonarQube returned no token.');
 
   upsertEnvLocal({ SONAR_ADMIN_PASSWORD: adminPassword, SONAR_TOKEN: token });
-  log('Token provisioned and saved to .env.local.');
+  log('Token provisioned and saved to .env.development.');
   return token;
 }
 

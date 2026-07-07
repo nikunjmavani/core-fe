@@ -28,7 +28,6 @@ export const AUTH_KEYS = {
     sending: 'common.sending',
     sendingEllipsis: 'common.sendingEllipsis',
     verifying: 'common.verifying',
-    verifyingEllipsis: 'common.verifyingEllipsis',
     pleaseWait: 'common.pleaseWait',
   },
   auth: {
@@ -39,7 +38,6 @@ export const AUTH_KEYS = {
     continueWithPasskey: 'auth.continueWithPasskey',
     dividerOr: 'auth.dividerOr',
     emailContinue: 'auth.emailContinue',
-    continuing: 'auth.continuing',
     tryAgainIn: 'auth.tryAgainIn',
     tryAgainPrefix: 'auth.tryAgainPrefix',
     back: 'auth.back',

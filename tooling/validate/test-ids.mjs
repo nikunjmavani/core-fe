@@ -298,14 +298,19 @@ function validateForms() {
 
       const content = readText(formPath);
       const slug = formSlugFromPath(formPath);
+      // Accept both the raw `data-testid` attribute and the `testId` prop that
+      // shared inputs/buttons (e.g. AuthMethodButton) forward to `data-testid`.
+      const testIdAttr = String.raw`(?:data-testid|testId)=\{?[^{}\s]*`;
       const hasFormId =
-        /data-testid=\{?[^{}\s]*form/i.test(content) ||
+        new RegExp(`${testIdAttr}form`, 'i').test(content) ||
         content.includes(`"${slug}-form"`) ||
         content.includes(`'${slug}-form'`);
 
       const hasSubmit =
-        /data-testid=\{?[^{}\s]*submit/i.test(content) ||
-        /data-testid=\{?[^{}\s]*(signIn|dashboard|continue|action)/i.test(content) ||
+        new RegExp(`${testIdAttr}submit`, 'i').test(content) ||
+        new RegExp(`${testIdAttr}(signIn|dashboard|continue|action)`, 'i').test(
+          content,
+        ) ||
         content.includes(`"${slug}-submit"`) ||
         content.includes(`'${slug}-submit'`);
 

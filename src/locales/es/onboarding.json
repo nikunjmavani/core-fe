@@ -32,10 +32,10 @@
     "body": "Te ayudaremos a configurar tu perfil, crear tu primera organización e invitar a tu equipo. Solo lleva un minuto."
   },
   "profile": {
-    "fullNameLabel": "Nombre completo",
-    "fullNamePlaceholder": "Ada Lovelace",
-    "jobTitleLabel": "Cargo",
-    "jobTitlePlaceholder": "Responsable de ingeniería"
+    "firstNameLabel": "Nombre",
+    "firstNamePlaceholder": "Ada",
+    "lastNameLabel": "Apellido",
+    "lastNamePlaceholder": "Lovelace"
   },
   "questions": {
     "teamSize": {

@@ -47,7 +47,10 @@ vi.mock('@/core/config/env.ts', () => ({
     environment: 'test',
     appVersion: '1.0.0-test',
     appBuildId: 'build_test',
-    isProduction: false,
+    sentryTracesSampleRate: 0.1,
+    sentryReplaysSessionSampleRate: 0.1,
+    sentryProfilesSampleRate: 1,
+    sentryReplaysOnErrorSampleRate: 1,
   },
 }));
 
@@ -94,7 +97,12 @@ describe('initSentry', () => {
   it('does not call init when DSN is missing', async () => {
     vi.resetModules();
     vi.doMock('@/core/config/env.ts', () => ({
-      platformConfig: { sentryDsn: undefined, environment: 'test', isProduction: false },
+      platformConfig: {
+        sentryDsn: undefined,
+        environment: 'test',
+        sentryTracesSampleRate: 0.1,
+        sentryReplaysSessionSampleRate: 0.1,
+      },
     }));
     vi.doMock('@sentry/react', () => ({
       init: vi.fn(),

@@ -11,6 +11,18 @@ else
   echo "Install with: brew install gitleaks"
 fi
 
+# ── Reject committing gitignored env files (only .env.example is tracked) ──
+# Two environments, one committed template: every other .env* is gitignored and
+# deploys inject env from GitHub Environments. Catches a forced `git add -f .env*`
+# before it can leak secrets (mirrors the pr-governance CI guard, locally).
+STAGED_ENV=$(git diff --cached --name-only --diff-filter=d | grep -E '^\.env($|\.)' | grep -vE '^\.env\.example$' || true)
+if [ -n "$STAGED_ENV" ]; then
+  echo "ERROR: Only .env.example may be committed. These are gitignored:"
+  echo "$STAGED_ENV"
+  echo "Provide real values via GitHub Environments (deploy) or your local .env.development."
+  exit 1
+fi
+
 # ── Reject merge conflict markers ──
 # Git writes `<<<<<<< <label>` / `>>>>>>> <label>` (trailing space) and a bare
 # 7-char `=======` line — anchored exactly so doc banner lines (`====…`) pass.

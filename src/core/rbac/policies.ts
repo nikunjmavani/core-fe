@@ -1,3 +1,4 @@
+import { platformConfig } from '@/core/config/env.ts';
 import type { OrganizationPermission } from '@/core/types/permissions.ts';
 import type { Role } from '@/shared/auth/types.ts';
 
@@ -49,7 +50,7 @@ export function hasAllPermissions(
 ): boolean {
   // Footgun: an empty list is vacuously `true` ("require none" → allow). Make a
   // dynamically-empty list loud in dev so it isn't mistaken for an access grant.
-  if (import.meta.env.DEV && permissions.length === 0) {
+  if (platformConfig.debugLogging && permissions.length === 0) {
     console.warn(
       '[rbac] hasAllPermissions([]) is vacuously true; pass a non-empty list or gate explicitly.',
     );

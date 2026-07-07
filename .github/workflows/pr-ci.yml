@@ -60,9 +60,6 @@ jobs:
               - 'biome.json'
               - 'eslint.config.mjs'
               - '.prettierrc'
-              - '.env'
-              - '.env.development'
-              - '.env.production'
               - '.env.example'
             e2e:
               - 'src/**'

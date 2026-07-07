@@ -1,30 +1,29 @@
 name: Post-merge CI
 
-# Post-merge pipeline on protected branch pushes (dev, main).
-# PR CI (pr-ci.yml) is the merge gate — same SHA already passed lint, tests, build,
-# and security. Post-merge runs heavier checks + release/deploy automation.
+# Trunk post-merge pipeline — runs on every push to `main` (and the `release/**`
+# hotfix lines). Single-channel: one release-please config, one manifest, one
+# changelog.
 #
-# Branch → GitHub Environment mapping (only difference between dev and main):
-#   dev  → development
-#   main → production
+# NO redundant testing: pr-ci.yml is the merge gate and already ran lint, types,
+# unit + security tests, build, and the security scans on this exact SHA behind
+# the required `quality-gate` check. Post-merge does ONLY what the gate cannot:
+# SBOM generation, release-please, and the Netlify deploys. It never re-runs the
+# test suite.
 #
-# Flow:
-#   detect changes → SBOM → unit + security → release-please (dev + main)
-#   → release SBOM attach → Netlify deploy (dev + main)
+# Deploy split (deploy-per-purpose, not deploy-per-branch):
+#   deploy-development → every push to main → Netlify --alias dev (ungated)
+#                        ⇒ dev--core-fe.netlify.app always serves trunk HEAD
+#   deploy-production  → only when release-please cut a release → Netlify --prod
+#                        ⇒ production environment reviewer is the ONE human gate
 #
-# Playwright E2E runs locally only (needs a live core-be on :3000) — post-merge
-# needs just the deployed backend URL (VITE_API_BASE_URL), never a full backend.
+# Rollback / redeploy an old tag: reusable-netlify-deploy.yml via workflow_dispatch
+# (target=production, ref=vX.Y.Z) — same production approval, no CI rerun.
 
 on:
   push:
-    branches: [dev, main]
+    branches: [main, 'release/**']
   workflow_dispatch:
     inputs:
-      skip_tests:
-        description: Skip post-merge Vitest suite
-        required: false
-        type: boolean
-        default: false
       skip_deploy:
         description: Skip Netlify deploy
         required: false
@@ -53,7 +52,6 @@ jobs:
     timeout-minutes: 10
     outputs:
       src-code: ${{ steps.filter.outputs.src-code }}
-      ci-config: ${{ steps.filter.outputs.ci-config }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -77,8 +75,6 @@ jobs:
               - 'vitest.config.ts'
               - 'playwright.config.ts'
               - 'tsconfig*.json'
-            ci-config:
-              - '.github/**'
 
   sbom:
     name: SBOM
@@ -115,95 +111,27 @@ jobs:
           path: sbom.cyclonedx.json
           retention-days: 30
 
-  unit-tests:
-    needs: [changes, sbom]
-    if: |
-      always() &&
-      inputs.skip_tests != true &&
-      (needs.changes.outputs.src-code == 'true' || needs.changes.outputs.ci-config == 'true') &&
-      (needs.sbom.result == 'success' || needs.sbom.result == 'skipped')
-    uses: ./.github/workflows/reusable-vitest-unit-only.yml
-
-  security-tests:
-    name: Security tests
-    needs: [changes, sbom]
-    if: |
-      always() &&
-      inputs.skip_tests != true &&
-      (needs.changes.outputs.src-code == 'true' || needs.changes.outputs.ci-config == 'true') &&
-      (needs.sbom.result == 'success' || needs.sbom.result == 'skipped')
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 1
-      - uses: ./.github/actions/setup-node-pnpm
-      - run: pnpm test:security
-
-  matrix-tests:
-    name: Matrix tests gate
-    needs: [unit-tests, security-tests]
-    if: always()
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: Evaluate post-merge test jobs
-        env:
-          UNIT: ${{ needs.unit-tests.result }}
-          SECURITY: ${{ needs.security-tests.result }}
-        run: |
-          FAILED=0
-          for job in UNIT SECURITY; do
-            result="${!job}"
-            echo "$job=$result"
-            case "$result" in
-              success|skipped) ;;
-              *) FAILED=1 ;;
-            esac
-          done
-          if [ "$FAILED" -ne 0 ]; then
-            echo "Post-merge test matrix failed."
-            exit 1
-          fi
-
   release-please:
     name: Release Please
-    needs: [matrix-tests]
+    needs: [sbom]
     if: |
       always() &&
       inputs.skip_release != true &&
-      (needs.matrix-tests.result == 'success' || needs.matrix-tests.result == 'skipped')
+      (needs.sbom.result == 'success' || needs.sbom.result == 'skipped')
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # release-please creates GitHub Releases with RELEASE_PLEASE_TOKEN (a PAT with
-    # the `workflow` scope; the default GITHUB_TOKEN cannot create releases here —
-    # the create-a-release API path requires that scope). The token is a GitHub
-    # Environment secret, so this job selects the matching environment to read it:
-    # dev → development, main → production. development has no protection rules
-    # (dev runs ungated), but production declares a required reviewer in
-    # .github/environments/production.json, so on `main` this job — and the
-    # downstream `deploy` job, which also selects production — PAUSES for manual
-    # approval before it runs. That approval gate is intentional governance, not
-    # a bug: a production release/deploy waits until a reviewer approves it.
-    environment: ${{ github.ref_name == 'dev' && 'development' || 'production' }}
+    # UNGATED — the PAT is a repository secret (RELEASE_PLEASE_TOKEN), so this job
+    # no longer selects an environment to read it. Refreshing the standing Release
+    # PR is harmless; the ONE human gate lives at deploy-production, nowhere else.
     permissions:
       contents: write
       pull-requests: write
       issues: write
-      # Some recent release-please-action paths invoke endpoints that the
-      # default `GITHUB_TOKEN` cannot reach unless `id-token: write` is also
-      # granted (OIDC-scoped octokit calls inside the action). Adding it here
-      # is a no-op for the actual release create/update but unblocks the
-      # underlying API call when the action falls into that path. Pair with
-      # `actions: write` so the action can update the run's own status when
-      # a release PR-creation step runs after release creation.
       id-token: write
       actions: write
     outputs:
       releases_created: ${{ steps.release.outputs.releases_created == 'true' && 'true' || 'false' }}
     env:
-      CHANNEL_SUFFIX: ${{ github.ref_name == 'dev' && '.dev' || '' }}
       # secrets.* is not readable in step `if:` expressions — hoist to job env.
       HAS_RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN != '' }}
     steps:
@@ -212,29 +140,26 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      # The github.token fallback below keeps the job green when the PAT is
-      # missing, but degrades SILENTLY: auto-merged release PR merges then do
-      # not re-trigger this workflow, so the tag/GitHub Release is never cut
-      # on the merge commit. Surface that on every run instead of at release
-      # time.
+      # The github.token fallback keeps the job green if the PAT is ever unset,
+      # but degrades SILENTLY: auto-merged release-PR merges then do not
+      # re-trigger this workflow, so the tag/GitHub Release is never cut. Surface
+      # it on every run instead of at release time.
       - name: Tripwire — RELEASE_PLEASE_TOKEN not provisioned
         if: env.HAS_RELEASE_PLEASE_TOKEN != 'true'
         run: |
-          echo "::warning title=RELEASE_PLEASE_TOKEN not provisioned::Release Please is running on the default GITHUB_TOKEN fallback. Release-PR auto-merge will NOT re-trigger post-merge CI, so no tag/GitHub Release is created on the merge commit. Add a PAT (repo + workflow scopes) as RELEASE_PLEASE_TOKEN to the development and production GitHub Environments."
+          echo "::warning title=RELEASE_PLEASE_TOKEN not provisioned::Release Please is running on the default GITHUB_TOKEN fallback. Release-PR auto-merge will NOT re-trigger post-merge CI, so no tag/GitHub Release is created on the merge commit. Add a PAT (repo + workflow scopes) as the RELEASE_PLEASE_TOKEN repository secret."
 
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         id: release
         with:
-          # PAT (repo + workflow scopes) read from the GitHub Environment secret
-          # selected by the job `environment:` above. Falls back to github.token
-          # until RELEASE_PLEASE_TOKEN is provisioned (github.token cannot create
-          # releases, but the fallback keeps release-PR creation working meanwhile).
+          # PAT (repo + workflow scopes) read from the repository secret. Falls
+          # back to github.token only if unset (which cannot create releases).
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           target-branch: ${{ github.ref_name }}
-          config-file: .github/release-please/config${{ env.CHANNEL_SUFFIX }}.json
-          manifest-file: .github/release-please/manifest${{ env.CHANNEL_SUFFIX }}.json
+          config-file: .github/release-please/config.json
+          manifest-file: .github/release-please/manifest.json
 
-      - name: Lint-fix CHANGELOGs on release PR branches
+      - name: Lint-fix CHANGELOG on release PR branches
         if: steps.release.outputs.prs_created == 'true' || steps.release.outputs.pr != ''
         env:
           # PAT (not github.token) so the lint-fix commit pushed to the release PR
@@ -274,11 +199,6 @@ jobs:
             echo "::group::Lint-fix CHANGELOG on ${branch}"
             git fetch origin "${branch}" --depth=2
             git checkout -B "${branch}" "origin/${branch}"
-            # Repo config (.markdownlint-cli2.jsonc) is auto-discovered. Both
-            # changelogs are in its ignores today, so this is a no-op safety net
-            # that only bites if changelogs re-enter the docs-lint surface —
-            # without it, a lint-dirty generated CHANGELOG would wedge the
-            # release PR's docs lane and auto-merge would wait forever.
             npx --yes markdownlint-cli2@0.22.1 \
               --fix \
               'CHANGELOG*.md' || true
@@ -295,10 +215,11 @@ jobs:
 
       - name: Enable auto-merge on release PRs
         # Use the PAT (not github.token) so the eventual auto-merge of the release
-        # PR is attributed to the PAT and its push to dev/main RE-TRIGGERS this
-        # workflow. A merge performed with the default GITHUB_TOKEN does not start
-        # a new workflow run, so the Release Please job would never run on the
-        # merge commit and the tag / GitHub Release would never be created.
+        # PR is attributed to the PAT and its push to main RE-TRIGGERS this
+        # workflow. A merge performed with the default GITHUB_TOKEN starts no
+        # workflow run, so the tag / GitHub Release would never be created.
+        # Merge method stays --merge here; PR C flips the ruleset + this flag to
+        # --squash together (a lone flip would strand auto-merge on the ruleset).
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           RELEASE_PR: ${{ steps.release.outputs.pr }}
@@ -365,13 +286,12 @@ jobs:
           GH_REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
-          expected_prerelease="${{ github.ref_name == 'dev' && 'true' || 'false' }}"
           tag_name="$(
             gh release list \
               --repo "${GH_REPOSITORY}" \
               --limit 20 \
               --json tagName,isPrerelease \
-              --jq "[.[] | select((.isPrerelease | tostring) == \"${expected_prerelease}\")][0].tagName // \"\""
+              --jq '[.[] | select(.isPrerelease == false)][0].tagName // ""'
           )"
           if [ -z "${tag_name}" ] || [ "${tag_name}" = "null" ]; then
             echo "::error::No GitHub Release found after release-please."
@@ -393,91 +313,60 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
-  dispatch-post-release-backmerge:
-    name: Dispatch post-release back-merge
-    needs: [release-please, deploy]
-    if: |
-      always() &&
-      github.ref_name == 'main' &&
-      needs.release-please.outputs.releases_created == 'true' &&
-      needs.deploy.result == 'success'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      actions: write
-      contents: read
-    steps:
-      - name: Resolve stable release version
-        id: release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPOSITORY: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          tag_name="$(
-            gh release list \
-              --repo "${GH_REPOSITORY}" \
-              --limit 20 \
-              --json tagName,isPrerelease \
-              --jq '[.[] | select(.isPrerelease == false)][0].tagName // ""'
-          )"
-          if [ -z "${tag_name}" ] || [ "${tag_name}" = "null" ]; then
-            echo "::error::No stable GitHub Release found after release-please."
-            exit 1
-          fi
-          version="${tag_name#v}"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "Dispatching post-release back-merge for ${tag_name}"
-
-      - name: Dispatch back-merge workflow
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPOSITORY: ${{ github.repository }}
-          VERSION: ${{ steps.release.outputs.version }}
-        run: |
-          set -euo pipefail
-          gh workflow run post-release-backmerge.yml \
-            --repo "${GH_REPOSITORY}" \
-            --ref main \
-            --field "version=${VERSION}"
-
-  deploy:
-    name: Deploy
-    needs: [matrix-tests, release-please, release-sbom]
+  deploy-development:
+    name: Deploy (development alias)
+    needs: [release-please]
+    # Every push to main updates the dev alias so dev--core-fe.netlify.app always
+    # serves trunk HEAD — including docs-only merges (the "alias = trunk HEAD"
+    # invariant is worth a ~2-minute rebuild). Not on release/** (hotfix lines
+    # deploy to prod via the Lane-4 dispatch only).
     if: |
       always() &&
       inputs.skip_deploy != true &&
-      (needs.matrix-tests.result == 'success' || needs.matrix-tests.result == 'skipped') &&
-      (needs.release-please.result == 'success' || needs.release-please.result == 'skipped') &&
+      github.ref_name == 'main' &&
+      (needs.release-please.result == 'success' || needs.release-please.result == 'skipped')
+    uses: ./.github/workflows/reusable-netlify-deploy.yml
+    secrets: inherit
+    with:
+      github_environment: development
+
+  deploy-production:
+    name: Deploy (production)
+    needs: [release-please, release-sbom]
+    # ONLY when release-please cut a release (releases_created) and only from
+    # main. The production environment's required reviewer is the ONE human gate
+    # in the whole model.
+    if: |
+      always() &&
+      inputs.skip_deploy != true &&
+      github.ref_name == 'main' &&
+      needs.release-please.outputs.releases_created == 'true' &&
       (needs.release-sbom.result == 'success' || needs.release-sbom.result == 'skipped')
     uses: ./.github/workflows/reusable-netlify-deploy.yml
     secrets: inherit
     with:
-      target_branch: ${{ github.ref_name }}
-      github_environment: ${{ github.ref_name == 'dev' && 'development' || 'production' }}
-      upload-release-artifact: ${{ needs.release-please.outputs.releases_created == 'true' }}
+      github_environment: production
+      upload-release-artifact: true
 
   notify-failure:
     name: Notify failure
-    needs: [matrix-tests, release-please, deploy, dispatch-post-release-backmerge]
+    needs: [release-please, deploy-development, deploy-production]
     if: |
       always() &&
       (
-        needs.matrix-tests.result == 'failure' ||
         needs.release-please.result == 'failure' ||
-        needs.deploy.result == 'failure' ||
-        needs.dispatch-post-release-backmerge.result == 'failure'
+        needs.deploy-development.result == 'failure' ||
+        needs.deploy-production.result == 'failure'
       )
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Emit post-merge failure notice
         env:
-          TESTS_RESULT: ${{ needs.matrix-tests.result }}
           RELEASE_RESULT: ${{ needs.release-please.result }}
-          DEPLOY_RESULT: ${{ needs.deploy.result }}
-          BACKMERGE_RESULT: ${{ needs.dispatch-post-release-backmerge.result }}
+          DEV_DEPLOY_RESULT: ${{ needs.deploy-development.result }}
+          PROD_DEPLOY_RESULT: ${{ needs.deploy-production.result }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
-          echo "::error title=Post-merge CI failed::tests=${TESTS_RESULT} release=${RELEASE_RESULT} deploy=${DEPLOY_RESULT} backmerge=${BACKMERGE_RESULT} — ${WORKFLOW_URL}"
+          echo "::error title=Post-merge CI failed::release=${RELEASE_RESULT} deploy-dev=${DEV_DEPLOY_RESULT} deploy-prod=${PROD_DEPLOY_RESULT} — ${WORKFLOW_URL}"

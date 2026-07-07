@@ -1,10 +1,16 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 
 import { ThemeModeToggle } from './ThemeModeToggle.tsx';
+
+// The quick-Shuffle shortcut is a devtools affordance (env-driven, off by
+// default) — enable devtools so the menu item is present to exercise.
+vi.mock('@/core/config/env.ts', () => ({
+  platformConfig: { devtools: true, themeLock: false },
+}));
 
 // Real theme store (a Zustand store works in jsdom). Plain render — the toggle
 // is routing-free, so no providers are needed.

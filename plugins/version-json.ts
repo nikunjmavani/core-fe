@@ -7,11 +7,16 @@ import type { Plugin } from 'vite';
  * Generates version.json at build time for cache busting and deployment detection.
  * - In dev: serves /version.json on the fly
  * - In prod: emits dist/version.json and injects VITE_APP_BUILD_ID for runtime comparison
+ *
+ * `buildId` may be supplied by the caller so the same value can also name the
+ * Sentry release (`<version>+<buildId>`), keeping the deployed build, its
+ * version.json, and its Sentry release in lock step. Omitted → minted here.
  */
-export function versionJson(): Plugin {
-  const buildId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+export function versionJson(buildId?: string): Plugin {
+  const resolvedBuildId =
+    buildId ?? `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   const versionDetails = {
-    buildId,
+    buildId: resolvedBuildId,
     builtAt: new Date().toISOString(),
   };
 
@@ -20,7 +25,7 @@ export function versionJson(): Plugin {
     config() {
       return {
         define: {
-          'import.meta.env.VITE_APP_BUILD_ID': JSON.stringify(buildId),
+          'import.meta.env.VITE_APP_BUILD_ID': JSON.stringify(resolvedBuildId),
         },
       };
     },

@@ -35,6 +35,10 @@ Single source of truth for **Playwright-ready selectors** in core-fe. Use **`dat
 
 Allowlist: `tooling/validate/test-ids-allowlist.txt`. Runs in `pnpm health` after `validate:theme-axis`.
 
+The Forms check reads the raw `data-testid` attribute **and** the `testId` prop that shared inputs/
+buttons forward to `data-testid` (e.g. `AuthMethodButton testId={…}`). So a form whose action lives
+in a shared component still satisfies the contract — keep passing the id, don't inline a duplicate.
+
 ## Naming patterns
 
 | Element              | Pattern                                 | Example                         |

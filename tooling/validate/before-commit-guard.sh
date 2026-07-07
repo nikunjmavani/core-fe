@@ -25,10 +25,26 @@ echo ""
 echo "3. Lint-staged (ESLint --fix + Prettier)..."
 pnpm lint-staged
 
-# ── 4. TypeScript type checking ──
+# ── 4. No env/mode sniffing (import.meta.env.DEV/PROD/MODE, environment===) ──
 echo ""
-echo "4. Type check..."
+echo "4. Env/mode sniffing gate..."
+pnpm run validate:vite-env
+
+# ── 5. TypeScript type checking ──
+echo ""
+echo "5. Type check..."
 pnpm type-check
+
+# ── 6. Lockfile ↔ package.json sync (only when deps/overrides change) ──
+# A package.json change (dependency or pnpm.overrides) without a regenerated
+# pnpm-lock.yaml causes ERR_PNPM_LOCKFILE_CONFIG_MISMATCH and reds every
+# frozen-install CI job. Gated on the staged file set so normal commits stay fast.
+STAGED_DEPS=$(git diff --cached --name-only --diff-filter=d | grep -E '^(package\.json|pnpm-lock\.yaml)$' || true)
+if [ -n "$STAGED_DEPS" ]; then
+  echo ""
+  echo "6. Lockfile sync..."
+  pnpm run validate:lockfile
+fi
 
 echo ""
 echo "==================="

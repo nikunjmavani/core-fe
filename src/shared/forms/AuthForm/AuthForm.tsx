@@ -22,12 +22,9 @@ import { Fingerprint, Github } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 
 import { AUTH_FORM_TEST_IDS, sortOAuthProviders } from './auth-form.constants.ts';
-import {
-  type AuthContinuePending,
-  authMethodIsDisabled,
-  authMethodIsLoading,
-} from './auth-form-pending.ts';
+import type { AuthContinuePending } from './auth-form-pending.ts';
 import { AuthEmailPanel } from './AuthEmailPanel.tsx';
+import { AuthMethodButton } from './components/AuthMethodButton/index.ts';
 import { AuthMethodDivider } from './components/AuthMethodDivider/index.ts';
 import { AuthWelcomeHeader } from './components/AuthWelcomeHeader/index.ts';
 
@@ -84,7 +81,6 @@ function providerTestId(provider: string): string {
  * Unified sign-in / sign-up entry — social methods first, then email OTP.
  * Optional `VITE_AUTH_OAUTH_AUTO_GOOGLE=true` starts Google OAuth after a short delay.
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity -- auth entry fans out over OAuth/passkey/email methods; splitting would scatter one cohesive flow
 export function AuthForm() {
   const { t } = useTranslation(AUTH_NS);
   const authMethods = useAuthMethods();
@@ -244,46 +240,31 @@ export function AuthForm() {
           className="flex flex-col gap-3"
           data-testid={AUTH_FORM_TEST_IDS.socialMethods}
         >
-          {visibleProviders.map((provider) => {
-            const target = { method: 'oauth' as const, provider };
-            const loading = authMethodIsLoading(pending, target);
-            const oauthBlocked = !turnstileReady || authMethodIsDisabled(pending, target);
-            return (
-              <Button
-                key={provider}
-                type="button"
-                variant="outline"
-                className="w-full"
-                disabled={oauthBlocked}
-                isLoading={loading || !turnstileReady}
-                onClick={() => void startOAuth(provider)}
-                data-testid={providerTestId(provider)}
-              >
-                <ProviderIcon provider={provider} />
-                {loading
-                  ? t(AUTH_KEYS.auth.continuing)
-                  : t(AUTH_KEYS.auth.continueWithProvider, {
-                      provider: t(AUTH_KEYS.login.oauth.providerKey(provider)),
-                    })}
-              </Button>
-            );
-          })}
+          {visibleProviders.map((provider) => (
+            <AuthMethodButton
+              key={provider}
+              target={{ method: 'oauth', provider }}
+              pending={pending}
+              captchaGated
+              turnstileReady={turnstileReady}
+              icon={<ProviderIcon provider={provider} />}
+              label={t(AUTH_KEYS.auth.continueWithProvider, {
+                provider: t(AUTH_KEYS.login.oauth.providerKey(provider)),
+              })}
+              onClick={() => void startOAuth(provider)}
+              testId={providerTestId(provider)}
+            />
+          ))}
 
           {showPasskey ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              disabled={authMethodIsDisabled(pending, { method: 'passkey' })}
-              isLoading={authMethodIsLoading(pending, { method: 'passkey' })}
+            <AuthMethodButton
+              target={{ method: 'passkey' }}
+              pending={pending}
+              icon={<Fingerprint className="size-4" data-icon="" />}
+              label={t(AUTH_KEYS.auth.continueWithPasskey)}
               onClick={() => void handlePasskey()}
-              data-testid={AUTH_FORM_TEST_IDS.continuePasskey}
-            >
-              <Fingerprint className="size-4" data-icon="" />
-              {authMethodIsLoading(pending, { method: 'passkey' })
-                ? t(AUTH_KEYS.auth.continuing)
-                : t(AUTH_KEYS.auth.continueWithPasskey)}
-            </Button>
+              testId={AUTH_FORM_TEST_IDS.continuePasskey}
+            />
           ) : null}
         </div>
       ) : null}

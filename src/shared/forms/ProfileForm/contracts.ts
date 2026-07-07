@@ -4,9 +4,10 @@ import { z } from 'zod';
  * Editable profile fields. The source of truth for the "About you" form; the TS
  * type is inferred so the form, API payload, and completeness meter stay aligned.
  *
- * Deferred to the FE↔BE integration epic: of these, only `name` maps to a
- * core-be column today (`PATCH /users/me`). When the backend adds jobTitle/bio/
- * location/timezone, align field names (snake_case wire) before wiring the save.
+ * Wire mapping (in `authApi.updateProfile`): `name` → core-be `first_name` +
+ * `last_name`, `jobTitle` → `job_title` (snake_case, `PATCH /users/me`). `bio`,
+ * `location`, and `timezone` have no core-be column yet — they stay FE-only until
+ * the backend adds them, at which point align the snake_case wire names here.
  */
 export const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Name is too long'),

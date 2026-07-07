@@ -11,7 +11,8 @@ describe('useOnboardingStore', () => {
     const state = useOnboardingStore.getState();
     expect(state.stepIndex).toBe(0);
     expect(state.completed).toBe(false);
-    expect(state.data.fullName).toBe('');
+    expect(state.data.firstName).toBe('');
+    expect(state.data.lastName).toBe('');
   });
 
   it('advances and clamps at the last step', () => {
@@ -30,11 +31,11 @@ describe('useOnboardingStore', () => {
   });
 
   it('patches data and marks complete', () => {
-    useOnboardingStore.getState().patch({ fullName: 'Ada', jobTitle: 'Engineer' });
+    useOnboardingStore.getState().patch({ firstName: 'Ada', lastName: 'Lovelace' });
     useOnboardingStore.getState().complete();
     const state = useOnboardingStore.getState();
-    expect(state.data.fullName).toBe('Ada');
-    expect(state.data.jobTitle).toBe('Engineer');
+    expect(state.data.firstName).toBe('Ada');
+    expect(state.data.lastName).toBe('Lovelace');
     expect(state.completed).toBe(true);
   });
 });

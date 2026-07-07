@@ -64,8 +64,22 @@ describe('platformConfig', () => {
     expect(['development', 'production', 'test']).toContain(platformConfig.environment);
   });
 
-  it('platformConfig.isDevelopment is boolean', () => {
-    expect(typeof platformConfig.isDevelopment).toBe('boolean');
+  it('exposes no isDevelopment/isProduction booleans (env-driven only)', () => {
+    expect('isDevelopment' in platformConfig).toBe(false);
+    expect('isProduction' in platformConfig).toBe(false);
+  });
+
+  it('sentry sample rates are numbers in 0..1', () => {
+    for (const rate of [
+      platformConfig.sentryTracesSampleRate,
+      platformConfig.sentryReplaysSessionSampleRate,
+      platformConfig.sentryProfilesSampleRate,
+      platformConfig.sentryReplaysOnErrorSampleRate,
+    ]) {
+      expect(typeof rate).toBe('number');
+      expect(rate).toBeGreaterThanOrEqual(0);
+      expect(rate).toBeLessThanOrEqual(1);
+    }
   });
 
   it('platformConfig.apiBaseUrl is a string', () => {

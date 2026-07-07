@@ -1,32 +1,32 @@
-const MFA_SESSION_TOKEN_KEY = 'core-fe:mfa-session-token';
-const MFA_REDIRECT_KEY = 'core-fe:mfa-redirect';
+/**
+ * In-memory hand-off of the short-lived MFA session token across the client-side
+ * `/login` → `/mfa` navigation.
+ *
+ * The token is held in a **module closure** — never `sessionStorage` /
+ * `localStorage` — so a sensitive credential is never written to disk as clear
+ * text (CodeQL `js/clear-text-storage-of-sensitive-data`). This mirrors the
+ * access-token storage rule in `token.ts` (tokens live in memory only).
+ *
+ * The `/login` → `/mfa` step is a SPA route change (`navigate({ to: '/mfa' })`),
+ * so the value survives it. A full page reload intentionally drops it — the token
+ * is single-use and short-lived, and `MfaForm` already handles the empty case by
+ * showing "session expired".
+ */
+type MfaHandoff = { mfaSessionToken: string; redirect?: string };
 
-/** Persists the short-lived MFA session token across the `/login` → `/mfa` navigation. */
+let handoff: MfaHandoff | null = null;
+
+/** Stash the short-lived MFA session token (+ optional post-MFA redirect). */
 export function stashMfaHandoff(mfaSessionToken: string, redirect?: string): void {
-  try {
-    sessionStorage.setItem(MFA_SESSION_TOKEN_KEY, mfaSessionToken);
-    if (redirect) sessionStorage.setItem(MFA_REDIRECT_KEY, redirect);
-    else sessionStorage.removeItem(MFA_REDIRECT_KEY);
-  } catch {
-    // sessionStorage unavailable — caller still navigates; MfaForm shows session expired.
-  }
+  handoff = redirect ? { mfaSessionToken, redirect } : { mfaSessionToken };
 }
 
-export function readMfaHandoff(): { mfaSessionToken: string; redirect?: string } {
-  try {
-    const mfaSessionToken = sessionStorage.getItem(MFA_SESSION_TOKEN_KEY) ?? '';
-    const redirect = sessionStorage.getItem(MFA_REDIRECT_KEY) ?? undefined;
-    return { mfaSessionToken, redirect };
-  } catch {
-    return { mfaSessionToken: '' };
-  }
+/** Read the pending MFA hand-off; `mfaSessionToken` is `''` when none is stashed. */
+export function readMfaHandoff(): MfaHandoff {
+  return handoff ?? { mfaSessionToken: '' };
 }
 
+/** Drop the stashed hand-off (after a successful verify, or on teardown). */
 export function clearMfaHandoff(): void {
-  try {
-    sessionStorage.removeItem(MFA_SESSION_TOKEN_KEY);
-    sessionStorage.removeItem(MFA_REDIRECT_KEY);
-  } catch {
-    // ignore
-  }
+  handoff = null;
 }

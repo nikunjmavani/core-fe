@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import babel from '@rolldown/plugin-babel';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
@@ -12,9 +14,16 @@ import { i18nBuild } from './plugins/i18n-build.ts';
 import { versionJson } from './plugins/version-json.ts';
 
 export default defineConfig(({ mode }) => {
-  // Env files at project root: .env, .env.development, .env.production, .env.local
+  // Env files at project root (gitignored; only .env.example is committed):
+  // .env.development (local dev) · .env.production (local prod build). No .env.local.
   const envDir = path.resolve(__dirname);
   const env = loadEnv(mode, envDir, '');
+
+  // One build id per build, shared by version.json (new-deploy detection) and the
+  // Sentry release name below — so a build, its version.json, and its Sentry
+  // release all carry the same identity. Trunk builds share a version, so the
+  // build id is what disambiguates their Sentry releases.
+  const buildId = `${Date.now()}-${randomUUID().slice(0, 8)}`;
 
   return {
     envDir,
@@ -30,7 +39,7 @@ export default defineConfig(({ mode }) => {
         modeFlag: env.BUILD_I18N_MODE,
         localeFlag: env.BUILD_I18N_LOCALE,
       }),
-      versionJson(),
+      versionJson(buildId),
       cspApiOrigin(env.VITE_API_BASE_URL, env.VITE_CSP_REPORT_URI),
 
       // PWA — injectManifest mode avoids workbox-build/terser race condition in Vite 7
@@ -79,7 +88,10 @@ export default defineConfig(({ mode }) => {
               project: env.VITE_SENTRY_PROJECT,
               authToken: env.SENTRY_AUTH_TOKEN,
               release: {
-                name: env.VITE_APP_VERSION || undefined,
+                // <version>+<buildId> — unique per build so trunk builds don't
+                // collapse into one Sentry release (which would mix sourcemaps).
+                // The `environment` tag separates dev/prod.
+                name: `${env.VITE_APP_VERSION || '0.0.0'}+${buildId}`,
               },
               sourcemaps: {
                 filesToDeleteAfterUpload: ['./dist/assets/*.map'],

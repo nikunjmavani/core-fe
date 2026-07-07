@@ -13,7 +13,7 @@ This document is for **humans** working on the project. It explains how the repo
 | **CONTRIBUTING.md** (this file)                             | For humans: where things live, what runs automatically, how to work with the codebase and with AI.                                                 |
 | **docs/getting-started/requirement-format.md**              | Standard format for writing feature requirements (template + field guide). Use so the AI can implement in one pass.                                |
 | **docs/getting-started/requirements/sample-requirement.md** | Filled example of the requirement format (Notifications page).                                                                                     |
-| **.env.example**                                            | Reference for all environment variables; copy to `.env.local` for local overrides.                                                                 |
+| **.env.example**                                            | Reference for all environment variables (the only committed env file); `pnpm setup:local` scaffolds the gitignored `.env.development` from it.     |
 | **agent-os/docs/cursor-mcp-setup.md**                       | **Onboarding (Cursor users):** Set up MCP locally (Context7, shadcn, Tailwind, core-be-api). Required for AI assistance with docs and backend API. |
 
 ---
@@ -160,11 +160,11 @@ Full matrix: **[docs/reference/testing.md](docs/reference/testing.md)** and **[t
 
 [Husky](.husky/) runs checks locally. Fix failures rather than skipping hooks (`--no-verify`).
 
-| Hook           | What runs                                                                                                                                                                                    |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **pre-commit** | before-commit-guard (env docs, public assets), lint-staged (biome check → eslint --fix → prettier), gitleaks scan, conflict-marker + large-file guards                                       |
-| **commit-msg** | commitlint (Conventional Commits, lower-case subject)                                                                                                                                        |
-| **pre-push**   | biome check, type-check, build, changed-markdown lint, unit tests (when relevant), API contract drift vs core-be, SonarQube gate on deployed-surface changes (`SKIP_SONAR=1` to bypass once) |
+| Hook           | What runs                                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **pre-commit** | before-commit-guard (env docs, public assets), lint-staged (biome check → eslint --fix → prettier), gitleaks scan, conflict-marker + large-file guards                                     |
+| **commit-msg** | commitlint (Conventional Commits, lower-case subject)                                                                                                                                      |
+| **pre-push**   | biome check, type-check, build, changed-markdown lint, unit tests (when relevant), API contract drift vs core-be, SonarQube gate on deployed-surface changes (no bypass — fix, don't skip) |
 
 **Full local gate:** `pnpm quality` = `pnpm health` (every phase: format, lint, biome, docs, types, tests, build, size, env, public, tsdoc, structure) + the local SonarQube gate ([docs/reference/quality/sonarqube-local.md](docs/reference/quality/sonarqube-local.md)). CI mirrors these as parallel lanes behind a single required `quality-gate` check.
 

@@ -44,13 +44,33 @@ function secretsFromConfigSetup(environmentName) {
     throw new Error(`Config not found: ${CONFIG_SETUP_PATH}`);
   }
 
-  const isDevelopment = environmentName === 'development';
-  const apiKey = isDevelopment ? 'VITE_API_BASE_URL_DEV' : 'VITE_API_BASE_URL_PROD';
-  const posthogKey = isDevelopment ? 'VITE_POSTHOG_KEY_DEV' : 'VITE_POSTHOG_KEY_PROD';
-  const privacyKey = isDevelopment
-    ? 'VITE_PRIVACY_POLICY_URL_DEV'
-    : 'VITE_PRIVACY_POLICY_URL_PROD';
-  const netlifySiteKey = isDevelopment ? 'NETLIFY_SITE_DEV' : 'NETLIFY_SITE_MAIN';
+  // Per-environment source key names via lookup — no `is<env>` boolean or
+  // environment comparison; the Map does the mapping.
+  const keyNamesByEnv = new Map([
+    [
+      'development',
+      {
+        api: 'VITE_API_BASE_URL_DEV',
+        posthog: 'VITE_POSTHOG_KEY_DEV',
+        privacy: 'VITE_PRIVACY_POLICY_URL_DEV',
+        netlifySite: 'NETLIFY_SITE_DEV',
+      },
+    ],
+    [
+      'production',
+      {
+        api: 'VITE_API_BASE_URL_PROD',
+        posthog: 'VITE_POSTHOG_KEY_PROD',
+        privacy: 'VITE_PRIVACY_POLICY_URL_PROD',
+        netlifySite: 'NETLIFY_SITE_MAIN',
+      },
+    ],
+  ]);
+  const keyNames = keyNamesByEnv.get(environmentName) ?? keyNamesByEnv.get('production');
+  const apiKey = keyNames.api;
+  const posthogKey = keyNames.posthog;
+  const privacyKey = keyNames.privacy;
+  const netlifySiteKey = keyNames.netlifySite;
 
   return new Map(
     [

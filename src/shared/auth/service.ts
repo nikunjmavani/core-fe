@@ -56,7 +56,7 @@ function clearLocalAuthState(): void {
     useOrganizationStore.getState().clearOrganization();
     queryClient.clear();
   } catch (cleanupError) {
-    if (import.meta.env.DEV) {
+    if (platformConfig.debugLogging) {
       console.error('[Auth] Cleanup failed during logout', cleanupError);
     }
   }
@@ -100,7 +100,7 @@ export function startAuthBootstrap(): Promise<void> {
     } catch {
       const { isAuthenticated } = useAuthStore.getState();
       if (!(isAuthenticated || getAccessToken())) {
-        if (import.meta.env.DEV) {
+        if (platformConfig.debugLogging) {
           console.info('[Bootstrap] No active session');
         }
         useAuthStore.getState().clearAuth();
