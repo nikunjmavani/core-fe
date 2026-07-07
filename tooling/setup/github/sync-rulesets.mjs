@@ -13,7 +13,7 @@
  *   - --check      : compare local files vs remote, report drift, exit non-zero on drift.
  *   - --dry-run    : show what would be created or updated without calling write APIs.
  *   - --prune      : flag branch rulesets on the remote that are NOT in config
- *                    (e.g. a leftover `dev` ruleset); DELETE them when combined with --yes.
+ *                    (e.g. a ruleset for a deleted branch); DELETE them when combined with --yes.
  *
  * Required status checks on protected branches:
  *   - "Quality gate" (PR CI aggregate)
@@ -70,7 +70,7 @@ function listRemoteRulesets(repository) {
 
 /**
  * Remote branch-target rulesets whose name is not among the committed files —
- * i.e. rulesets for branches no longer in config (e.g. a leftover `dev` ruleset
+ * i.e. rulesets for branches no longer in config (e.g. a ruleset for a deleted branch
  * after moving to a single `main` trunk). Tag/push rulesets are never touched.
  * @param {Array<{ id: number, name: string, target?: string }>} remote
  * @param {Set<string>} localNames

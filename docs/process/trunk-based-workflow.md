@@ -1,9 +1,9 @@
-# Git Branch Naming and PR Workflow
+# Trunk-Based Workflow
 
-Trunk-based workflow for core-fe. For setup see [setup.md](../getting-started/setup.md)
-and [netlify-cli-setup.md](../deployment/netlify-cli-setup.md). For CI/CD and deployment,
-see [cicd-and-netlify.md](../deployment/cicd-and-netlify.md). The full migration rationale is
-[delivery-model-migration-plan.md](delivery-model-migration-plan.md).
+Trunk-based branch naming, PR flow, and release process for core-fe. For setup see
+[setup.md](../getting-started/setup.md) and
+[netlify-cli-setup.md](../deployment/netlify-cli-setup.md). For CI/CD and deployment, see
+[cicd-and-netlify.md](../deployment/cicd-and-netlify.md).
 
 ---
 
@@ -20,9 +20,6 @@ a long-lived branch** (see [feature-flags.md](../reference/feature-flags.md)).
 `main` also drives the `development` environment — **every push to `main` deploys the
 development alias** (`development--core-fe.netlify.app`), so the alias always serves trunk HEAD. Production
 (`core-fe.netlify.app`) serves the latest **release tag** only.
-
-> The former `dev` integration branch is retired. The dev→main dual-channel model, the
-> back-merge loop, and the promote ceremony are gone.
 
 ---
 

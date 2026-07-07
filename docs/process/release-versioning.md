@@ -3,7 +3,7 @@
 How version numbers are chosen in **core-fe**. You do not set versions by hand —
 conventional-commit prefixes drive release-please on the single trunk (`main`).
 
-Branch flow: [git-workflow.md](git-workflow.md). CI/deploy: [cicd-and-netlify.md](../deployment/cicd-and-netlify.md).
+Branch flow: [trunk-based-workflow.md](trunk-based-workflow.md). CI/deploy: [cicd-and-netlify.md](../deployment/cicd-and-netlify.md).
 
 ## Commit prefix → bump
 

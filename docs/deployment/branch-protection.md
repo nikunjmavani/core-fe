@@ -4,7 +4,7 @@ Canonical reference for **which GitHub checks must gate merges** into **`main`**
 single trunk), and how that maps to workflows and the committed ruleset JSON under
 [`.github/rulesets/`](../../.github/rulesets/).
 
-**Related docs:** [cicd-and-netlify.md](cicd-and-netlify.md) (CI/CD + Netlify deploy), [git-workflow.md](../process/git-workflow.md) (branch naming and release flow).
+**Related docs:** [cicd-and-netlify.md](cicd-and-netlify.md) (CI/CD + Netlify deploy), [trunk-based-workflow.md](../process/trunk-based-workflow.md) (branch naming and release flow).
 
 ---
 

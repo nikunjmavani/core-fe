@@ -54,7 +54,7 @@ it locally via `pnpm run validate:lockfile` (see `agent-os/skills/platform-hygie
 - **Netlify CLI setup:** docs/deployment/netlify-cli-setup.md
 - **Credentials / env:** docs/integrations/credentials-and-env.md; **env runbook:** docs/deployment/runbooks/environment-variables.md; Sentry: docs/integrations/sentry-sourcemaps.md
 - **Cursor ↔ backend API (MCP):** agent-os/docs/cursor-backend-mcp.md
-- **Git workflow:** docs/process/git-workflow.md
+- **Git workflow:** docs/process/trunk-based-workflow.md
 - **Routing & tenancy (implemented spec):** docs/reference/routing-and-tenancy.md
 - **SonarQube local quality gate:** docs/reference/quality/sonarqube-local.md
 - **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/frontend-platform.md (platform kernel), docs/reference/pwa-manifest-and-app-icon.md (PWA install surface), docs/reference/local-production-perf.md (build + preview perf), docs/reference/cross-browser-support.md (Chrome/Firefox/Safari), docs/reference/design.md (design language), docs/reference/theming.md, docs/reference/theme-axis-audit-playbook.md (axis audit procedure), docs/reference/dependency-upgrades.md, docs/reference/internationalization.md

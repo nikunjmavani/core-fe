@@ -2,7 +2,7 @@
 # is still a notification, not a blocked release.
 #
 # Single-trunk model: there is no second branch to diverge from, so the former
-# "main ⊆ dev" branch-ancestry canary is gone. What remains:
+# branch-ancestry canary is gone. What remains:
 #   • GitHub environment protection + branch ruleset drift (weekly): the
 #      committed `.github/environments/*.json` must match the GitHub UI
 #      (full protection diff — the Netlify deploy refuses to deploy on this
