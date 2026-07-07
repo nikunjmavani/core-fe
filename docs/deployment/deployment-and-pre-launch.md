@@ -54,7 +54,7 @@ Single trunk (`main`) drives both GitHub environments by **purpose**, not by bra
 
 - **After merge to `main`**
   - **Post-merge CI** (`.github/workflows/post-merge-ci.yml`) runs on push to `main`:
-    - Every push → GitHub environment **`development`** → Netlify **alias** deploy (`dev--core-fe.netlify.app`, ungated).
+    - Every push → GitHub environment **`development`** → Netlify **alias** deploy (`development--core-fe.netlify.app`, ungated).
     - Runs single-channel **release-please**, keeping one standing `chore: release X.Y.Z` Release PR up to date.
     - Does **not** re-run tests — pr-ci already gated the SHA.
 
@@ -244,7 +244,7 @@ On **push to `main`** (and `release/**` for hotfixes), **Post-merge CI** (`.gith
    - `.github/release-please/config.json` + `manifest.json` → stable releases (`CHANGELOG.md`).
    - Calculates the next version from conventional commits and keeps one standing `chore: release X.Y.Z` Release PR up to date; merging it by hand (squash) creates a tag + GitHub Release. Release PRs are **not** auto-merged (release on cadence).
 2. Deploys via the reusable Netlify workflow, split by purpose:
-   - **Every push to `main`** → GitHub environment **`development`** → **alias** deploy (`dev--core-fe.netlify.app`, ungated).
+   - **Every push to `main`** → GitHub environment **`development`** → **alias** deploy (`development--core-fe.netlify.app`, ungated).
    - **A release** (release-please tag) → GitHub environment **`production`** → `--prod` deploy (`core-fe.netlify.app`), gated by one reviewer approval.
    - Builds with `pnpm build`, deploys when `VITE_API_BASE_URL`, `NETLIFY_AUTH_TOKEN`, and `NETLIFY_SITE_ID` are set on that environment.
    - Post-deploy smoke checks `version.json` and `/login`.

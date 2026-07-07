@@ -26,10 +26,10 @@ flowchart LR
 
 `main` drives both GitHub environments by **purpose**, not by branch:
 
-| Trigger                        | GitHub Environment | Deploy target                                    |
-| ------------------------------ | ------------------ | ------------------------------------------------ |
-| every push to `main`           | `development`      | Netlify `--alias dev` (dev--core-fe.netlify.app) |
-| a release (`vX.Y.Z`) on `main` | `production`       | Netlify `--prod` (core-fe.netlify.app)           |
+| Trigger                        | GitHub Environment | Deploy target                                                    |
+| ------------------------------ | ------------------ | ---------------------------------------------------------------- |
+| every push to `main`           | `development`      | Netlify `--alias development` (development--core-fe.netlify.app) |
+| a release (`vX.Y.Z`) on `main` | `production`       | Netlify `--prod` (core-fe.netlify.app)                           |
 
 Hotfix an already-shipped version on a short-lived `release/<major>.<minor>` line cut from
 the tag (never merged back). Canonical manifest: [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).

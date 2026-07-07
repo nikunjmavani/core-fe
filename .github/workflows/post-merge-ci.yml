@@ -9,19 +9,19 @@ name: Post-merge CI
 # the required `quality-gate` check. Post-merge does ONLY what the gate cannot.
 #
 # Per-merge cost is minimized — a routine feature merge runs only release-please
-# (~30s) + a batched dev-alias deploy:
+# (~30s) + a batched development-alias deploy:
 #   • SBOM is generated ONLY when release-please actually cuts a release (it is
 #     consumed only by release-sbom), not on every merge.
 #   • deploy-development batches: cancel-in-progress on its concurrency group, so
 #     a burst of N merges close together collapses to ONE deploy of the final
 #     HEAD; a lone merge deploys by itself.
-#   • deploy-development is decoupled from release-please — the dev alias tracks
+#   • deploy-development is decoupled from release-please — the development alias tracks
 #     trunk HEAD even if release-please has a transient failure.
 # release-please and deploy-production are serialized and NEVER cancelled, so a
 # release is never lost to a following merge.
 #
 # Deploy split (deploy-per-purpose, not deploy-per-branch):
-#   deploy-development → src pushes to main → Netlify --alias dev (ungated)
+#   deploy-development → src pushes to main → Netlify --alias development (ungated)
 #   deploy-production  → releases only → Netlify --prod (production reviewer gate)
 #
 # Rollback / redeploy an old tag: reusable-netlify-deploy.yml via workflow_dispatch
@@ -277,13 +277,13 @@ jobs:
   deploy-development:
     name: Deploy (development alias)
     needs: [changes]
-    # Decoupled from release-please: the dev alias tracks trunk HEAD regardless of
+    # Decoupled from release-please: the development alias tracks trunk HEAD regardless of
     # release health. Src pushes to main only (docs/chore-only merges skip the
     # rebuild). Batched — see the concurrency group.
     if: |
       always() &&
       inputs.skip_deploy != true &&
-      github.ref_name == 'main' &&
+      github.ref_name == github.event.repository.default_branch &&
       needs.changes.outputs.src-code == 'true'
     # Batch: a burst of merges collapses to ONE deploy of the final HEAD.
     concurrency:
@@ -303,7 +303,7 @@ jobs:
     if: |
       always() &&
       inputs.skip_deploy != true &&
-      github.ref_name == 'main' &&
+      github.ref_name == github.event.repository.default_branch &&
       needs.release-please.outputs.releases_created == 'true' &&
       (needs.release-sbom.result == 'success' || needs.release-sbom.result == 'skipped')
     concurrency:

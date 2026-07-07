@@ -17,8 +17,8 @@ a long-lived branch** (see [feature-flags.md](../reference/feature-flags.md)).
 | -------- | ----------------------- | ------------------------------------------------------ |
 | **main** | `production` (releases) | The trunk. Every PR merges here; releases cut from it. |
 
-`main` also drives the `development` environment — **every push to `main` deploys the dev
-alias** (`dev--core-fe.netlify.app`), so the alias always serves trunk HEAD. Production
+`main` also drives the `development` environment — **every push to `main` deploys the
+development alias** (`development--core-fe.netlify.app`), so the alias always serves trunk HEAD. Production
 (`core-fe.netlify.app`) serves the latest **release tag** only.
 
 > The former `dev` integration branch is retired. The dev→main dual-channel model, the
@@ -71,7 +71,7 @@ flowchart TB
 ```
 
 **Integrate often** (merge to `main`), **release on cadence** (merge the Release PR).
-A feature merge is not a release — it refreshes the preview + the dev alias only.
+A feature merge is not a release — it refreshes the preview + the development alias only.
 
 ---
 
@@ -151,6 +151,6 @@ work on a branch instead of a flag.
 ## Summary
 
 - **One trunk:** `main`. Feature branches squash-merge to it and auto-delete.
-- **Deploys:** every `main` push → dev alias; releases only → production (one approval).
+- **Deploys:** every `main` push → development alias; releases only → production (one approval).
 - **Ship:** merge the standing `chore: release X.Y.Z` Release PR.
 - **Rollback:** dispatch a Netlify deploy of an older tag.
