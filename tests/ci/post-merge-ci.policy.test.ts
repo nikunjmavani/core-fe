@@ -76,19 +76,35 @@ describe('post-merge CI policy (single trunk)', () => {
     expect(workflow).not.toMatch(/gh pr merge "\$\{pr_number\}" --auto --squash/);
   });
 
-  it('reuses the SBOM artifact for release-sbom (no duplicate generation)', () => {
-    expect(workflow).toMatch(/release-sbom:[\s\S]*?needs:\s*\[sbom,\s*release-please\]/);
-    expect(workflow).toMatch(/release-sbom:[\s\S]*?name: sbom\.cyclonedx\.json/);
+  it('generates the SBOM ONLY when a release is cut (not on every merge)', () => {
+    const sbomBlock = jobBlock(workflow, 'sbom');
+    expect(sbomBlock).not.toBe('');
+    expect(sbomBlock).toContain('needs: [release-please]');
+    expect(sbomBlock).toContain(
+      "needs.release-please.outputs.releases_created == 'true'",
+    );
+    // release-sbom still reuses that artifact (no duplicate generation).
+    const releaseSbomBlock = jobBlock(workflow, 'release-sbom');
+    expect(releaseSbomBlock).toContain('needs: [sbom, release-please]');
+    expect(releaseSbomBlock).toContain('name: sbom.cyclonedx.json');
   });
 
-  it('splits deploy: development alias on every main push, production only on a release', () => {
-    // deploy-development — ungated, development environment, main only.
+  it('deploy-development is decoupled from release-please and batched (cancel-in-progress)', () => {
     const devBlock = jobBlock(workflow, 'deploy-development');
     expect(devBlock).not.toBe('');
+    // decoupled: depends on `changes`, NOT release-please (dev alias tracks HEAD
+    // even on a release failure).
+    expect(devBlock).toContain('needs: [changes]');
+    expect(devBlock).not.toContain('needs.release-please');
+    expect(devBlock).not.toMatch(/needs:\s*\[[^\]]*release-please/);
+    // batched: rapid merges collapse to one deploy.
+    expect(devBlock).toContain('cancel-in-progress: true');
     expect(devBlock).toContain('github_environment: development');
     expect(devBlock).toContain("github.ref_name == 'main'");
+    expect(devBlock).toContain("needs.changes.outputs.src-code == 'true'");
+  });
 
-    // deploy-production — gated on releases_created, production environment.
+  it('deploy-production is release-gated and never cancelled', () => {
     const prodBlock = jobBlock(workflow, 'deploy-production');
     expect(prodBlock).not.toBe('');
     expect(prodBlock).toContain('github_environment: production');
@@ -96,6 +112,7 @@ describe('post-merge CI policy (single trunk)', () => {
       "needs.release-please.outputs.releases_created == 'true'",
     );
     expect(prodBlock).toContain("github.ref_name == 'main'");
+    expect(prodBlock).toContain('cancel-in-progress: false');
   });
 
   it('no longer dispatches a post-release back-merge (single trunk — nothing to back-merge)', () => {
