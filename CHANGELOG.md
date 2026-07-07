@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/nikunjmavani/core-fe/compare/v1.2.2...v1.2.3) (2026-07-07)
+
+
+### Changed
+
+* **setup:** drop per-environment branch; source trunk from git.defaultBranch ([#91](https://github.com/nikunjmavani/core-fe/issues/91)) ([41da2f1](https://github.com/nikunjmavani/core-fe/commit/41da2f1e8e4791607a6f7e39da4ea57b2995799e))
+
 ## [1.2.2](https://github.com/nikunjmavani/core-fe/compare/v1.2.1...v1.2.2) (2026-07-07)
 
 
