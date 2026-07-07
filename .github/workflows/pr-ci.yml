@@ -10,7 +10,7 @@ name: PR CI
 
 on:
   pull_request:
-    branches: [main, 'release/**']
+    branches: [main]
 
 concurrency:
   group: pr-ci-${{ github.event.pull_request.number }}

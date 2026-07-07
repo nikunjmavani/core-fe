@@ -11,7 +11,7 @@ Trunk-based branch naming, PR flow, and release process for core-fe. For setup s
 
 core-fe is **trunk-based** — there is a single long-lived branch, `main`, and short-lived
 working branches off it. Unfinished or risky work ships **behind a feature flag, never behind
-a long-lived branch** (see [feature-flags.md](../reference/feature-flags.md)).
+a long-lived branch**.
 
 | Branch   | GitHub Environment      | Purpose                                                |
 | -------- | ----------------------- | ------------------------------------------------------ |
@@ -44,8 +44,7 @@ Use the format **type/short-description**.
 `feature` · `feat` · `fix` · `refactor` · `docs` · `test` · `chore` · `ci` · `perf` ·
 `build` · `style` · `revert`
 
-Hotfixes to an already-shipped version use a short-lived `release/<major>.<minor>` line — see
-below.
+Hotfixes are **fix-forward on `main`** (no release branches) — see below.
 
 ---
 
@@ -92,7 +91,7 @@ git commit -m "feat: add AI streaming response"
 ```
 
 Unfinished? Put it behind a `VITE_FF_*` flag and merge anyway — do **not** hold it on a
-long-lived branch ([feature-flags.md](../reference/feature-flags.md)).
+long-lived branch.
 
 ### 3. Push and open a PR to `main`
 
@@ -126,14 +125,19 @@ Two paths, both behind the `production` reviewer approval:
 - **Redeploy a tag** (clean rebuild): Actions → **Release deploy** → Run workflow →
   `tag=v1.0.0`. Rebuilds that tag's tree and deploys `--prod`.
 
-### Hotfix an already-shipped version
+### Hotfix an already-shipped version (fix-forward)
+
+No release branches — patch on the trunk and cut the next release:
 
 ```bash
-git switch -c release/1.0 v1.0.0     # short-lived; NEVER merged back
-# fix, commit, push → post-merge CI on release/** cuts v1.0.1 (GitHub Release)
-# → release-deploy.yml deploys v1.0.1 to prod ⛔ approval (or dispatch Release deploy tag=v1.0.1)
-# cherry-pick to main if the bug exists there too (one-way)
+git switch -c fix/null-user main      # short-lived; squash-merges back to main
+# fix, commit, open a `fix:` PR to main → PR CI → squash-merge
+# merge the standing release-please Release PR → v1.0.1 tag + GitHub Release
+# → release-deploy.yml deploys v1.0.1 to prod ⛔ approval
 ```
+
+`main` deploys continuously, so ship or flag any in-progress work first — a
+fix-forward release carries everything currently on `main`.
 
 ---
 

@@ -31,15 +31,14 @@ flowchart LR
 | every push to `main`           | `development`      | Netlify `--alias development` (development--core-fe.netlify.app) |
 | a release (`vX.Y.Z`) on `main` | `production`       | Netlify `--prod` (core-fe.netlify.app)                           |
 
-Hotfix an already-shipped version on a short-lived `release/<major>.<minor>` line cut from
-the tag (never merged back). Canonical manifest: [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
+Hotfixes are fix-forward on `main` (a `fix:` PR → next patch release) — no release
+branches. Canonical manifest: [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
 
 ---
 
 ## Required status checks (pull requests)
 
-These are the **exact check names** required in GitHub for every PR targeting **`main`**
-(or a `release/**` hotfix line):
+These are the **exact check names** required in GitHub for every PR targeting **`main`**:
 
 | Workflow file                                                                                                               | Job / check         | Required check string  |
 | --------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------- |
