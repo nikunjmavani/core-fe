@@ -6,15 +6,23 @@ name: Post-merge CI
 #
 # NO redundant testing: pr-ci.yml is the merge gate and already ran lint, types,
 # unit + security tests, build, and the security scans on this exact SHA behind
-# the required `quality-gate` check. Post-merge does ONLY what the gate cannot:
-# SBOM generation, release-please, and the Netlify deploys. It never re-runs the
-# test suite.
+# the required `quality-gate` check. Post-merge does ONLY what the gate cannot.
+#
+# Per-merge cost is minimized — a routine feature merge runs only release-please
+# (~30s) + a batched dev-alias deploy:
+#   • SBOM is generated ONLY when release-please actually cuts a release (it is
+#     consumed only by release-sbom), not on every merge.
+#   • deploy-development batches: cancel-in-progress on its concurrency group, so
+#     a burst of N merges close together collapses to ONE deploy of the final
+#     HEAD; a lone merge deploys by itself.
+#   • deploy-development is decoupled from release-please — the dev alias tracks
+#     trunk HEAD even if release-please has a transient failure.
+# release-please and deploy-production are serialized and NEVER cancelled, so a
+# release is never lost to a following merge.
 #
 # Deploy split (deploy-per-purpose, not deploy-per-branch):
-#   deploy-development → every push to main → Netlify --alias dev (ungated)
-#                        ⇒ dev--core-fe.netlify.app always serves trunk HEAD
-#   deploy-production  → only when release-please cut a release → Netlify --prod
-#                        ⇒ production environment reviewer is the ONE human gate
+#   deploy-development → src pushes to main → Netlify --alias dev (ungated)
+#   deploy-production  → releases only → Netlify --prod (production reviewer gate)
 #
 # Rollback / redeploy an old tag: reusable-netlify-deploy.yml via workflow_dispatch
 # (target=production, ref=vX.Y.Z) — same production approval, no CI rerun.
@@ -35,9 +43,8 @@ on:
         type: boolean
         default: false
 
-concurrency:
-  group: post-merge-ci-${{ github.ref }}
-  cancel-in-progress: false
+# No workflow-level concurrency: runs may overlap so a burst of merges can batch
+# at the deploy. The critical sections are serialized per-JOB below.
 
 permissions:
   contents: read
@@ -76,50 +83,16 @@ jobs:
               - 'playwright.config.ts'
               - 'tsconfig*.json'
 
-  sbom:
-    name: SBOM
-    needs: [changes]
-    permissions:
-      contents: read
-      id-token: write
-      attestations: write
-    if: needs.changes.outputs.src-code == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          ref: ${{ github.sha }}
-          fetch-depth: 1
-
-      - name: Generate SBOM
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
-        with:
-          path: .
-          format: cyclonedx-json
-          output-file: sbom.cyclonedx.json
-
-      - name: Attest CycloneDX source SBOM
-        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
-        with:
-          subject-path: sbom.cyclonedx.json
-          sbom-path: sbom.cyclonedx.json
-
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: sbom.cyclonedx.json
-          path: sbom.cyclonedx.json
-          retention-days: 30
-
   release-please:
     name: Release Please
-    needs: [sbom]
-    if: |
-      always() &&
-      inputs.skip_release != true &&
-      (needs.sbom.result == 'success' || needs.sbom.result == 'skipped')
+    if: always() && inputs.skip_release != true
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Serialized across runs, NEVER cancelled — a release push must complete, and
+    # concurrent runs must not race on the standing Release PR.
+    concurrency:
+      group: post-merge-release-please-${{ github.ref }}
+      cancel-in-progress: false
     # UNGATED — the PAT is a repository secret (RELEASE_PLEASE_TOKEN), so this job
     # no longer selects an environment to read it. Refreshing the standing Release
     # PR is harmless; the ONE human gate lives at deploy-production, nowhere else.
@@ -267,6 +240,43 @@ jobs:
             gh pr merge "${pr_number}" --auto --merge --delete-branch=false
           done
 
+  sbom:
+    name: SBOM
+    needs: [release-please]
+    # Generated ONLY when a release is actually cut — it is consumed solely by
+    # release-sbom. Skipping it on routine merges is the main per-merge saving.
+    if: always() && needs.release-please.outputs.releases_created == 'true'
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+
+      - name: Attest CycloneDX source SBOM
+        uses: actions/attest-sbom@c604332985a26aa8cf1bdc465b92731239ec6b9e # v4.1.0
+        with:
+          subject-path: sbom.cyclonedx.json
+          sbom-path: sbom.cyclonedx.json
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sbom.cyclonedx.json
+          path: sbom.cyclonedx.json
+          retention-days: 30
+
   release-sbom:
     name: Release SBOM
     needs: [sbom, release-please]
@@ -315,16 +325,19 @@ jobs:
 
   deploy-development:
     name: Deploy (development alias)
-    needs: [release-please]
-    # Every push to main updates the dev alias so dev--core-fe.netlify.app always
-    # serves trunk HEAD — including docs-only merges (the "alias = trunk HEAD"
-    # invariant is worth a ~2-minute rebuild). Not on release/** (hotfix lines
-    # deploy to prod via the Lane-4 dispatch only).
+    needs: [changes]
+    # Decoupled from release-please: the dev alias tracks trunk HEAD regardless of
+    # release health. Src pushes to main only (docs/chore-only merges skip the
+    # rebuild). Batched — see the concurrency group.
     if: |
       always() &&
       inputs.skip_deploy != true &&
       github.ref_name == 'main' &&
-      (needs.release-please.result == 'success' || needs.release-please.result == 'skipped')
+      needs.changes.outputs.src-code == 'true'
+    # Batch: a burst of merges collapses to ONE deploy of the final HEAD.
+    concurrency:
+      group: post-merge-deploy-development
+      cancel-in-progress: true
     uses: ./.github/workflows/reusable-netlify-deploy.yml
     secrets: inherit
     with:
@@ -333,15 +346,18 @@ jobs:
   deploy-production:
     name: Deploy (production)
     needs: [release-please, release-sbom]
-    # ONLY when release-please cut a release (releases_created) and only from
-    # main. The production environment's required reviewer is the ONE human gate
-    # in the whole model.
+    # ONLY when release-please cut a release, only from main. The production
+    # environment's required reviewer is the ONE human gate in the whole model.
+    # Never cancelled — a prod deploy must complete.
     if: |
       always() &&
       inputs.skip_deploy != true &&
       github.ref_name == 'main' &&
       needs.release-please.outputs.releases_created == 'true' &&
       (needs.release-sbom.result == 'success' || needs.release-sbom.result == 'skipped')
+    concurrency:
+      group: post-merge-deploy-production
+      cancel-in-progress: false
     uses: ./.github/workflows/reusable-netlify-deploy.yml
     secrets: inherit
     with:
