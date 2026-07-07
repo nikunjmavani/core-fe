@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/nikunjmavani/core-fe/compare/v1.1.2...v1.2.0) (2026-07-07)
+
+
+### Added
+
+* **ci:** single-trunk CI/CD hardening — github:sync, tag-pinned release deploy, instant rollback ([#83](https://github.com/nikunjmavani/core-fe/issues/83)) ([fa6ab76](https://github.com/nikunjmavani/core-fe/commit/fa6ab7668cb1cf21b607d76572edaf771cd06086))
+
 ## [1.1.2](https://github.com/nikunjmavani/core-fe/compare/v1.1.1...v1.1.2) (2026-07-07)
 
 
