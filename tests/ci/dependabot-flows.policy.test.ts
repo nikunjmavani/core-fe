@@ -39,13 +39,13 @@ describe('dependabot auto-merge policy', () => {
   });
 
   it('merges with the PAT (github.token fallback) so the merge push triggers post-merge CI', () => {
-    // A GITHUB_TOKEN-attributed merge starts no workflows: PR #27 merged with
-    // no post-merge run (no SBOM / tests / dev deploy for that commit). The
-    // PAT is an environment secret, so the job must select an environment.
+    // A GITHUB_TOKEN-attributed merge starts no workflows (no post-merge run for
+    // that commit). Single-trunk: the PAT is a REPOSITORY secret, so the job no
+    // longer selects an environment to read it.
     expect(autoMerge).toMatch(
       /GH_TOKEN:\s*\$\{\{\s*secrets\.RELEASE_PLEASE_TOKEN \|\| secrets\.GITHUB_TOKEN\s*\}\}/,
     );
-    expect(autoMerge).toContain('environment: development');
+    expect(autoMerge).not.toContain('environment:');
   });
 });
 
