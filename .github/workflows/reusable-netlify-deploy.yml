@@ -2,9 +2,13 @@ name: Reusable — Netlify deploy
 
 # Builds dist/ on GitHub Actions and publishes to Netlify. Deploy-per-purpose:
 # the GitHub Environment (not a branch) selects the target and its secrets.
-#   development → alias deploy  (--alias dev, dev--core-fe.netlify.app)
-#   production  → production deploy (--prod, core-fe.netlify.app)
-# ONE Netlify project ("core-fe") serves both via deploy contexts.
+#   production   → production deploy (--prod, core-fe.netlify.app)
+#   development  → alias deploy      (--alias dev, dev--core-fe.netlify.app)
+#   <any other>  → alias deploy      (--alias <env>, <env>--core-fe.netlify.app)
+# Adding a new environment = a new GitHub Environment + a deploy-<env> job in
+# post-merge-ci.yml; this reusable needs no change (it derives the alias from the
+# environment name). Point a new env's NETLIFY_SITE_ID at a separate site if you
+# want it off the shared "core-fe" project.
 #
 # Two ways in (parity with core-be's reusable-railway-deploy.yml):
 #   - workflow_call  — post-merge-ci passes github_environment (+ optional ref).
@@ -207,11 +211,16 @@ jobs:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           GITHUB_ENVIRONMENT: ${{ needs.resolve-environment.outputs.environment }}
         run: |
-          if [ "$GITHUB_ENVIRONMENT" = "production" ]; then
-            DEPLOY_FLAGS="--prod"
-          else
-            DEPLOY_FLAGS="--alias dev"
-          fi
+          # Deploy target per environment:
+          #   production  → --prod (the live site)
+          #   development → --alias dev  (dev--core-fe.netlify.app — kept as-is)
+          #   any OTHER env → --alias <env-name>  (e.g. staging → staging--…)
+          # so a new GitHub Environment deploys to its own alias with no rewiring.
+          case "$GITHUB_ENVIRONMENT" in
+            production)  DEPLOY_FLAGS="--prod" ;;
+            development) DEPLOY_FLAGS="--alias dev" ;;
+            *)           DEPLOY_FLAGS="--alias $GITHUB_ENVIRONMENT" ;;
+          esac
           # shellcheck disable=SC2086 # DEPLOY_FLAGS is two words by design
           pnpm exec netlify deploy $DEPLOY_FLAGS --dir=dist --json > deploy-result.json
           DEPLOY_URL=$(node -e "const r=JSON.parse(require('fs').readFileSync('deploy-result.json','utf8')); console.log(r.url ?? r.deploy_url ?? '')")
