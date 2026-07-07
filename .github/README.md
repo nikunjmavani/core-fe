@@ -6,12 +6,14 @@ Workflow _file names_ describe _what_ runs; the YAML `name:` field is what appea
 
 ## Orchestrator workflows
 
-| What it does                                 | File                                             | When it runs                          |
-| -------------------------------------------- | ------------------------------------------------ | ------------------------------------- |
-| PR merge gate (lint, typecheck, unit, build) | [pr-ci.yml](workflows/pr-ci.yml)                 | `pull_request` → `main`, `release/**` |
-| PR title, labels, `.env` guard               | [pr-governance.yml](workflows/pr-governance.yml) | Every PR event                        |
-| Post-merge pipeline                          | [post-merge-ci.yml](workflows/post-merge-ci.yml) | push to `main` / `release/**`         |
-| Weekly Lighthouse budgets                    | [lighthouse.yml](workflows/lighthouse.yml)       | Wed 03:00 UTC                         |
+| What it does                                      | File                                                 | When it runs                          |
+| ------------------------------------------------- | ---------------------------------------------------- | ------------------------------------- |
+| PR merge gate (lint, typecheck, unit, build)      | [pr-ci.yml](workflows/pr-ci.yml)                     | `pull_request` → `main`, `release/**` |
+| PR title, labels, `.env` guard                    | [pr-governance.yml](workflows/pr-governance.yml)     | Every PR event                        |
+| Post-merge pipeline (release-please + dev deploy) | [post-merge-ci.yml](workflows/post-merge-ci.yml)     | push to `main` / `release/**`         |
+| Production deploy (tag-pinned, reviewer-gated)    | [release-deploy.yml](workflows/release-deploy.yml)   | `release: published` + manual `{tag}` |
+| Instant production rollback (restore, no rebuild) | [rollback-deploy.yml](workflows/rollback-deploy.yml) | Manual `workflow_dispatch`            |
+| Weekly Lighthouse budgets                         | [lighthouse.yml](workflows/lighthouse.yml)           | Wed 03:00 UTC                         |
 
 Playwright E2E is local-only (`pnpm test:e2e` against a live core-be on `:3000`) — CI never boots the backend; deploys only need the backend URL (`VITE_API_BASE_URL`).
 

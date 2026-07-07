@@ -182,7 +182,7 @@ Backend must allow CORS from the frontend origin (Netlify site URL / custom doma
 
 - **Site:** Netlify hosts the pre-built `dist/` only. No build runs on Netlify.
 - **Config:** `netlify.toml` (publish dir, SPA redirect, headers). Build command there is unused when deploying from GitHub (workflow runs build and uploads `dist/`).
-- **Deploys:** (1) **GitHub Actions** — Deploy workflow on push to `main` (build with GitHub secrets, then `netlify deploy --prod --dir=dist`), or Release workflow when a release is created. (2) **CLI** — `pnpm run deploy:netlify:prod` for manual deploy.
+- **Deploys:** (1) **GitHub Actions** — `post-merge-ci.yml` deploys the `development` alias on every `main` src push; `release-deploy.yml` deploys `--prod` on a published release (pinned to the tag, reviewer-gated); `rollback-deploy.yml` restores a previous prod deploy instantly. (2) **CLI** — `pnpm run deploy:netlify:prod` for manual deploy.
 
 ### Build-time env (GitHub Secrets)
 

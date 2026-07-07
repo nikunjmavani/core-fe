@@ -120,19 +120,21 @@ the next version + changelog from all unreleased commits. **Merging it is the sh
 Bump rules (highest wins): `fix:` → patch, `feat:` → minor, `feat!:`/`BREAKING CHANGE:` →
 major; `chore/docs/refactor/ci/test/build/style/perf` → changelog only.
 
-### Rollback / redeploy an old tag (rare)
+### Rollback (fast) / redeploy an old tag
 
-No CI rerun — dispatch the Netlify deploy with a tag:
+Two paths, both behind the `production` reviewer approval:
 
-- Actions → **Reusable — Netlify deploy** → Run workflow → `target=production`,
-  `ref=v1.0.0` → same production approval.
+- **Instant rollback** (no rebuild): Actions → **Rollback deploy** → Run workflow.
+  Restores the previous published Netlify deploy (or an explicit `deploy_id`).
+- **Redeploy a tag** (clean rebuild): Actions → **Release deploy** → Run workflow →
+  `tag=v1.0.0`. Rebuilds that tag's tree and deploys `--prod`.
 
 ### Hotfix an already-shipped version
 
 ```bash
 git switch -c release/1.0 v1.0.0     # short-lived; NEVER merged back
-# fix, commit, push → post-merge CI on release/** cuts v1.0.1
-# deploy via the Lane-4 dispatch (target=production, ref=v1.0.1) ⛔ approval
+# fix, commit, push → post-merge CI on release/** cuts v1.0.1 (GitHub Release)
+# → release-deploy.yml deploys v1.0.1 to prod ⛔ approval (or dispatch Release deploy tag=v1.0.1)
 # cherry-pick to main if the bug exists there too (one-way)
 ```
 
@@ -153,4 +155,4 @@ work on a branch instead of a flag.
 - **One trunk:** `main`. Feature branches squash-merge to it and auto-delete.
 - **Deploys:** every `main` push → development alias; releases only → production (one approval).
 - **Ship:** merge the standing `chore: release X.Y.Z` Release PR.
-- **Rollback:** dispatch a Netlify deploy of an older tag.
+- **Rollback:** **Rollback deploy** (instant restore, no rebuild) or **Release deploy** `{tag}` (rebuild).
