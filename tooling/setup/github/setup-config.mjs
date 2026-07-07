@@ -1,12 +1,13 @@
 /**
- * Load tooling/setup/setup.config.json — canonical branch ↔ environment mapping.
+ * Load tooling/setup/setup.config.json — environments + git config for GitHub IaC
+ * sync. Single trunk: the branch is `git.defaultBranch` (not per-environment).
  */
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 const SETUP_CONFIG_PATH = resolve(import.meta.dirname, '../setup.config.json');
 
-/** @typedef {{ name: string, branch: string, deploySecrets?: string[], deploySecretsRequired?: string[] }} SetupEnvironment */
+/** @typedef {{ name: string, deploySecrets?: string[], deploySecretsRequired?: string[] }} SetupEnvironment */
 
 /**
  * @returns {{
@@ -34,22 +35,25 @@ export function getConfiguredEnvironmentNames() {
  */
 export function resolveGitHubEnvironmentName(config) {
   const { environments } = loadSetupConfig();
-  const byBranch = Object.fromEntries(environments.map((env) => [env.branch, env.name]));
   const byName = Object.fromEntries(environments.map((env) => [env.name, env.name]));
   const shorthand = {
     dev: byName.development ?? 'development',
     prod: byName.production ?? 'production',
   };
-  return byBranch[config] ?? byName[config] ?? shorthand[config] ?? config;
+  return byName[config] ?? shorthand[config] ?? config;
 }
 
 /**
  * @param {string} environmentName
  */
 export function getEnvironmentConfig(environmentName) {
-  const environment = loadSetupConfig().environments.find((entry) => entry.name === environmentName);
+  const environment = loadSetupConfig().environments.find(
+    (entry) => entry.name === environmentName,
+  );
   if (!environment) {
-    throw new Error(`Unknown environment "${environmentName}" — not in setup.config.json.`);
+    throw new Error(
+      `Unknown environment "${environmentName}" — not in setup.config.json.`,
+    );
   }
   return environment;
 }

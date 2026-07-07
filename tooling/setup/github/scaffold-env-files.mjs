@@ -22,7 +22,7 @@ export function scaffoldGithubEnvFiles(options = {}) {
 
     const secretNames = environment.deploySecrets ?? [];
     const lines = [
-      `# GitHub Environment: ${environment.name} (branch ${environment.branch})`,
+      `# GitHub Environment: ${environment.name}`,
       '# Fill values locally — gitignored. Push with `pnpm github:sync`.',
       '# See config.setup.env for canonical provisioning values.',
       '',
