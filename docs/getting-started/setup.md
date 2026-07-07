@@ -119,4 +119,4 @@ Full steps and MCP list: [cursor-mcp-setup.md](../../agent-os/docs/cursor-mcp-se
 
 - **First-time Netlify connect + deploy:** [netlify-cli-setup.md](../deployment/netlify-cli-setup.md)
 - **CI/CD and production env:** [cicd-and-netlify.md](../deployment/cicd-and-netlify.md)
-- **Step-by-step path to production:** [runbook-dev-to-production.md](../deployment/runbook-dev-to-production.md)
+- **Step-by-step path to production:** [runbook-local-to-production.md](../deployment/runbook-local-to-production.md)
