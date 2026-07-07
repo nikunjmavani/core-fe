@@ -14,7 +14,9 @@ export function DoneStep() {
     <dl className="space-y-3 text-sm">
       <div className="flex justify-between">
         <dt className="text-muted-foreground">{t(ONBOARDING_KEYS.done.nameLabel)}</dt>
-        <dd className="font-medium">{data.fullName || empty}</dd>
+        <dd className="font-medium">
+          {[data.firstName, data.lastName].filter(Boolean).join(' ') || empty}
+        </dd>
       </div>
       <div className="flex justify-between">
         <dt className="text-muted-foreground">

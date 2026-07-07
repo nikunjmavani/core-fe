@@ -32,10 +32,10 @@
     "body": "我们将帮助您设置个人资料、创建第一个组织并邀请团队。只需一分钟。"
   },
   "profile": {
-    "fullNameLabel": "姓名",
-    "fullNamePlaceholder": "Ada Lovelace",
-    "jobTitleLabel": "职位",
-    "jobTitlePlaceholder": "工程负责人"
+    "firstNameLabel": "名字",
+    "firstNamePlaceholder": "Ada",
+    "lastNameLabel": "姓氏",
+    "lastNamePlaceholder": "Lovelace"
   },
   "questions": {
     "teamSize": {

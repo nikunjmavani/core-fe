@@ -160,6 +160,8 @@ describe('authApi.updateProfile wire mapping', () => {
   });
 
   async function captureProfileBody(input: {
+    firstName?: string;
+    lastName?: string;
     name?: string;
     jobTitle?: string;
   }): Promise<Record<string, unknown>> {
@@ -175,7 +177,31 @@ describe('authApi.updateProfile wire mapping', () => {
     return body;
   }
 
-  it('splits a full name into first_name/last_name and maps jobTitle → job_title', async () => {
+  it('maps explicit firstName/lastName 1:1 to first_name/last_name', async () => {
+    expect(await captureProfileBody({ firstName: 'Ada', lastName: 'Lovelace' })).toEqual({
+      first_name: 'Ada',
+      last_name: 'Lovelace',
+    });
+  });
+
+  it('sends last_name null when an explicit lastName is blank', async () => {
+    expect(await captureProfileBody({ firstName: 'Ada', lastName: '' })).toEqual({
+      first_name: 'Ada',
+      last_name: null,
+    });
+  });
+
+  it('prefers explicit firstName/lastName over a legacy name string', async () => {
+    expect(
+      await captureProfileBody({
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        name: 'Ignored',
+      }),
+    ).toEqual({ first_name: 'Ada', last_name: 'Lovelace' });
+  });
+
+  it('splits a legacy full name into first_name/last_name and maps jobTitle → job_title', async () => {
     expect(await captureProfileBody({ name: 'NIK PATEL', jobTitle: 'CEO' })).toEqual({
       first_name: 'NIK',
       last_name: 'PATEL',

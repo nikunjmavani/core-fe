@@ -10,30 +10,32 @@ import {
   ONBOARDING_TEST_IDS,
 } from '../../onboarding.constants.ts';
 
-/** Collects the user's name + job title into the onboarding store. */
+/** Collects the user's first + last name into the onboarding store. */
 export function ProfileStep() {
   const { t } = useTranslation(ONBOARDING_NS);
   const { data, patch } = useOnboardingStore();
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="ob-name">{t(ONBOARDING_KEYS.profile.fullNameLabel)}</Label>
+        <Label htmlFor="ob-first-name">{t(ONBOARDING_KEYS.profile.firstNameLabel)}</Label>
         <Input
-          id="ob-name"
-          value={data.fullName}
-          onChange={(e) => patch({ fullName: e.target.value })}
-          placeholder={t(ONBOARDING_KEYS.profile.fullNamePlaceholder)}
-          data-testid={ONBOARDING_TEST_IDS.fullName}
+          id="ob-first-name"
+          value={data.firstName}
+          onChange={(e) => patch({ firstName: e.target.value })}
+          placeholder={t(ONBOARDING_KEYS.profile.firstNamePlaceholder)}
+          autoComplete="given-name"
+          data-testid={ONBOARDING_TEST_IDS.firstName}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="ob-title">{t(ONBOARDING_KEYS.profile.jobTitleLabel)}</Label>
+        <Label htmlFor="ob-last-name">{t(ONBOARDING_KEYS.profile.lastNameLabel)}</Label>
         <Input
-          id="ob-title"
-          value={data.jobTitle}
-          onChange={(e) => patch({ jobTitle: e.target.value })}
-          placeholder={t(ONBOARDING_KEYS.profile.jobTitlePlaceholder)}
-          data-testid={ONBOARDING_TEST_IDS.jobTitle}
+          id="ob-last-name"
+          value={data.lastName}
+          onChange={(e) => patch({ lastName: e.target.value })}
+          placeholder={t(ONBOARDING_KEYS.profile.lastNamePlaceholder)}
+          autoComplete="family-name"
+          data-testid={ONBOARDING_TEST_IDS.lastName}
         />
       </div>
     </div>
