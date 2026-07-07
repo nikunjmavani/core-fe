@@ -29,6 +29,8 @@ All specs live in `tests/e2e/*.e2e.test.ts`. One command: `pnpm test:e2e`.
 
 **Prerequisite:** **core-be** running on `:3000` (`GET /readyz` must succeed). `tests/e2e/global-setup.ts` fails fast if core-be is down — there is no skip path.
 
+**Rate-limit caps (required for E2E):** boot core-be with **`RATE_LIMIT_RELAXED_CAPS=true`** (it's in core-be's `.env.example`; defaults to `false`/hardened). Public-auth routes (`send-code`, login) are capped at **5 requests/min per IP** when hardened, so a loopback suite that loops these routes floods into `429 send-code failed` and most authenticated flows fail. Relaxed lifts the ceiling to 5000/min. CI boots core-be with `NODE_ENV=test`, which relaxes the caps automatically.
+
 **CAPTCHA (manual dev + E2E):** core-fe mounts invisible Cloudflare Turnstile when `VITE_TURNSTILE_SITE_KEY` is set (`.env.development` ships the always-pass test key `1x00000000000000000000AA`; do **not** set `VITE_CAPTCHA_DISABLED=true`). Pair with core-be `CAPTCHA_PROVIDER=turnstile` and the matching test secret. Auth buttons wait for a Turnstile token before POST (`useTurnstileReady`). `global-setup` probes core-be and caches working auth headers for E2E (typically `X-Captcha-Bypass: true` in local/test `NODE_ENV`).
 
 | Spec                                               | What it covers                                               |
