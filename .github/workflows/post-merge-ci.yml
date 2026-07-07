@@ -191,8 +191,9 @@ jobs:
         # PR is attributed to the PAT and its push to main RE-TRIGGERS this
         # workflow. A merge performed with the default GITHUB_TOKEN starts no
         # workflow run, so the tag / GitHub Release would never be created.
-        # Merge method stays --merge here; PR C flips the ruleset + this flag to
-        # --squash together (a lone flip would strand auto-merge on the ruleset).
+        # Squash-only: the main ruleset allows only `squash`, so auto-merge (and
+        # manual merges of the release PR) use --squash. release-please tracks the
+        # release via the manifest + squash commit.
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           RELEASE_PR: ${{ steps.release.outputs.pr }}
@@ -237,7 +238,7 @@ jobs:
 
           for pr_number in ${pr_numbers}; do
             echo "Enabling auto-merge for release PR #${pr_number}"
-            gh pr merge "${pr_number}" --auto --merge --delete-branch=false
+            gh pr merge "${pr_number}" --auto --squash --delete-branch=false
           done
 
   sbom:
