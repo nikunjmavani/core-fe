@@ -71,7 +71,7 @@ Committed ruleset: [main.json](../../.github/rulesets/main.json). Sync to GitHub
 | Required approving reviews      | **0** (solo phase — the human Merge click is the gate; restore ≥1 when a second reviewer exists) |
 | Require CODEOWNER review        | No                                                                                               |
 | Require conversation resolution | Yes                                                                                              |
-| Strict up-to-date checks        | **Off**                                                                                          |
+| Strict up-to-date checks        | **On** — a branch must be up to date with `main` before it merges (merged tree == tested tree)   |
 | Allowed merge methods           | **`squash` only** (branch auto-deletes on merge)                                                 |
 | Require signed commits          | Yes                                                                                              |
 | Block force-push / deletion     | Yes                                                                                              |
