@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/nikunjmavani/core-fe/compare/v1.1.0...v1.1.1) (2026-07-07)
+
+
+### Fixed
+
+* **knip:** allow the rg (ripgrep) binary ([a685f85](https://github.com/nikunjmavani/core-fe/commit/a685f85e9e195b164e2a2973d485e889c6b1aff2))
+* **knip:** allow the rg (ripgrep) binary ([932c38f](https://github.com/nikunjmavani/core-fe/commit/932c38ff67cb1eed1f705b8ff116b450bd89afa0))
+
 ## [1.1.0](https://github.com/nikunjmavani/core-fe/compare/v1.0.0...v1.1.0) (2026-07-07)
 
 
