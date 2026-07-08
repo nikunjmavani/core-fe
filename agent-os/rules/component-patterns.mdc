@@ -208,11 +208,11 @@ All animation components automatically respect `prefers-reduced-motion`.
 
 ## React Performance (Vite SPA)
 
-This project uses **React 18 + Vite + React Router** (not Next.js). Apply these patterns in `src/**/*.tsx`:
+This project uses **React 19 + Vite + TanStack Router** (not Next.js). Apply these patterns in `src/**/*.tsx`:
 
-- **Code splitting:** Routes are lazy-loaded via `route.tsx` and `routeTree.tsx`; use `React.lazy` for heavy page-specific UI when needed.
+- **Code splitting:** Routes are lazy-loaded via `<page>.route.tsx` and `routeTree.tsx`; use `React.lazy` for heavy page-specific UI when needed.
 - **Server state:** Use TanStack Query hooks in `pages/<name>/hooks/` — not `useEffect` + manual fetch.
-- **RBAC pre-checks:** Use route `loader` with `requirePermission` before the page renders (see route module pattern above).
+- **RBAC pre-checks:** Enforce in `routeTree.tsx` `beforeLoad` via `gatewayFromManifest(manifest)` before the page renders — never in a route `loader` (see route module pattern above).
 - **Local state:** Keep UI state local; use react-hook-form for forms; Zustand only for theme/UI (see `project-conventions.mdc`).
 - **Derived state:** Prefer computing values during render over duplicating state in `useEffect`.
 - **Memoization:** Default to no `memo` / `useMemo` / `useCallback` unless profiling shows a benefit.

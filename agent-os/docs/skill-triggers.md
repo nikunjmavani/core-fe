@@ -75,7 +75,7 @@ Read in order; **project guardrails always win** over skill suggestions.
 
 ## Gates (definition of done)
 
-`pnpm health` (full check) — or individually: `pnpm tsc` · `pnpm lint` ·
+`pnpm health` (full check) — or individually: `pnpm type-check` · `pnpm lint` ·
 `pnpm biome:check` · `pnpm format:check` · `pnpm validate:tokens` ·
 `pnpm validate:structure` · `pnpm validate:testids` · `pnpm validate:theme-axis` ·
 `pnpm validate:vite-env` · `pnpm validate:client-env --production` · `pnpm knip` ·

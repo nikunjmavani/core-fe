@@ -122,7 +122,7 @@ spinner; the rest disable **without** a spinner. `/login` codifies this in
 ## Verify
 
 ```bash
-pnpm tsc
+pnpm type-check
 pnpm test -- --run src/lib/forms/ src/shared/components/RateLimitNotice/ src/shared/errors/
 ```
 

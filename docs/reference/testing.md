@@ -119,25 +119,29 @@ Helpers: `tests/utils/e2e-auth.ts`, `tests/utils/axe-for-dialog.ts`.
 
 ## Security specs (Vitest)
 
-| Spec                                      | Focus                         |
-| ----------------------------------------- | ----------------------------- |
-| `token-storage.security.test.ts`          | Tokens not in localStorage    |
-| `static-security-config.security.test.ts` | CSP / security headers config |
-| `route-access-matrix.security.test.ts`    | Route permission matrix       |
-| `xss-sinks.security.test.ts`              | Dangerous sink patterns       |
+| Spec                                       | Focus                              |
+| ------------------------------------------ | ---------------------------------- |
+| `token-storage.security.test.ts`           | Tokens not in localStorage         |
+| `token-egress.security.test.ts`            | Tokens never leave via URL/logs    |
+| `static-security-config.security.test.ts`  | CSP / security headers config      |
+| `route-access-matrix.security.test.ts`     | Route permission matrix            |
+| `settings-access-matrix.security.test.ts`  | Settings-section permission matrix |
+| `cross-tenant-query-keys.security.test.ts` | Query keys scoped per organization |
+| `redirect-safety.security.test.ts`         | Safe post-auth redirect targets    |
+| `xss-sinks.security.test.ts`               | Dangerous sink patterns            |
 
 ## Commands
 
 | Command                                   | What runs                                           |
 | ----------------------------------------- | --------------------------------------------------- |
-| `pnpm test`                               | Vitest unit + security                              |
+| `pnpm test`                               | Vitest all projects — unit + security + ci-policy   |
 | `pnpm test:unit`                          | Colocated `src/**/*.test.*` only                    |
 | `pnpm test:security`                      | `tests/security/`                                   |
 | `pnpm test:e2e`                           | All Playwright specs in `tests/e2e/`                |
 | `pnpm test:e2e:integration`               | Routes integration + org-switching only             |
 | `pnpm test:e2e:integration:cross-browser` | Same, on Chromium + Firefox + WebKit (live core-be) |
 | `pnpm test:visual`                        | Screenshot regression (`visual.e2e.test.ts`)        |
-| `pnpm coverage:patch`                     | Changed-lines ≥ 80% (PR CI)                         |
+| `pnpm coverage:patch`                     | Changed-lines ≥ 90% (PR CI)                         |
 
 Contract drift (scheduled CI): `pnpm contracts:drift` vs `core-be/docs/routes.txt`.
 

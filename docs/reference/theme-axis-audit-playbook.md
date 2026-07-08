@@ -181,7 +181,7 @@ Categorize each hit:
 ### Phase 3 — Verify
 
 ```bash
-pnpm tsc
+pnpm type-check
 pnpm eslint --fix <changed-files>
 pnpm test -- --run <colocated-tests-for-touched-components>
 ```

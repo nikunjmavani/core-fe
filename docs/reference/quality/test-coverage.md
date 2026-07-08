@@ -24,7 +24,7 @@ not synthetic memo-cache checks.
 pnpm test              # vitest run (all projects)
 pnpm test:unit         # unit project only
 pnpm test:security     # security project only
-pnpm coverage          # run with coverage report
+pnpm test:coverage          # run with coverage report
 pnpm coverage:patch    # changed-lines coverage gate (PR CI)
 ```
 
@@ -42,7 +42,7 @@ on regression, never on ambition. **Raise as coverage rises; never lower.**
 
 ## Patch coverage
 
-PR CI also enforces **patch coverage** — changed lines must be ≥ 80%
+PR CI also enforces **patch coverage** — changed lines must be ≥ 90%
 (`tooling/ci/check-patch-coverage.mjs`, run as `pnpm coverage:patch`). This keeps
 new/edited code well-covered even while the global ratchet rises gradually. The
 `json-summary` reporter feeds the CI job-summary coverage table.

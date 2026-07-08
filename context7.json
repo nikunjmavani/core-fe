@@ -15,7 +15,7 @@
     {
       "id": "/facebook/react",
       "package": "react",
-      "topic": "React 18 patterns, context, hooks"
+      "topic": "React 19 patterns, context, hooks"
     },
     {
       "id": "/tailwindlabs/tailwindcss",
@@ -43,14 +43,14 @@
       "topic": "Client state, stores"
     },
     {
-      "id": "/framer/motion",
-      "package": "framer-motion",
-      "topic": "Animations"
+      "id": "/juliangarnier/anime",
+      "package": "animejs",
+      "topic": "Timelines, staggers, SVG, keyframes"
     },
     {
-      "id": "/remix-run/react-router",
-      "package": "react-router",
-      "topic": "React Router v7, loaders, routes"
+      "id": "/TanStack/router",
+      "package": "@tanstack/react-router",
+      "topic": "Routes, beforeLoad guards, search params"
     },
     {
       "id": "/radix-ui/primitives",

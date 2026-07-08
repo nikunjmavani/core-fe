@@ -6,13 +6,16 @@
 
 ## Layout
 
-| Path                  | Purpose                                                                                 | Tool                | Command               |
-| --------------------- | --------------------------------------------------------------------------------------- | ------------------- | --------------------- |
-| **`tests/utils/`**    | Helpers: `renderWithProviders`, `e2e-hybrid`, `e2e-auth`, `axe-for-dialog`              | Vitest / Playwright | (imported by tests)   |
-| **`tests/fixtures/`** | Test-only fixture data (never imported by `src/`)                                       | —                   | —                     |
-| **`tests/e2e/`**      | Browser + API E2E (one suite)                                                           | Playwright          | `pnpm test:e2e`       |
-| **`tests/ci/`**       | CI-flow policy invariants (workflow wiring, release-please manifests, Dependabot rules) | Vitest              | `pnpm test:ci-policy` |
-| **`tests/security/`** | Security tripwires                                                                      | Vitest              | `pnpm test:security`  |
+| Path                       | Purpose                                                                                 | Tool                | Command                   |
+| -------------------------- | --------------------------------------------------------------------------------------- | ------------------- | ------------------------- |
+| **`tests/utils/`**         | Helpers: `renderWithProviders`, `e2e-hybrid`, `e2e-auth`, `axe-for-dialog`              | Vitest / Playwright | (imported by tests)       |
+| **`tests/fixtures/`**      | Test-only fixture data (never imported by `src/`)                                       | —                   | —                         |
+| **`tests/factories/`**     | Test data factories (never imported by `src/`)                                          | —                   | (imported by tests)       |
+| **`tests/e2e/`**           | Browser + API E2E (one suite)                                                           | Playwright          | `pnpm test:e2e`           |
+| **`tests/cross-browser/`** | Cross-browser E2E (Chromium / Firefox / WebKit)                                         | Playwright          | `pnpm test:cross-browser` |
+| **`tests/ci/`**            | CI-flow policy invariants (workflow wiring, release-please manifests, Dependabot rules) | Vitest              | `pnpm test:ci-policy`     |
+| **`tests/security/`**      | Security tripwires                                                                      | Vitest              | `pnpm test:security`      |
+| **`tests/performance/`**   | Optional Lighthouse / bundle-size checks                                                | Lighthouse          | (manual)                  |
 
 ## Two test layers
 
@@ -25,17 +28,17 @@
 
 ## Commands
 
-| Command                                   | What it runs                                  |
-| ----------------------------------------- | --------------------------------------------- |
-| `pnpm test`                               | Vitest unit + security                        |
-| `pnpm test:unit`                          | Colocated unit suites only                    |
-| `pnpm test:security`                      | Security tripwires                            |
-| `pnpm test:e2e`                           | All Playwright E2E specs                      |
-| `pnpm test:e2e:integration`               | Routes integration + org switching            |
-| `pnpm test:e2e:integration:cross-browser` | Live integration on Chromium, Firefox, WebKit |
-| `pnpm test:visual`                        | Visual regression only                        |
-| `pnpm validate:testids`                   | Page/form/shell `data-testid` gate            |
-| `pnpm validate:structure`                 | Route-island + test colocation gate           |
+| Command                                   | What it runs                                      |
+| ----------------------------------------- | ------------------------------------------------- |
+| `pnpm test`                               | Vitest all projects — unit + security + ci-policy |
+| `pnpm test:unit`                          | Colocated unit suites only                        |
+| `pnpm test:security`                      | Security tripwires                                |
+| `pnpm test:e2e`                           | All Playwright E2E specs                          |
+| `pnpm test:e2e:integration`               | Routes integration + org switching                |
+| `pnpm test:e2e:integration:cross-browser` | Live integration on Chromium, Firefox, WebKit     |
+| `pnpm test:visual`                        | Visual regression only                            |
+| `pnpm validate:testids`                   | Page/form/shell `data-testid` gate                |
+| `pnpm validate:structure`                 | Route-island + test colocation gate               |
 
 E2E artifacts: **`test-results/`** — `pnpm test:e2e:report` to open the HTML report.
 

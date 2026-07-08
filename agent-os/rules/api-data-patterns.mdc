@@ -92,23 +92,24 @@ and picks **one** of two modes. Full policy + current inventory:
 ```
 Component (useUsers hook)
     → TanStack Query (cache, dedup, retry)
-        → apiClient (Axios instance)
-            → Request interceptor (Bearer + X-Tenant-ID)
-            → axios-retry (backoff for 429/5xx)
+        → apiClient (hand-rolled fetch client — core/http/fetch-client.ts)
+            → attaches Authorization: Bearer (org context travels in the URL path)
+            → writes auto-carry an Idempotency-Key (minted once, reused across retries/replay)
+            → in-client retry (exponential backoff + Retry-After for 429/5xx)
             → Vite proxy (/api → backend)
-            → Response interceptor (401 refresh + replay)
+            → single-flight 401 refresh + one replay (a second 401 → forceLogout)
         → TanStack Query (cache update)
     → Component (re-render with data)
 ```
 
 ## Error Handling
 
-- **401 errors**: Handled exclusively by Axios response interceptor (refresh + replay)
-- **Network/5xx errors**: Retried by axios-retry (exponential backoff, max 3)
+- **401 errors**: Handled exclusively by the fetch client — single-flight refresh + one replay; a second 401 after a fresh token means the session is dead → `forceLogout()`
+- **Network/5xx/429 errors**: Retried by the fetch client (exponential backoff + `Retry-After`, max 3)
 - **Validation errors**: Returned in response body, handled by mutation onError
 - **Query errors**: Logged by QueryCache.onError (non-401 only)
 
-Never catch 401 in components — the interceptor handles it.
+Never catch 401 in components — the fetch client handles it.
 
 ## Zod Validation
 
@@ -139,6 +140,6 @@ Client-side checks improve UX but **do not replace server validation** — never
 
 - **Input:** Define Zod schemas in `contracts.ts`; validate forms with react-hook-form + zodResolver before mutations.
 - **Responses:** Use `schema.parse()` on critical API responses when data integrity matters (see Zod Validation above).
-- **Authorization:** Enforce RBAC in route loaders via `requirePermission` (see `component-patterns.mdc` route module pattern) — do not rely on hiding UI alone.
+- **Authorization:** Enforce RBAC in `routeTree.tsx` `beforeLoad` via `gatewayFromManifest(manifest)` (see `component-patterns.mdc` route module pattern) — never in a route `loader`, and do not rely on hiding UI alone.
 - **Secrets:** Never put API keys or secrets in `VITE_*` env vars (they are bundled). Access tokens stay in memory only; never use localStorage/sessionStorage for tokens (see `project-conventions.mdc` Auth & Security).
 - **XSS:** Avoid `dangerouslySetInnerHTML`; if unavoidable, sanitize content first. Follow OWASP-minded defaults for user-generated content.

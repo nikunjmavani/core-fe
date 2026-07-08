@@ -78,9 +78,9 @@ flowchart TB
 | [sentry-sourcemaps.md](integrations/sentry-sourcemaps.md)                                       | Sentry source map upload (Vite plugin)                                                                    |
 | [sentry-frontend.md](integrations/sentry-frontend.md)                                           | Sentry React SDK — errors, replay, performance, logs, feedback (full data catalog)                        |
 | [posthog-frontend.md](integrations/posthog-frontend.md)                                         | PostHog product analytics — events, funnels, flags, Web Vitals (full event catalog)                       |
-| [cursor-mcp-setup.md](integrations/cursor-mcp-setup.md)                                         | **Local setup:** Cursor MCP servers (Context7, shadcn, Tailwind, core-be-api) — required for Cursor users |
-| [cursor-agent-environments.md](integrations/cursor-agent-environments.md)                       | Multi-root workspaces and Cursor agent environments (core-fe + core-be)                                   |
-| [cursor-backend-mcp.md](integrations/cursor-backend-mcp.md)                                     | Connect Cursor to the backend MCP for API discovery                                                       |
+| [cursor-mcp-setup.md](../agent-os/docs/cursor-mcp-setup.md)                                     | **Local setup:** Cursor MCP servers (Context7, shadcn, Tailwind, core-be-api) — required for Cursor users |
+| [cursor-agent-environments.md](../agent-os/docs/cursor-agent-environments.md)                   | Multi-root workspaces and Cursor agent environments (core-fe + core-be)                                   |
+| [cursor-backend-mcp.md](../agent-os/docs/cursor-backend-mcp.md)                                 | Connect Cursor to the backend MCP for API discovery                                                       |
 
 ---
 
@@ -143,9 +143,9 @@ flowchart TB
 
 ## Reports & audits
 
-| Doc                                                              | Purpose                                                                                                                                             |
-| ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [full-code-review-report.md](reports/full-code-review-report.md) | Full code review (security, performance, quality, readability, maintainability, scalability) and findings — **generate:** `pnpm report:code-review` |
+| Doc                                                                             | Purpose                                                                                                                                             |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [full-code-review-report.md](../reports/code-review/full-code-review-report.md) | Full code review (security, performance, quality, readability, maintainability, scalability) and findings — **generate:** `pnpm report:code-review` |
 
 ---
 

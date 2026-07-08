@@ -1,6 +1,6 @@
 # Core Frontend
 
-Enterprise-grade multi-tenant admin dashboard built with **React 18 + TypeScript + Vite**. Mirrors backend guarantees for security, multi-tenancy, RBAC, clean architecture, testability, observability, performance, and accessibility.
+Enterprise-grade multi-tenant admin dashboard built with **React 19 + TypeScript + Vite**. Mirrors backend guarantees for security, multi-tenancy, RBAC, clean architecture, testability, observability, performance, and accessibility.
 
 ---
 
@@ -107,14 +107,14 @@ core-fe/
 
 ### Layer responsibilities
 
-| Layer      | Path          | Purpose                                                                                                                                                                              |
-| ---------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **App**    | `src/app/`    | Routes config, `beforeLoad` auth/RBAC guards, providers, error boundaries.                                                                                                           |
-| **Core**   | `src/core/`   | Auth, HTTP (axios + refresh), RBAC, tenancy, config, errors, observability. No React components; used by pages and shared.                                                           |
-| **Pages**  | `src/pages/`  | One directory per route. Each has `route.tsx` (exports `Component`, optional `loader`/`ErrorBoundary`), page component, `contracts.ts`, `api.ts`, `hooks/`, `components/`, `forms/`. |
-| **Shared** | `src/shared/` | Cross-page UI (`components/ui/` = shadcn), layouts, forms, hooks. Promote from a page only when used by 2+ page groups.                                                              |
-| **Lib**    | `src/lib/`    | Pure helpers (e.g. `cn()`), animations. No side effects.                                                                                                                             |
-| **Stores** | `src/stores/` | Global client state (theme, UI). Server state lives in TanStack Query, not Zustand.                                                                                                  |
+| Layer      | Path          | Purpose                                                                                                                                                                                                                                                                                              |
+| ---------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **App**    | `src/app/`    | Routes config, `beforeLoad` auth/RBAC guards, providers, error boundaries.                                                                                                                                                                                                                           |
+| **Core**   | `src/core/`   | HTTP (hand-rolled fetch client + refresh), RBAC, config, data-provider, resources, security, types, version. No React components; used by pages and shared. (Auth runtime lives in `shared/auth/`, tenancy in `shared/tenancy/`, errors in `shared/errors/`, observability in `app/observability/`.) |
+| **Pages**  | `src/pages/`  | One directory per route. Each has `<page>.route.tsx` (exports `Component`, optional `ErrorBoundary`; RBAC is enforced in `routeTree.tsx` `beforeLoad`, never a `loader`), `<Page>Page.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<page>.api.ts`, `hooks/`, `components/`, `forms/`.         |
+| **Shared** | `src/shared/` | Cross-page UI (`components/ui/` = shadcn), layouts, forms, hooks. Promote from a page only when used by 2+ page groups.                                                                                                                                                                              |
+| **Lib**    | `src/lib/`    | Pure helpers (e.g. `cn()`), animations. No side effects.                                                                                                                                                                                                                                             |
+| **Stores** | `src/stores/` | Global client state (theme, UI). Server state lives in TanStack Query, not Zustand.                                                                                                                                                                                                                  |
 
 ### Page directory shape
 
@@ -199,13 +199,13 @@ flowchart LR
 ```text
   Step 1 (sync)    Step 2 (sync)         Step 3 (async)        Step 4 (sync)
   ┌───────────┐    ┌──────────────────┐   ┌────────────────┐   ┌──────────────┐
-  │ Init      │───>│ Resolve tenant   │──>│ Silent refresh │──>│ Mount React  │
-  │ Sentry +  │    │ from subdomain   │   │ (JWT refresh)  │   │ <App />      │
-  │ WebVitals │    │ → Zustand store  │   │ → Auth store   │   │              │
+  │ Init      │───>│ Seed org context │──>│ Silent refresh │──>│ Mount React  │
+  │ Sentry +  │    │ (subdomain seed; │   │ (JWT refresh)  │   │ <App />      │
+  │ WebVitals │    │  URL is truth)   │   │ → Auth store   │   │              │
   └───────────┘    └──────────────────┘   └────────────────┘   └──────────────┘
 ```
 
-Sentry first → tenant (for `X-Tenant-ID`) → auth refresh → then render.
+Sentry first → seed org context (the URL path is the source of truth once routing mounts) → auth refresh → then render.
 
 ### Data flow (HTTP & server state)
 
@@ -216,10 +216,10 @@ Sentry first → tenant (for `X-Tenant-ID`) → auth refresh → then render.
   TanStack Query (queryClient) — cache, dedup, retry (skip 401)
        │
        ▼
-  Axios (apiClient) — Bearer + X-Tenant-ID, 401 → refresh + replay
+  apiClient (fetch client) — Bearer; org in URL path; 401 → single-flight refresh + replay
        │
        ▼
-  axios-retry — 429 / 5xx exponential backoff
+  in-client retry — 429 / 5xx exponential backoff + Retry-After
        │
        ▼
   Vite dev proxy (/api → backend) or production API
@@ -229,30 +229,30 @@ Sentry first → tenant (for `X-Tenant-ID`) → auth refresh → then render.
 
 ## Third-Party Libraries
 
-| Category                     | Package                                                                            | Purpose                                                                                                                                                                                                              |
-| ---------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Runtime**                  | React 18, React DOM                                                                | UI framework                                                                                                                                                                                                         |
-| **Build**                    | Vite 7                                                                             | Dev server, HMR, production build                                                                                                                                                                                    |
-| **Language**                 | TypeScript                                                                         | Typing, strict mode                                                                                                                                                                                                  |
-| **Routing**                  | react-router 7                                                                     | Data APIs, lazy routes, loaders                                                                                                                                                                                      |
-| **Server state**             | @tanstack/react-query                                                              | Queries, mutations, cache                                                                                                                                                                                            |
-| **Client state**             | zustand                                                                            | Auth, theme, UI, tenant stores                                                                                                                                                                                       |
-| **HTTP**                     | axios, axios-retry                                                                 | API client, 401 refresh/replay, retries                                                                                                                                                                              |
-| **Forms**                    | react-hook-form, @hookform/resolvers, zod                                          | Form state + validation (Zod schemas)                                                                                                                                                                                |
-| **Styling**                  | tailwindcss 4, @tailwindcss/vite                                                   | Utility CSS, design tokens                                                                                                                                                                                           |
-| **UI primitives**            | radix-ui                                                                           | Accessible primitives (shadcn base)                                                                                                                                                                                  |
-| **UI utilities**             | class-variance-authority, clsx, tailwind-merge                                     | Variants, `cn()`                                                                                                                                                                                                     |
-| **Icons**                    | lucide-react                                                                       | Icons                                                                                                                                                                                                                |
-| **Animations**               | CSS / Tailwind + tw-animate-css                                                    | Minimal, professional motion — no JS animation library (framer-motion removed). `tw-animate-css` drives shadcn overlay enter/exit; subtle page fade-in-up + card hover via CSS. All honour `prefers-reduced-motion`. |
-| **Charts**                   | @nivo/core, @nivo/line, @nivo/bar                                                  | Charts on dashboard                                                                                                                                                                                                  |
-| **Command bar**              | cmdk                                                                               | Global command palette (Cmd+K)                                                                                                                                                                                       |
-| **RBAC**                     | ts-pattern                                                                         | Exhaustive permission matching                                                                                                                                                                                       |
-| **Observability**            | @sentry/react, posthog-js, web-vitals                                              | Errors, replay, analytics, Core Web Vitals                                                                                                                                                                           |
-| **PWA**                      | vite-plugin-pwa, workbox-\*                                                        | Service worker, offline                                                                                                                                                                                              |
-| **New-deployment detection** | `plugins/version-json.ts`, `src/core/version/check.ts`                             | Polls `/version.json`; reloads when a new build is deployed so users don’t run stale cache                                                                                                                           |
-| **Testing**                  | vitest, @testing-library/react, @playwright/test, vitest-axe, @axe-core/playwright | Unit (colocated), security, E2E, a11y                                                                                                                                                                                |
-| **Quality**                  | eslint, prettier, husky, lint-staged                                               | Lint, format, pre-commit                                                                                                                                                                                             |
-| **Security**                 | gitleaks, semgrep                                                                  | Secret detection, SAST (CI/local)                                                                                                                                                                                    |
+| Category                     | Package                                                                            | Purpose                                                                                                                                                                                                                           |
+| ---------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Runtime**                  | React 19, React DOM                                                                | UI framework                                                                                                                                                                                                                      |
+| **Build**                    | Vite 7                                                                             | Dev server, HMR, production build                                                                                                                                                                                                 |
+| **Language**                 | TypeScript                                                                         | Typing, strict mode                                                                                                                                                                                                               |
+| **Routing**                  | @tanstack/react-router                                                             | Lazy routes, `beforeLoad` guards, search params                                                                                                                                                                                   |
+| **Server state**             | @tanstack/react-query                                                              | Queries, mutations, cache                                                                                                                                                                                                         |
+| **Client state**             | zustand                                                                            | Auth, theme, UI, tenant stores                                                                                                                                                                                                    |
+| **HTTP**                     | hand-rolled fetch client (`core/http/fetch-client.ts`)                             | API client, 401 single-flight refresh/replay, retries                                                                                                                                                                             |
+| **Forms**                    | react-hook-form, @hookform/resolvers, zod                                          | Form state + validation (Zod schemas)                                                                                                                                                                                             |
+| **Styling**                  | tailwindcss 4, @tailwindcss/vite                                                   | Utility CSS, design tokens                                                                                                                                                                                                        |
+| **UI primitives**            | radix-ui                                                                           | Accessible primitives (shadcn base)                                                                                                                                                                                               |
+| **UI utilities**             | class-variance-authority, clsx, tailwind-merge                                     | Variants, `cn()`                                                                                                                                                                                                                  |
+| **Icons**                    | lucide-react                                                                       | Icons                                                                                                                                                                                                                             |
+| **Animations**               | animejs + CSS / Tailwind + tw-animate-css                                          | Anime.js drives JS motion (dashboard count-ups via `useAnimeCountUp`, onboarding step transitions); `tw-animate-css` drives shadcn overlay enter/exit; page fade-in-up + card hover via CSS. All honour `prefers-reduced-motion`. |
+| **Charts**                   | recharts (via shadcn `chart`)                                                      | Charts on dashboard (lazy-loaded `charts` chunk)                                                                                                                                                                                  |
+| **Command bar**              | cmdk                                                                               | Global command palette (Cmd+K)                                                                                                                                                                                                    |
+| **RBAC**                     | ts-pattern                                                                         | Exhaustive permission matching                                                                                                                                                                                                    |
+| **Observability**            | @sentry/react, posthog-js, web-vitals                                              | Errors, replay, analytics, Core Web Vitals                                                                                                                                                                                        |
+| **PWA**                      | vite-plugin-pwa, workbox-\*                                                        | Service worker, offline                                                                                                                                                                                                           |
+| **New-deployment detection** | `plugins/version-json.ts`, `src/core/version/check.ts`                             | Polls `/version.json`; reloads when a new build is deployed so users don’t run stale cache                                                                                                                                        |
+| **Testing**                  | vitest, @testing-library/react, @playwright/test, vitest-axe, @axe-core/playwright | Unit (colocated), security, E2E, a11y                                                                                                                                                                                             |
+| **Quality**                  | eslint, prettier, husky, lint-staged                                               | Lint, format, pre-commit                                                                                                                                                                                                          |
+| **Security**                 | gitleaks, semgrep                                                                  | Secret detection, SAST (CI/local)                                                                                                                                                                                                 |
 
 UI components are **shadcn/ui** style: Radix primitives + Tailwind + `cva` in `src/shared/components/ui/`.
 
@@ -389,14 +389,15 @@ For **larger or feature-sized requests**, use the full requirement format: **[do
 
 ### Authentication
 
-- **Access token:** In-memory only (module closure in `core/auth/token.ts`); never localStorage.
+- **Access token:** In-memory only (module closure in `shared/auth/token.ts`); never localStorage.
 - **Refresh token:** HttpOnly cookie set by backend.
-- **Flow:** Bootstrap runs silent refresh; Axios interceptor adds Bearer + `X-Tenant-ID`, on 401 runs refresh and replays queued requests.
+- **Flow:** Bootstrap runs silent refresh; the fetch client attaches Bearer (org context travels in the URL path), and on 401 runs a single-flight refresh and replays queued requests.
 
 ### Multi-tenancy
 
-- Tenant resolved **synchronously** from subdomain (e.g. `acme.app.example.com` → `acme`).
-- Stored in Zustand; `apiClient` adds `X-Tenant-ID` to every request.
+- **The URL path is the single source of truth** for organization context (`/organization/$organizationSlug`), synced into the store by the route guard chain.
+- At bootstrap, `resolveOrganizationFromSubdomain()` seeds a fallback org into the store (and localStorage/subdomain feed the `/` resolver) before the URL guards take over.
+- The backend scopes organization context from the URL path (`/api/v1/tenancy/organizations/:id/…`).
 
 ### RBAC
 

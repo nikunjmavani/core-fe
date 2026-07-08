@@ -29,5 +29,5 @@ Use `agent-os/skills/shadcn-component-selection/SKILL.md` when choosing componen
 ## Stack notes
 
 - Charts: shadcn `chart` (Recharts), lazy-loaded on dashboard.
-- Motion: CSS / `tw-animate-css` only (no framer-motion).
+- Motion: Anime.js for JS-driven motion (dashboard count-up, onboarding steps) + CSS / `tw-animate-css`.
 - Tables: TanStack Table + shared data-table toolbar/pagination.

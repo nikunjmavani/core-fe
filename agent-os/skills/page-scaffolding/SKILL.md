@@ -266,7 +266,7 @@ When the user mentions sub-paths under this page:
 ### 9. Verify
 
 ```bash
-pnpm tsc --noEmit
+pnpm type-check
 pnpm exec eslint src/pages/<name>
 pnpm exec vitest run src/pages/<name>
 ```

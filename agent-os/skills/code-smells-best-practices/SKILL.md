@@ -33,7 +33,7 @@ For each **modified or new** file, verify and fix:
 
 ### 3. Styling
 
-- **No inline styles.** Use Tailwind utility classes or add a class in `src/index.css` (e.g. `.chart-tooltip`, `.skeleton-shimmer-bg`) and reference it with `className`. For third-party components that require style objects (e.g. Nivo tooltips), prefer a CSS class and `className` when the library supports it.
+- **No inline styles.** Use Tailwind utility classes or add a class in `src/index.css` (e.g. `.chart-tooltip`, `.skeleton-shimmer-bg`) and reference it with `className`. For third-party components that require style objects (e.g. Recharts tooltips), prefer a CSS class and `className` when the library supports it.
 
 ### 4. TypeScript
 

@@ -32,14 +32,14 @@ Use **Context7 MCP** when working with library APIs, setup, or code generation. 
 | Zod | `/colinhacks/zod` | Schemas, validation |
 | react-hook-form | `/react-hook-form/react-hook-form` | Forms |
 | Zustand | `/pmndrs/zustand` | Client state |
-| React Router | `/remix-run/react-router` | v7 routes, loaders |
+| TanStack Router | `/TanStack/router` | Routes, `beforeLoad`, search params |
 | Radix UI | `/radix-ui/primitives` | Primitives |
 
 ## Prompt Patterns
 
 - **Single lib**: `Add a shadcn Dialog. use context7 /shadcn-ui/ui`
 - **Multi-lib**: `Tailwind + shadcn theme. use context7 for tailwindcss, shadcn`
-- **Version-specific**: `React 18 context provider. use context7 /facebook/react`
+- **Version-specific**: `React 19 context provider. use context7 /facebook/react`
 - **Token limit**: `tokens:2000` via MCP params for focused snippets
 
 ## Setup

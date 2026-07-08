@@ -8,7 +8,7 @@ This document is the single source of truth for understanding and working in thi
 pnpm install
 pnpm dev          # Vite dev server on port 5173
 pnpm build        # Production build
-pnpm tsc          # Type check (no emit)
+pnpm type-check   # Type check (no emit, tsconfig.app.json)
 pnpm lint         # ESLint
 pnpm biome:check  # Biome lint lane (lint-only; Prettier owns formatting)
 pnpm health       # Full project health check (all phases)
@@ -23,7 +23,7 @@ no per-gate bypass — a red gate must be fixed, not skipped) — see docs/refer
 Coverage thresholds in `vitest.config.ts` are a **ratchet**: pinned just under measured
 coverage, raised as coverage rises, never lowered; the same raise-never philosophy applies to
 the **TSDoc budget** (`pnpm tsdoc:check`, `tooling/tsdoc-coverage/budget.json`) and to **patch
-coverage** (`pnpm coverage:patch` — changed lines ≥ 80% in PR CI). Vitest is split into
+coverage** (`pnpm coverage:patch` — changed lines ≥ 90% in PR CI). Vitest is split into
 `unit` (colocated src suites), `security` (tests/security — token storage, redirect
 safety, header tripwires), and `ci-policy` (tests/ci — workflow wiring, release-please
 manifests, Dependabot flow invariants) projects. Markdown is linted
@@ -81,7 +81,7 @@ agent-os/      Agents, skills, rules, hooks, MCP, platforms, docs           ~50+
 ```
 
 ```text
-tests/              # At project root: utils, e2e, load (see tests/README.md)
+tests/              # At project root: utils, e2e, security, ci, performance (see tests/README.md)
 src/
 ├── app/            # Application shell: route tree, guards, providers, error boundaries
 ├── core/           # Framework-agnostic services: HTTP, RBAC, config, data-provider, resources, version
@@ -408,7 +408,7 @@ from **GitHub Environments** (never from files). No `.env.local`, no shared `.en
 - **Colocated unit tests:** `src/**/*.test.{ts,tsx}` (+ `pages/**/__tests__/integration/` for cross-component flows)
 - **E2E:** `tests/e2e/*.e2e.test.ts` (Playwright) — requires **core-be** on `:3000` (`global-setup.ts` fails if down). Never `.spec.ts`.
 - **Hybrid E2E selectors:** `data-testid` for actions, `getByRole`/`getByLabel` for a11y guards — `agent-os/skills/playwright-e2e/SKILL.md`, `tests/utils/e2e-hybrid.ts`
-- **Gates:** `pnpm validate:structure` (colocation), `pnpm validate:testids` (page/form/shell testids), `pnpm validate:theme-axis`, `pnpm coverage:patch` (PR changed-lines ≥ 80%)
+- **Gates:** `pnpm validate:structure` (colocation), `pnpm validate:testids` (page/form/shell testids), `pnpm validate:theme-axis`, `pnpm coverage:patch` (PR changed-lines ≥ 90%)
 - Unit/security: Vitest; E2E: Playwright (Chromium). Component tests require `vitest-axe`; portaled dialogs use `axeForDialog`.
 
 **Dev API:** In development, Vite proxies `/api` to `VITE_DEV_API_URL` (default `http://localhost:3000`). The FE always uses `apiClient` / `authFetch` against **core-be**. Unit tests stub modules with `vi.mock()` — no HTTP server.

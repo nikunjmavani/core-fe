@@ -8,9 +8,9 @@ alwaysApply: true
 
 ## Architecture
 
-This is an enterprise React 18 + TypeScript + Vite frontend with a page-first architecture:
+This is an enterprise React 19 + TypeScript + Vite frontend with a page-first architecture:
 
-- **Core** (`src/core/`): Framework-agnostic services — auth, HTTP, RBAC, tenancy, config, errors, observability, data-provider, resources. No React components here.
+- **Core** (`src/core/`): Framework-agnostic services — HTTP, RBAC, config, data-provider, resources, security, types, version. No React components here. (Auth runtime lives in `src/shared/auth/`, tenancy in `src/shared/tenancy/`, errors in `src/shared/errors/`, and observability bootstrap in `src/app/observability/`.)
 - **Pages** (`src/pages/`): Page-first feature directories. Each directory maps to a frontend route via a `<page>.route.tsx` marker file. Pages never import from other pages.
 - **Shared** (`src/shared/`): Cross-page reusables — components (shadcn/ui primitives in `components/ui/` stay flat; everything else is folder-per-unit), forms, layouts, hooks, global Zustand stores in `store/`.
 - **Lib** (`src/lib/`): Pure utilities (cn(), animations). No side effects.
@@ -41,13 +41,12 @@ Every directory under `src/pages/` that maps to a frontend URL **must** contain 
 ## State Management
 
 - **Server state**: TanStack Query (queries + mutations) in `pages/<page>/hooks/use<X>/` or `shared/hooks/use{List,One,...}/`. Never store API data in Zustand.
-- **Global client state**: Zustand in `src/shared/store/use<X>Store/` (theme, UI, onboarding)
-- **Feature-owned state**: Zustand in `src/core/<feature>/store.ts` (auth, tenant)
+- **Global client state**: Zustand in `src/shared/store/use<X>Store/` — all stores live here (auth, organization, theme, UI, onboarding, consent, locale). There is no `core/<feature>/store.ts` pattern.
 - **Page-local client state** (rare): Zustand in `src/pages/<page>/store/use<X>Store/`
 - **Component-local**: `useState` / `useReducer` inline; extract reducer to `<Component>.reducer.ts` only when complex
 - **Form state**: react-hook-form + Zod resolver. Never manage form state in Zustand.
 - **URL state**: TanStack Router via `<page>.search.ts` (validateSearch schema)
-- Access stores outside React via `useStore.getState()` (e.g., in Axios interceptors)
+- Access stores outside React via `useStore.getState()` (e.g., in the fetch client or other non-React modules)
 
 ## Component Patterns
 
@@ -86,10 +85,10 @@ pages/<page>/
 
 ## HTTP / API
 
-- Use `apiClient` from `@/core/http/fetch-client.ts` for all API calls (never raw fetch except auth)
-- Exception: auth service uses raw axios to avoid interceptor recursion
-- The Axios interceptor handles 401 refresh + replay — never handle 401 in components
-- TanStack Query's retry skips 401s (handled by interceptor)
+- Use `apiClient` from `@/core/http/fetch-client.ts` (a hand-rolled `fetch` client) for all API calls (never raw fetch except auth)
+- Exception: auth service uses raw `fetch` to avoid interceptor recursion
+- The fetch client handles 401 refresh + replay (single-flight refresh + one replay) — never handle 401 in components
+- TanStack Query's retry skips 401s (handled by the fetch client)
 
 ## Styling
 
@@ -101,14 +100,14 @@ pages/<page>/
 
 ## Auth & Security
 
-- Access token stored in memory only (module closure in `core/auth/token.ts`)
+- Access token stored in memory only (module closure in `shared/auth/token.ts`)
 - Refresh token is an HttpOnly cookie (set by backend)
 - Never store tokens in localStorage or sessionStorage
 - `assetsInlineLimit: 0` in Vite config for CSP compliance
 
 ## Testing
 
-- All test code: **`tests/`** at project root (see `tests/README.md`)
-- Unit/integration: `pages/**` → `__tests__/unit/`; `shared/`, `core/`, `lib/`, `stores/` → colocated `*.test.*`; run with Vitest
+- E2E specs live in **`tests/`** at project root (see `tests/README.md`); unit tests are colocated in `src/`
+- Unit tests: colocated `*.test.{ts,tsx}` next to source across `pages/`, `shared/`, `core/`, `lib/`, `store/`; cross-component flows in `pages/**/__tests__/integration/`; run with Vitest
 - E2E: `tests/e2e/` — Playwright browser tests
 - Test utilities: `tests/utils/` (renderWithProviders); import as `@/tests/utils/...`
