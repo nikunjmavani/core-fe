@@ -3,14 +3,17 @@ import { platformConfig } from '@/core/config/env.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 /**
- * Resolve tenant from the subdomain of the current URL.
+ * Seed an initial organization into the store from the current subdomain.
  *
- * Expected format: `{tenant-slug}.app.example.com`
- * Localhost / bare domains: Falls back to a configurable default tenant.
+ * Expected format: `{org-slug}.app.example.com`
+ * Localhost / bare domains: Falls back to a configurable default org.
  *
  * This function is SYNCHRONOUS — no API call needed for initial resolution.
- * The resolved tenant is stored in the Zustand store, which the Axios
- * interceptor reads from on every request.
+ * It only SEEDS a fallback so the derived store is never empty at bootstrap:
+ * the URL path (`/organization/$organizationSlug`) is the single source of
+ * truth for organization context once the route guards take over, and the
+ * backend scopes context from that path — there is no tenant/organization
+ * request header.
  */
 export function resolveOrganizationFromSubdomain(): void {
   const hostname = window.location.hostname;

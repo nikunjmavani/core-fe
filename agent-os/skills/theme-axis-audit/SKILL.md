@@ -21,7 +21,7 @@ Make **every UI surface respect Appearance / Shuffle config**. Work **one axis (
 4. **Do not ask** whether to fix violations, add tests, or update docs — do it.
 5. **Update the playbook status tracker** when the axis is done.
 6. **Deliver a detailed cycle report** to the user (see Report template).
-7. After code changes: `pnpm tsc`, eslint on touched files, colocated tests for touched components.
+7. After code changes: `pnpm type-check`, eslint on touched files, colocated tests for touched components.
 
 ---
 
@@ -75,7 +75,7 @@ Categorize each hit:
 ## Phase 3 — Verify
 
 ```bash
-pnpm tsc
+pnpm type-check
 pnpm eslint --fix <changed-files>
 pnpm test -- --run <colocated-tests-for-touched-paths>
 ```

@@ -65,8 +65,9 @@ export default defineConfig([
   },
 
   // Icons flow through the @/shared/icons barrel so the icon library is
-  // swappable in one file. Vendored shadcn primitives and the barrel itself
-  // are the only direct lucide importers.
+  // swappable in one file. Direct lucide imports are allowed only in the
+  // exempt paths below: the barrel itself, vendored shadcn primitives, the
+  // notify layer, and the generated routeTree.
   {
     files: ['src/**/*.{ts,tsx}'],
     ignores: [

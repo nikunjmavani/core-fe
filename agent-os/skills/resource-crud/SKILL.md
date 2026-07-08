@@ -108,7 +108,7 @@ When `manifest.module` is set, hide nav entries via `isModuleEnabled()` — gate
 ```bash
 pnpm validate:structure
 pnpm validate:testids
-pnpm tsc
+pnpm type-check
 pnpm test -- --run src/pages/<resource-path>/
 ```
 

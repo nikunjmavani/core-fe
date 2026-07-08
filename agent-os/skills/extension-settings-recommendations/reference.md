@@ -4,7 +4,7 @@ Use this list when recommending extensions. Only suggest extensions that are **m
 
 ## Project stack (core-fe)
 
-React 18, TypeScript, Vite, Tailwind CSS v4, Vitest, Playwright, ESLint (flat config), Prettier, Zod, TanStack Query, react-hook-form, Zustand, shadcn/ui.
+React 19, TypeScript, Vite, Tailwind CSS v4, Vitest, Playwright, ESLint (flat config), Prettier, Zod, TanStack Query, react-hook-form, Zustand, shadcn/ui.
 
 ## Curated extensions (category → ID → when to recommend)
 

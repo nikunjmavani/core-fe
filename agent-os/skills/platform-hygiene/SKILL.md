@@ -118,7 +118,7 @@ A desynced lockfile produces `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` on `pnpm instal
 pnpm validate:vite-env
 pnpm validate:client-env --production
 pnpm knip
-pnpm tsc
+pnpm type-check
 pnpm test -- --run src/core/config/ src/lib/i18n/build-env.test.ts
 ```
 

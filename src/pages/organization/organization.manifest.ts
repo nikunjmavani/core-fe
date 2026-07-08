@@ -12,6 +12,6 @@ export const manifest = {
   title: 'Choose organization',
   testId: 'organization-page',
   permission: null,
-  kind: 'layout',
-  children: ['$organizationSlug'],
+  kind: 'leaf',
+  children: [],
 } as const satisfies PageManifest;

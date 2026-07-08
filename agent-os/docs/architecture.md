@@ -8,7 +8,7 @@ this is the orientation pass.
 
 ## Stack
 
-React 18 + TypeScript (strict) + Vite, Tailwind CSS v4 (CSS-first tokens in
+React 19 + TypeScript (strict) + Vite, Tailwind CSS v4 (CSS-first tokens in
 `src/index.css`), shadcn/ui (new-york, radix, lucide), TanStack Query (server
 state) + TanStack Router (routing/URL state) + Zustand (client state),
 react-hook-form + Zod (forms/validation).
@@ -50,8 +50,8 @@ spec: [`route-island` skill](../skills/route-island/SKILL.md).
 - **Global client state** → Zustand in `src/shared/store/use<X>Store/`.
 - **URL state** → TanStack Router (`<page>.search.ts`).
 - **Form state** → react-hook-form + Zod, inside the form component.
-- **Organization context** travels in the **URL path** — there is no
-  `X-Organization-ID` header.
+- **Organization context** travels in the **URL path**
+  (`/organization/$organizationSlug`); the backend scopes from it.
 
 ## Auth & security
 

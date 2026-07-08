@@ -27,5 +27,5 @@ pnpm health                # includes theme-axis in phase 8b
 
 ```text
 Theme axis follow-up — item: <N> from docs/reference/theme-axis-follow-up-plan.md
-Implement fully, update status table, run pnpm validate:theme-axis && pnpm tsc.
+Implement fully, update status table, run pnpm validate:theme-axis && pnpm type-check.
 ```

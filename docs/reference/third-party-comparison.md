@@ -10,9 +10,9 @@ Verdict summary for major libraries used in this repo. Full stack list: [tools-a
 
 ## Animation
 
-| Current                  | Alternatives                                     | Verdict                                                                                              |
-| ------------------------ | ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| **CSS + tw-animate-css** | framer-motion (~39 KB), motion-one, react-spring | **KEEP** — zero JS animation library; overlays use `tw-animate-css`; page fade via custom keyframes. |
+| Current                             | Alternatives                                     | Verdict                                                                                                                                                                          |
+| ----------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Anime.js + CSS + tw-animate-css** | framer-motion (~39 KB), motion-one, react-spring | **KEEP** — Anime.js for the few JS-driven motions (dashboard count-up, onboarding steps); overlays use `tw-animate-css`; page fade via custom keyframes. framer-motion not used. |
 
 ## Error tracking
 

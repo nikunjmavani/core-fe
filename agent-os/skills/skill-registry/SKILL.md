@@ -131,7 +131,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 **Doc:** `docs/reference/preset-product-design-rules.md`  
 **Rule:** `agent-os/rules/preset-product-design.mdc`
 
-**Purpose:** Industry-backed floors for every Appearance/Shuffle axis (typography, density, contrast, touch, motion) — not a skill, but mandatory reading when editing `presets.ts`, Appearance, or dense product UI.
+**Purpose:** Industry-backed floors for every Appearance/Shuffle axis (typography, density, contrast, touch, motion) — not a skill, but mandatory reading when editing `src/shared/theme/presets.ts`, Appearance, or dense product UI.
 
 **Trigger keywords:** preset rules, type scale too small, density guidelines, shuffle policy, product design presets
 
@@ -187,7 +187,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 **Key behaviors:**
 
 - Defines dependency rule: shared ← pages ← core; pages never import from pages
-- Placement cheat sheet: route → pages/<name>/route.tsx; API → pages/<name>/api.ts; shared UI → shared/components/
+- Placement cheat sheet: route → pages/<name>/<name>.route.tsx; API → pages/<name>/<name>.api.ts; shared UI → shared/components/
 - Requires automatic test generation as part of every implementation (no user ask)
 - References test-generation and page-scaffolding for full flow
 
@@ -226,11 +226,13 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 **Key files it creates/touches:**
 
-- `src/pages/<name>/route.tsx` (required route marker)
+- `src/pages/<name>/<name>.route.tsx` (required route marker)
+- `src/pages/<name>/<name>.manifest.ts` (required manifest — path, RBAC, testId, kind, children)
 - `src/pages/<name>/<Name>Page.tsx` (main component with `data-testid`)
-- `src/pages/<name>/contracts.ts` (Zod schemas)
-- `src/pages/<name>/api.ts` (API functions with Zod validation)
-- `src/pages/<name>/hooks/use<Name>.ts` (TanStack Query hooks)
+- `src/pages/<name>/<NAME>.OVERVIEW.md` (required entry doc)
+- `src/pages/<name>/<name>.contracts.ts` (Zod schemas)
+- `src/pages/<name>/<name>.api.ts` (API functions with Zod validation)
+- `src/pages/<name>/hooks/use<Name>/` (folder-per-unit TanStack Query hooks)
 - `src/app/routes/routeTree.tsx` (route registration)
 - Test files for all of the above (auto-generated)
 
@@ -422,7 +424,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 1. Architecture: avoid boolean props, compound components (HIGH)
 2. State: decouple implementation, context interface, lift state (MEDIUM)
 3. Implementation: explicit variants, children over render props (MEDIUM)
-4. React 19: no forwardRef (skip -- project uses React 18)
+4. React 19: no forwardRef, `use()` for context — applies (project is on React 19)
 
 **Related skills:** react-best-practices (architecture affects performance), web-design-guidelines (composition affects accessibility)
 
@@ -863,7 +865,9 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 | `src/shared/components/ui/`                           | composition-patterns, web-design-guidelines, **shadcn** (`agent-os/skills/shadcn`)                                                               |
 | `src/core/`                                           | test-generation                                                                                                                                  |
 | `src/lib/`                                            | test-generation                                                                                                                                  |
-| `src/stores/`                                         | test-generation                                                                                                                                  |
+| `src/shared/store/`                                   | test-generation                                                                                                                                  |
+| `package.json`, `pnpm-lock.yaml`, `pnpm.overrides`    | **dependency-management**                                                                                                                        |
+| `.size-limit.json`, bundle budgets (`pnpm size`)      | **bundle-performance**                                                                                                                           |
 | `eslint.config.mjs`                                   | code-quality-security, lint-guard                                                                                                                |
 | `.husky/`                                             | code-quality-security                                                                                                                            |
 | `.github/workflows/`                                  | code-quality-security                                                                                                                            |
@@ -915,7 +919,7 @@ Read-only reviewer agents are catalogued in `agent-os/docs/agents-catalog.md`.
 | Tool           | Config File                                                                        | Purpose                                   |
 | -------------- | ---------------------------------------------------------------------------------- | ----------------------------------------- |
 | Backstage      | `catalog-info.yaml`                                                                | Service catalog registration              |
-| Nginx          | `nginx/default.conf`                                                               | SPA serving, caching, security headers    |
+| Netlify        | `netlify.toml`, `dist/_headers`, `.github/workflows/reusable-netlify-deploy.yml`   | SPA serving, caching, security headers    |
 | PWA            | `src/core/config/app-manifest.ts`, `public/manifest.webmanifest`, `vite.config.ts` | Install surface; skill **pwa-manifest**   |
 | release-please | `.github/release-please/config.json`, `.github/release-please/manifest.json`       | Human-gated releases                      |
 | Sentry         | `src/app/observability/sentry.ts`                                                  | Error tracking + PII scrubbing            |

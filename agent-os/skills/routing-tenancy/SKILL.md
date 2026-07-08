@@ -121,7 +121,7 @@ Personal org uses root `/dashboard`; team org uses `/organization/$organizationS
 ## Verify
 
 ```bash
-pnpm tsc
+pnpm type-check
 pnpm test -- --run src/app/guards/ src/core/security/ tests/security/route-access-matrix.security.test.ts
 pnpm validate:testids   # when pages/forms touched
 ```

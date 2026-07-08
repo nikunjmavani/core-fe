@@ -155,7 +155,7 @@ When implementing any requirement that adds or changes source files:
 - [ ] API calls go through `apiClient` (`@/core/http/fetch-client.ts`); types from Zod in `<page>.contracts.ts`
 - [ ] New components/hooks/forms are folder-per-unit (`<Name>/` + `.tsx` + `.test.tsx` + `index.ts`)
 - [ ] Tests created without user asking
-- [ ] `pnpm tsc` and `pnpm lint` and tests all clean
+- [ ] `pnpm type-check` and `pnpm lint` and tests all clean
 
 ## Documentation updates (without asking)
 
