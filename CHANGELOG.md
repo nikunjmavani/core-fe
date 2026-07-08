@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.5](https://github.com/nikunjmavani/core-fe/compare/v1.2.4...v1.2.5) (2026-07-08)
+
+
+### Documentation
+
+* sync docs, skills, and rules with current code ([#96](https://github.com/nikunjmavani/core-fe/issues/96)) ([1313f56](https://github.com/nikunjmavani/core-fe/commit/1313f56919fdde245095eb5e359ad111aa14a0b0))
+
 ## [1.2.4](https://github.com/nikunjmavani/core-fe/compare/v1.2.3...v1.2.4) (2026-07-07)
 
 
