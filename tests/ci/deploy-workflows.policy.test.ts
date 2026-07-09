@@ -21,6 +21,20 @@ describe('deploy workflows policy', () => {
     expect(rollback).toContain('group: netlify-deploy-production');
   });
 
+  it('reusable-netlify-deploy.yml attests build provenance for the production bundle', () => {
+    const reusable = workflow('reusable-netlify-deploy.yml');
+    // The provenance attestation over the shipped bundle, wired into the deploy
+    // that builds it — the frontend analog of core-be's release attestation.
+    expect(reusable).toContain('actions/attest-build-provenance@');
+    // Attestation needs OIDC + write scope on the deploy job.
+    expect(reusable).toContain('id-token: write');
+    expect(reusable).toContain('attestations: write');
+    // Production only — the development alias is not a release surface.
+    expect(reusable).toMatch(
+      /Attest production build provenance[\s\S]*environment == 'production'/,
+    );
+  });
+
   it('release-deploy.yml deploys production on release publish, pinned to the tag', () => {
     const release = workflow('release-deploy.yml');
     // event-driven, and re-runnable for the same tag

@@ -118,6 +118,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: ${{ needs.resolve-environment.outputs.environment }}
+    # id-token/attestations: mint a build-provenance attestation for the exact
+    # production bundle before it ships (production deploys only — see the
+    # prod-gated attest step). contents:read is kept for checkout.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -198,6 +205,22 @@ jobs:
           VITE_POSTHOG_HOST: ${{ secrets.VITE_POSTHOG_HOST }}
           VITE_PRIVACY_POLICY_URL: ${{ secrets.VITE_PRIVACY_POLICY_URL }}
           VITE_CSP_REPORT_URI: ${{ secrets.VITE_CSP_REPORT_URI }}
+
+      # Build-provenance for the exact bytes that ship to production. Package
+      # dist/ into one deterministic subject and attest it BEFORE deploy, so a
+      # production bundle is never published without a verifiable provenance
+      # attestation (fail-closed). Production only — the development alias is not
+      # a release surface. Verify later with:
+      #   gh attestation verify core-fe-dist.tgz --repo nikunjmavani/core-fe
+      - name: Package dist for provenance
+        if: needs.resolve-environment.outputs.environment == 'production'
+        run: tar -czf core-fe-dist.tgz -C dist .
+
+      - name: Attest production build provenance
+        if: needs.resolve-environment.outputs.environment == 'production'
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        with:
+          subject-path: core-fe-dist.tgz
 
       - name: Upload release artifact
         if: inputs.upload-release-artifact
