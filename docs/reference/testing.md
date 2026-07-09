@@ -109,7 +109,7 @@ loosens local Docker.
 
 **Local:** Vite serves the FE on `:5173` and proxies `/api` → `http://localhost:3000`. Start core-be, then `pnpm test:e2e`.
 
-**CI:** PR and scheduled workflows boot postgres + redis + core-be via `.github/actions/setup-core-be`, then run the full suite.
+**CI:** none — E2E is **local-only**. No workflow boots postgres/redis/core-be (see `pr-ci.yml` header note); run the suite locally against core-be on `:3000`.
 
 **Naming:** UI flows → `<feature>.e2e.test.ts`; HTTP contract suites → `<feature>-api.e2e.test.ts`.
 
@@ -166,7 +166,7 @@ pnpm build   # CI uses preview; local dev can use `pnpm dev` via config reuseExi
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/core pnpm test:e2e:integration:cross-browser
 ```
 
-CI: `.github/workflows/scheduled-fe-be-integration.yml` (nightly + `workflow_dispatch`).  
+CI: none — live FE ↔ BE integration runs are local-only (CI never boots core-be).  
 Details: **`docs/reference/cross-browser-support.md`**.
 
 ## Local production performance

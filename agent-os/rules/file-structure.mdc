@@ -364,7 +364,7 @@ Auth infrastructure (token storage, refresh timer, idle timeout, login/logout se
 
 ## Import Rules
 
-- Always use `@/` alias for imports from `src/`
+- Use `@/` alias for cross-layer imports from `src/`; within a page island use relative imports (`@/pages/**` is eslint-forbidden even from the same island)
 - Always include `.ts`/`.tsx` extensions: `import { Button } from '@/shared/components/Button/index.ts'`
 - Type-only imports: `import type { Org } from './<resource>.contracts.ts'`
 

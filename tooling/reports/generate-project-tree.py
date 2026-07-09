@@ -20,6 +20,7 @@ IGNORE_DIRS = {
     ".pnpm-store",
     "test-results",
     "__pycache__",
+    ".stryker-tmp",
 }
 IGNORE_FILES = {".DS_Store", "settings.local.json", "state.json", "pnpm-lock.yaml"}
 SKIP_TOP = {".claude", ".cursor"}

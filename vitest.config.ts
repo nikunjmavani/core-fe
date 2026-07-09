@@ -41,10 +41,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'unit',
-          include: [
-            'src/**/*.{test,spec}.{ts,tsx}',
-            'src/**/__tests__/**/*.{test,spec}.{ts,tsx}',
-          ],
+          include: ['src/**/*.test.{ts,tsx}', 'src/**/__tests__/**/*.test.{ts,tsx}'],
         },
       },
       {
@@ -74,7 +71,6 @@ export default defineConfig({
       include: ['src/**/*.{ts,tsx}'],
       exclude: [
         'src/**/*.test.{ts,tsx}',
-        'src/**/*.spec.{ts,tsx}',
         'src/**/__tests__/**',
         'tests/**',
         'src/vite-env.d.ts',

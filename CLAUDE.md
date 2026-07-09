@@ -23,14 +23,18 @@ no per-gate bypass — a red gate must be fixed, not skipped) — see docs/refer
 Coverage thresholds in `vitest.config.ts` are a **ratchet**: pinned just under measured
 coverage, raised as coverage rises, never lowered; the same raise-never philosophy applies to
 the **TSDoc budget** (`pnpm tsdoc:check`, `tooling/tsdoc-coverage/budget.json`) and to **patch
-coverage** (`pnpm coverage:patch` — changed lines ≥ 90% in PR CI). Vitest is split into
+coverage** (changed lines ≥ 90% — PR CI runs `tooling/ci/check-patch-coverage.mjs`; local
+mirror: `pnpm coverage:patch`). Vitest is split into
 `unit` (colocated src suites), `security` (tests/security — token storage, redirect
 safety, header tripwires), and `ci-policy` (tests/ci — workflow wiring, release-please
 manifests, Dependabot flow invariants) projects. Markdown is linted
-(`pnpm docs:lint`; emphasis style follows Prettier). CI (`.github/workflows/pr-ci.yml`) runs
-path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest+patch-coverage/docs-lint/
-structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint —
-behind a single aggregate `quality-gate` required check (branch protection as code:
+(`pnpm docs:lint`; emphasis style follows Prettier) in its own path-filtered workflow
+(`pr-docs-lane.yml`, outside the quality gate). CI (`.github/workflows/pr-ci.yml`) runs
+path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest(+patch coverage)/security-tests/
+knip/structure+tsdoc/agent-os-gate/build+size+SBOM/gitleaks/semgrep/Trivy-IaC/deps-audit/
+dependency-review/actionlint —
+behind the aggregate `Quality gate` required check (`Checks` is the second required
+context; branch protection as code:
 `.github/rulesets/`, `pnpm github:sync`; personal↔team review posture via
 `pnpm github:tool:governance-mode` — see docs/reference/branch-governance.md). Playwright E2E is local-only (needs
 core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
@@ -67,15 +71,15 @@ Layer          Purpose                                                    Files 
 ─────────────  ─────────────────────────────────────────────────────────  ──────────────
 src/app/       Application shell: routes, guards, providers, error        ~20
                boundaries, analytics + observability bootstrap
-src/core/      HTTP, RBAC, config, data-provider, resources,             ~30
+src/core/      HTTP, RBAC, config, data-provider, resources,             ~35
                version, types — pure framework-agnostic platform
-src/pages/     Route islands (feature code) — custom + resource shapes    ~100
-src/shared/    shadcn UI (flat), components/forms/hooks/layouts          ~100
+src/pages/     Route islands (feature code) — custom + resource shapes    ~50
+src/shared/    shadcn UI (flat), components/forms/hooks/layouts          ~380
                (folder-per-unit), global Zustand store, standard CRUD,
                cross-page api helpers, auth + tenancy runtime, errors,
                icons, analytics, billing, notifications/notify, theme
-src/lib/       Pure utilities (cn, animations, route-island helpers)      ~15
-tests/         E2E (Playwright), shared test utils                         ~15
+src/lib/       Pure utilities (cn, animations, route-island helpers)      ~45
+tests/         E2E (Playwright), shared test utils                         ~75
 
 agent-os/      Agents, skills, rules, hooks, MCP, platforms, docs           ~50+
                (.cursor/, .claude/, .codex/ symlink into this)
@@ -96,7 +100,7 @@ src/
 
 All Zustand stores live in **`src/shared/store/<X>Store/`** (folder-per-unit) — `useAuthStore`, `useOrganizationStore`, `useThemeStore`, `useUIStore`, `useOnboardingStore`, `useConsentStore`, `useLocaleStore`. Cross-page API helpers (auth-screen schemas + fetchers `auth-api.ts`/`auth-contracts.ts`, organization-domain schemas + fetchers) live in **`src/shared/api/`**. Organization/tenancy runtime (URL-driven context, membership, `/` resolver, my-organizations) lives in **`src/shared/tenancy/`** — the URL is the single source of truth for organization context. Auth infrastructure (token, refresh-timer, idle-timeout, login/logout service) lives in **`src/shared/auth/`**.
 
-**Dependency rule (one-way):** `ui → lib → core → shared → pages → app`. Pages never import from other pages. One documented exception: the core kernel (`core/http`, `core/rbac`) may import the shared runtime trio — `shared/auth`, `shared/errors`, `useAuthStore`/`useOrganizationStore` (see `agent-os/rules/file-structure.mdc` → Import Rules; enforced in `eslint.config.mjs`).
+**Dependency rule (one-way, importer → importee):** `app → pages → shared → core → lib`; `shared/components/ui` is a leaf that imports only `lib` and other ui primitives, and `lib` may reach only `core/types`. Pages never import from other pages. One documented exception: the core kernel (`core/http`, `core/rbac`) may import the shared runtime trio — `shared/auth`, `shared/errors`, `useAuthStore`/`useOrganizationStore` (see `agent-os/rules/file-structure.mdc` → Import Rules; enforced in `eslint.config.mjs`).
 
 ## Route Marker Convention (`<page>.route.tsx`)
 
@@ -263,7 +267,7 @@ Family-shared is importable by the parent island and its descendants only — ne
 
 ## Import Conventions
 
-- **Always** use the `@/` path alias for all imports from `src/`.
+- Use the `@/` path alias for all cross-layer imports from `src/`; **within a page island use relative imports** (eslint forbids `@/pages/**` even from the same island).
 - **Always** include `.ts`/`.tsx` extensions in import paths.
 - Use `type` imports for type-only imports: `import type { User } from './types.ts'`
 - **Icons:** import from `@/shared/icons/index.ts` — never `lucide-react` directly (eslint-enforced; vendored `components/ui/` is exempt). One-file icon-library swap.
@@ -303,7 +307,7 @@ import { User } from './contracts';
 
 - **shadcn skill (single source of truth):** for all shadcn/ui work — adding, fixing, styling, composing, CLI, **and choosing which component to use** — follow **`agent-os/skills/shadcn/SKILL.md`** (installed via `pnpm dlx skills add shadcn/ui`). It contains the CLI workflow, Critical Rules, and the project's allowed-sources/selection policy (the former `shadcn-component-selection` skill is merged into it). Add components with `pnpm dlx shadcn@latest add …`; the always-applied rule is `agent-os/rules/ui-sources.mdc`.
 - Functional components only (no class components).
-- shadcn/ui components use **plain functions** (not `React.forwardRef`), with `data-slot` attributes.
+- shadcn/ui components use **plain functions** (not `React.forwardRef`), with `data-slot` attributes. Two deliberate exceptions keep `React.forwardRef`: `input.tsx` and `textarea.tsx` (react-hook-form `register()` needs the ref on React 18).
 - shadcn/ui imports from `radix-ui` monorepo (not individual `@radix-ui/react-*` packages).
 - Compose styles with `cn()` from `@/lib/utils.ts` (clsx + tailwind-merge).
 - Use `cva` (class-variance-authority) for variant-based component APIs.
@@ -326,9 +330,12 @@ import { User } from './contracts';
 - Exception: the auth service uses raw `fetch` (`authFetch`) to avoid interceptor recursion.
 - The fetch client is the reactive auth layer: Bearer attach, single-flight 401 refresh
   (concurrent 401s share ONE refresh) + one replay — a second 401 after a fresh token
-  means the session is dead → `forceLogout()`. Writes auto-carry an `Idempotency-Key`
-  (minted once per logical request, reused across retries/replay). Organization context
-  travels in the URL path — there is no `X-Organization-ID` header.
+  means the session is dead → `forceLogout()`. Writes auto-carry an `X-Idempotency-Key`
+  (minted once per logical request, reused across retries/replay). Organization context:
+  the **app URL** drives the active org — guards sync it via `/auth/switch-to-organization`,
+  which re-mints the access token with a signed `org` claim. API requests carry **no**
+  org header (`X-Organization-ID` does not exist) and no org id path segment; the backend
+  scopes from the token claim.
 
 ## Environment Variables
 
@@ -381,9 +388,9 @@ from **GitHub Environments** (never from files). No `.env.local`, no shared `.en
 
 - All routes are lazy loaded via `route.tsx` files.
 - Route config lives in `src/app/routes/routeTree.tsx`.
-- Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationSlug` chain (auth → membership/context sync from the URL → status) plus `requirePermission`; see `src/app/guards/GUARDS.OVERVIEW.md`.
+- Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationSlug` shell runs `requireAuth → requireTeamDeployment → requireProvisionedWorkspace → resolveActiveOrg` (context sync from the URL); leaf routes then run `gatewayFromManifest` (session → module → permission) followed by `requireOrgStatus`; see `src/app/guards/GUARDS.OVERVIEW.md`.
 - RBAC enforcement in `routeTree.tsx` `beforeLoad` via `gatewayFromManifest(manifest)` (+ tenancy guards).
-- Every route sets `head: manifestHead(manifest)` (`lib/routes/page-head.ts`) — the document
+- Every manifest-backed route sets `head: manifestHead(manifest)` (`lib/routes/page-head.ts`) — app-shell routes without a manifest (`/unauthorized`, the `$` 404 splat) use inline `composePageTitle`; the document
   title comes from `manifest.title` as `"<title> · Core Admin"`; the root-mounted
   `RouteAnnouncer` announces it to screen readers on SPA navigations.
 

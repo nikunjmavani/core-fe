@@ -40,7 +40,7 @@ jobs:
       - name: Run unit tests with coverage
         run: pnpm test:ci
 
-      - name: Patch coverage (changed lines ≥ 80%)
+      - name: Patch coverage (changed lines ≥ 90%)
         if: github.event_name == 'pull_request'
         env:
           BASE_REF: ${{ github.base_ref }}

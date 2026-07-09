@@ -55,8 +55,9 @@ export const SESSION = {
   LIFETIME_CHECK_INTERVAL_MS: 60_000,
 } as const;
 
-// No HEADER entry: the backend scopes organization context from the URL path
-// (/api/v1/tenancy/organizations/:id/…) — there is no X-Organization-ID header.
+// No HEADER entry: the backend scopes organization context from the signed `org`
+// claim in the access token (re-minted by /auth/switch-to-organization) — there is
+// no X-Organization-ID header and no org id in API paths.
 export const ORGANIZATION = {
   LOCALHOST_FALLBACK: 'default',
 } as const;
