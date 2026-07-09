@@ -77,6 +77,8 @@
     "setup:infra:github-secrets": "./tooling/setup/github-secrets.sh",
     "tool:sync-env-example": "tsx tooling/validate/sync-env-example.ts",
     "tool:sync-env-example:fix": "tsx tooling/validate/sync-env-example.ts --fix",
+    "tool:project-structure-tree": "python3 tooling/reports/generate-project-tree.py",
+    "tool:project-structure-tree:check": "python3 tooling/reports/generate-project-tree.py --check",
     "validate:env-example": "./tooling/validate/env-example.sh",
     "validate:public": "./tooling/validate/public-assets.sh",
     "validate:structure": "./tooling/validate/route-islands.sh",
