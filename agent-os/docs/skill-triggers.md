@@ -49,29 +49,30 @@ Read in order; **project guardrails always win** over skill suggestions.
 
 ## By file pattern (after an edit)
 
-| File pattern                                                                           | Skill(s)                                                               |
-| -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `**/*.route.tsx` · `**/*.manifest.ts`                                                  | `route-island`                                                         |
-| `src/app/routes/routeTree.tsx` · `src/app/guards/**` · `src/shared/tenancy/**`         | `routing-tenancy`                                                      |
-| `**/*.resource.ts` · `**/*ListPage.tsx` · `**/dialogs/**`                              | `resource-crud`                                                        |
-| `**/forms/**/*` · mutation hooks touching `apiClient`                                  | `http-forms-errors`, `composition-patterns`                            |
-| `src/core/config/env-schema.ts` · `platform-config.ts` · `build-env.ts` · `knip.jsonc` | `platform-hygiene`, `env-schema-add` (if env key changed)              |
-| `src/pages/**/`                                                                        | `page-scaffolding`, `route-island`                                     |
-| `**/*.contracts.ts`                                                                    | `code-structure`                                                       |
-| `**/*.constants.ts` · new user-facing copy / locale namespace                          | `i18n-constants`, `code-structure`                                     |
-| `**/*.api.ts` · `**/hooks/use*/**`                                                     | `react-best-practices`                                                 |
-| `**/components/ui/*`                                                                   | `shadcn`                                                               |
-| `**/components/**/*.tsx` · `**/forms/**/*`                                             | `shadcn`, `composition-patterns`, `frontend-design`, `test-generation` |
-| `src/shared/components/**/*.tsx` (promoted from a page)                                | `component-promotion`, `composition-patterns`                          |
-| `src/index.css` · `**/*.css`                                                           | `frontend-design`, `theme-axis-audit` (if axis work)                   |
-| `**/*.test.ts` · `**/*.test.tsx`                                                       | `test-generation`                                                      |
-| `tests/e2e/**`                                                                         | `playwright-e2e`, `e2e-testids`                                        |
-| `.env.example`                                                                         | `platform-hygiene`, `env-schema-add`, `documentation-maintenance`      |
-| `package.json` · `pnpm-lock.yaml` · `pnpm.overrides`                                   | `dependency-management`                                                |
-| `vite.config.ts` · `tooling/ci/run-size-limit.mjs` · size budget                       | `bundle-performance`                                                   |
-| `src/core/config/app-manifest.ts` · `public/manifest.webmanifest` · `app-icon.svg`     | `pwa-manifest`                                                         |
-| `docs/**/*.md` · `**/*.OVERVIEW.md`                                                    | `documentation-maintenance`                                            |
-| `useAnimeCountUp.ts` · animation hooks                                                 | `animejs`, `emil-design-eng`                                           |
+| File pattern                                                                                   | Skill(s)                                                                                                |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `**/*.route.tsx` · `**/*.manifest.ts`                                                          | `route-island`                                                                                          |
+| `src/app/routes/routeTree.tsx` · `src/app/guards/**` · `src/shared/tenancy/**`                 | `routing-tenancy`                                                                                       |
+| `**/*.resource.ts` · `**/*ListPage.tsx` · `**/dialogs/**`                                      | `resource-crud`                                                                                         |
+| `**/forms/**/*` · mutation hooks touching `apiClient`                                          | `http-forms-errors`, `composition-patterns`                                                             |
+| `src/core/config/env-schema.ts` · `platform-config.ts` · `build-env.ts` · `knip.jsonc`         | `platform-hygiene`, `env-schema-add` (if env key changed)                                               |
+| `.github/rulesets/**` · `.github/environments/**` · `tooling/setup/github/governance-mode.mjs` | `platform-hygiene` (governance mode — use `github:tool:governance-mode`, never hand-edit review fields) |
+| `src/pages/**/`                                                                                | `page-scaffolding`, `route-island`                                                                      |
+| `**/*.contracts.ts`                                                                            | `code-structure`                                                                                        |
+| `**/*.constants.ts` · new user-facing copy / locale namespace                                  | `i18n-constants`, `code-structure`                                                                      |
+| `**/*.api.ts` · `**/hooks/use*/**`                                                             | `react-best-practices`                                                                                  |
+| `**/components/ui/*`                                                                           | `shadcn`                                                                                                |
+| `**/components/**/*.tsx` · `**/forms/**/*`                                                     | `shadcn`, `composition-patterns`, `frontend-design`, `test-generation`                                  |
+| `src/shared/components/**/*.tsx` (promoted from a page)                                        | `component-promotion`, `composition-patterns`                                                           |
+| `src/index.css` · `**/*.css`                                                                   | `frontend-design`, `theme-axis-audit` (if axis work)                                                    |
+| `**/*.test.ts` · `**/*.test.tsx`                                                               | `test-generation`                                                                                       |
+| `tests/e2e/**`                                                                                 | `playwright-e2e`, `e2e-testids`                                                                         |
+| `.env.example`                                                                                 | `platform-hygiene`, `env-schema-add`, `documentation-maintenance`                                       |
+| `package.json` · `pnpm-lock.yaml` · `pnpm.overrides`                                           | `dependency-management`                                                                                 |
+| `vite.config.ts` · `tooling/ci/run-size-limit.mjs` · size budget                               | `bundle-performance`                                                                                    |
+| `src/core/config/app-manifest.ts` · `public/manifest.webmanifest` · `app-icon.svg`             | `pwa-manifest`                                                                                          |
+| `docs/**/*.md` · `**/*.OVERVIEW.md`                                                            | `documentation-maintenance`                                                                             |
+| `useAnimeCountUp.ts` · animation hooks                                                         | `animejs`, `emil-design-eng`                                                                            |
 
 ## Gates (definition of done)
 

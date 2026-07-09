@@ -54,18 +54,23 @@ pnpm knip
 ```
 
 8. **Health** — `pnpm health` or CI-equivalent lanes after broad changes.
+9. **Branch governance?** — never hand-edit the review fields in `.github/rulesets/*.json` or
+   `.github/environments/production.json` (coupled → deadlock). Switch posture with
+   `pnpm github:tool:governance-mode <personal|team>`, then `pnpm github:sync`. See
+   `docs/reference/branch-governance.md`.
 
 ---
 
 ## Validator reference
 
-| Command                                 | Enforces                                                                                                                     |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm validate:vite-env`                | No env/mode sniffing: `import.meta.env.VITE_*`/`DEV`/`PROD`/`MODE` outside allowlist, or `.environment`/`.MODE ===` compares |
-| `pnpm validate:client-env --production` | Production deploy env completeness (e.g. captcha, API URL)                                                                   |
-| `pnpm knip`                             | Unused exports, deps, files (see `knip.jsonc`)                                                                               |
-| `pnpm tool:sync-env-example`            | Schema ↔ `.env.example` parity                                                                                               |
-| `pnpm validate:lockfile`                | `pnpm-lock.yaml` ↔ `package.json` in sync (frozen install; deps + `pnpm.overrides`)                                          |
+| Command                                  | Enforces                                                                                                                     |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm validate:vite-env`                 | No env/mode sniffing: `import.meta.env.VITE_*`/`DEV`/`PROD`/`MODE` outside allowlist, or `.environment`/`.MODE ===` compares |
+| `pnpm validate:client-env --production`  | Production deploy env completeness (e.g. captcha, API URL)                                                                   |
+| `pnpm knip`                              | Unused exports, deps, files (see `knip.jsonc`)                                                                               |
+| `pnpm tool:sync-env-example`             | Schema ↔ `.env.example` parity                                                                                               |
+| `pnpm validate:lockfile`                 | `pnpm-lock.yaml` ↔ `package.json` in sync (frozen install; deps + `pnpm.overrides`)                                          |
+| `pnpm github:tool:governance-mode:check` | Branch governance (personal↔team) — ruleset ↔ prod env agree, no self-review deadlock (also in the `ci-policy` lane)         |
 
 CI: static-sync lane runs vite-env + client-env; Netlify reusable workflow runs client-env for production builds.
 

@@ -31,7 +31,8 @@ manifests, Dependabot flow invariants) projects. Markdown is linted
 path-filtered parallel lanes — biome/eslint/prettier/tsc/vitest+patch-coverage/docs-lint/
 structure+tsdoc/build+size+SBOM/gitleaks/semgrep/deps-audit/dependency-review/actionlint —
 behind a single aggregate `quality-gate` required check (branch protection as code:
-`.github/rulesets/`, `pnpm github:sync`). Playwright E2E is local-only (needs
+`.github/rulesets/`, `pnpm github:sync`; personal↔team review posture via
+`pnpm github:tool:governance-mode` — see docs/reference/branch-governance.md). Playwright E2E is local-only (needs
 core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
 budgets, cache cleanup, release-flow guards (environment-drift canary),
 and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)

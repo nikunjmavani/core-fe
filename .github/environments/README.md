@@ -70,6 +70,21 @@ reusable deploy workflow must agree, and `git.protectedBranches` / `defaultBranc
 must match the committed `.github/rulesets/*.json` (single trunk = `main` only).
 It fails fast on drift before touching GitHub.
 
+## Governance mode (personal ↔ team)
+
+The production environment's `requiredReviewers` (`users` + `preventSelfReview`)
+is one half of the repo's branch-governance mode; the trunk ruleset's
+`pull_request` rule is the other. Do not edit them by hand — the coupled review
+fields deadlock the maintainer in the wrong combination. Switch both atomically:
+
+```bash
+pnpm github:tool:governance-mode          # status
+pnpm github:tool:governance-mode team     # four-eyes (needs ≥2 CODEOWNERS users)
+pnpm github:sync                          # apply to GitHub
+```
+
+Full reference: [docs/reference/branch-governance.md](../../docs/reference/branch-governance.md).
+
 ## Protection drift
 
 GitHub does not expose a full “apply protection from JSON” API for all fields.
