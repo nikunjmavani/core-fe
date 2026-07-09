@@ -52,6 +52,7 @@
   // External CLIs invoked from tooling/workflows but not npm dependencies:
   // gh (GitHub CLI), gitleaks/semgrep (security scanners),
   // stryker (installed ad-hoc by mutation-test.yml),
-  // rg (ripgrep, used by tooling/reports/code-review-report.mjs).
-  "ignoreBinaries": ["gh", "gitleaks", "semgrep", "stryker", "rg"],
+  // rg (ripgrep, used by tooling/reports/code-review-report.mjs),
+  // python3 (runs tooling/reports/generate-project-tree.py).
+  "ignoreBinaries": ["gh", "gitleaks", "semgrep", "stryker", "rg", "python3"],
 }
