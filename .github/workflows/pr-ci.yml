@@ -186,6 +186,9 @@ jobs:
       - name: Vite env read allowlist
         run: pnpm validate:vite-env
 
+      - name: No hardcoded trunk name in app code
+        run: pnpm validate:no-static-branch-name
+
       - name: Public assets
         run: ./tooling/validate/public-assets.sh
 
