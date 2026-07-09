@@ -1,6 +1,22 @@
 #!/usr/bin/env sh
 # Fast gate before push — full suite runs in CI (.github/workflows/pr-ci.yml).
 
+# Branch-name policy — short-lived branches follow <type>/<description>
+# (parity with core-be). The trunk and a detached HEAD are exempt. The trunk is
+# resolved from tooling/setup/setup.config.json (git.defaultBranch), never
+# hardcoded, so a renamed trunk stays exempt automatically.
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo HEAD)
+DEFAULT_BRANCH=$(node -e "const fs=require('fs');try{const c=JSON.parse(fs.readFileSync('tooling/setup/setup.config.json','utf8'));process.stdout.write((c.git&&c.git.defaultBranch)||'main')}catch(e){process.stdout.write('main')}" 2>/dev/null || echo main)
+if [ "$CURRENT_BRANCH" != "HEAD" ] && [ "$CURRENT_BRANCH" != "$DEFAULT_BRANCH" ]; then
+  if ! printf '%s' "$CURRENT_BRANCH" | grep -Eq '^(feat|fix|chore|ci|docs|refactor|test|perf|build|style|revert)/[a-z0-9._-]+$'; then
+    echo "✖ Branch name '$CURRENT_BRANCH' does not follow <type>/<description>." >&2
+    echo "  Allowed types: feat fix chore ci docs refactor test perf build style revert" >&2
+    echo "  Description: lowercase letters, digits, . _ - (e.g. ci/branch-name-guard)." >&2
+    echo "  Rename with: git branch -m <type>/<description>" >&2
+    exit 1
+  fi
+fi
+
 pnpm biome:check
 pnpm type-check
 pnpm build
