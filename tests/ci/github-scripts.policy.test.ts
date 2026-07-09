@@ -3,10 +3,11 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-// Locks the single-command GitHub IaC surface: one flag-driven `github:sync`
-// (no per-domain subcommands), so a future edit cannot quietly re-introduce the
+// Locks the GitHub IaC surface: one flag-driven `github:sync` for sync (no
+// per-domain subcommands) plus discrete `github:tool:*` named tools (the
+// governance-mode switch). Guards against quietly re-introducing the
 // github:rulesets:* / github:environments:* / gh:rulesets:* / validate:github-env*
-// scripts that were collapsed into it.
+// scripts that were collapsed into `github:sync`.
 const packageJson = JSON.parse(
   readFileSync(join(process.cwd(), 'package.json'), 'utf8'),
 ) as { scripts: Record<string, string> };
@@ -27,12 +28,22 @@ const REMOVED = [
 ];
 
 describe('GitHub IaC scripts policy (single github:sync)', () => {
-  it('exposes exactly one github: entry point — github:sync', () => {
-    const githubScripts = Object.keys(scripts).filter((name) =>
-      name.startsWith('github:'),
-    );
-    expect(githubScripts).toEqual(['github:sync']);
+  it('exposes only the sanctioned github: entry points', () => {
+    const githubScripts = Object.keys(scripts)
+      .filter((name) => name.startsWith('github:'))
+      .sort();
+    expect(githubScripts).toEqual([
+      'github:sync',
+      'github:tool:governance-mode',
+      'github:tool:governance-mode:check',
+    ]);
     expect(scripts['github:sync']).toBe('node tooling/setup/github/sync.mjs');
+    expect(scripts['github:tool:governance-mode']).toBe(
+      'node tooling/setup/github/governance-mode.mjs',
+    );
+    expect(scripts['github:tool:governance-mode:check']).toBe(
+      'node tooling/setup/github/governance-mode.mjs --check',
+    );
   });
 
   it('has no bare gh: scripts — all GitHub IaC lives under github:', () => {

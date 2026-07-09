@@ -120,6 +120,7 @@ flowchart TB
 | [quality/sonarqube-local.md](reference/quality/sonarqube-local.md)           | **SonarQube local quality gate** — Docker server, `pnpm sonar:scan`, pre-push enforcement                        |
 | [quality/test-coverage.md](reference/quality/test-coverage.md)               | **Test coverage** — runners, global ratchet thresholds, patch coverage, strict colocation                        |
 | [security-model.md](reference/security-model.md)                             | **Frontend security model** — threats covered, CSP delivery, accepted risks, backend's half                      |
+| [branch-governance.md](reference/branch-governance.md)                       | **Branch governance mode** — personal ↔ team review posture, one switch keeps ruleset + prod env consistent      |
 | [backend-list-pagination-spec.md](reference/backend-list-pagination-spec.md) | **Backend pagination spec** — core-be cursor for invoices + server-side sort/filter; FE follow-ups               |
 | [third-party-comparison.md](reference/third-party-comparison.md)             | Keep/swap verdicts for major dependencies (charts, analytics, routing)                                           |
 | [ui-components-sourcing.md](reference/ui-components-sourcing.md)             | shadcn-first UI workflow (`npx shadcn add`, research sites)                                                      |
