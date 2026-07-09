@@ -25,6 +25,9 @@ on:
 permissions:
   contents: read
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: ${{ vars.FORCE_JAVASCRIPT_ACTIONS_TO_NODE24 || 'true' }}
+
 concurrency:
   # Share the production deploy group so a rollback never races a forward deploy.
   group: netlify-deploy-production
