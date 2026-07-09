@@ -21,7 +21,7 @@ src/shared/    UI, auth, api, errors, forms, hooks, layouts, store (Zustand)
 src/lib/       Pure utilities, animations, route-island helpers
 tests/         E2E, utils (project root)
 
-Stats: ~533 src files · ~291 tests in src/ · 36 E2E specs · 24 shadcn UI primitives
+Stats: ~533 src files · ~293 tests in src/ · 36 E2E specs · 24 shadcn UI primitives
 
 ================================================================================
 §2  FULL DIRECTORY TREE
@@ -181,6 +181,8 @@ core-fe/
 ├── .codegraph/
 │   ├── .gitignore
 │   ├── codegraph.db
+│   ├── codegraph.db-shm
+│   ├── codegraph.db-wal
 │   └── daemon.log
 ├── .codex/
 │   ├── config.toml
@@ -1412,6 +1414,7 @@ core-fe/
 │   ├── rules/
 │   │   ├── agent-behavior.mdc
 │   │   ├── api-data-patterns.mdc
+│   │   ├── change-completeness.mdc
 │   │   ├── component-patterns.mdc
 │   │   ├── context7-libraries.mdc
 │   │   ├── engineering-principles.mdc
@@ -1468,6 +1471,7 @@ core-fe/
 │   │   │   ├── sonarqube-local.md
 │   │   │   └── test-coverage.md
 │   │   ├── backend-list-pagination-spec.md
+│   │   ├── branch-governance.md
 │   │   ├── constants-and-i18n.md
 │   │   ├── cross-browser-support.md
 │   │   ├── csrf-mitigation.md
@@ -1577,7 +1581,7 @@ core-fe/
 │   │   ├── rbac/
 │   │   │   ├── guards.ts
 │   │   │   ├── policies.ts
-│   │   │   └── [2 test files]
+│   │   │   └── [3 test files]
 │   │   ├── resources/
 │   │   │   ├── bootstrap.ts
 │   │   │   ├── index.ts
@@ -1662,7 +1666,7 @@ core-fe/
 │   │   ├── sensitive-clipboard.ts
 │   │   ├── telemetry-scrub.ts
 │   │   ├── utils.ts
-│   │   └── [15 test files]
+│   │   └── [16 test files]
 │   ├── locales/
 │   │   ├── ar/
 │   │   │   └── common.json
@@ -2422,7 +2426,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [9 test files]
+│   │   └── [13 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/
@@ -2486,6 +2490,7 @@ core-fe/
 │   │   │   ├── check-environments-drift.mjs
 │   │   │   ├── environments-util.mjs
 │   │   │   ├── github-shared.mjs
+│   │   │   ├── governance-mode.mjs
 │   │   │   ├── parse-env-file.mjs
 │   │   │   ├── scaffold-env-files.mjs
 │   │   │   ├── setup-config.mjs
@@ -2495,7 +2500,7 @@ core-fe/
 │   │   │   ├── sync-rulesets.mjs
 │   │   │   ├── sync.mjs
 │   │   │   ├── validate-github-env.mjs
-│   │   │   └── [3 test files]
+│   │   │   └── [4 test files]
 │   │   ├── live/
 │   │   │   ├── config.mjs
 │   │   │   ├── github.mjs
@@ -2576,6 +2581,7 @@ core-fe/
 ├── playwright.integration-cross-browser.config.ts
 ├── README.md
 ├── SECURITY.md
+├── SESSION.md
 ├── SETUP.md
 ├── skills-lock.json
 ├── sonar-project.properties

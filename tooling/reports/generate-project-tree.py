@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -157,9 +158,25 @@ Tests:
 
 """
 
-    OUT.write_text(header + "core-fe/\n" + "\n".join(body) + footer)
-    line_count = len(OUT.read_text().splitlines())
-    print(f"Wrote {OUT.relative_to(ROOT)} ({line_count} lines)")
+    content = header + "core-fe/\n" + "\n".join(body) + footer
+    rel = OUT.relative_to(ROOT)
+
+    # --check: compare against the committed file and fail on drift, without
+    # writing. Lets the tree be verified in CI / a review without a side effect.
+    if "--check" in sys.argv[1:]:
+        current = OUT.read_text() if OUT.exists() else ""
+        if current != content:
+            print(
+                f"✖ {rel} is out of date. Regenerate with: "
+                "pnpm tool:project-structure-tree",
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+        print(f"{rel} is up to date.")
+        return
+
+    OUT.write_text(content)
+    print(f"Wrote {rel} ({len(content.splitlines())} lines)")
 
 
 if __name__ == "__main__":
