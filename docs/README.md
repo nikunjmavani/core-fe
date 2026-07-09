@@ -116,6 +116,7 @@ flowchart TB
 | Doc                                                                          | Purpose                                                                                                          |
 | ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | [tools-and-usage.md](reference/tools-and-usage.md)                           | Dependency usage table (what each package is used for)                                                           |
+| [documentation-tiers.md](reference/documentation-tiers.md)                   | **In-source doc tiers** — OVERVIEW (required) + optional PATTERNS/FLOWS/POLICIES for complex subsystems          |
 | [data-mutations.md](reference/data-mutations.md)                             | **Optimistic updates & write UX** — which mutations are optimistic vs in-progress, the policy, and the inventory |
 | [quality/sonarqube-local.md](reference/quality/sonarqube-local.md)           | **SonarQube local quality gate** — Docker server, `pnpm sonar:scan`, pre-push enforcement                        |
 | [quality/test-coverage.md](reference/quality/test-coverage.md)               | **Test coverage** — runners, global ratchet thresholds, patch coverage, strict colocation                        |
