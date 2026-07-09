@@ -100,6 +100,8 @@
     "agent-os:check:report": "tsx agent-os/evals/check.ts --report",
     "agent-os:triggers": "tsx agent-os/evals/trigger-eval.ts",
     "agent-os:triggers:strict": "tsx agent-os/evals/trigger-eval.ts --strict",
+    "agent-os:lock": "tsx tooling/agent-os/lock.ts",
+    "agent-os:lock:check": "tsx tooling/agent-os/lock.ts --check",
     "test:visual": "rm -rf test-results && playwright test tests/e2e/visual.e2e.test.ts",
     "test:visual:update": "rm -rf test-results && playwright test tests/e2e/visual.e2e.test.ts --update-snapshots",
     "prepare": "husky"
