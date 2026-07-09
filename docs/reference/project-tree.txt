@@ -183,7 +183,9 @@ core-fe/
 │   ├── codegraph.db
 │   ├── codegraph.db-shm
 │   ├── codegraph.db-wal
-│   └── daemon.log
+│   ├── daemon.log
+│   ├── daemon.pid
+│   └── daemon.sock
 ├── .codex/
 │   ├── config.toml
 │   └── hooks.json
@@ -233,1108 +235,6 @@ core-fe/
 │   └── pre-push
 ├── .netlify/
 │   └── netlify.toml
-├── .stryker-tmp/
-│   └── sandbox-gcugmu/
-│       ├── .agents/
-│       │   └── skills/
-│       │       ├── animejs/
-│       │       │   ├── assets/
-│       │       │   │   └── README.md
-│       │       │   ├── references/
-│       │       │   │   ├── api_reference.md
-│       │       │   │   ├── stagger_guide.md
-│       │       │   │   └── timeline_guide.md
-│       │       │   ├── scripts/
-│       │       │   │   ├── animation_generator.py
-│       │       │   │   └── timeline_builder.py
-│       │       │   └── SKILL.md
-│       │       ├── emil-design-eng/
-│       │       │   └── SKILL.md
-│       │       ├── impeccable/
-│       │       │   ├── agents/
-│       │       │   │   ├── impeccable_asset_producer.toml
-│       │       │   │   ├── impeccable_manual_edit_applier.toml
-│       │       │   │   └── openai.yaml
-│       │       │   ├── reference/
-│       │       │   │   ├── adapt.md
-│       │       │   │   ├── animate.md
-│       │       │   │   ├── audit.md
-│       │       │   │   ├── bolder.md
-│       │       │   │   ├── brand.md
-│       │       │   │   ├── clarify.md
-│       │       │   │   ├── codex.md
-│       │       │   │   ├── colorize.md
-│       │       │   │   ├── craft.md
-│       │       │   │   ├── critique.md
-│       │       │   │   ├── delight.md
-│       │       │   │   ├── distill.md
-│       │       │   │   ├── document.md
-│       │       │   │   ├── extract.md
-│       │       │   │   ├── harden.md
-│       │       │   │   ├── hooks.md
-│       │       │   │   ├── init.md
-│       │       │   │   ├── interaction-design.md
-│       │       │   │   ├── layout.md
-│       │       │   │   ├── live.md
-│       │       │   │   ├── onboard.md
-│       │       │   │   ├── optimize.md
-│       │       │   │   ├── overdrive.md
-│       │       │   │   ├── polish.md
-│       │       │   │   ├── product.md
-│       │       │   │   ├── quieter.md
-│       │       │   │   ├── shape.md
-│       │       │   │   └── typeset.md
-│       │       │   ├── scripts/
-│       │       │   │   ├── detector/
-│       │       │   │   ├── lib/
-│       │       │   │   ├── live/
-│       │       │   │   ├── command-metadata.json
-│       │       │   │   ├── context-signals.mjs
-│       │       │   │   ├── context.mjs
-│       │       │   │   ├── critique-storage.mjs
-│       │       │   │   ├── detect-csp.mjs
-│       │       │   │   ├── detect.mjs
-│       │       │   │   ├── hook-admin.mjs
-│       │       │   │   ├── hook-before-edit.mjs
-│       │       │   │   ├── hook-lib.mjs
-│       │       │   │   ├── hook.mjs
-│       │       │   │   ├── live-accept.mjs
-│       │       │   │   ├── live-browser-dom.js
-│       │       │   │   ├── live-browser-session.js
-│       │       │   │   ├── live-browser.js
-│       │       │   │   ├── live-commit-manual-edits.mjs
-│       │       │   │   ├── live-complete.mjs
-│       │       │   │   ├── live-copy-edit-agent.mjs
-│       │       │   │   ├── live-discard-manual-edits.mjs
-│       │       │   │   ├── live-inject.mjs
-│       │       │   │   ├── live-insert.mjs
-│       │       │   │   ├── live-manual-edit-evidence.mjs
-│       │       │   │   ├── live-poll.mjs
-│       │       │   │   ├── live-resume.mjs
-│       │       │   │   ├── live-server.mjs
-│       │       │   │   ├── live-status.mjs
-│       │       │   │   ├── live-target.mjs
-│       │       │   │   ├── live-wrap.mjs
-│       │       │   │   ├── live.mjs
-│       │       │   │   ├── modern-screenshot.umd.js
-│       │       │   │   ├── palette.mjs
-│       │       │   │   └── pin.mjs
-│       │       │   └── SKILL.md
-│       │       ├── review-animations/
-│       │       │   ├── SKILL.md
-│       │       │   └── STANDARDS.md
-│       │       └── shadcn/
-│       │           ├── agents/
-│       │           │   └── openai.yml
-│       │           ├── assets/
-│       │           │   ├── shadcn-small.png
-│       │           │   └── shadcn.png
-│       │           ├── evals/
-│       │           │   └── evals.json
-│       │           ├── rules/
-│       │           │   ├── base-vs-radix.md
-│       │           │   ├── composition.md
-│       │           │   ├── forms.md
-│       │           │   ├── icons.md
-│       │           │   └── styling.md
-│       │           ├── cli.md
-│       │           ├── customization.md
-│       │           ├── mcp.md
-│       │           ├── registry.md
-│       │           └── SKILL.md
-│       ├── .codegraph/
-│       │   ├── .gitignore
-│       │   ├── codegraph.db
-│       │   ├── codegraph.db-shm
-│       │   ├── codegraph.db-wal
-│       │   ├── daemon.log
-│       │   └── daemon.pid
-│       ├── .codex/
-│       │   ├── config.toml
-│       │   └── hooks.json
-│       ├── .github/
-│       │   ├── actions/
-│       │   │   ├── setup-core-be/
-│       │   │   │   └── action.yml
-│       │   │   └── setup-node-pnpm/
-│       │   │       └── action.yml
-│       │   ├── codeql/
-│       │   │   └── codeql-config.yml
-│       │   ├── environments/
-│       │   │   ├── development.json
-│       │   │   ├── production.json
-│       │   │   └── README.md
-│       │   ├── release-please/
-│       │   │   ├── config.dev.json
-│       │   │   ├── config.json
-│       │   │   ├── manifest.dev.json
-│       │   │   └── manifest.json
-│       │   ├── rulesets/
-│       │   │   ├── dev.json
-│       │   │   └── main.json
-│       │   ├── workflows/
-│       │   │   ├── cleanup-cache.yml
-│       │   │   ├── codeql.yml
-│       │   │   ├── cross-browser.yml
-│       │   │   ├── dependabot-ci-triage.yml
-│       │   │   ├── lighthouse.yml
-│       │   │   ├── mutation-test.yml
-│       │   │   ├── post-merge-ci.yml
-│       │   │   ├── post-release-backmerge.yml
-│       │   │   ├── pr-ci.yml
-│       │   │   ├── pr-docs-lane.yml
-│       │   │   ├── pr-governance.yml
-│       │   │   ├── preview.yml
-│       │   │   ├── reusable-netlify-deploy.yml
-│       │   │   ├── reusable-unit-gate.yml
-│       │   │   ├── reusable-vitest-e2e.yml
-│       │   │   ├── reusable-vitest-unit-only.yml
-│       │   │   └── scheduled-fe-be-integration.yml
-│       │   ├── CODEOWNERS
-│       │   ├── dependabot.yml
-│       │   ├── labeler.yml
-│       │   ├── labels.yml
-│       │   ├── PULL_REQUEST_TEMPLATE.md
-│       │   └── README.md
-│       ├── .husky/
-│       │   ├── commit-msg
-│       │   ├── pre-commit
-│       │   └── pre-push
-│       ├── .vscode/
-│       │   ├── extensions.json
-│       │   └── settings.json
-│       ├── plugins/
-│       │   ├── csp-api-origin.ts
-│       │   ├── i18n-build.ts
-│       │   └── version-json.ts
-│       ├── public/
-│       │   ├── _headers
-│       │   ├── app-icon.svg
-│       │   ├── config.js
-│       │   ├── manifest.webmanifest
-│       │   ├── offline.html
-│       │   ├── pwa-192x192.png
-│       │   ├── pwa-512x512.png
-│       │   ├── README.md
-│       │   ├── robots.txt
-│       │   ├── theme-init.js
-│       │   └── vite.svg
-│       ├── scripts/
-│       │   └── README.md
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── analytics/
-│       │   │   │   ├── FeatureFlagProvider.tsx
-│       │   │   │   ├── posthog.ts
-│       │   │   │   └── [2 test files]
-│       │   │   ├── guards/
-│       │   │   │   ├── GUARDS.OVERVIEW.md
-│       │   │   │   ├── org-gates.ts
-│       │   │   │   ├── RBACGuard.tsx
-│       │   │   │   ├── route-guards.ts
-│       │   │   │   └── [3 test files]
-│       │   │   ├── observability/
-│       │   │   │   ├── performance.ts
-│       │   │   │   ├── sentry.ts
-│       │   │   │   └── [2 test files]
-│       │   │   ├── providers/
-│       │   │   │   ├── AppProviders.tsx
-│       │   │   │   ├── I18nProvider.tsx
-│       │   │   │   └── QueryProvider.tsx
-│       │   │   ├── routes/
-│       │   │   │   ├── ErrorBoundary.tsx
-│       │   │   │   ├── NotFoundPage.tsx
-│       │   │   │   ├── routeTree.tsx
-│       │   │   │   ├── UnauthorizedPage.tsx
-│       │   │   │   └── [3 test files]
-│       │   │   └── version/
-│       │   │       ├── index.ts
-│       │   │       ├── show-update-available-toast.ts
-│       │   │       ├── version-update.constants.ts
-│       │   │       └── [1 test file]
-│       │   ├── core/
-│       │   │   ├── config/
-│       │   │   │   ├── app-manifest.ts
-│       │   │   │   ├── auth-methods.ts
-│       │   │   │   ├── constants.ts
-│       │   │   │   ├── env-resolvers.ts
-│       │   │   │   ├── env-schema.ts
-│       │   │   │   ├── env.config.ts
-│       │   │   │   ├── env.ts
-│       │   │   │   ├── platform-config.ts
-│       │   │   │   └── [7 test files]
-│       │   │   ├── data-provider/
-│       │   │   │   ├── http-data-provider/
-│       │   │   │   │   ├── http-data-provider.ts
-│       │   │   │   │   └── index.ts
-│       │   │   │   ├── dataProvider.ts
-│       │   │   │   └── index.ts
-│       │   │   ├── http/
-│       │   │   │   ├── fetch-client.ts
-│       │   │   │   ├── pagination.ts
-│       │   │   │   ├── queryClient.ts
-│       │   │   │   └── [3 test files]
-│       │   │   ├── rbac/
-│       │   │   │   ├── guards.ts
-│       │   │   │   ├── policies.ts
-│       │   │   │   └── [2 test files]
-│       │   │   ├── resources/
-│       │   │   │   ├── bootstrap.ts
-│       │   │   │   ├── index.ts
-│       │   │   │   ├── members.resource.ts
-│       │   │   │   ├── resource-registry.ts
-│       │   │   │   ├── types.ts
-│       │   │   │   └── [2 test files]
-│       │   │   ├── security/
-│       │   │   │   ├── gates/
-│       │   │   │   │   ├── require-module.ts
-│       │   │   │   │   ├── require-permission.ts
-│       │   │   │   │   ├── require-session.ts
-│       │   │   │   │   └── [3 test files]
-│       │   │   │   ├── gate-context.ts
-│       │   │   │   ├── gate.types.ts
-│       │   │   │   ├── gateway.ts
-│       │   │   │   ├── index.ts
-│       │   │   │   └── [2 test files]
-│       │   │   ├── types/
-│       │   │   │   ├── branded.ts
-│       │   │   │   ├── permissions.ts
-│       │   │   │   ├── wire.ts
-│       │   │   │   └── [3 test files]
-│       │   │   └── version/
-│       │   │       ├── check.ts
-│       │   │       ├── version-check.constants.ts
-│       │   │       ├── version-update-snooze.ts
-│       │   │       └── [2 test files]
-│       │   ├── lib/
-│       │   │   ├── animations/
-│       │   │   │   ├── AnimatedSection.tsx
-│       │   │   │   ├── index.ts
-│       │   │   │   ├── LayoutGroup.tsx
-│       │   │   │   ├── PageTransition.tsx
-│       │   │   │   ├── prefers-reduced-motion.ts
-│       │   │   │   ├── Skeleton.tsx
-│       │   │   │   ├── StaggerList.tsx
-│       │   │   │   ├── useAnimeCountUp.ts
-│       │   │   │   ├── useAutoAnimate.ts
-│       │   │   │   ├── useCountUp.ts
-│       │   │   │   └── [5 test files]
-│       │   │   ├── billing/
-│       │   │   │   ├── stripe-return.ts
-│       │   │   │   └── [1 test file]
-│       │   │   ├── i18n/
-│       │   │   │   ├── apply-document-locale.ts
-│       │   │   │   ├── build-config.ts
-│       │   │   │   ├── build-env.ts
-│       │   │   │   ├── build-runtime.ts
-│       │   │   │   ├── errors.constants.ts
-│       │   │   │   ├── format.ts
-│       │   │   │   ├── i18n-resources.multi.ts
-│       │   │   │   ├── i18n-resources.ts
-│       │   │   │   ├── i18n.ts
-│       │   │   │   ├── index.ts
-│       │   │   │   ├── intl-config.ts
-│       │   │   │   ├── load-namespace.ts
-│       │   │   │   ├── locale.constants.ts
-│       │   │   │   ├── locales.ts
-│       │   │   │   ├── namespaces.ts
-│       │   │   │   ├── translate-form-message.ts
-│       │   │   │   └── [6 test files]
-│       │   │   ├── routes/
-│       │   │   │   ├── builders.ts
-│       │   │   │   ├── index.ts
-│       │   │   │   ├── page-head.ts
-│       │   │   │   ├── page-manifest.ts
-│       │   │   │   ├── params.ts
-│       │   │   │   └── [4 test files]
-│       │   │   ├── app-splash.ts
-│       │   │   ├── appearance-surface.ts
-│       │   │   ├── chunk-prefetch.ts
-│       │   │   ├── csp-api-origin.ts
-│       │   │   ├── css-safe.ts
-│       │   │   ├── csv.ts
-│       │   │   ├── icon-surface.ts
-│       │   │   ├── onboarding-defaults.ts
-│       │   │   ├── parse-list-tolerant.ts
-│       │   │   ├── password-breach.ts
-│       │   │   ├── password-strength.ts
-│       │   │   ├── responsive-grid.ts
-│       │   │   ├── sensitive-clipboard.ts
-│       │   │   ├── telemetry-scrub.ts
-│       │   │   ├── utils.ts
-│       │   │   └── [15 test files]
-│       │   ├── locales/
-│       │   │   ├── ar/
-│       │   │   │   └── common.json
-│       │   │   ├── de/
-│       │   │   │   └── common.json
-│       │   │   ├── en/
-│       │   │   │   ├── auth.json
-│       │   │   │   ├── common.json
-│       │   │   │   ├── dashboard.json
-│       │   │   │   ├── errors.json
-│       │   │   │   ├── layout.json
-│       │   │   │   ├── onboarding.json
-│       │   │   │   └── settings.json
-│       │   │   ├── es/
-│       │   │   │   ├── auth.json
-│       │   │   │   ├── common.json
-│       │   │   │   ├── dashboard.json
-│       │   │   │   ├── errors.json
-│       │   │   │   ├── layout.json
-│       │   │   │   ├── onboarding.json
-│       │   │   │   └── settings.json
-│       │   │   ├── fr/
-│       │   │   │   └── common.json
-│       │   │   ├── hi/
-│       │   │   │   └── common.json
-│       │   │   ├── it/
-│       │   │   │   └── common.json
-│       │   │   ├── ja/
-│       │   │   │   └── common.json
-│       │   │   ├── ko/
-│       │   │   │   └── common.json
-│       │   │   ├── pt/
-│       │   │   │   └── common.json
-│       │   │   └── zh/
-│       │   │       ├── auth.json
-│       │   │       ├── common.json
-│       │   │       ├── dashboard.json
-│       │   │       ├── errors.json
-│       │   │       ├── layout.json
-│       │   │       ├── onboarding.json
-│       │   │       └── settings.json
-│       │   ├── pages/
-│       │   │   ├── accept-invite/
-│       │   │   │   ├── accept-invite.constants.ts
-│       │   │   │   ├── accept-invite.manifest.ts
-│       │   │   │   ├── accept-invite.route.tsx
-│       │   │   │   ├── ACCEPT_INVITE.OVERVIEW.md
-│       │   │   │   ├── AcceptInvitePage.tsx
-│       │   │   │   └── [1 test file]
-│       │   │   ├── callback/
-│       │   │   │   ├── callback.constants.ts
-│       │   │   │   ├── callback.manifest.ts
-│       │   │   │   ├── CALLBACK.OVERVIEW.md
-│       │   │   │   ├── callback.route.tsx
-│       │   │   │   ├── CallbackPage.tsx
-│       │   │   │   └── [1 test file]
-│       │   │   ├── login/
-│       │   │   │   ├── login.constants.ts
-│       │   │   │   ├── login.manifest.ts
-│       │   │   │   ├── LOGIN.OVERVIEW.md
-│       │   │   │   ├── login.route.tsx
-│       │   │   │   ├── LoginPage.tsx
-│       │   │   │   └── [1 test file]
-│       │   │   ├── mfa/
-│       │   │   │   ├── forms/
-│       │   │   │   │   └── MfaForm/
-│       │   │   │   ├── mfa.constants.ts
-│       │   │   │   ├── mfa.manifest.ts
-│       │   │   │   ├── MFA.OVERVIEW.md
-│       │   │   │   ├── mfa.route.tsx
-│       │   │   │   ├── MfaPage.tsx
-│       │   │   │   └── [1 test file]
-│       │   │   ├── onboarding/
-│       │   │   │   ├── components/
-│       │   │   │   │   ├── DoneStep/
-│       │   │   │   │   ├── InviteStep/
-│       │   │   │   │   ├── ProfileStep/
-│       │   │   │   │   ├── QuestionsStep/
-│       │   │   │   │   ├── StepIndicator/
-│       │   │   │   │   ├── WelcomeStep/
-│       │   │   │   │   └── WorkspaceStep/
-│       │   │   │   ├── hooks/
-│       │   │   │   │   └── useOnboardingStepMotion/
-│       │   │   │   ├── onboarding-flow.ts
-│       │   │   │   ├── onboarding.constants.ts
-│       │   │   │   ├── onboarding.manifest.ts
-│       │   │   │   ├── ONBOARDING.OVERVIEW.md
-│       │   │   │   ├── onboarding.route.tsx
-│       │   │   │   ├── OnboardingPage.tsx
-│       │   │   │   └── [2 test files]
-│       │   │   └── organization/
-│       │   │       ├── $organizationSlug/
-│       │   │       │   ├── dashboard/
-│       │   │       │   ├── suspended/
-│       │   │       │   ├── organization-slug.manifest.ts
-│       │   │       │   ├── organization-slug.route.tsx
-│       │   │       │   ├── ORGANIZATION_SLUG.OVERVIEW.md
-│       │   │       │   ├── OrganizationLayout.tsx
-│       │   │       │   └── [1 test file]
-│       │   │       ├── organization.manifest.ts
-│       │   │       ├── ORGANIZATION.OVERVIEW.md
-│       │   │       ├── organization.route.tsx
-│       │   │       ├── OrganizationPickerPage.tsx
-│       │   │       └── [1 test file]
-│       │   ├── shared/
-│       │   │   ├── analytics/
-│       │   │   │   ├── analytics.constants.ts
-│       │   │   │   ├── capture-consent-decision.ts
-│       │   │   │   ├── capture.ts
-│       │   │   │   └── [2 test files]
-│       │   │   ├── api/
-│       │   │   │   ├── API.OVERVIEW.md
-│       │   │   │   ├── auth-api.ts
-│       │   │   │   ├── auth-contracts.ts
-│       │   │   │   ├── billing-api.ts
-│       │   │   │   ├── billing-contracts.ts
-│       │   │   │   ├── billing-query-keys.ts
-│       │   │   │   ├── fetch-all-pages.ts
-│       │   │   │   ├── mfa-api.ts
-│       │   │   │   ├── notification-contracts.ts
-│       │   │   │   ├── notification-query-keys.ts
-│       │   │   │   ├── notifications-api.ts
-│       │   │   │   ├── organization-api.ts
-│       │   │   │   ├── organization-contracts.ts
-│       │   │   │   ├── organization-query-keys.ts
-│       │   │   │   ├── passkey-contracts.ts
-│       │   │   │   ├── passkeys-api.ts
-│       │   │   │   ├── session-contracts.ts
-│       │   │   │   ├── sessions-api.ts
-│       │   │   │   ├── webhook-contracts.ts
-│       │   │   │   ├── webhooks-api.ts
-│       │   │   │   └── [12 test files]
-│       │   │   ├── auth/
-│       │   │   │   ├── captcha/
-│       │   │   │   │   ├── useTurnstileReady/
-│       │   │   │   │   ├── auth-captcha-headers.ts
-│       │   │   │   │   ├── captcha-config.ts
-│       │   │   │   │   ├── captcha.constants.ts
-│       │   │   │   │   ├── InvisibleTurnstile.tsx
-│       │   │   │   │   ├── turnstile-token-store.ts
-│       │   │   │   │   └── [4 test files]
-│       │   │   │   ├── auth-channel.ts
-│       │   │   │   ├── auth-shell.constants.ts
-│       │   │   │   ├── AUTH.OVERVIEW.md
-│       │   │   │   ├── auto-google-sign-in.ts
-│       │   │   │   ├── idle-timeout.ts
-│       │   │   │   ├── mfa-handoff.ts
-│       │   │   │   ├── passkey-sign-in.ts
-│       │   │   │   ├── redirect-safety.ts
-│       │   │   │   ├── refresh-timer.ts
-│       │   │   │   ├── service.ts
-│       │   │   │   ├── session-lifetime.ts
-│       │   │   │   ├── token.ts
-│       │   │   │   ├── types.ts
-│       │   │   │   └── [10 test files]
-│       │   │   ├── billing/
-│       │   │   │   ├── load-stripe.ts
-│       │   │   │   ├── stripe-config.ts
-│       │   │   │   └── [1 test file]
-│       │   │   ├── components/
-│       │   │   │   ├── AppearanceDialog/
-│       │   │   │   │   ├── appearance-look.ts
-│       │   │   │   │   ├── AppearanceDialog.tsx
-│       │   │   │   │   ├── AppearanceDialogLazy.tsx
-│       │   │   │   │   ├── AppearancePanel.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [4 test files]
-│       │   │   │   ├── CommandPalette/
-│       │   │   │   │   ├── CommandPalette.tsx
-│       │   │   │   │   ├── CommandPaletteItem.tsx
-│       │   │   │   │   ├── CommandPaletteLazy.tsx
-│       │   │   │   │   ├── CommandPaletteOrgGroup.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── preload-command-palette.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── ConfirmDialog/
-│       │   │   │   │   ├── ConfirmDialog.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── ConsentBanner/
-│       │   │   │   │   ├── ConsentBanner.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── CreateOrganizationDialog/
-│       │   │   │   │   ├── CreateOrganizationDialog.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── Dashboard/
-│       │   │   │   │   ├── AnalyticsChart/
-│       │   │   │   │   ├── DashboardActionCard/
-│       │   │   │   │   ├── DashboardHero/
-│       │   │   │   │   ├── DashboardNextSteps/
-│       │   │   │   │   ├── DashboardStatCard/
-│       │   │   │   │   ├── HighlightsCarousel/
-│       │   │   │   │   ├── MembersTable/
-│       │   │   │   │   ├── ScheduleCalendar/
-│       │   │   │   │   ├── dashboard-quick-actions.ts
-│       │   │   │   │   ├── dashboard.constants.ts
-│       │   │   │   │   ├── Dashboard.deferred.tsx
-│       │   │   │   │   ├── dashboard.placeholder-data.ts
-│       │   │   │   │   ├── Dashboard.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [3 test files]
-│       │   │   │   ├── data-table/
-│       │   │   │   │   ├── DataTable.tsx
-│       │   │   │   │   ├── DataTableColumnHeader.tsx
-│       │   │   │   │   ├── DataTablePagination.tsx
-│       │   │   │   │   ├── DataTableToolbar.tsx
-│       │   │   │   │   └── [4 test files]
-│       │   │   │   ├── EmailVerificationBanner/
-│       │   │   │   │   ├── EmailVerificationBanner.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── EmptyState/
-│       │   │   │   │   ├── EmptyState.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── FloatingEdgeControls/
-│       │   │   │   │   ├── floating-edge-button.ts
-│       │   │   │   │   ├── FloatingEdgeControls.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── FloatingLanguageButton/
-│       │   │   │   │   ├── FloatingLanguageButton.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── FloatingSettingsButton/
-│       │   │   │   │   ├── FloatingSettingsButton.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── FormattedDate/
-│       │   │   │   │   ├── FormattedDate.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── FullPageSpinner/
-│       │   │   │   │   ├── FullPageSpinner.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── Gate/
-│       │   │   │   │   ├── Gate.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── InvitationsTable/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── InvitationsTable.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── InviteMemberDialog/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── InviteMemberDialog.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── KeyboardShortcutsDialog/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── KeyboardShortcutsDialog.tsx
-│       │   │   │   │   ├── KeyboardShortcutsLazy.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── LanguageDialog/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── LanguageDialog.tsx
-│       │   │   │   │   ├── LanguageDialogLazy.tsx
-│       │   │   │   │   ├── LanguagePanel.tsx
-│       │   │   │   │   └── [3 test files]
-│       │   │   │   ├── MembersTable/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── members-table.constants.ts
-│       │   │   │   │   ├── MembersTable.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── NotificationCenter/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── NotificationCenter.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── OfflineIndicator/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── OfflineIndicator.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── OptimizedImage/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── OptimizedImage.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── OrganizationBadges/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── OrganizationBadges.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── OrganizationSwitcher/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── OrganizationSwitcher.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── PasswordStrengthMeter/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── PasswordStrengthMeter.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── PermissionGuard/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── PermissionGuard.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── QrCode/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── QrCode.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── QueryBoundary/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── QueryBoundary.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── RateLimitNotice/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── RateLimitNotice.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── RecoveryCodesPanel/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── RecoveryCodesPanel.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── RetryError/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── RetryError.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── RouteAnnouncer/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── RouteAnnouncer.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── RouteErrorBoundary/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── RouteErrorBoundary.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── RouteProgressBar/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── RouteProgressBar.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── SecurityOverviewCard/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── SecurityOverviewCard.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── SessionTimeoutDialog/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── SessionTimeoutDialog.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── SettingsModal/
-│       │   │   │   │   ├── account/
-│       │   │   │   │   ├── organization/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── settings-dirty.tsx
-│       │   │   │   │   ├── settings-hash.ts
-│       │   │   │   │   ├── settings-modules.ts
-│       │   │   │   │   ├── settings-nav-visibility.ts
-│       │   │   │   │   ├── settings-permissions.ts
-│       │   │   │   │   ├── settings-resolve.ts
-│       │   │   │   │   ├── settings-route-policy.ts
-│       │   │   │   │   ├── settings-sections.ts
-│       │   │   │   │   ├── settings.constants.ts
-│       │   │   │   │   ├── SettingsModal.tsx
-│       │   │   │   │   ├── SettingsModalLazy.tsx
-│       │   │   │   │   ├── SettingsNav.tsx
-│       │   │   │   │   ├── SettingsPanelShell.tsx
-│       │   │   │   │   └── [12 test files]
-│       │   │   │   ├── StripePaymentForm/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── StripePaymentForm.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── Surface/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── Surface.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── ThemeModeToggle/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── ThemeModeToggle.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── ThemeShowcase/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── ThemeShowcase.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── TotpCodeInput/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── TotpCodeInput.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── ui/
-│       │   │   │   └── WidgetErrorBoundary/
-│       │   │   │       ├── index.ts
-│       │   │   │       ├── WidgetErrorBoundary.tsx
-│       │   │   │       └── [1 test file]
-│       │   │   ├── errors/
-│       │   │   │   ├── AppError.ts
-│       │   │   │   ├── errorHandler.ts
-│       │   │   │   ├── frontend-error-codes.ts
-│       │   │   │   ├── HttpError.ts
-│       │   │   │   ├── map-frontend-error.ts
-│       │   │   │   ├── map-validation-errors.ts
-│       │   │   │   ├── rate-limit.ts
-│       │   │   │   └── [6 test files]
-│       │   │   ├── forms/
-│       │   │   │   ├── AuthForm/
-│       │   │   │   │   ├── components/
-│       │   │   │   │   ├── auth-form-pending.ts
-│       │   │   │   │   ├── auth-form.constants.ts
-│       │   │   │   │   ├── AuthEmailPanel.tsx
-│       │   │   │   │   ├── AuthForm.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [4 test files]
-│       │   │   │   ├── FormError/
-│       │   │   │   │   ├── FormError.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── FormField/
-│       │   │   │   │   ├── FormField.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   └── ProfileForm/
-│       │   │   │       ├── contracts.ts
-│       │   │   │       ├── index.ts
-│       │   │   │       ├── ProfileForm.tsx
-│       │   │   │       └── [2 test files]
-│       │   │   ├── hooks/
-│       │   │   │   ├── useApiKeys/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useApiKeys.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useAppMutation/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useAppMutation.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useAuthMethods/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useAuthMethods.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useBillingInvoices/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useBillingInvoices.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useBillingPaymentMethods/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useBillingPaymentMethods.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useCan/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useCan.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useConsumedSearchToken/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useConsumedSearchToken.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useCooldownClock/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useCooldownClock.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useCreate/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useCreate.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useDataTableUrlState/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useDataTableUrlState.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useDelete/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useDelete.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useDeploymentFlags/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useDeploymentFlags.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useInvitations/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useInvitations.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useList/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useList.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useLocaleFormat/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useLocaleFormat.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useMeContext/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useMeContext.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useMembers/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useMembers.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useMfa/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useMfa.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useNotifications/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useNotifications.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useOne/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useOne.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useOrgBrand/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useOrgBrand.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── usePasskeys/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── usePasskeys.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useRBAC/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useRBAC.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useRoles/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useRoles.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useSessions/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useSessions.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useSubscription/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useSubscription.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useUnsavedChangesGuard/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useUnsavedChangesGuard.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useUpdate/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useUpdate.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useUpdateOrganization/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useUpdateOrganization.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   └── useWebhooks/
-│       │   │   │       ├── index.ts
-│       │   │   │       ├── useWebhooks.ts
-│       │   │   │       └── [1 test file]
-│       │   │   ├── icons/
-│       │   │   │   ├── icon-names.ts
-│       │   │   │   ├── icon-registry.ts
-│       │   │   │   ├── icon-types.ts
-│       │   │   │   ├── iconset-phosphor.ts
-│       │   │   │   ├── iconset-tabler.ts
-│       │   │   │   ├── index.ts
-│       │   │   │   └── [2 test files]
-│       │   │   ├── layouts/
-│       │   │   │   ├── AppLayout/
-│       │   │   │   │   ├── components/
-│       │   │   │   │   ├── variants/
-│       │   │   │   │   ├── AppLayout.shared.tsx
-│       │   │   │   │   ├── AppLayout.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── resolve-app-shell.ts
-│       │   │   │   │   └── [2 test files]
-│       │   │   │   ├── AuthLayout/
-│       │   │   │   │   ├── variants/
-│       │   │   │   │   ├── AuthLayout.shared.tsx
-│       │   │   │   │   ├── AuthLayout.tsx
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── LayoutVariantFallback/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   └── LayoutVariantFallback.tsx
-│       │   │   │   ├── PublicLayout/
-│       │   │   │   │   ├── variants/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── PublicLayout.shared.tsx
-│       │   │   │   │   ├── PublicLayout.tsx
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   └── layout.constants.ts
-│       │   │   ├── notifications/
-│       │   │   │   ├── desktop.ts
-│       │   │   │   └── [1 test file]
-│       │   │   ├── notify/
-│       │   │   │   ├── AppToaster.tsx
-│       │   │   │   ├── CustomToast.tsx
-│       │   │   │   ├── index.ts
-│       │   │   │   ├── notify-deferred.ts
-│       │   │   │   ├── notify.ts
-│       │   │   │   └── [5 test files]
-│       │   │   ├── store/
-│       │   │   │   ├── useAuthStore/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useAuthStore.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useConsentStore/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useConsentStore.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useLocaleStore/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useLocaleStore.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useOnboardingStore/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useOnboardingStore.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useOrganizationStore/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useOrganizationStore.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   ├── useThemeStore/
-│       │   │   │   │   ├── index.ts
-│       │   │   │   │   ├── useThemeStore.ts
-│       │   │   │   │   └── [1 test file]
-│       │   │   │   └── useUIStore/
-│       │   │   │       ├── index.ts
-│       │   │   │       ├── useUIStore.ts
-│       │   │   │       └── [1 test file]
-│       │   │   ├── tenancy/
-│       │   │   │   ├── deployment-mode.ts
-│       │   │   │   ├── me-context.ts
-│       │   │   │   ├── my-organizations.ts
-│       │   │   │   ├── organization-context.ts
-│       │   │   │   ├── organization-membership.ts
-│       │   │   │   ├── organization-resolver.ts
-│       │   │   │   ├── session-context.ts
-│       │   │   │   ├── switch.ts
-│       │   │   │   ├── tenancy-service.ts
-│       │   │   │   ├── TENANCY.OVERVIEW.md
-│       │   │   │   └── [12 test files]
-│       │   │   └── theme/
-│       │   │       ├── catalog-doc.ts
-│       │   │       ├── index.ts
-│       │   │       ├── layout-width.ts
-│       │   │       ├── org-brand.ts
-│       │   │       ├── presets.ts
-│       │   │       └── [4 test files]
-│       │   ├── App.tsx
-│       │   ├── index.css
-│       │   ├── main.tsx
-│       │   ├── sw.ts
-│       │   └── vite-env.d.ts
-│       ├── tests/
-│       │   ├── cross-browser/
-│       │   │   └── [2 test files]
-│       │   ├── factories/
-│       │   │   └── README.md
-│       │   ├── fixtures/
-│       │   │   └── notification-fixtures.ts
-│       │   ├── performance/
-│       │   │   └── README.md
-│       │   ├── security/
-│       │   │   ├── README.md
-│       │   │   └── [8 test files]
-│       │   ├── utils/
-│       │   │   ├── auth-api-paths.ts
-│       │   │   ├── axe-for-dialog.ts
-│       │   │   ├── e2e-api-retry.ts
-│       │   │   ├── e2e-auth.ts
-│       │   │   ├── e2e-captcha.ts
-│       │   │   ├── e2e-deployment-mode.ts
-│       │   │   ├── e2e-faker.ts
-│       │   │   ├── e2e-hybrid.ts
-│       │   │   ├── e2e-session.ts
-│       │   │   ├── e2e-tenancy.ts
-│       │   │   ├── README.md
-│       │   │   ├── renderWithProviders.tsx
-│       │   │   └── setup.ts
-│       │   └── README.md
-│       ├── tooling/
-│       │   ├── ci/
-│       │   │   ├── check-api-contract-drift.mjs
-│       │   │   ├── check-patch-coverage.mjs
-│       │   │   ├── check-preload-graph.mjs
-│       │   │   ├── contract-drift-allowlist.json
-│       │   │   ├── coverage-summary.mjs
-│       │   │   ├── lint-changed-markdown.sh
-│       │   │   └── run-size-limit.mjs
-│       │   ├── dev/
-│       │   │   ├── mcp-config.ts
-│       │   │   ├── screenshot-auth-pages.mjs
-│       │   │   ├── setup-local.ts
-│       │   │   ├── setup-mcp.ts
-│       │   │   └── [1 test file]
-│       │   ├── setup/
-│       │   │   ├── github/
-│       │   │   │   ├── check-environments-drift.mjs
-│       │   │   │   ├── environments-util.mjs
-│       │   │   │   ├── github-shared.mjs
-│       │   │   │   ├── parse-env-file.mjs
-│       │   │   │   ├── scaffold-env-files.mjs
-│       │   │   │   ├── setup-config.mjs
-│       │   │   │   ├── sync-env-secrets.mjs
-│       │   │   │   ├── sync-environments.mjs
-│       │   │   │   ├── sync-rulesets.mjs
-│       │   │   │   ├── sync.mjs
-│       │   │   │   ├── validate-github-env.mjs
-│       │   │   │   └── [1 test file]
-│       │   │   ├── live/
-│       │   │   │   ├── config.mjs
-│       │   │   │   ├── github.mjs
-│       │   │   │   ├── index.mjs
-│       │   │   │   ├── netlify.mjs
-│       │   │   │   ├── prompts.mjs
-│       │   │   │   └── README.md
-│       │   │   ├── github-secrets.sh
-│       │   │   ├── netlify.sh
-│       │   │   └── setup.config.json
-│       │   ├── sonar/
-│       │   │   └── sonar-gate.mjs
-│       │   ├── tsdoc-coverage/
-│       │   │   ├── budget.json
-│       │   │   └── check-coverage.mjs
-│       │   ├── validate/
-│       │   │   ├── before-commit-guard.sh
-│       │   │   ├── client-env.ts
-│       │   │   ├── design-tokens.sh
-│       │   │   ├── env-example.sh
-│       │   │   ├── health-check.sh
-│       │   │   ├── i18n-keys.mjs
-│       │   │   ├── public-assets.sh
-│       │   │   ├── route-islands.sh
-│       │   │   ├── sync-env-example.ts
-│       │   │   ├── test-ids-allowlist.txt
-│       │   │   ├── test-ids.mjs
-│       │   │   ├── theme-axis-allowlist.txt
-│       │   │   ├── theme-axis.sh
-│       │   │   ├── theme-catalog.mjs
-│       │   │   ├── vite-env-reads.mjs
-│       │   │   └── [1 test file]
-│       │   ├── load-env-files.mjs
-│       │   └── README.md
-│       ├── .commitlintrc.json
-│       ├── .cursorignore
-│       ├── .editorconfig
-│       ├── .env
-│       ├── .env.development
-│       ├── .env.example
-│       ├── .env.local
-│       ├── .env.production
-│       ├── .env.staging
-│       ├── .gitignore
-│       ├── .gitleaks.toml
-│       ├── .lighthouserc.cjs
-│       ├── .markdownlint-cli2.jsonc
-│       ├── .markdownlint.json
-│       ├── .mcp.default.json
-│       ├── .mcp.example.json
-│       ├── .mcp.json
-│       ├── .node-version
-│       ├── .npmrc
-│       ├── .nvmrc
-│       ├── .prettierignore
-│       ├── .prettierrc
-│       ├── .semgrepignore
-│       ├── .size-limit.generated.json
-│       ├── .size-limit.json
-│       ├── AGENTS.md
-│       ├── biome.json
-│       ├── catalog-info.yaml
-│       ├── CLAUDE.md
-│       ├── CODE_OF_CONDUCT.md
-│       ├── components.json
-│       ├── config.setup.env
-│       ├── context7.json
-│       ├── CONTRIBUTING.md
-│       ├── docker-compose.sonar.yml
-│       ├── eslint.config.mjs
-│       ├── index.html
-│       ├── knip.jsonc
-│       ├── LICENSE
-│       ├── Makefile
-│       ├── netlify.toml
-│       ├── package.json
-│       ├── playwright.config.ts
-│       ├── playwright.cross-browser.config.ts
-│       ├── playwright.integration-cross-browser.config.ts
-│       ├── README.md
-│       ├── SECURITY.md
-│       ├── SETUP.md
-│       ├── skills-lock.json
-│       ├── sonar-project.properties
-│       ├── stryker.config.json
-│       ├── stryker.config.mjs
-│       ├── tsconfig.app.json
-│       ├── tsconfig.json
-│       ├── tsconfig.node.json
-│       ├── vite.config.ts
-│       └── vitest.config.ts
 ├── .vscode/
 │   ├── extensions.json
 │   └── settings.json
@@ -1433,6 +333,1704 @@ core-fe/
 │   ├── skills/  (39 skills: auto-implement, shadcn, route-island, …)
 │   └── skills-lock.json
 ├── docs/
+│   ├── api/
+│   │   ├── assets/
+│   │   │   ├── hierarchy.js
+│   │   │   ├── highlight.css
+│   │   │   ├── icons.js
+│   │   │   ├── icons.svg
+│   │   │   ├── main.js
+│   │   │   ├── navigation.js
+│   │   │   ├── search.js
+│   │   │   └── style.css
+│   │   ├── classes/
+│   │   │   ├── shared_api_auth-api.MfaRequiredError.html
+│   │   │   ├── shared_errors_AppError.AppError.html
+│   │   │   ├── shared_errors_AppError.ForbiddenError.html
+│   │   │   ├── shared_errors_AppError.NotFoundError.html
+│   │   │   ├── shared_errors_AppError.UnauthorizedError.html
+│   │   │   ├── shared_errors_AppError.ValidationError.html
+│   │   │   └── shared_errors_HttpError.HttpError.html
+│   │   ├── functions/
+│   │   │   ├── core_config_app-manifest.buildWebManifest.html
+│   │   │   ├── core_config_auth-methods.resolveAuthMethods.html
+│   │   │   ├── core_config_env-resolvers.enabledOAuthProviders.html
+│   │   │   ├── core_config_env-resolvers.hasAnyAuthSurface.html
+│   │   │   ├── core_config_env-resolvers.resolveOAuthProviderFlags.html
+│   │   │   ├── core_config_env-schema.assertAuthPlatformInvariants.html
+│   │   │   ├── core_config_env-schema.environmentForBranch.html
+│   │   │   ├── core_config_env.config.getClientEnv.html
+│   │   │   ├── core_config_env.config.getRuntimeConfigValue.html
+│   │   │   ├── core_config_env.config.resetClientEnvCacheForTests.html
+│   │   │   ├── core_config_env.config.validatePlatformInvariantsAtBoot.html
+│   │   │   ├── core_config_platform-config.isPlatformModuleEnabled.html
+│   │   │   ├── core_config_platform-config.resolveAuthMethodsFromPlatform.html
+│   │   │   ├── core_config_platform-config.resolvePlatformConfig.html
+│   │   │   ├── core_data-provider_http-data-provider_http-data-provider.createHttpDataProvider.html
+│   │   │   ├── core_http_fetch-client.isApiOriginUrl.html
+│   │   │   ├── core_http_pagination.toPaginated.html
+│   │   │   ├── core_rbac_guards.denyAccess.html
+│   │   │   ├── core_rbac_guards.redirectIfAuthenticated.html
+│   │   │   ├── core_rbac_guards.requireAuth.html
+│   │   │   ├── core_rbac_guards.requirePermission.html
+│   │   │   ├── core_rbac_policies.hasAllPermissions.html
+│   │   │   ├── core_rbac_policies.hasAnyPermission.html
+│   │   │   ├── core_rbac_policies.hasGlobalRole.html
+│   │   │   ├── core_rbac_policies.hasPermission.html
+│   │   │   ├── core_resources_bootstrap.__resetBootstrapForTests.html
+│   │   │   ├── core_resources_bootstrap.bootstrapResources.html
+│   │   │   ├── core_resources_resource-registry.__clearRegistry.html
+│   │   │   ├── core_resources_resource-registry.getResource.html
+│   │   │   ├── core_resources_resource-registry.listResources.html
+│   │   │   ├── core_resources_resource-registry.registerResource.html
+│   │   │   ├── core_security_gate-context.toGateContext.html
+│   │   │   ├── core_security_gates_require-module.isModuleEnabled.html
+│   │   │   ├── core_security_gates_require-module.requireFeature.html
+│   │   │   ├── core_security_gates_require-module.requireModuleGate.html
+│   │   │   ├── core_security_gates_require-permission.requirePermissionGate.html
+│   │   │   ├── core_security_gateway.gateway.html
+│   │   │   ├── core_security_gateway.gatewayFromManifest.html
+│   │   │   ├── core_security_gateway.gatewayFromPolicy.html
+│   │   │   ├── core_types_wire.decimalStringToCents.html
+│   │   │   ├── core_types_wire.publicId.html
+│   │   │   ├── core_version_check.startVersionCheck.html
+│   │   │   ├── core_version_version-check.constants.versionUpdateSnoozeKey.html
+│   │   │   ├── core_version_version-update-snooze.clearVersionUpdateSnooze.html
+│   │   │   ├── core_version_version-update-snooze.isVersionUpdateSnoozed.html
+│   │   │   ├── core_version_version-update-snooze.snoozeVersionUpdate.html
+│   │   │   ├── lib_animations_AnimatedSection.AnimatedSection.html
+│   │   │   ├── lib_animations_LayoutGroup.AnimatedLayoutGroup.html
+│   │   │   ├── lib_animations_LayoutGroup.AnimatedTabs.html
+│   │   │   ├── lib_animations_PageTransition.PageTransition.html
+│   │   │   ├── lib_animations_prefers-reduced-motion.prefersReducedMotion.html
+│   │   │   ├── lib_animations_Skeleton.Skeleton.html
+│   │   │   ├── lib_animations_Skeleton.SkeletonShimmer.html
+│   │   │   ├── lib_animations_StaggerList.StaggerItem.html
+│   │   │   ├── lib_animations_StaggerList.StaggerList.html
+│   │   │   ├── lib_animations_useAnimeCountUp.useAnimeCountUp.html
+│   │   │   ├── lib_animations_useAutoAnimate.useAutoAnimate.html
+│   │   │   ├── lib_animations_useCountUp.useCountUp.html
+│   │   │   ├── lib_app-splash.afterPaint.html
+│   │   │   ├── lib_app-splash.dismissAppSplash.html
+│   │   │   ├── lib_app-splash.isAppSplashActive.html
+│   │   │   ├── lib_app-splash.onAppSplashDismissed.html
+│   │   │   ├── lib_billing_stripe-return.omitStripeReturnParams.html
+│   │   │   ├── lib_billing_stripe-return.readStripeBillingReturnParams.html
+│   │   │   ├── lib_billing_stripe-return.stripeBillingReturnUrl.html
+│   │   │   ├── lib_chunk-prefetch.isAuthenticatedAppSurface.html
+│   │   │   ├── lib_chunk-prefetch.scheduleIdleChunkPrefetch.html
+│   │   │   ├── lib_chunk-prefetch.useAuthenticatedIdleChunkPrefetch.html
+│   │   │   ├── lib_csp-api-origin.buildContentSecurityPolicy.html
+│   │   │   ├── lib_csp-api-origin.buildTrustedTypesReportOnlyPolicy.html
+│   │   │   ├── lib_csp-api-origin.formatCspApiConnectSrcFragment.html
+│   │   │   ├── lib_csp-api-origin.getCspConnectSrcOrigin.html
+│   │   │   ├── lib_css-safe.isSafeCssColor.html
+│   │   │   ├── lib_csv.downloadCsv.html
+│   │   │   ├── lib_csv.toCsv.html
+│   │   │   ├── lib_i18n_apply-document-locale.applyDocumentLocale.html
+│   │   │   ├── lib_i18n_build-config.localeBuildProfileFor.html
+│   │   │   ├── lib_i18n_build-config.resolveBuildFormatLocale.html
+│   │   │   ├── lib_i18n_build-config.uiLocaleFromBcp47.html
+│   │   │   ├── lib_i18n_build-env.readInjectedAppBuildId.html
+│   │   │   ├── lib_i18n_build-env.readInjectedAppVersion.html
+│   │   │   ├── lib_i18n_build-env.readInjectedI18nBcp47.html
+│   │   │   ├── lib_i18n_build-env.readInjectedI18nMode.html
+│   │   │   ├── lib_i18n_build-runtime.isMultiLocaleBuild.html
+│   │   │   ├── lib_i18n_build-runtime.isSingleLocaleBuild.html
+│   │   │   ├── lib_i18n_build-runtime.resolveRuntimeI18nBuildMode.html
+│   │   │   ├── lib_i18n_format.formatCurrencyValue.html
+│   │   │   ├── lib_i18n_format.formatDateValue.html
+│   │   │   ├── lib_i18n_format.formatNumberValue.html
+│   │   │   ├── lib_i18n_format.formatRelativeTimeValue.html
+│   │   │   ├── lib_i18n_i18n-resources.multi.getBootstrapResources.html
+│   │   │   ├── lib_i18n_i18n-resources.multi.getBuildLocaleProfile.html
+│   │   │   ├── lib_i18n_intl-config.currencyFormatOptions.html
+│   │   │   ├── lib_i18n_intl-config.dateFormatOptions.html
+│   │   │   ├── lib_i18n_intl-config.defaultCurrencyForFormatLocale.html
+│   │   │   ├── lib_i18n_intl-config.defaultFormatLocaleForUi.html
+│   │   │   ├── lib_i18n_intl-config.intlLocaleFor.html
+│   │   │   ├── lib_i18n_intl-config.isCurrencyCode.html
+│   │   │   ├── lib_i18n_intl-config.isCurrencyDisplayPreference.html
+│   │   │   ├── lib_i18n_intl-config.isDateFormatPreference.html
+│   │   │   ├── lib_i18n_intl-config.isFormatLocaleTag.html
+│   │   │   ├── lib_i18n_intl-config.isHourCyclePreference.html
+│   │   │   ├── lib_i18n_intl-config.isNumberStylePreference.html
+│   │   │   ├── lib_i18n_intl-config.normalizeCurrencyCode.html
+│   │   │   ├── lib_i18n_intl-config.normalizeCurrencyDisplayPreference.html
+│   │   │   ├── lib_i18n_intl-config.normalizeDateFormatPreference.html
+│   │   │   ├── lib_i18n_intl-config.normalizeFormatLocaleTag.html
+│   │   │   ├── lib_i18n_intl-config.normalizeHourCyclePreference.html
+│   │   │   ├── lib_i18n_intl-config.normalizeNumberStylePreference.html
+│   │   │   ├── lib_i18n_intl-config.numberFormatOptions.html
+│   │   │   ├── lib_i18n_intl-config.regionLocaleFacts.html
+│   │   │   ├── lib_i18n_intl-config.regionOf.html
+│   │   │   ├── lib_i18n_load-namespace.ensureLocale.html
+│   │   │   ├── lib_i18n_load-namespace.ensureNamespace.html
+│   │   │   ├── lib_i18n_load-namespace.preloadLocaleIdle.html
+│   │   │   ├── lib_i18n_locale.constants.currencyCodeTestId.html
+│   │   │   ├── lib_i18n_locale.constants.formatLocaleTestId.html
+│   │   │   ├── lib_i18n_locales.isI18nLocale.html
+│   │   │   ├── lib_i18n_locales.localeDirection.html
+│   │   │   ├── lib_i18n_translate-form-message.isLikelyI18nKey.html
+│   │   │   ├── lib_i18n_translate-form-message.translateFormMessage.html
+│   │   │   ├── lib_onboarding-defaults.organizationNameFromEmail.html
+│   │   │   ├── lib_parse-list-tolerant.parseListTolerant.html
+│   │   │   ├── lib_password-breach.checkPasswordBreached.html
+│   │   │   ├── lib_password-strength.estimatePasswordStrength.html
+│   │   │   ├── lib_routes_builders.organizationDashboard.html
+│   │   │   ├── lib_routes_builders.organizationPicker.html
+│   │   │   ├── lib_routes_builders.organizationSuspended.html
+│   │   │   ├── lib_routes_page-head.composePageTitle.html
+│   │   │   ├── lib_routes_page-head.manifestHead.html
+│   │   │   ├── lib_routes_params.parseInvitationIdParam.html
+│   │   │   ├── lib_routes_params.parseOrganizationSlugParam.html
+│   │   │   ├── lib_sensitive-clipboard.cancelSensitiveClipboardClear.html
+│   │   │   ├── lib_sensitive-clipboard.copySensitiveText.html
+│   │   │   ├── lib_telemetry-scrub.hasSensitiveParams.html
+│   │   │   ├── lib_telemetry-scrub.scrubEventUrls.html
+│   │   │   ├── lib_telemetry-scrub.scrubObjectUrls.html
+│   │   │   ├── lib_telemetry-scrub.scrubSensitiveUrl.html
+│   │   │   ├── lib_utils.cn.html
+│   │   │   ├── shared_analytics_capture-consent-decision.captureAnalyticsConsentDecision.html
+│   │   │   ├── shared_analytics_capture.attachPostHogIdentitySync.html
+│   │   │   ├── shared_analytics_capture.attachPostHogRouter.html
+│   │   │   ├── shared_analytics_capture.captureAnalyticsEvent.html
+│   │   │   ├── shared_analytics_capture.getAnalyticsContext.html
+│   │   │   ├── shared_analytics_capture.markPostHogActive.html
+│   │   │   ├── shared_analytics_capture.purgeAnalyticsOnConsentRevoked.html
+│   │   │   ├── shared_analytics_capture.registerPostHogBootstrap.html
+│   │   │   ├── shared_analytics_capture.registerPostHogSuperProperties.html
+│   │   │   ├── shared_analytics_capture.scrubAnalyticsPath.html
+│   │   │   ├── shared_analytics_capture.syncPostHogIdentity.html
+│   │   │   ├── shared_api_billing-api.cancelSubscription.html
+│   │   │   ├── shared_api_billing-api.changeSubscriptionPlan.html
+│   │   │   ├── shared_api_billing-api.createPaymentMethodSetup.html
+│   │   │   ├── shared_api_billing-api.createSubscription.html
+│   │   │   ├── shared_api_billing-api.getActiveSubscription.html
+│   │   │   ├── shared_api_billing-api.getSubscriptionPaymentSetup.html
+│   │   │   ├── shared_api_billing-api.listBillingInvoices.html
+│   │   │   ├── shared_api_billing-api.listBillingPaymentMethods.html
+│   │   │   ├── shared_api_billing-api.listBillingPlans.html
+│   │   │   ├── shared_api_billing-api.listSubscriptions.html
+│   │   │   ├── shared_api_billing-api.resumeSubscription.html
+│   │   │   ├── shared_api_fetch-all-pages.fetchAllPages.html
+│   │   │   ├── shared_api_fetch-list-page.fetchListPage.html
+│   │   │   ├── shared_api_mfa-api.beginMfaEnrollment.html
+│   │   │   ├── shared_api_mfa-api.confirmMfaEnrollment.html
+│   │   │   ├── shared_api_mfa-api.disableMfa.html
+│   │   │   ├── shared_api_mfa-api.getMfaStatus.html
+│   │   │   ├── shared_api_notification-contracts.toNotification.html
+│   │   │   ├── shared_api_notification-contracts.toNotificationPreference.html
+│   │   │   ├── shared_api_notification-contracts.toNotificationPreferenceWire.html
+│   │   │   ├── shared_api_notifications-api.getNotificationPreferences.html
+│   │   │   ├── shared_api_notifications-api.getUnreadCount.html
+│   │   │   ├── shared_api_notifications-api.listNotifications.html
+│   │   │   ├── shared_api_notifications-api.markAllNotificationsRead.html
+│   │   │   ├── shared_api_notifications-api.markNotificationRead.html
+│   │   │   ├── shared_api_notifications-api.updateNotificationPreferences.html
+│   │   │   ├── shared_api_organization-api.acceptInvitation.html
+│   │   │   ├── shared_api_organization-api.createApiKey.html
+│   │   │   ├── shared_api_organization-api.createInvitation.html
+│   │   │   ├── shared_api_organization-api.createRole.html
+│   │   │   ├── shared_api_organization-api.deleteRole.html
+│   │   │   ├── shared_api_organization-api.getMyPermissions.html
+│   │   │   ├── shared_api_organization-api.listApiKeys.html
+│   │   │   ├── shared_api_organization-api.listInvitations.html
+│   │   │   ├── shared_api_organization-api.listMembers.html
+│   │   │   ├── shared_api_organization-api.listRoles.html
+│   │   │   ├── shared_api_organization-api.removeMember.html
+│   │   │   ├── shared_api_organization-api.renameApiKey.html
+│   │   │   ├── shared_api_organization-api.resendInvitation.html
+│   │   │   ├── shared_api_organization-api.revokeApiKey.html
+│   │   │   ├── shared_api_organization-api.revokeInvitation.html
+│   │   │   ├── shared_api_organization-api.updateMemberRole.html
+│   │   │   ├── shared_api_organization-api.updateMemberStatus.html
+│   │   │   ├── shared_api_organization-api.updateRole.html
+│   │   │   ├── shared_api_passkeys-api.listPasskeys.html
+│   │   │   ├── shared_api_passkeys-api.registerPasskey.html
+│   │   │   ├── shared_api_passkeys-api.removePasskey.html
+│   │   │   ├── shared_api_session-contracts.toSession.html
+│   │   │   ├── shared_api_sessions-api.listSessions.html
+│   │   │   ├── shared_api_sessions-api.revokeSession.html
+│   │   │   ├── shared_api_webhook-contracts.toWebhook.html
+│   │   │   ├── shared_api_webhooks-api.createWebhook.html
+│   │   │   ├── shared_api_webhooks-api.deleteWebhook.html
+│   │   │   ├── shared_api_webhooks-api.listWebhooks.html
+│   │   │   ├── shared_auth_auth-channel.broadcastLogout.html
+│   │   │   ├── shared_auth_auth-channel.subscribeToAuthBroadcast.html
+│   │   │   ├── shared_auth_auto-google-sign-in.clearAutoGoogleSignInSkip.html
+│   │   │   ├── shared_auth_auto-google-sign-in.shouldAttemptAutoGoogleSignIn.html
+│   │   │   ├── shared_auth_auto-google-sign-in.skipAutoGoogleSignIn.html
+│   │   │   ├── shared_auth_captcha_auth-captcha-headers.authCaptchaHeaders.html
+│   │   │   ├── shared_auth_captcha_captcha-config.isCaptchaEnabled.html
+│   │   │   ├── shared_auth_captcha_captcha-config.isTurnstileCaptchaGateActive.html
+│   │   │   ├── shared_auth_captcha_captcha-config.resolveCaptchaProvider.html
+│   │   │   ├── shared_auth_captcha_InvisibleTurnstile.InvisibleTurnstile.html
+│   │   │   ├── shared_auth_captcha_turnstile-token-store.consumeTurnstileToken.html
+│   │   │   ├── shared_auth_captcha_turnstile-token-store.peekTurnstileToken.html
+│   │   │   ├── shared_auth_captcha_turnstile-token-store.setTurnstileResetHandler.html
+│   │   │   ├── shared_auth_captcha_turnstile-token-store.setTurnstileToken.html
+│   │   │   ├── shared_auth_captcha_turnstile-token-store.subscribeTurnstileToken.html
+│   │   │   ├── shared_auth_captcha_useTurnstileReady_useTurnstileReady.useTurnstileReady.html
+│   │   │   ├── shared_auth_idle-timeout.startIdleTimeout.html
+│   │   │   ├── shared_auth_mfa-handoff.clearMfaHandoff.html
+│   │   │   ├── shared_auth_mfa-handoff.readMfaHandoff.html
+│   │   │   ├── shared_auth_mfa-handoff.stashMfaHandoff.html
+│   │   │   ├── shared_auth_passkey-sign-in.signInWithPasskey.html
+│   │   │   ├── shared_auth_redirect-safety.isSafeExternalHttpsUrl.html
+│   │   │   ├── shared_auth_redirect-safety.isSafeRedirectPath.html
+│   │   │   ├── shared_auth_redirect-safety.popReturnTo.html
+│   │   │   ├── shared_auth_redirect-safety.safeRedirect.html
+│   │   │   ├── shared_auth_redirect-safety.stashReturnTo.html
+│   │   │   ├── shared_auth_refresh-timer.cancelTokenRefresh.html
+│   │   │   ├── shared_auth_refresh-timer.scheduleTokenRefresh.html
+│   │   │   ├── shared_auth_service.awaitAuthBootstrap.html
+│   │   │   ├── shared_auth_service.establishSession.html
+│   │   │   ├── shared_auth_service.forceLogout.html
+│   │   │   ├── shared_auth_service.handleCrossTabLogout.html
+│   │   │   ├── shared_auth_service.logout.html
+│   │   │   ├── shared_auth_service.refreshAccessToken.html
+│   │   │   ├── shared_auth_service.silentRefresh.html
+│   │   │   ├── shared_auth_service.startAuthBootstrap.html
+│   │   │   ├── shared_auth_session-lifetime.clearSessionStart.html
+│   │   │   ├── shared_auth_session-lifetime.getSessionAge.html
+│   │   │   ├── shared_auth_session-lifetime.isSessionExpired.html
+│   │   │   ├── shared_auth_session-lifetime.markSessionStart.html
+│   │   │   ├── shared_auth_session-lifetime.startSessionLifetimeWatch.html
+│   │   │   ├── shared_auth_token.clearAccessToken.html
+│   │   │   ├── shared_auth_token.getAccessToken.html
+│   │   │   ├── shared_auth_token.getTokenExpiry.html
+│   │   │   ├── shared_auth_token.isTokenExpiringSoon.html
+│   │   │   ├── shared_auth_token.setAccessToken.html
+│   │   │   ├── shared_billing_load-stripe.getStripePromise.html
+│   │   │   ├── shared_billing_load-stripe.resetStripePromiseForTests.html
+│   │   │   ├── shared_billing_stripe-config.getStripePublishableKey.html
+│   │   │   ├── shared_billing_stripe-config.isStripeEnabled.html
+│   │   │   ├── shared_components_AppearanceDialog_appearance-look.accentIdForHue.html
+│   │   │   ├── shared_components_AppearanceDialog_appearance-look.customLookLabel.html
+│   │   │   ├── shared_components_AppearanceDialog_appearance-look.lookFields.html
+│   │   │   ├── shared_components_AppearanceDialog_AppearanceDialog.AppearanceDialog.html
+│   │   │   ├── shared_components_AppearanceDialog_AppearanceDialogLazy.AppearanceDialogLazy.html
+│   │   │   ├── shared_components_AppearanceDialog_AppearancePanel.AppearancePanel.html
+│   │   │   ├── shared_components_CommandPalette_CommandPalette.CommandPalette.html
+│   │   │   ├── shared_components_CommandPalette_CommandPaletteItem.CommandItem.html
+│   │   │   ├── shared_components_CommandPalette_CommandPaletteLazy.CommandPaletteLazy.html
+│   │   │   ├── shared_components_CommandPalette_CommandPaletteOrgGroup.CommandPaletteOrgGroup.html
+│   │   │   ├── shared_components_CommandPalette_preload-command-palette.preloadCommandPalette.html
+│   │   │   ├── shared_components_ConfirmDialog_ConfirmDialog.ConfirmDialog.html
+│   │   │   ├── shared_components_ConsentBanner_ConsentBanner.ConsentBanner.html
+│   │   │   ├── shared_components_CreateOrganizationDialog_CreateOrganizationDialog.CreateOrganizationDialog.html
+│   │   │   ├── shared_components_Dashboard_AnalyticsChart_AnalyticsChart.AnalyticsChart.html
+│   │   │   ├── shared_components_Dashboard_dashboard-quick-actions.buildDashboardQuickActions.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.Dashboard.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.deferred.DeferredAnalyticsChart.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.deferred.DeferredHighlightsCarousel.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.deferred.DeferredMembersTable.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.deferred.DeferredScheduleCalendar.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.deferred.DeferredThemeShowcase.html
+│   │   │   ├── shared_components_Dashboard_DashboardActionCard_DashboardActionCard.DashboardActionCard.html
+│   │   │   ├── shared_components_Dashboard_DashboardHero_DashboardHero.DashboardHero.html
+│   │   │   ├── shared_components_Dashboard_DashboardNextSteps_DashboardNextSteps.DashboardNextSteps.html
+│   │   │   ├── shared_components_Dashboard_DashboardStatCard_DashboardStatCard.DashboardKpiTile.html
+│   │   │   ├── shared_components_Dashboard_DashboardStatCard_DashboardStatCard.DashboardStatCard.html
+│   │   │   ├── shared_components_Dashboard_DashboardStatCard_DashboardStatCard.DashboardStatRow.html
+│   │   │   ├── shared_components_Dashboard_DashboardStatCard_DashboardStatCard.DashboardStatsPanel.html
+│   │   │   ├── shared_components_Dashboard_HighlightsCarousel_HighlightsCarousel.HighlightsCarousel.html
+│   │   │   ├── shared_components_Dashboard_MembersTable_MembersTable.MembersTable.html
+│   │   │   ├── shared_components_Dashboard_ScheduleCalendar_ScheduleCalendar.ScheduleCalendar.html
+│   │   │   ├── shared_components_data-table_DataTableColumnHeader.DataTableColumnHeader.html
+│   │   │   ├── shared_components_data-table_DataTablePagination.DataTablePagination.html
+│   │   │   ├── shared_components_data-table_DataTableToolbar.DataTableToolbar.html
+│   │   │   ├── shared_components_EmailVerificationBanner_EmailVerificationBanner.EmailVerificationBanner.html
+│   │   │   ├── shared_components_EmptyState_EmptyState.EmptyState.html
+│   │   │   ├── shared_components_FloatingEdgeControls_FloatingEdgeControls.FloatingEdgeControls.html
+│   │   │   ├── shared_components_FloatingLanguageButton_FloatingLanguageButton.FloatingLanguageButton.html
+│   │   │   ├── shared_components_FloatingSettingsButton_FloatingSettingsButton.FloatingSettingsButton.html
+│   │   │   ├── shared_components_FormattedDate_FormattedDate.FormattedDate.html
+│   │   │   ├── shared_components_FullPageSpinner_FullPageSpinner.FullPageSpinner.html
+│   │   │   ├── shared_components_Gate_Gate.Gate.html
+│   │   │   ├── shared_components_InvitationsTable_InvitationsTable.InvitationsTable.html
+│   │   │   ├── shared_components_InviteMemberDialog_InviteMemberDialog.InviteMemberDialog.html
+│   │   │   ├── shared_components_KeyboardShortcutsDialog_KeyboardShortcutsDialog.KeyboardShortcutsDialog.html
+│   │   │   ├── shared_components_KeyboardShortcutsDialog_KeyboardShortcutsLazy.KeyboardShortcutsLazy.html
+│   │   │   ├── shared_components_LanguageDialog_LanguageDialog.LanguageDialog.html
+│   │   │   ├── shared_components_LanguageDialog_LanguageDialogLazy.LanguageDialogLazy.html
+│   │   │   ├── shared_components_LanguageDialog_LanguagePanel.LanguagePanel.html
+│   │   │   ├── shared_components_MembersTable_MembersTable.MembersTable.html
+│   │   │   ├── shared_components_NotificationCenter_NotificationCenter.NotificationCenter.html
+│   │   │   ├── shared_components_OfflineIndicator_OfflineIndicator.OfflineIndicator.html
+│   │   │   ├── shared_components_OptimizedImage_OptimizedImage.OptimizedImage.html
+│   │   │   ├── shared_components_OrganizationBadges_OrganizationBadges.InvitationStatusBadge.html
+│   │   │   ├── shared_components_OrganizationBadges_OrganizationBadges.MemberStatusBadge.html
+│   │   │   ├── shared_components_OrganizationBadges_OrganizationBadges.RoleBadge.html
+│   │   │   ├── shared_components_OrganizationSwitcher_OrganizationSwitcher.OrganizationSwitcher.html
+│   │   │   ├── shared_components_PasswordStrengthMeter_PasswordStrengthMeter.PasswordStrengthMeter.html
+│   │   │   ├── shared_components_PermissionGuard_PermissionGuard.PermissionGuard.html
+│   │   │   ├── shared_components_QrCode_QrCode.QrCode.html
+│   │   │   ├── shared_components_QueryBoundary_QueryBoundary.QueryBoundary.html
+│   │   │   ├── shared_components_RateLimitNotice_RateLimitNotice.RateLimitNotice.html
+│   │   │   ├── shared_components_RecoveryCodesPanel_RecoveryCodesPanel.RecoveryCodesPanel.html
+│   │   │   ├── shared_components_RetryError_RetryError.RetryError.html
+│   │   │   ├── shared_components_RouteAnnouncer_RouteAnnouncer.RouteAnnouncer.html
+│   │   │   ├── shared_components_RouteErrorBoundary_RouteErrorBoundary.RouteErrorBoundary.html
+│   │   │   ├── shared_components_RouteProgressBar_RouteProgressBar.RouteProgressBar.html
+│   │   │   ├── shared_components_SecurityOverviewCard_SecurityOverviewCard.SecurityOverviewCard.html
+│   │   │   ├── shared_components_SessionTimeoutDialog_SessionTimeoutDialog.SessionTimeoutDialog.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountBillingPanel.AccountBillingPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountNotificationsPanel.AccountNotificationsPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountPanel.AccountPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountProfilePanel.AccountProfilePanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountSecurityPanel.AccountSecurityPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountSessionsPanel.AccountSessionsPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingCancellationSection_BillingCancellationSection.BillingCancellationSection.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingInvoicesTable_BillingInvoicesTable.BillingInvoicesTable.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingPaymentMethods_BillingPaymentMethods.BillingPaymentMethods.html
+│   │   │   ├── shared_components_SettingsModal_organization_org-list-sort.orgListSortToParams.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationBranchesPanel.OrganizationBranchesPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationGeneralPanel.OrganizationGeneralPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationIntegrationsPanel.OrganizationIntegrationsPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationMembersPanel.OrganizationMembersPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationRolesPanel.OrganizationRolesPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrgListControls.OrgListControls.html
+│   │   │   ├── shared_components_SettingsModal_settings-dirty.SettingsDirtyProvider.html
+│   │   │   ├── shared_components_SettingsModal_settings-dirty.useRegisterSettingsDirty.html
+│   │   │   ├── shared_components_SettingsModal_settings-dirty.useSettingsDirty.html
+│   │   │   ├── shared_components_SettingsModal_settings-hash.isCanonicalSettingsHash.html
+│   │   │   ├── shared_components_SettingsModal_settings-hash.isSettingsHash.html
+│   │   │   ├── shared_components_SettingsModal_settings-hash.normalizeSettingsHash.html
+│   │   │   ├── shared_components_SettingsModal_settings-hash.parseSettingsHash.html
+│   │   │   ├── shared_components_SettingsModal_settings-hash.settingsHash.html
+│   │   │   ├── shared_components_SettingsModal_settings-hash.settingsHashPath.html
+│   │   │   ├── shared_components_SettingsModal_settings-modules.isSettingsModuleEnabled.html
+│   │   │   ├── shared_components_SettingsModal_settings-modules.settingsSectionModuleKey.html
+│   │   │   ├── shared_components_SettingsModal_settings-nav-visibility.firstVisibleSettingsSection.html
+│   │   │   ├── shared_components_SettingsModal_settings-nav-visibility.visibleSettingsNavGroups.html
+│   │   │   ├── shared_components_SettingsModal_settings-permissions.canViewSettingsSection.html
+│   │   │   ├── shared_components_SettingsModal_settings-resolve.isSettingsSectionAvailable.html
+│   │   │   ├── shared_components_SettingsModal_settings-resolve.resolveSettingsSection.html
+│   │   │   ├── shared_components_SettingsModal_settings-route-policy.isSettingsPathAllowed.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.filterNav.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.sectionsForOrgType.html
+│   │   │   ├── shared_components_SettingsModal_settings.constants.formatSettingsBreadcrumb.html
+│   │   │   ├── shared_components_SettingsModal_SettingsModal.SettingsModal.html
+│   │   │   ├── shared_components_SettingsModal_SettingsModalLazy.SettingsModalLazy.html
+│   │   │   ├── shared_components_SettingsModal_SettingsNav.SettingsNav.html
+│   │   │   ├── shared_components_SettingsModal_SettingsPanelShell.SectionHeader.html
+│   │   │   ├── shared_components_StripePaymentForm_StripePaymentForm.StripePaymentForm.html
+│   │   │   ├── shared_components_Surface_Surface.Surface.html
+│   │   │   ├── shared_components_ThemeModeToggle_ThemeModeToggle.ThemeModeToggle.html
+│   │   │   ├── shared_components_ThemeShowcase_ThemeShowcase.ThemeShowcase.html
+│   │   │   ├── shared_components_TotpCodeInput_TotpCodeInput.TotpCodeInput.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialog.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogAction.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogCancel.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogContent.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogDescription.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogFooter.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogHeader.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogOverlay.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogPortal.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogTitle.html
+│   │   │   ├── shared_components_ui_alert-dialog.AlertDialogTrigger.html
+│   │   │   ├── shared_components_ui_avatar.Avatar.html
+│   │   │   ├── shared_components_ui_avatar.AvatarBadge.html
+│   │   │   ├── shared_components_ui_avatar.AvatarFallback.html
+│   │   │   ├── shared_components_ui_avatar.AvatarGroup.html
+│   │   │   ├── shared_components_ui_avatar.AvatarGroupCount.html
+│   │   │   ├── shared_components_ui_avatar.AvatarImage.html
+│   │   │   ├── shared_components_ui_badge.Badge.html
+│   │   │   ├── shared_components_ui_button.Button.html
+│   │   │   ├── shared_components_ui_calendar.Calendar.html
+│   │   │   ├── shared_components_ui_calendar.CalendarDayButton.html
+│   │   │   ├── shared_components_ui_card.Card.html
+│   │   │   ├── shared_components_ui_card.CardAction.html
+│   │   │   ├── shared_components_ui_card.CardContent.html
+│   │   │   ├── shared_components_ui_card.CardDescription.html
+│   │   │   ├── shared_components_ui_card.CardFooter.html
+│   │   │   ├── shared_components_ui_card.CardHeader.html
+│   │   │   ├── shared_components_ui_card.CardTitle.html
+│   │   │   ├── shared_components_ui_carousel.Carousel.html
+│   │   │   ├── shared_components_ui_carousel.CarouselContent.html
+│   │   │   ├── shared_components_ui_carousel.CarouselItem.html
+│   │   │   ├── shared_components_ui_carousel.CarouselNext.html
+│   │   │   ├── shared_components_ui_carousel.CarouselPrevious.html
+│   │   │   ├── shared_components_ui_chart.ChartContainer.html
+│   │   │   ├── shared_components_ui_chart.ChartStyle.html
+│   │   │   ├── shared_components_ui_chart.ChartTooltipContent.html
+│   │   │   ├── shared_components_ui_checkbox.Checkbox.html
+│   │   │   ├── shared_components_ui_dialog.Dialog.html
+│   │   │   ├── shared_components_ui_dialog.DialogClose.html
+│   │   │   ├── shared_components_ui_dialog.DialogContent.html
+│   │   │   ├── shared_components_ui_dialog.DialogDescription.html
+│   │   │   ├── shared_components_ui_dialog.DialogFooter.html
+│   │   │   ├── shared_components_ui_dialog.DialogHeader.html
+│   │   │   ├── shared_components_ui_dialog.DialogOverlay.html
+│   │   │   ├── shared_components_ui_dialog.DialogPortal.html
+│   │   │   ├── shared_components_ui_dialog.DialogTitle.html
+│   │   │   ├── shared_components_ui_dialog.DialogTrigger.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenu.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuCheckboxItem.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuContent.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuGroup.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuItem.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuLabel.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuPortal.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuRadioGroup.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuRadioItem.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuSeparator.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuShortcut.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuSub.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuSubContent.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuSubTrigger.html
+│   │   │   ├── shared_components_ui_dropdown-menu.DropdownMenuTrigger.html
+│   │   │   ├── shared_components_ui_input-otp.InputOTP.html
+│   │   │   ├── shared_components_ui_input-otp.InputOTPGroup.html
+│   │   │   ├── shared_components_ui_input-otp.InputOTPSeparator.html
+│   │   │   ├── shared_components_ui_input-otp.InputOTPSlot.html
+│   │   │   ├── shared_components_ui_label.Label.html
+│   │   │   ├── shared_components_ui_popover.Popover.html
+│   │   │   ├── shared_components_ui_popover.PopoverAnchor.html
+│   │   │   ├── shared_components_ui_popover.PopoverContent.html
+│   │   │   ├── shared_components_ui_popover.PopoverTrigger.html
+│   │   │   ├── shared_components_ui_progress.Progress.html
+│   │   │   ├── shared_components_ui_select.Select.html
+│   │   │   ├── shared_components_ui_select.SelectContent.html
+│   │   │   ├── shared_components_ui_select.SelectGroup.html
+│   │   │   ├── shared_components_ui_select.SelectItem.html
+│   │   │   ├── shared_components_ui_select.SelectLabel.html
+│   │   │   ├── shared_components_ui_select.SelectScrollDownButton.html
+│   │   │   ├── shared_components_ui_select.SelectScrollUpButton.html
+│   │   │   ├── shared_components_ui_select.SelectSeparator.html
+│   │   │   ├── shared_components_ui_select.SelectTrigger.html
+│   │   │   ├── shared_components_ui_select.SelectValue.html
+│   │   │   ├── shared_components_ui_separator.Separator.html
+│   │   │   ├── shared_components_ui_skeleton.Skeleton.html
+│   │   │   ├── shared_components_ui_switch.Switch.html
+│   │   │   ├── shared_components_ui_table.Table.html
+│   │   │   ├── shared_components_ui_table.TableBody.html
+│   │   │   ├── shared_components_ui_table.TableCaption.html
+│   │   │   ├── shared_components_ui_table.TableCell.html
+│   │   │   ├── shared_components_ui_table.TableFooter.html
+│   │   │   ├── shared_components_ui_table.TableHead.html
+│   │   │   ├── shared_components_ui_table.TableHeader.html
+│   │   │   ├── shared_components_ui_table.TableRow.html
+│   │   │   ├── shared_components_ui_tabs.Tabs.html
+│   │   │   ├── shared_components_ui_tabs.TabsContent.html
+│   │   │   ├── shared_components_ui_tabs.TabsList.html
+│   │   │   ├── shared_components_ui_tabs.TabsTrigger.html
+│   │   │   ├── shared_components_ui_tooltip.Tooltip.html
+│   │   │   ├── shared_components_ui_tooltip.TooltipContent.html
+│   │   │   ├── shared_components_ui_tooltip.TooltipProvider.html
+│   │   │   ├── shared_components_ui_tooltip.TooltipTrigger.html
+│   │   │   ├── shared_components_WidgetErrorBoundary_WidgetErrorBoundary.SectionErrorBoundary.html
+│   │   │   ├── shared_errors_errorHandler.apiErrorReason.html
+│   │   │   ├── shared_errors_errorHandler.mapApiError.html
+│   │   │   ├── shared_errors_errorHandler.notifyError.html
+│   │   │   ├── shared_errors_errorHandler.reportError.html
+│   │   │   ├── shared_errors_HttpError.isHttpError.html
+│   │   │   ├── shared_errors_HttpError.isUnauthorized.html
+│   │   │   ├── shared_errors_map-frontend-error.mapFrontendError.html
+│   │   │   ├── shared_errors_map-frontend-error.resolveKnownFrontendError.html
+│   │   │   ├── shared_errors_map-validation-errors.mapValidationErrors.html
+│   │   │   ├── shared_errors_rate-limit.formatRateLimitMessage.html
+│   │   │   ├── shared_errors_rate-limit.getRateLimitRetryAfterSeconds.html
+│   │   │   ├── shared_errors_rate-limit.isRateLimitError.html
+│   │   │   ├── shared_forms_AuthForm_auth-form-pending.authEmailPanelIsBlocked.html
+│   │   │   ├── shared_forms_AuthForm_auth-form-pending.authMethodIsDisabled.html
+│   │   │   ├── shared_forms_AuthForm_auth-form-pending.authMethodIsLoading.html
+│   │   │   ├── shared_forms_AuthForm_auth-form.constants.sortOAuthProviders.html
+│   │   │   ├── shared_forms_AuthForm_AuthEmailPanel.AuthEmailPanel.html
+│   │   │   ├── shared_forms_AuthForm_AuthForm.AuthForm.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthMethodButton_AuthMethodButton.AuthMethodButton.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthMethodDivider_AuthMethodDivider.AuthMethodDivider.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthWelcomeHeader_AuthWelcomeHeader.AuthWelcomeHeader.html
+│   │   │   ├── shared_forms_FormError_FormError.FormError.html
+│   │   │   ├── shared_forms_FormField_FormField.FormField.html
+│   │   │   ├── shared_forms_ProfileForm_contracts.computeProfileCompleteness.html
+│   │   │   ├── shared_forms_ProfileForm_ProfileForm.ProfileForm.html
+│   │   │   ├── shared_hooks_useApiKeys_useApiKeys.useApiKeys.html
+│   │   │   ├── shared_hooks_useApiKeys_useApiKeys.useCreateApiKey.html
+│   │   │   ├── shared_hooks_useApiKeys_useApiKeys.useRenameApiKey.html
+│   │   │   ├── shared_hooks_useApiKeys_useApiKeys.useRevokeApiKey.html
+│   │   │   ├── shared_hooks_useAppMutation_useAppMutation.useAppMutation.html
+│   │   │   ├── shared_hooks_useAuthMethods_useAuthMethods.useAuthMethods.html
+│   │   │   ├── shared_hooks_useBillingInvoices_useBillingInvoices.useBillingInvoices.html
+│   │   │   ├── shared_hooks_useBillingPaymentMethods_useBillingPaymentMethods.useBillingPaymentMethods.html
+│   │   │   ├── shared_hooks_useCan_useCan.useCan.html
+│   │   │   ├── shared_hooks_useCan_useCan.useVisibleNav.html
+│   │   │   ├── shared_hooks_useConsumedSearchToken_useConsumedSearchToken.useConsumedSearchToken.html
+│   │   │   ├── shared_hooks_useCooldownClock_useCooldownClock.useCooldownClock.html
+│   │   │   ├── shared_hooks_useCreate_useCreate.useCreate.html
+│   │   │   ├── shared_hooks_useCursorList_useCursorList.useCursorList.html
+│   │   │   ├── shared_hooks_useDataTableUrlState_useDataTableUrlState.filtersFromSearch.html
+│   │   │   ├── shared_hooks_useDataTableUrlState_useDataTableUrlState.sortingFromSearch.html
+│   │   │   ├── shared_hooks_useDataTableUrlState_useDataTableUrlState.sortingToSearch.html
+│   │   │   ├── shared_hooks_useDataTableUrlState_useDataTableUrlState.useDataTableUrlState.html
+│   │   │   ├── shared_hooks_useDebouncedValue_useDebouncedValue.useDebouncedValue.html
+│   │   │   ├── shared_hooks_useDelete_useDelete.useDelete.html
+│   │   │   ├── shared_hooks_useDeploymentFlags_useDeploymentFlags.useDeploymentFlags.html
+│   │   │   ├── shared_hooks_useDeploymentFlags_useDeploymentFlags.useDeploymentMode.html
+│   │   │   ├── shared_hooks_useInvitations_useInvitations.useCreateInvitation.html
+│   │   │   ├── shared_hooks_useInvitations_useInvitations.useInvitations.html
+│   │   │   ├── shared_hooks_useInvitations_useInvitations.useResendInvitation.html
+│   │   │   ├── shared_hooks_useInvitations_useInvitations.useRevokeInvitation.html
+│   │   │   ├── shared_hooks_useList_useList.useList.html
+│   │   │   ├── shared_hooks_useLocaleFormat_useLocaleFormat.useLocaleFormat.html
+│   │   │   ├── shared_hooks_useMeContext_useMeContext.useMeContext.html
+│   │   │   ├── shared_hooks_useMembers_useMembers.useMembers.html
+│   │   │   ├── shared_hooks_useMembers_useMembers.useRemoveMember.html
+│   │   │   ├── shared_hooks_useMembers_useMembers.useUpdateMemberRole.html
+│   │   │   ├── shared_hooks_useMembers_useMembers.useUpdateMemberStatus.html
+│   │   │   ├── shared_hooks_useMfa_useMfa.useBeginMfaEnrollment.html
+│   │   │   ├── shared_hooks_useMfa_useMfa.useConfirmMfaEnrollment.html
+│   │   │   ├── shared_hooks_useMfa_useMfa.useDisableMfa.html
+│   │   │   ├── shared_hooks_useMfa_useMfa.useMfaStatus.html
+│   │   │   ├── shared_hooks_useNotifications_useNotifications.useMarkAllNotificationsRead.html
+│   │   │   ├── shared_hooks_useNotifications_useNotifications.useMarkNotificationRead.html
+│   │   │   ├── shared_hooks_useNotifications_useNotifications.useNotificationPreferences.html
+│   │   │   ├── shared_hooks_useNotifications_useNotifications.useNotifications.html
+│   │   │   ├── shared_hooks_useNotifications_useNotifications.useUnreadCount.html
+│   │   │   ├── shared_hooks_useNotifications_useNotifications.useUpdateNotificationPreferences.html
+│   │   │   ├── shared_hooks_useOne_useOne.useOne.html
+│   │   │   ├── shared_hooks_useOrgBrand_useOrgBrand.useOrgBrand.html
+│   │   │   ├── shared_hooks_usePasskeys_usePasskeys.usePasskeys.html
+│   │   │   ├── shared_hooks_usePasskeys_usePasskeys.useRegisterPasskey.html
+│   │   │   ├── shared_hooks_usePasskeys_usePasskeys.useRemovePasskey.html
+│   │   │   ├── shared_hooks_useRBAC_useRBAC.useHasPermission.html
+│   │   │   ├── shared_hooks_useRBAC_useRBAC.useRequirePermission.html
+│   │   │   ├── shared_hooks_useRoles_useRoles.useCreateRole.html
+│   │   │   ├── shared_hooks_useRoles_useRoles.useDeleteRole.html
+│   │   │   ├── shared_hooks_useRoles_useRoles.useRoles.html
+│   │   │   ├── shared_hooks_useRoles_useRoles.useUpdateRole.html
+│   │   │   ├── shared_hooks_useSessions_useSessions.useRevokeSession.html
+│   │   │   ├── shared_hooks_useSessions_useSessions.useSessions.html
+│   │   │   ├── shared_hooks_useSubscription_useSubscription.useBillingPlans.html
+│   │   │   ├── shared_hooks_useSubscription_useSubscription.useCancelSubscription.html
+│   │   │   ├── shared_hooks_useSubscription_useSubscription.useResumeSubscription.html
+│   │   │   ├── shared_hooks_useSubscription_useSubscription.useSelectBillingPlan.html
+│   │   │   ├── shared_hooks_useSubscription_useSubscription.useSubscription.html
+│   │   │   ├── shared_hooks_useUnsavedChangesGuard_useUnsavedChangesGuard.useUnsavedChangesGuard.html
+│   │   │   ├── shared_hooks_useUpdate_useUpdate.useUpdate.html
+│   │   │   ├── shared_hooks_useUpdateOrganization_useUpdateOrganization.useUpdateOrganization.html
+│   │   │   ├── shared_hooks_useWebhooks_useWebhooks.useCreateWebhook.html
+│   │   │   ├── shared_hooks_useWebhooks_useWebhooks.useDeleteWebhook.html
+│   │   │   ├── shared_hooks_useWebhooks_useWebhooks.useWebhooks.html
+│   │   │   ├── shared_hooks_useWebhooks_useWebhooks.webhooksQueryKey.html
+│   │   │   ├── shared_icons_github-mark.GithubMark.html
+│   │   │   ├── shared_icons_icon-registry.initDeferredIconSets.html
+│   │   │   ├── shared_icons_icon-registry.loadIconSet.html
+│   │   │   ├── shared_icons_icon-registry.useIconSet.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.AppLayoutShell.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.Component.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.AppMain.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.BrandLogo.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.DashboardNavLink.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.MobileNav.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.NavList.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.SearchTrigger.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.SkipLink.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.UserMenu.html
+│   │   │   ├── shared_layouts_AppLayout_components_AppContextStrip_AppContextStrip.AppContextStrip.html
+│   │   │   ├── shared_layouts_AppLayout_components_SidebarQuickLinks_SidebarQuickLinks.SidebarQuickLinks.html
+│   │   │   ├── shared_layouts_AppLayout_resolve-app-shell.resolveAppShellVariant.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutFocus.FocusShell.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutRail.RailShell.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutSidebar.SidebarShell.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutTopNav.TopNavShell.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.AuthLayout.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.AuthControls.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.AuthForm.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.AuthHeroBadge.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.AuthMarketingStats.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.BrandMark.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.MobileBrandMark.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.SkipLink.html
+│   │   │   ├── shared_layouts_AuthLayout_variants_AuthLayoutMinimal.MinimalAuth.html
+│   │   │   ├── shared_layouts_AuthLayout_variants_AuthLayoutSplit.SplitAuth.html
+│   │   │   ├── shared_layouts_AuthLayout_variants_AuthLayoutSpotlight.SpotlightAuth.html
+│   │   │   ├── shared_layouts_LayoutVariantFallback_LayoutVariantFallback.LayoutVariantFallback.html
+│   │   │   ├── shared_layouts_PublicLayout_PublicLayout.PublicLayout.html
+│   │   │   ├── shared_layouts_PublicLayout_PublicLayout.shared.PublicMain.html
+│   │   │   ├── shared_layouts_PublicLayout_PublicLayout.shared.PublicSkipLink.html
+│   │   │   ├── shared_layouts_PublicLayout_PublicLayout.shared.PublicThemeToggle.html
+│   │   │   ├── shared_layouts_PublicLayout_variants_PublicLayoutBrand.BrandPublic.html
+│   │   │   ├── shared_layouts_PublicLayout_variants_PublicLayoutCard.CardPublic.html
+│   │   │   ├── shared_layouts_PublicLayout_variants_PublicLayoutCentered.CenteredPublic.html
+│   │   │   ├── shared_notifications_desktop.getDesktopPermission.html
+│   │   │   ├── shared_notifications_desktop.isDesktopSupported.html
+│   │   │   ├── shared_notifications_desktop.requestDesktopPermission.html
+│   │   │   ├── shared_notifications_desktop.showDesktopNotification.html
+│   │   │   ├── shared_notify_AppToaster.AppToaster.html
+│   │   │   ├── shared_notify_CustomToast.CustomToast.html
+│   │   │   ├── shared_notify_notify-deferred.notifyDeferredCommit.html
+│   │   │   ├── shared_store_useConsentStore_useConsentStore.hasAnalyticsConsent.html
+│   │   │   ├── shared_store_useLocaleStore_useLocaleStore.localeFormatPrefs.html
+│   │   │   ├── shared_store_useOrganizationStore_useOrganizationStore.getLastOrganizationFromStorage.html
+│   │   │   ├── shared_store_useOrganizationStore_useOrganizationStore.persistOrganizationToStorage.html
+│   │   │   ├── shared_tenancy_deployment-mode.isPersonalOnlyDeployment.html
+│   │   │   ├── shared_tenancy_deployment-mode.mergeDeploymentFlags.html
+│   │   │   ├── shared_tenancy_deployment-mode.parseDeploymentFlagsFromUserWire.html
+│   │   │   ├── shared_tenancy_deployment-mode.resolveDeploymentMode.html
+│   │   │   ├── shared_tenancy_deployment-mode.shouldAllowCreateTeam.html
+│   │   │   ├── shared_tenancy_deployment-mode.shouldShowOrganizationSwitcher.html
+│   │   │   ├── shared_tenancy_me-context.fetchMeContext.html
+│   │   │   ├── shared_tenancy_me-context.needsOnboarding.html
+│   │   │   ├── shared_tenancy_me-context.toMeContext.html
+│   │   │   ├── shared_tenancy_me-context.toOrganization.html
+│   │   │   ├── shared_tenancy_my-organizations.createOrganization.html
+│   │   │   ├── shared_tenancy_my-organizations.deriveOrganizationSlug.html
+│   │   │   ├── shared_tenancy_my-organizations.listMyOrganizations.html
+│   │   │   ├── shared_tenancy_my-organizations.updateOrganization.html
+│   │   │   ├── shared_tenancy_organization-context.deriveOrgContext.html
+│   │   │   ├── shared_tenancy_organization-context.getActiveOrganizationId.html
+│   │   │   ├── shared_tenancy_organization-context.syncOrganizationFromRoute.html
+│   │   │   ├── shared_tenancy_organization-membership.ensurePermissionsFor.html
+│   │   │   ├── shared_tenancy_organization-membership.findMembership.html
+│   │   │   ├── shared_tenancy_organization-membership.findMembershipBySlug.html
+│   │   │   ├── shared_tenancy_organization-membership.invalidateMembershipContext.html
+│   │   │   ├── shared_tenancy_organization-membership.resetPermissionCacheForTests.html
+│   │   │   ├── shared_tenancy_organization-resolver.resolveRootRedirect.html
+│   │   │   ├── shared_tenancy_organization-resolver.resolveRootTarget.html
+│   │   │   ├── shared_tenancy_organization-resolver.workspaceRedirectForPersonalDashboard.html
+│   │   │   ├── shared_tenancy_organization-resolver.workspaceRedirectForTeamEntry.html
+│   │   │   ├── shared_tenancy_session-context.hydrateSessionContext.html
+│   │   │   ├── shared_tenancy_session-context.invalidateSessionContext.html
+│   │   │   ├── shared_tenancy_session-context.resetSessionContextForTests.html
+│   │   │   ├── shared_tenancy_switch.switchToOrganization.html
+│   │   │   ├── shared_tenancy_switch.switchToPersonal.html
+│   │   │   ├── shared_tenancy_tenancy-service.getCurrentOrganizationSlug.html
+│   │   │   ├── shared_tenancy_tenancy-service.resolveOrganizationFromSubdomain.html
+│   │   │   ├── shared_theme_layout-width.layoutMainClassName.html
+│   │   │   ├── shared_theme_layout-width.resolveEffectiveLayoutWidth.html
+│   │   │   ├── shared_theme_org-brand.applyOrgBrand.html
+│   │   │   ├── shared_theme_presets.accentForeground.html
+│   │   │   ├── shared_theme_presets.applyBaseColor.html
+│   │   │   ├── shared_theme_presets.applyGeneratedTheme.html
+│   │   │   ├── shared_theme_presets.applyIconColor.html
+│   │   │   ├── shared_theme_presets.applyIconWeight.html
+│   │   │   ├── shared_theme_presets.applyMenuStyle.html
+│   │   │   ├── shared_theme_presets.applyThemePreset.html
+│   │   │   ├── shared_theme_presets.generateSeededTheme.html
+│   │   │   ├── shared_theme_presets.generateTheme.html
+│   │   │   ├── shared_theme_presets.hexToHue.html
+│   │   │   ├── shared_theme_presets.isThemePreset.html
+│   │   │   ├── shared_theme_presets.nextAppVariant.html
+│   │   │   ├── shared_theme_presets.nextAuthVariant.html
+│   │   │   ├── shared_theme_presets.nextPublicVariant.html
+│   │   │   ├── shared_theme_presets.nextRandomHue.html
+│   │   │   ├── shared_theme_presets.nextToastPosition.html
+│   │   │   ├── shared_theme_presets.nextToastVariant.html
+│   │   │   ├── shared_theme_presets.normalizeDensityId.html
+│   │   │   ├── shared_theme_presets.normalizeLayoutWidthId.html
+│   │   │   ├── shared_theme_presets.normalizeLook.html
+│   │   │   ├── shared_theme_presets.normalizeSeparationId.html
+│   │   │   ├── shared_theme_presets.oklchToHex.html
+│   │   │   ├── shared_theme_presets.randomSeed.html
+│   │   │   ├── shared_theme_presets.randomThemeHue.html
+│   │   │   ├── shared_theme_presets.rollColour.html
+│   │   │   ├── shared_theme_presets.rollSurface.html
+│   │   │   ├── shared_theme_presets.rollTypography.html
+│   │   │   └── shared_theme_presets.shuffleIcons.html
+│   │   ├── interfaces/
+│   │   │   ├── core_config_app-manifest.WebManifestIcon.html
+│   │   │   ├── core_config_auth-methods.AuthMethods.html
+│   │   │   ├── core_config_env-schema.EnvProfile.html
+│   │   │   ├── core_config_env-schema.ForbiddenKeyRule.html
+│   │   │   ├── core_config_env-schema.RequiredKeyRule.html
+│   │   │   ├── core_config_platform-config.AuthMethods.html
+│   │   │   ├── core_config_platform-config.DeploymentEnvOverrides.html
+│   │   │   ├── core_config_platform-config.PlatformConfig.html
+│   │   │   ├── core_data-provider_dataProvider.DataProvider.html
+│   │   │   ├── core_data-provider_dataProvider.ListParams.html
+│   │   │   ├── core_data-provider_dataProvider.ListResult.html
+│   │   │   ├── core_http_fetch-client.HttpClient.html
+│   │   │   ├── core_http_fetch-client.HttpClientConfig.html
+│   │   │   ├── core_http_fetch-client.HttpResponse.html
+│   │   │   ├── core_http_fetch-client.PaginationMeta.html
+│   │   │   ├── core_http_fetch-client.ResponseMeta.html
+│   │   │   ├── core_http_pagination.PageInfo.html
+│   │   │   ├── core_http_pagination.Paginated.html
+│   │   │   ├── core_rbac_policies.AccessContext.html
+│   │   │   ├── core_resources_types.Resource.html
+│   │   │   ├── core_resources_types.ResourcePermissions.html
+│   │   │   ├── core_resources_types.ResourceUI.html
+│   │   │   ├── core_security_gate.types.GateContext.html
+│   │   │   ├── core_security_gateway.RoutePolicy.html
+│   │   │   ├── core_version_check.VersionCheckOptions.html
+│   │   │   ├── core_version_check.VersionCheckUpdateContext.html
+│   │   │   ├── lib_billing_stripe-return.StripeBillingReturnParams.html
+│   │   │   ├── lib_password-breach.BreachResult.html
+│   │   │   ├── lib_password-strength.PasswordStrength.html
+│   │   │   ├── shared_api_fetch-list-page.ListPage.html
+│   │   │   ├── shared_api_fetch-list-page.ListPageParams.html
+│   │   │   ├── shared_api_mfa-api.MfaConfirmation.html
+│   │   │   ├── shared_api_mfa-api.MfaEnrollment.html
+│   │   │   ├── shared_api_organization-api.AcceptedInvitation.html
+│   │   │   ├── shared_api_organization-query-keys.OrgListKeyParams.html
+│   │   │   ├── shared_components_ConfirmDialog_ConfirmDialog.ConfirmDialogProps.html
+│   │   │   ├── shared_components_EmptyState_EmptyState.EmptyStateProps.html
+│   │   │   ├── shared_components_Gate_Gate.GateProps.html
+│   │   │   ├── shared_components_RateLimitNotice_RateLimitNotice.RateLimitNoticeProps.html
+│   │   │   ├── shared_components_RecoveryCodesPanel_RecoveryCodesPanel.RecoveryCodesPanelProps.html
+│   │   │   ├── shared_components_SecurityOverviewCard_SecurityOverviewCard.SecurityOverviewCardProps.html
+│   │   │   ├── shared_components_SettingsModal_settings-nav-visibility.SettingsNavVisibilityContext.html
+│   │   │   ├── shared_components_SettingsModal_settings-resolve.SettingsResolveContext.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.SettingsNavGroup.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.SettingsSectionRef.html
+│   │   │   ├── shared_components_StripePaymentForm_StripePaymentForm.StripePaymentFormProps.html
+│   │   │   ├── shared_components_Surface_Surface.SurfaceProps.html
+│   │   │   ├── shared_components_TotpCodeInput_TotpCodeInput.TotpCodeInputProps.html
+│   │   │   ├── shared_components_ui_chart.ChartConfigItem.html
+│   │   │   ├── shared_hooks_useAppMutation_useAppMutation.AppMutationOptions.html
+│   │   │   ├── shared_hooks_useAppMutation_useAppMutation.OptimisticConfig.html
+│   │   │   ├── shared_hooks_useAppMutation_useAppMutation.OptimisticInfiniteConfig.html
+│   │   │   ├── shared_hooks_useCan_useCan.AccessCheck.html
+│   │   │   ├── shared_hooks_useCursorList_useCursorList.CursorListResult.html
+│   │   │   ├── shared_hooks_useDataTableUrlState_useDataTableUrlState.DataTableSearch.html
+│   │   │   ├── shared_hooks_useUnsavedChangesGuard_useUnsavedChangesGuard.UseUnsavedChangesGuardOptions.html
+│   │   │   ├── shared_notify_CustomToast.CustomToastProps.html
+│   │   │   ├── shared_notify_notify.NotifyAction.html
+│   │   │   ├── shared_notify_notify.NotifyOptions.html
+│   │   │   ├── shared_tenancy_deployment-mode.DeploymentFlags.html
+│   │   │   ├── shared_tenancy_me-context.MeContext.html
+│   │   │   ├── shared_tenancy_me-context.MeUser.html
+│   │   │   ├── shared_tenancy_me-context.OrganizationSummary.html
+│   │   │   ├── shared_theme_catalog-doc.DocAssertion.html
+│   │   │   ├── shared_theme_presets.GeneratedTheme.html
+│   │   │   └── shared_theme_presets.ThemePreset.html
+│   │   ├── modules/
+│   │   │   ├── core_config_app-manifest.html
+│   │   │   ├── core_config_auth-methods.html
+│   │   │   ├── core_config_constants.html
+│   │   │   ├── core_config_env-resolvers.html
+│   │   │   ├── core_config_env-schema.html
+│   │   │   ├── core_config_env.config.html
+│   │   │   ├── core_config_env.html
+│   │   │   ├── core_config_platform-config.html
+│   │   │   ├── core_data-provider.html
+│   │   │   ├── core_data-provider_dataProvider.html
+│   │   │   ├── core_data-provider_http-data-provider.html
+│   │   │   ├── core_data-provider_http-data-provider_http-data-provider.html
+│   │   │   ├── core_http_fetch-client.html
+│   │   │   ├── core_http_pagination.html
+│   │   │   ├── core_http_queryClient.html
+│   │   │   ├── core_rbac_guards.html
+│   │   │   ├── core_rbac_policies.html
+│   │   │   ├── core_resources.html
+│   │   │   ├── core_resources_bootstrap.html
+│   │   │   ├── core_resources_members.resource.html
+│   │   │   ├── core_resources_resource-registry.html
+│   │   │   ├── core_resources_types.html
+│   │   │   ├── core_security.html
+│   │   │   ├── core_security_gate-context.html
+│   │   │   ├── core_security_gate.types.html
+│   │   │   ├── core_security_gates_require-module.html
+│   │   │   ├── core_security_gates_require-permission.html
+│   │   │   ├── core_security_gates_require-session.html
+│   │   │   ├── core_security_gateway.html
+│   │   │   ├── core_types_branded.html
+│   │   │   ├── core_types_permissions.html
+│   │   │   ├── core_types_wire.html
+│   │   │   ├── core_version_check.html
+│   │   │   ├── core_version_version-check.constants.html
+│   │   │   ├── core_version_version-update-snooze.html
+│   │   │   ├── lib_animations.html
+│   │   │   ├── lib_animations_AnimatedSection.html
+│   │   │   ├── lib_animations_LayoutGroup.html
+│   │   │   ├── lib_animations_PageTransition.html
+│   │   │   ├── lib_animations_prefers-reduced-motion.html
+│   │   │   ├── lib_animations_Skeleton.html
+│   │   │   ├── lib_animations_StaggerList.html
+│   │   │   ├── lib_animations_useAnimeCountUp.html
+│   │   │   ├── lib_animations_useAutoAnimate.html
+│   │   │   ├── lib_animations_useCountUp.html
+│   │   │   ├── lib_app-splash.html
+│   │   │   ├── lib_appearance-surface.html
+│   │   │   ├── lib_billing_stripe-return.html
+│   │   │   ├── lib_chunk-prefetch.html
+│   │   │   ├── lib_csp-api-origin.html
+│   │   │   ├── lib_css-safe.html
+│   │   │   ├── lib_csv.html
+│   │   │   ├── lib_i18n.html
+│   │   │   ├── lib_i18n_apply-document-locale.html
+│   │   │   ├── lib_i18n_build-config.html
+│   │   │   ├── lib_i18n_build-env.html
+│   │   │   ├── lib_i18n_build-runtime.html
+│   │   │   ├── lib_i18n_errors.constants.html
+│   │   │   ├── lib_i18n_format.html
+│   │   │   ├── lib_i18n_i18n-resources.html
+│   │   │   ├── lib_i18n_i18n-resources.multi.html
+│   │   │   ├── lib_i18n_i18n.html
+│   │   │   ├── lib_i18n_intl-config.html
+│   │   │   ├── lib_i18n_load-namespace.html
+│   │   │   ├── lib_i18n_locale.constants.html
+│   │   │   ├── lib_i18n_locales.html
+│   │   │   ├── lib_i18n_namespaces.html
+│   │   │   ├── lib_i18n_translate-form-message.html
+│   │   │   ├── lib_icon-surface.html
+│   │   │   ├── lib_onboarding-defaults.html
+│   │   │   ├── lib_parse-list-tolerant.html
+│   │   │   ├── lib_password-breach.html
+│   │   │   ├── lib_password-strength.html
+│   │   │   ├── lib_responsive-grid.html
+│   │   │   ├── lib_routes.html
+│   │   │   ├── lib_routes_builders.html
+│   │   │   ├── lib_routes_page-head.html
+│   │   │   ├── lib_routes_page-manifest.html
+│   │   │   ├── lib_routes_params.html
+│   │   │   ├── lib_sensitive-clipboard.html
+│   │   │   ├── lib_telemetry-scrub.html
+│   │   │   ├── lib_utils.html
+│   │   │   ├── shared_analytics_analytics.constants.html
+│   │   │   ├── shared_analytics_capture-consent-decision.html
+│   │   │   ├── shared_analytics_capture.html
+│   │   │   ├── shared_api_auth-api.html
+│   │   │   ├── shared_api_auth-contracts.html
+│   │   │   ├── shared_api_billing-api.html
+│   │   │   ├── shared_api_billing-contracts.html
+│   │   │   ├── shared_api_billing-query-keys.html
+│   │   │   ├── shared_api_fetch-all-pages.html
+│   │   │   ├── shared_api_fetch-list-page.html
+│   │   │   ├── shared_api_mfa-api.html
+│   │   │   ├── shared_api_notification-contracts.html
+│   │   │   ├── shared_api_notification-query-keys.html
+│   │   │   ├── shared_api_notifications-api.html
+│   │   │   ├── shared_api_organization-api.html
+│   │   │   ├── shared_api_organization-contracts.html
+│   │   │   ├── shared_api_organization-query-keys.html
+│   │   │   ├── shared_api_passkey-contracts.html
+│   │   │   ├── shared_api_passkeys-api.html
+│   │   │   ├── shared_api_session-contracts.html
+│   │   │   ├── shared_api_sessions-api.html
+│   │   │   ├── shared_api_webhook-contracts.html
+│   │   │   ├── shared_api_webhooks-api.html
+│   │   │   ├── shared_auth_auth-channel.html
+│   │   │   ├── shared_auth_auth-shell.constants.html
+│   │   │   ├── shared_auth_auto-google-sign-in.html
+│   │   │   ├── shared_auth_captcha_auth-captcha-headers.html
+│   │   │   ├── shared_auth_captcha_captcha-config.html
+│   │   │   ├── shared_auth_captcha_captcha.constants.html
+│   │   │   ├── shared_auth_captcha_InvisibleTurnstile.html
+│   │   │   ├── shared_auth_captcha_turnstile-token-store.html
+│   │   │   ├── shared_auth_captcha_useTurnstileReady.html
+│   │   │   ├── shared_auth_captcha_useTurnstileReady_useTurnstileReady.html
+│   │   │   ├── shared_auth_idle-timeout.html
+│   │   │   ├── shared_auth_mfa-handoff.html
+│   │   │   ├── shared_auth_passkey-sign-in.html
+│   │   │   ├── shared_auth_redirect-safety.html
+│   │   │   ├── shared_auth_refresh-timer.html
+│   │   │   ├── shared_auth_service.html
+│   │   │   ├── shared_auth_session-lifetime.html
+│   │   │   ├── shared_auth_token.html
+│   │   │   ├── shared_auth_types.html
+│   │   │   ├── shared_billing_load-stripe.html
+│   │   │   ├── shared_billing_stripe-config.html
+│   │   │   ├── shared_components_AppearanceDialog.html
+│   │   │   ├── shared_components_AppearanceDialog_appearance-look.html
+│   │   │   ├── shared_components_AppearanceDialog_AppearanceDialog.html
+│   │   │   ├── shared_components_AppearanceDialog_AppearanceDialogLazy.html
+│   │   │   ├── shared_components_AppearanceDialog_AppearancePanel.html
+│   │   │   ├── shared_components_CommandPalette.html
+│   │   │   ├── shared_components_CommandPalette_CommandPalette.html
+│   │   │   ├── shared_components_CommandPalette_CommandPaletteItem.html
+│   │   │   ├── shared_components_CommandPalette_CommandPaletteLazy.html
+│   │   │   ├── shared_components_CommandPalette_CommandPaletteOrgGroup.html
+│   │   │   ├── shared_components_CommandPalette_preload-command-palette.html
+│   │   │   ├── shared_components_ConfirmDialog.html
+│   │   │   ├── shared_components_ConfirmDialog_ConfirmDialog.html
+│   │   │   ├── shared_components_ConsentBanner.html
+│   │   │   ├── shared_components_ConsentBanner_ConsentBanner.html
+│   │   │   ├── shared_components_CreateOrganizationDialog.html
+│   │   │   ├── shared_components_CreateOrganizationDialog_CreateOrganizationDialog.html
+│   │   │   ├── shared_components_Dashboard.html
+│   │   │   ├── shared_components_Dashboard_AnalyticsChart.html
+│   │   │   ├── shared_components_Dashboard_AnalyticsChart_AnalyticsChart.html
+│   │   │   ├── shared_components_Dashboard_dashboard-quick-actions.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.deferred.html
+│   │   │   ├── shared_components_Dashboard_Dashboard.html
+│   │   │   ├── shared_components_Dashboard_DashboardActionCard.html
+│   │   │   ├── shared_components_Dashboard_DashboardActionCard_DashboardActionCard.html
+│   │   │   ├── shared_components_Dashboard_DashboardHero.html
+│   │   │   ├── shared_components_Dashboard_DashboardHero_DashboardHero.html
+│   │   │   ├── shared_components_Dashboard_DashboardNextSteps.html
+│   │   │   ├── shared_components_Dashboard_DashboardNextSteps_DashboardNextSteps.html
+│   │   │   ├── shared_components_Dashboard_DashboardStatCard.html
+│   │   │   ├── shared_components_Dashboard_DashboardStatCard_DashboardStatCard.html
+│   │   │   ├── shared_components_Dashboard_HighlightsCarousel.html
+│   │   │   ├── shared_components_Dashboard_HighlightsCarousel_HighlightsCarousel.html
+│   │   │   ├── shared_components_Dashboard_MembersTable.html
+│   │   │   ├── shared_components_Dashboard_MembersTable_MembersTable.html
+│   │   │   ├── shared_components_Dashboard_ScheduleCalendar.html
+│   │   │   ├── shared_components_Dashboard_ScheduleCalendar_ScheduleCalendar.html
+│   │   │   ├── shared_components_data-table_DataTable.html
+│   │   │   ├── shared_components_data-table_DataTableColumnHeader.html
+│   │   │   ├── shared_components_data-table_DataTablePagination.html
+│   │   │   ├── shared_components_data-table_DataTableToolbar.html
+│   │   │   ├── shared_components_EmailVerificationBanner.html
+│   │   │   ├── shared_components_EmailVerificationBanner_EmailVerificationBanner.html
+│   │   │   ├── shared_components_EmptyState.html
+│   │   │   ├── shared_components_EmptyState_EmptyState.html
+│   │   │   ├── shared_components_FloatingEdgeControls.html
+│   │   │   ├── shared_components_FloatingEdgeControls_floating-edge-button.html
+│   │   │   ├── shared_components_FloatingEdgeControls_FloatingEdgeControls.html
+│   │   │   ├── shared_components_FloatingLanguageButton.html
+│   │   │   ├── shared_components_FloatingLanguageButton_FloatingLanguageButton.html
+│   │   │   ├── shared_components_FloatingSettingsButton.html
+│   │   │   ├── shared_components_FloatingSettingsButton_FloatingSettingsButton.html
+│   │   │   ├── shared_components_FormattedDate.html
+│   │   │   ├── shared_components_FormattedDate_FormattedDate.html
+│   │   │   ├── shared_components_FullPageSpinner.html
+│   │   │   ├── shared_components_FullPageSpinner_FullPageSpinner.html
+│   │   │   ├── shared_components_Gate.html
+│   │   │   ├── shared_components_Gate_Gate.html
+│   │   │   ├── shared_components_InvitationsTable.html
+│   │   │   ├── shared_components_InvitationsTable_InvitationsTable.html
+│   │   │   ├── shared_components_InviteMemberDialog.html
+│   │   │   ├── shared_components_InviteMemberDialog_InviteMemberDialog.html
+│   │   │   ├── shared_components_KeyboardShortcutsDialog.html
+│   │   │   ├── shared_components_KeyboardShortcutsDialog_KeyboardShortcutsDialog.html
+│   │   │   ├── shared_components_KeyboardShortcutsDialog_KeyboardShortcutsLazy.html
+│   │   │   ├── shared_components_LanguageDialog.html
+│   │   │   ├── shared_components_LanguageDialog_LanguageDialog.html
+│   │   │   ├── shared_components_LanguageDialog_LanguageDialogLazy.html
+│   │   │   ├── shared_components_LanguageDialog_LanguagePanel.html
+│   │   │   ├── shared_components_MembersTable.html
+│   │   │   ├── shared_components_MembersTable_members-table.constants.html
+│   │   │   ├── shared_components_MembersTable_MembersTable.html
+│   │   │   ├── shared_components_NotificationCenter.html
+│   │   │   ├── shared_components_NotificationCenter_NotificationCenter.html
+│   │   │   ├── shared_components_OfflineIndicator.html
+│   │   │   ├── shared_components_OfflineIndicator_OfflineIndicator.html
+│   │   │   ├── shared_components_OptimizedImage.html
+│   │   │   ├── shared_components_OptimizedImage_OptimizedImage.html
+│   │   │   ├── shared_components_OrganizationBadges.html
+│   │   │   ├── shared_components_OrganizationBadges_OrganizationBadges.html
+│   │   │   ├── shared_components_OrganizationSwitcher.html
+│   │   │   ├── shared_components_OrganizationSwitcher_OrganizationSwitcher.html
+│   │   │   ├── shared_components_PasswordStrengthMeter.html
+│   │   │   ├── shared_components_PasswordStrengthMeter_PasswordStrengthMeter.html
+│   │   │   ├── shared_components_PermissionGuard.html
+│   │   │   ├── shared_components_PermissionGuard_PermissionGuard.html
+│   │   │   ├── shared_components_QrCode.html
+│   │   │   ├── shared_components_QrCode_QrCode.html
+│   │   │   ├── shared_components_QueryBoundary.html
+│   │   │   ├── shared_components_QueryBoundary_QueryBoundary.html
+│   │   │   ├── shared_components_RateLimitNotice.html
+│   │   │   ├── shared_components_RateLimitNotice_RateLimitNotice.html
+│   │   │   ├── shared_components_RecoveryCodesPanel.html
+│   │   │   ├── shared_components_RecoveryCodesPanel_RecoveryCodesPanel.html
+│   │   │   ├── shared_components_RetryError.html
+│   │   │   ├── shared_components_RetryError_RetryError.html
+│   │   │   ├── shared_components_RouteAnnouncer.html
+│   │   │   ├── shared_components_RouteAnnouncer_RouteAnnouncer.html
+│   │   │   ├── shared_components_RouteErrorBoundary.html
+│   │   │   ├── shared_components_RouteErrorBoundary_RouteErrorBoundary.html
+│   │   │   ├── shared_components_RouteProgressBar.html
+│   │   │   ├── shared_components_RouteProgressBar_RouteProgressBar.html
+│   │   │   ├── shared_components_SecurityOverviewCard.html
+│   │   │   ├── shared_components_SecurityOverviewCard_SecurityOverviewCard.html
+│   │   │   ├── shared_components_SessionTimeoutDialog.html
+│   │   │   ├── shared_components_SessionTimeoutDialog_SessionTimeoutDialog.html
+│   │   │   ├── shared_components_SettingsModal.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountBillingPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountNotificationsPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountProfilePanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountSecurityPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_AccountSessionsPanel.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingCancellationSection.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingCancellationSection_BillingCancellationSection.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingInvoicesTable.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingInvoicesTable_BillingInvoicesTable.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingPaymentMethods.html
+│   │   │   ├── shared_components_SettingsModal_account_BillingPaymentMethods_BillingPaymentMethods.html
+│   │   │   ├── shared_components_SettingsModal_organization_org-list-sort.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationBranchesPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationGeneralPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationIntegrationsPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationMembersPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrganizationRolesPanel.html
+│   │   │   ├── shared_components_SettingsModal_organization_OrgListControls.html
+│   │   │   ├── shared_components_SettingsModal_settings-dirty.html
+│   │   │   ├── shared_components_SettingsModal_settings-hash.html
+│   │   │   ├── shared_components_SettingsModal_settings-modules.html
+│   │   │   ├── shared_components_SettingsModal_settings-nav-visibility.html
+│   │   │   ├── shared_components_SettingsModal_settings-permissions.html
+│   │   │   ├── shared_components_SettingsModal_settings-resolve.html
+│   │   │   ├── shared_components_SettingsModal_settings-route-policy.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.html
+│   │   │   ├── shared_components_SettingsModal_settings.constants.html
+│   │   │   ├── shared_components_SettingsModal_SettingsModal.html
+│   │   │   ├── shared_components_SettingsModal_SettingsModalLazy.html
+│   │   │   ├── shared_components_SettingsModal_SettingsNav.html
+│   │   │   ├── shared_components_SettingsModal_SettingsPanelShell.html
+│   │   │   ├── shared_components_StripePaymentForm.html
+│   │   │   ├── shared_components_StripePaymentForm_StripePaymentForm.html
+│   │   │   ├── shared_components_Surface.html
+│   │   │   ├── shared_components_Surface_Surface.html
+│   │   │   ├── shared_components_ThemeModeToggle.html
+│   │   │   ├── shared_components_ThemeModeToggle_ThemeModeToggle.html
+│   │   │   ├── shared_components_ThemeShowcase.html
+│   │   │   ├── shared_components_ThemeShowcase_ThemeShowcase.html
+│   │   │   ├── shared_components_TotpCodeInput.html
+│   │   │   ├── shared_components_TotpCodeInput_TotpCodeInput.html
+│   │   │   ├── shared_components_ui_alert-dialog.html
+│   │   │   ├── shared_components_ui_avatar.html
+│   │   │   ├── shared_components_ui_badge.html
+│   │   │   ├── shared_components_ui_button.html
+│   │   │   ├── shared_components_ui_calendar.html
+│   │   │   ├── shared_components_ui_card.html
+│   │   │   ├── shared_components_ui_carousel.html
+│   │   │   ├── shared_components_ui_chart.html
+│   │   │   ├── shared_components_ui_checkbox.html
+│   │   │   ├── shared_components_ui_dialog.html
+│   │   │   ├── shared_components_ui_dropdown-menu.html
+│   │   │   ├── shared_components_ui_input-otp.html
+│   │   │   ├── shared_components_ui_input.html
+│   │   │   ├── shared_components_ui_label.html
+│   │   │   ├── shared_components_ui_popover.html
+│   │   │   ├── shared_components_ui_progress.html
+│   │   │   ├── shared_components_ui_select.html
+│   │   │   ├── shared_components_ui_separator.html
+│   │   │   ├── shared_components_ui_skeleton.html
+│   │   │   ├── shared_components_ui_switch.html
+│   │   │   ├── shared_components_ui_table.html
+│   │   │   ├── shared_components_ui_tabs.html
+│   │   │   ├── shared_components_ui_textarea.html
+│   │   │   ├── shared_components_ui_tooltip.html
+│   │   │   ├── shared_components_WidgetErrorBoundary.html
+│   │   │   ├── shared_components_WidgetErrorBoundary_WidgetErrorBoundary.html
+│   │   │   ├── shared_errors_AppError.html
+│   │   │   ├── shared_errors_errorHandler.html
+│   │   │   ├── shared_errors_frontend-error-codes.html
+│   │   │   ├── shared_errors_HttpError.html
+│   │   │   ├── shared_errors_map-frontend-error.html
+│   │   │   ├── shared_errors_map-validation-errors.html
+│   │   │   ├── shared_errors_rate-limit.html
+│   │   │   ├── shared_forms_AuthForm.html
+│   │   │   ├── shared_forms_AuthForm_auth-form-pending.html
+│   │   │   ├── shared_forms_AuthForm_auth-form.constants.html
+│   │   │   ├── shared_forms_AuthForm_AuthEmailPanel.html
+│   │   │   ├── shared_forms_AuthForm_AuthForm.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthMethodButton.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthMethodButton_AuthMethodButton.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthMethodDivider.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthMethodDivider_AuthMethodDivider.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthWelcomeHeader.html
+│   │   │   ├── shared_forms_AuthForm_components_AuthWelcomeHeader_AuthWelcomeHeader.html
+│   │   │   ├── shared_forms_FormError.html
+│   │   │   ├── shared_forms_FormError_FormError.html
+│   │   │   ├── shared_forms_FormField.html
+│   │   │   ├── shared_forms_FormField_FormField.html
+│   │   │   ├── shared_forms_ProfileForm.html
+│   │   │   ├── shared_forms_ProfileForm_contracts.html
+│   │   │   ├── shared_forms_ProfileForm_ProfileForm.html
+│   │   │   ├── shared_hooks_useApiKeys.html
+│   │   │   ├── shared_hooks_useApiKeys_useApiKeys.html
+│   │   │   ├── shared_hooks_useAppMutation.html
+│   │   │   ├── shared_hooks_useAppMutation_useAppMutation.html
+│   │   │   ├── shared_hooks_useAuthMethods.html
+│   │   │   ├── shared_hooks_useAuthMethods_useAuthMethods.html
+│   │   │   ├── shared_hooks_useBillingInvoices.html
+│   │   │   ├── shared_hooks_useBillingInvoices_useBillingInvoices.html
+│   │   │   ├── shared_hooks_useBillingPaymentMethods.html
+│   │   │   ├── shared_hooks_useBillingPaymentMethods_useBillingPaymentMethods.html
+│   │   │   ├── shared_hooks_useCan.html
+│   │   │   ├── shared_hooks_useCan_useCan.html
+│   │   │   ├── shared_hooks_useConsumedSearchToken.html
+│   │   │   ├── shared_hooks_useConsumedSearchToken_useConsumedSearchToken.html
+│   │   │   ├── shared_hooks_useCooldownClock.html
+│   │   │   ├── shared_hooks_useCooldownClock_useCooldownClock.html
+│   │   │   ├── shared_hooks_useCreate.html
+│   │   │   ├── shared_hooks_useCreate_useCreate.html
+│   │   │   ├── shared_hooks_useCursorList.html
+│   │   │   ├── shared_hooks_useCursorList_useCursorList.html
+│   │   │   ├── shared_hooks_useDataTableUrlState.html
+│   │   │   ├── shared_hooks_useDataTableUrlState_useDataTableUrlState.html
+│   │   │   ├── shared_hooks_useDebouncedValue.html
+│   │   │   ├── shared_hooks_useDebouncedValue_useDebouncedValue.html
+│   │   │   ├── shared_hooks_useDelete.html
+│   │   │   ├── shared_hooks_useDelete_useDelete.html
+│   │   │   ├── shared_hooks_useDeploymentFlags.html
+│   │   │   ├── shared_hooks_useDeploymentFlags_useDeploymentFlags.html
+│   │   │   ├── shared_hooks_useInvitations.html
+│   │   │   ├── shared_hooks_useInvitations_useInvitations.html
+│   │   │   ├── shared_hooks_useList.html
+│   │   │   ├── shared_hooks_useList_useList.html
+│   │   │   ├── shared_hooks_useLocaleFormat.html
+│   │   │   ├── shared_hooks_useLocaleFormat_useLocaleFormat.html
+│   │   │   ├── shared_hooks_useMeContext.html
+│   │   │   ├── shared_hooks_useMeContext_useMeContext.html
+│   │   │   ├── shared_hooks_useMembers.html
+│   │   │   ├── shared_hooks_useMembers_useMembers.html
+│   │   │   ├── shared_hooks_useMfa.html
+│   │   │   ├── shared_hooks_useMfa_useMfa.html
+│   │   │   ├── shared_hooks_useNotifications.html
+│   │   │   ├── shared_hooks_useNotifications_useNotifications.html
+│   │   │   ├── shared_hooks_useOne.html
+│   │   │   ├── shared_hooks_useOne_useOne.html
+│   │   │   ├── shared_hooks_useOrgBrand.html
+│   │   │   ├── shared_hooks_useOrgBrand_useOrgBrand.html
+│   │   │   ├── shared_hooks_usePasskeys.html
+│   │   │   ├── shared_hooks_usePasskeys_usePasskeys.html
+│   │   │   ├── shared_hooks_useRBAC.html
+│   │   │   ├── shared_hooks_useRBAC_useRBAC.html
+│   │   │   ├── shared_hooks_useRoles.html
+│   │   │   ├── shared_hooks_useRoles_useRoles.html
+│   │   │   ├── shared_hooks_useSessions.html
+│   │   │   ├── shared_hooks_useSessions_useSessions.html
+│   │   │   ├── shared_hooks_useSubscription.html
+│   │   │   ├── shared_hooks_useSubscription_useSubscription.html
+│   │   │   ├── shared_hooks_useUnsavedChangesGuard.html
+│   │   │   ├── shared_hooks_useUnsavedChangesGuard_useUnsavedChangesGuard.html
+│   │   │   ├── shared_hooks_useUpdate.html
+│   │   │   ├── shared_hooks_useUpdate_useUpdate.html
+│   │   │   ├── shared_hooks_useUpdateOrganization.html
+│   │   │   ├── shared_hooks_useUpdateOrganization_useUpdateOrganization.html
+│   │   │   ├── shared_hooks_useWebhooks.html
+│   │   │   ├── shared_hooks_useWebhooks_useWebhooks.html
+│   │   │   ├── shared_icons.html
+│   │   │   ├── shared_icons_github-mark.html
+│   │   │   ├── shared_icons_icon-names.html
+│   │   │   ├── shared_icons_icon-registry.html
+│   │   │   ├── shared_icons_icon-types.html
+│   │   │   ├── shared_icons_iconset-phosphor.html
+│   │   │   ├── shared_icons_iconset-tabler.html
+│   │   │   ├── shared_layouts_AppLayout.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.html
+│   │   │   ├── shared_layouts_AppLayout_components_AppContextStrip.html
+│   │   │   ├── shared_layouts_AppLayout_components_AppContextStrip_AppContextStrip.html
+│   │   │   ├── shared_layouts_AppLayout_components_SidebarQuickLinks.html
+│   │   │   ├── shared_layouts_AppLayout_components_SidebarQuickLinks_SidebarQuickLinks.html
+│   │   │   ├── shared_layouts_AppLayout_resolve-app-shell.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutFocus.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutRail.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutSidebar.html
+│   │   │   ├── shared_layouts_AppLayout_variants_AppLayoutTopNav.html
+│   │   │   ├── shared_layouts_AuthLayout.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.html
+│   │   │   ├── shared_layouts_AuthLayout_variants_AuthLayoutMinimal.html
+│   │   │   ├── shared_layouts_AuthLayout_variants_AuthLayoutSplit.html
+│   │   │   ├── shared_layouts_AuthLayout_variants_AuthLayoutSpotlight.html
+│   │   │   ├── shared_layouts_layout.constants.html
+│   │   │   ├── shared_layouts_LayoutVariantFallback.html
+│   │   │   ├── shared_layouts_LayoutVariantFallback_LayoutVariantFallback.html
+│   │   │   ├── shared_layouts_PublicLayout.html
+│   │   │   ├── shared_layouts_PublicLayout_PublicLayout.html
+│   │   │   ├── shared_layouts_PublicLayout_PublicLayout.shared.html
+│   │   │   ├── shared_layouts_PublicLayout_variants_PublicLayoutBrand.html
+│   │   │   ├── shared_layouts_PublicLayout_variants_PublicLayoutCard.html
+│   │   │   ├── shared_layouts_PublicLayout_variants_PublicLayoutCentered.html
+│   │   │   ├── shared_notifications_desktop.html
+│   │   │   ├── shared_notify.html
+│   │   │   ├── shared_notify_AppToaster.html
+│   │   │   ├── shared_notify_CustomToast.html
+│   │   │   ├── shared_notify_notify-deferred.html
+│   │   │   ├── shared_notify_notify.html
+│   │   │   ├── shared_store_useAuthStore.html
+│   │   │   ├── shared_store_useAuthStore_useAuthStore.html
+│   │   │   ├── shared_store_useConsentStore.html
+│   │   │   ├── shared_store_useConsentStore_useConsentStore.html
+│   │   │   ├── shared_store_useLocaleStore.html
+│   │   │   ├── shared_store_useLocaleStore_useLocaleStore.html
+│   │   │   ├── shared_store_useOnboardingStore.html
+│   │   │   ├── shared_store_useOnboardingStore_useOnboardingStore.html
+│   │   │   ├── shared_store_useOrganizationStore.html
+│   │   │   ├── shared_store_useOrganizationStore_useOrganizationStore.html
+│   │   │   ├── shared_store_useThemeStore.html
+│   │   │   ├── shared_store_useThemeStore_useThemeStore.html
+│   │   │   ├── shared_store_useUIStore.html
+│   │   │   ├── shared_store_useUIStore_useUIStore.html
+│   │   │   ├── shared_tenancy_deployment-mode.html
+│   │   │   ├── shared_tenancy_me-context.html
+│   │   │   ├── shared_tenancy_my-organizations.html
+│   │   │   ├── shared_tenancy_organization-context.html
+│   │   │   ├── shared_tenancy_organization-membership.html
+│   │   │   ├── shared_tenancy_organization-resolver.html
+│   │   │   ├── shared_tenancy_session-context.html
+│   │   │   ├── shared_tenancy_switch.html
+│   │   │   ├── shared_tenancy_tenancy-service.html
+│   │   │   ├── shared_theme.html
+│   │   │   ├── shared_theme_catalog-doc.html
+│   │   │   ├── shared_theme_layout-width.html
+│   │   │   ├── shared_theme_org-brand.html
+│   │   │   └── shared_theme_presets.html
+│   │   ├── types/
+│   │   │   ├── core_config_env-resolvers.OAuthProviderFlags.html
+│   │   │   ├── core_config_env-resolvers.OAuthProviderId.html
+│   │   │   ├── core_config_env-schema.ClientEnv.html
+│   │   │   ├── core_config_env-schema.DeployEnvironment.html
+│   │   │   ├── core_config_platform-config.ConfigGet.html
+│   │   │   ├── core_rbac_guards.DenyMode.html
+│   │   │   ├── core_security_gate.types.Gate.html
+│   │   │   ├── core_types_branded.AppointmentPublicId.html
+│   │   │   ├── core_types_branded.InvoicePublicId.html
+│   │   │   ├── core_types_branded.OrganizationPublicId.html
+│   │   │   ├── core_types_branded.PatientPublicId.html
+│   │   │   ├── core_types_branded.UserPublicId.html
+│   │   │   ├── core_types_permissions.OrganizationPermission.html
+│   │   │   ├── lib_i18n_build-config.I18nBuildMode.html
+│   │   │   ├── lib_i18n_build-config.LocaleBuildProfile.html
+│   │   │   ├── lib_i18n_format.LocaleFormatInput.html
+│   │   │   ├── lib_i18n_intl-config.CurrencyCode.html
+│   │   │   ├── lib_i18n_intl-config.CurrencyDisplayPreference.html
+│   │   │   ├── lib_i18n_intl-config.DateFormatPreference.html
+│   │   │   ├── lib_i18n_intl-config.FirstDayOfWeek.html
+│   │   │   ├── lib_i18n_intl-config.FormatLocaleTag.html
+│   │   │   ├── lib_i18n_intl-config.HourCyclePreference.html
+│   │   │   ├── lib_i18n_intl-config.MeasurementSystem.html
+│   │   │   ├── lib_i18n_intl-config.NumberStylePreference.html
+│   │   │   ├── lib_i18n_locales.I18nLocale.html
+│   │   │   ├── lib_i18n_locales.TextDirection.html
+│   │   │   ├── lib_i18n_namespaces.I18nNamespace.html
+│   │   │   ├── lib_password-strength.PasswordScore.html
+│   │   │   ├── lib_routes_page-manifest.PageManifest.html
+│   │   │   ├── shared_analytics_analytics.constants.AnalyticsEventName.html
+│   │   │   ├── shared_api_auth-contracts.EmailVerificationCodeInput.html
+│   │   │   ├── shared_api_auth-contracts.LoginInput.html
+│   │   │   ├── shared_api_auth-contracts.MfaVerifyInput.html
+│   │   │   ├── shared_api_billing-contracts.BillingCycle.html
+│   │   │   ├── shared_api_billing-contracts.BillingInvoice.html
+│   │   │   ├── shared_api_billing-contracts.BillingInvoiceStatus.html
+│   │   │   ├── shared_api_billing-contracts.BillingPaymentMethod.html
+│   │   │   ├── shared_api_billing-contracts.BillingPlan.html
+│   │   │   ├── shared_api_billing-contracts.BillingSubscription.html
+│   │   │   ├── shared_api_billing-contracts.BillingSubscriptionStatus.html
+│   │   │   ├── shared_api_notification-contracts.Notification.html
+│   │   │   ├── shared_api_notification-contracts.NotificationCategory.html
+│   │   │   ├── shared_api_notification-contracts.NotificationChannel.html
+│   │   │   ├── shared_api_notification-contracts.NotificationPreference.html
+│   │   │   ├── shared_api_notification-contracts.NotificationPreferenceWire.html
+│   │   │   ├── shared_api_notification-contracts.NotificationWire.html
+│   │   │   ├── shared_api_organization-contracts.ApiKey.html
+│   │   │   ├── shared_api_organization-contracts.ApiKeyWithSecret.html
+│   │   │   ├── shared_api_organization-contracts.CreateApiKeyInput.html
+│   │   │   ├── shared_api_organization-contracts.Invitation.html
+│   │   │   ├── shared_api_organization-contracts.InvitationStatus.html
+│   │   │   ├── shared_api_organization-contracts.Member.html
+│   │   │   ├── shared_api_organization-contracts.MembershipStatus.html
+│   │   │   ├── shared_api_organization-contracts.OrgRole.html
+│   │   │   ├── shared_api_organization-contracts.RoleInput.html
+│   │   │   ├── shared_api_organization-contracts.RoleSummary.html
+│   │   │   ├── shared_api_passkey-contracts.Passkey.html
+│   │   │   ├── shared_api_session-contracts.Session.html
+│   │   │   ├── shared_api_session-contracts.SessionWire.html
+│   │   │   ├── shared_api_webhook-contracts.CreateWebhookInput.html
+│   │   │   ├── shared_api_webhook-contracts.Webhook.html
+│   │   │   ├── shared_api_webhook-contracts.WebhookWire.html
+│   │   │   ├── shared_auth_captcha_captcha-config.CaptchaProvider.html
+│   │   │   ├── shared_auth_types.AuthTokenResponse.html
+│   │   │   ├── shared_auth_types.AuthUser.html
+│   │   │   ├── shared_auth_types.Role.html
+│   │   │   ├── shared_components_Dashboard_dashboard-quick-actions.DashboardQuickAction.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.AnalyticsRange.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.MemberStatus.html
+│   │   │   ├── shared_components_QrCode_QrCode.QrCodeProps.html
+│   │   │   ├── shared_components_SettingsModal_organization_org-list-sort.OrgListSortPreset.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.OrganizationSettingsSection.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.SettingsScope.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.SettingsSection.html
+│   │   │   ├── shared_components_StripePaymentForm_StripePaymentForm.StripeBillingIntent.html
+│   │   │   ├── shared_components_Surface_Surface.SurfaceVariant.html
+│   │   │   ├── shared_components_ui_carousel.CarouselApi.html
+│   │   │   ├── shared_components_ui_chart.ChartConfig.html
+│   │   │   ├── shared_errors_frontend-error-codes.FrontendErrorCode.html
+│   │   │   ├── shared_forms_AuthForm_auth-form-pending.AuthContinuePending.html
+│   │   │   ├── shared_forms_ProfileForm_contracts.ProfileInput.html
+│   │   │   ├── shared_hooks_useApiKeys_useApiKeys.ApiKeysListParams.html
+│   │   │   ├── shared_hooks_useMembers_useMembers.MembersListParams.html
+│   │   │   ├── shared_hooks_useRoles_useRoles.RolesListParams.html
+│   │   │   ├── shared_icons.LucideIcon.html
+│   │   │   ├── shared_icons_icon-names.IconName.html
+│   │   │   ├── shared_icons_icon-types.AppIcon.html
+│   │   │   ├── shared_icons_icon-types.IconProps.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.NavItems.html
+│   │   │   ├── shared_layouts_AppLayout_resolve-app-shell.AppShellVariant.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.AuthLayoutShellProps.html
+│   │   │   ├── shared_layouts_PublicLayout_PublicLayout.shared.PublicLayoutShellProps.html
+│   │   │   ├── shared_notifications_desktop.DesktopPermission.html
+│   │   │   ├── shared_notify_CustomToast.ToastType.html
+│   │   │   ├── shared_store_useConsentStore_useConsentStore.ConsentDecision.html
+│   │   │   ├── shared_store_useOnboardingStore_useOnboardingStore.OnboardingStep.html
+│   │   │   ├── shared_tenancy_deployment-mode.DeploymentEnvOverrides.html
+│   │   │   ├── shared_tenancy_deployment-mode.DeploymentMode.html
+│   │   │   ├── shared_tenancy_me-context.GlobalRole.html
+│   │   │   ├── shared_tenancy_me-context.MeContextWire.html
+│   │   │   ├── shared_tenancy_me-context.OrganizationStatusValue.html
+│   │   │   ├── shared_tenancy_me-context.OrganizationType.html
+│   │   │   ├── shared_tenancy_my-organizations.CreateOrganizationInput.html
+│   │   │   ├── shared_tenancy_my-organizations.Organization.html
+│   │   │   ├── shared_tenancy_my-organizations.OrganizationStatus.html
+│   │   │   ├── shared_tenancy_my-organizations.UpdateOrganizationInput.html
+│   │   │   ├── shared_tenancy_organization-resolver.RootTarget.html
+│   │   │   ├── shared_theme_presets.LayoutWidthId.html
+│   │   │   ├── shared_theme_presets.ToastPosition.html
+│   │   │   └── shared_theme_presets.ToastVariant.html
+│   │   ├── variables/
+│   │   │   ├── core_config_app-manifest.APP_ICON_PATHS.html
+│   │   │   ├── core_config_app-manifest.APP_MANIFEST_BACKGROUND_COLOR.html
+│   │   │   ├── core_config_app-manifest.APP_MANIFEST_DESCRIPTION.html
+│   │   │   ├── core_config_app-manifest.APP_MANIFEST_DISPLAY.html
+│   │   │   ├── core_config_app-manifest.APP_MANIFEST_ORIENTATION.html
+│   │   │   ├── core_config_app-manifest.APP_MANIFEST_SHORT_NAME.html
+│   │   │   ├── core_config_app-manifest.APP_MANIFEST_THEME_COLOR.html
+│   │   │   ├── core_config_constants.API_BASE_PATH.html
+│   │   │   ├── core_config_constants.API_ENDPOINTS.html
+│   │   │   ├── core_config_constants.AUTH_ROUTES.html
+│   │   │   ├── core_config_constants.HTTP.html
+│   │   │   ├── core_config_constants.ORGANIZATION.html
+│   │   │   ├── core_config_constants.SESSION.html
+│   │   │   ├── core_config_env-resolvers.OAUTH_PROVIDER_IDS.html
+│   │   │   ├── core_config_env-schema.branchEnvironmentMap.html
+│   │   │   ├── core_config_env-schema.clientEnvSchema.html
+│   │   │   ├── core_config_env-schema.envProfiles.html
+│   │   │   ├── core_config_env-schema.envSchemaBase.html
+│   │   │   ├── core_config_env-schema.envSchemaConditionallyRequiredKeys.html
+│   │   │   ├── core_config_env-schema.envSchemaKeys.html
+│   │   │   ├── core_config_env-schema.envSchemaRequiredKeys.html
+│   │   │   ├── core_config_env.platformConfig.html
+│   │   │   ├── core_data-provider.dataProvider.html
+│   │   │   ├── core_http_fetch-client.apiClient.html
+│   │   │   ├── core_http_queryClient.queryClient.html
+│   │   │   ├── core_resources_members.resource.memberSchema.html
+│   │   │   ├── core_resources_members.resource.membersResource.html
+│   │   │   ├── core_security_gates_require-session.requireSession.html
+│   │   │   ├── core_types_branded.AppointmentPublicId.html
+│   │   │   ├── core_types_branded.InvoicePublicId.html
+│   │   │   ├── core_types_branded.OrganizationPublicId.html
+│   │   │   ├── core_types_branded.PatientPublicId.html
+│   │   │   ├── core_types_branded.UserPublicId.html
+│   │   │   ├── core_types_permissions.organizationPermissionSchema.html
+│   │   │   ├── core_types_wire.anyPublicIdSchema.html
+│   │   │   ├── core_types_wire.decimalString.html
+│   │   │   ├── core_types_wire.isoDateString.html
+│   │   │   ├── core_version_version-check.constants.VERSION_CHECK_INITIAL_DELAY_MS.html
+│   │   │   ├── core_version_version-check.constants.VERSION_CHECK_RELOADED_FOR_KEY.html
+│   │   │   ├── core_version_version-check.constants.VERSION_UPDATE_SNOOZE_MS.html
+│   │   │   ├── lib_appearance-surface.appearanceChoiceClassName.html
+│   │   │   ├── lib_appearance-surface.appearanceModeCardClassName.html
+│   │   │   ├── lib_appearance-surface.appearancePreviewWellClassName.html
+│   │   │   ├── lib_appearance-surface.appearanceRowTileClassName.html
+│   │   │   ├── lib_appearance-surface.appearanceTileActiveClassName.html
+│   │   │   ├── lib_appearance-surface.appearanceTileClassName.html
+│   │   │   ├── lib_appearance-surface.appearanceTileIdleClassName.html
+│   │   │   ├── lib_chunk-prefetch.IDLE_PREFETCH_TIMEOUT_MS.html
+│   │   │   ├── lib_i18n.i18n.html
+│   │   │   ├── lib_i18n_build-config.DEFAULT_BUILD_I18N_BCP47.html
+│   │   │   ├── lib_i18n_build-config.DEFAULT_BUILD_I18N_MODE.html
+│   │   │   ├── lib_i18n_build-env.buildEnv.html
+│   │   │   ├── lib_i18n_build-runtime.I18N_BUILD_MODE.html
+│   │   │   ├── lib_i18n_errors.constants.ERRORS_KEYS.html
+│   │   │   ├── lib_i18n_errors.constants.ERRORS_NS.html
+│   │   │   ├── lib_i18n_i18n-resources.multi.I18N_BUILD_BCP47.html
+│   │   │   ├── lib_i18n_i18n-resources.multi.I18N_BUILD_MODE.html
+│   │   │   ├── lib_i18n_i18n-resources.multi.I18N_BUILD_UI_LOCALE.html
+│   │   │   ├── lib_i18n_intl-config.CURRENCY_CODES.html
+│   │   │   ├── lib_i18n_intl-config.CURRENCY_DISPLAY_PREFERENCES.html
+│   │   │   ├── lib_i18n_intl-config.DATE_FORMAT_PREFERENCES.html
+│   │   │   ├── lib_i18n_intl-config.DEFAULT_CURRENCY_CODE.html
+│   │   │   ├── lib_i18n_intl-config.DEFAULT_CURRENCY_DISPLAY.html
+│   │   │   ├── lib_i18n_intl-config.DEFAULT_DATE_FORMAT.html
+│   │   │   ├── lib_i18n_intl-config.DEFAULT_FORMAT_LOCALE.html
+│   │   │   ├── lib_i18n_intl-config.DEFAULT_HOUR_CYCLE.html
+│   │   │   ├── lib_i18n_intl-config.DEFAULT_NUMBER_STYLE.html
+│   │   │   ├── lib_i18n_intl-config.FORMAT_LOCALE_TAGS.html
+│   │   │   ├── lib_i18n_intl-config.HOUR_CYCLE_PREFERENCES.html
+│   │   │   ├── lib_i18n_intl-config.INTL_LOCALE.html
+│   │   │   ├── lib_i18n_intl-config.LOCALE_FORMAT_SAMPLES.html
+│   │   │   ├── lib_i18n_intl-config.NUMBER_STYLE_PREFERENCES.html
+│   │   │   ├── lib_i18n_locale.constants.CURRENCY_CODE_LIST.html
+│   │   │   ├── lib_i18n_locale.constants.CURRENCY_DISPLAY_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.CURRENCY_DISPLAY_PREFERENCE_LIST.html
+│   │   │   ├── lib_i18n_locale.constants.DATE_FORMAT_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.DATE_FORMAT_PREFERENCE_LIST.html
+│   │   │   ├── lib_i18n_locale.constants.DIRECTION_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.FIRST_DAY_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.FORMAT_LOCALE_LIST.html
+│   │   │   ├── lib_i18n_locale.constants.HOUR_CYCLE_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.HOUR_CYCLE_PREFERENCE_LIST.html
+│   │   │   ├── lib_i18n_locale.constants.LOCALE_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.LOCALE_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.LOCALE_NS.html
+│   │   │   ├── lib_i18n_locale.constants.LOCALE_TEST_IDS.html
+│   │   │   ├── lib_i18n_locale.constants.MEASUREMENT_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.NUMBER_STYLE_LABEL_KEYS.html
+│   │   │   ├── lib_i18n_locale.constants.NUMBER_STYLE_PREFERENCE_LIST.html
+│   │   │   ├── lib_i18n_locales.DEFAULT_LOCALE.html
+│   │   │   ├── lib_i18n_locales.I18N_LOCALES.html
+│   │   │   ├── lib_i18n_locales.LOCALE_NATIVE_LABELS.html
+│   │   │   ├── lib_i18n_locales.PARTIAL_UI_LOCALES.html
+│   │   │   ├── lib_i18n_locales.RTL_LOCALES.html
+│   │   │   ├── lib_i18n_namespaces.I18N_NAMESPACES.html
+│   │   │   ├── lib_icon-surface.closeControlClassName.html
+│   │   │   ├── lib_icon-surface.focusControlClassName.html
+│   │   │   ├── lib_icon-surface.iconChipClassName.html
+│   │   │   ├── lib_icon-surface.iconOnBrandSurface.html
+│   │   │   ├── lib_icon-surface.iconOnDestructiveSurface.html
+│   │   │   ├── lib_icon-surface.iconOnInfoSurface.html
+│   │   │   ├── lib_icon-surface.iconOnPrimarySurface.html
+│   │   │   ├── lib_icon-surface.iconOnSidebarSurface.html
+│   │   │   ├── lib_icon-surface.iconOnSuccessSurface.html
+│   │   │   ├── lib_icon-surface.iconOnWarningSurface.html
+│   │   │   ├── lib_icon-surface.themeChoiceButtonClassName.html
+│   │   │   ├── lib_responsive-grid.autoFitActionsGrid.html
+│   │   │   ├── lib_responsive-grid.autoFitCardsGrid.html
+│   │   │   ├── lib_responsive-grid.dashboardFooterGrid.html
+│   │   │   ├── lib_responsive-grid.dashboardKpiGrid.html
+│   │   │   ├── lib_responsive-grid.gridCellMinWidth.html
+│   │   │   ├── lib_responsive-grid.splitMainAsideGrid.html
+│   │   │   ├── lib_routes_page-head.APP_DESCRIPTION.html
+│   │   │   ├── lib_routes_page-head.APP_TITLE.html
+│   │   │   ├── lib_routes_params.invitationIdParamSchema.html
+│   │   │   ├── lib_routes_params.organizationSlugParamSchema.html
+│   │   │   ├── lib_sensitive-clipboard.SENSITIVE_CLIPBOARD_CLEAR_MS.html
+│   │   │   ├── shared_analytics_analytics.constants.ANALYTICS_EVENTS.html
+│   │   │   ├── shared_analytics_analytics.constants.ANALYTICS_ORG_GROUP_TYPE.html
+│   │   │   ├── shared_analytics_analytics.constants.ANALYTICS_SUPER_PROPERTIES.html
+│   │   │   ├── shared_analytics_capture-consent-decision.ANALYTICS_CONSENT_EVENT.html
+│   │   │   ├── shared_api_auth-api.authApi.html
+│   │   │   ├── shared_api_auth-contracts.emailVerificationCodeSchema.html
+│   │   │   ├── shared_api_auth-contracts.loginSchema.html
+│   │   │   ├── shared_api_auth-contracts.mfaVerifySchema.html
+│   │   │   ├── shared_api_billing-contracts.billingCycleSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingInvoiceSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingInvoiceStatusSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingInvoiceWireSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingPaymentMethodSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingPaymentMethodWireSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingPaymentSetupWireSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingPlanSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingPlanWireSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingSubscriptionSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingSubscriptionStatusSchema.html
+│   │   │   ├── shared_api_billing-contracts.billingSubscriptionWireSchema.html
+│   │   │   ├── shared_api_billing-query-keys.billingQueryKeys.html
+│   │   │   ├── shared_api_notification-contracts.notificationCategorySchema.html
+│   │   │   ├── shared_api_notification-contracts.notificationChannelSchema.html
+│   │   │   ├── shared_api_notification-contracts.notificationPreferenceSchema.html
+│   │   │   ├── shared_api_notification-contracts.notificationPreferenceWireSchema.html
+│   │   │   ├── shared_api_notification-contracts.notificationSchema.html
+│   │   │   ├── shared_api_notification-contracts.notificationWireSchema.html
+│   │   │   ├── shared_api_notification-contracts.unreadCountWireSchema.html
+│   │   │   ├── shared_api_notification-query-keys.notificationQueryKeys.html
+│   │   │   ├── shared_api_organization-contracts.apiKeySchema.html
+│   │   │   ├── shared_api_organization-contracts.apiKeyWithSecretSchema.html
+│   │   │   ├── shared_api_organization-contracts.ASSIGNABLE_ROLE_PERMISSIONS.html
+│   │   │   ├── shared_api_organization-contracts.createApiKeyInputSchema.html
+│   │   │   ├── shared_api_organization-contracts.invitationSchema.html
+│   │   │   ├── shared_api_organization-contracts.invitationStatusSchema.html
+│   │   │   ├── shared_api_organization-contracts.memberSchema.html
+│   │   │   ├── shared_api_organization-contracts.membershipStatusSchema.html
+│   │   │   ├── shared_api_organization-contracts.orgRoleSchema.html
+│   │   │   ├── shared_api_organization-contracts.roleInputSchema.html
+│   │   │   ├── shared_api_organization-contracts.roleSummarySchema.html
+│   │   │   ├── shared_api_organization-query-keys.orgQueryKeys.html
+│   │   │   ├── shared_api_passkey-contracts.passkeySchema.html
+│   │   │   ├── shared_api_session-contracts.sessionSchema.html
+│   │   │   ├── shared_api_session-contracts.sessionWireSchema.html
+│   │   │   ├── shared_api_webhook-contracts.createWebhookSchema.html
+│   │   │   ├── shared_api_webhook-contracts.WEBHOOK_EVENTS.html
+│   │   │   ├── shared_api_webhook-contracts.webhookSchema.html
+│   │   │   ├── shared_api_webhook-contracts.webhookWireSchema.html
+│   │   │   ├── shared_auth_auth-shell.constants.ACCEPT_INVITE_REDIRECT_MS.html
+│   │   │   ├── shared_auth_auth-shell.constants.AUTH_EMAIL_VERIFICATION_CODE_LENGTH.html
+│   │   │   ├── shared_auth_auth-shell.constants.AUTH_KEYS.html
+│   │   │   ├── shared_auth_auth-shell.constants.AUTH_MFA_RECOVERY_MAX_LENGTH.html
+│   │   │   ├── shared_auth_auth-shell.constants.AUTH_MFA_TOTP_LENGTH.html
+│   │   │   ├── shared_auth_auth-shell.constants.AUTH_NS.html
+│   │   │   ├── shared_auth_auth-shell.constants.LOGIN_COOLDOWN_BASE_MS.html
+│   │   │   ├── shared_auth_auth-shell.constants.LOGIN_COOLDOWN_MAX_MS.html
+│   │   │   ├── shared_auth_captcha_captcha.constants.CAPTCHA_TEST_IDS.html
+│   │   │   ├── shared_auth_captcha_captcha.constants.CAPTCHA_TOKEN_HEADER.html
+│   │   │   ├── shared_auth_captcha_captcha.constants.DEFAULT_CAPTCHA_BYPASS_HEADER.html
+│   │   │   ├── shared_auth_captcha_captcha.constants.DEV_CAPTCHA_TOKEN.html
+│   │   │   ├── shared_auth_captcha_captcha.constants.TURNSTILE_DUMMY_TOKEN.html
+│   │   │   ├── shared_auth_captcha_captcha.constants.TURNSTILE_TEST_SITE_KEY.html
+│   │   │   ├── shared_auth_types.authTokenResponseSchema.html
+│   │   │   ├── shared_auth_types.authUserSchema.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.ANALYTICS_RANGE_DAYS.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.ANALYTICS_RANGES.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.DASHBOARD_KEYS.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.DASHBOARD_NS.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.DASHBOARD_TEST_IDS.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.MEMBER_STATUS_META.html
+│   │   │   ├── shared_components_Dashboard_dashboard.constants.ORG_STATUS_LABEL_KEYS.html
+│   │   │   ├── shared_components_data-table_DataTable.DataTable.html
+│   │   │   ├── shared_components_FloatingEdgeControls_floating-edge-button.floatingEdgeButtonClassName.html
+│   │   │   ├── shared_components_MembersTable_members-table.constants.MEMBERS_TABLE_KEYS.html
+│   │   │   ├── shared_components_MembersTable_members-table.constants.MEMBERS_TABLE_NS.html
+│   │   │   ├── shared_components_SettingsModal_organization_org-list-sort.DEFAULT_ORG_LIST_SORT.html
+│   │   │   ├── shared_components_SettingsModal_organization_org-list-sort.ORG_LIST_SORT_PRESETS.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.DEFAULT_SETTINGS.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.SECTIONS_BY_SCOPE.html
+│   │   │   ├── shared_components_SettingsModal_settings-sections.SETTINGS_NAV.html
+│   │   │   ├── shared_components_SettingsModal_settings.constants.SETTINGS_GROUP_LABEL_KEYS.html
+│   │   │   ├── shared_components_SettingsModal_settings.constants.SETTINGS_KEYS.html
+│   │   │   ├── shared_components_SettingsModal_settings.constants.SETTINGS_NS.html
+│   │   │   ├── shared_components_SettingsModal_settings.constants.SETTINGS_SECTION_LABEL_KEYS.html
+│   │   │   ├── shared_components_ui_badge.badgeVariants.html
+│   │   │   ├── shared_components_ui_button.buttonVariants.html
+│   │   │   ├── shared_components_ui_chart.ChartLegend.html
+│   │   │   ├── shared_components_ui_chart.ChartTooltip.html
+│   │   │   ├── shared_components_ui_input.Input.html
+│   │   │   ├── shared_components_ui_textarea.Textarea.html
+│   │   │   ├── shared_components_WidgetErrorBoundary_WidgetErrorBoundary.WidgetErrorBoundary.html
+│   │   │   ├── shared_errors_errorHandler.getErrorMessage.html
+│   │   │   ├── shared_errors_frontend-error-codes.FRONTEND_ERROR_CODES.html
+│   │   │   ├── shared_forms_AuthForm_auth-form.constants.AUTH_EMAIL_VERIFICATION_CODE_RESEND_COOLDOWN_MS.html
+│   │   │   ├── shared_forms_AuthForm_auth-form.constants.AUTH_FORM_COOLDOWN_BASE_MS.html
+│   │   │   ├── shared_forms_AuthForm_auth-form.constants.AUTH_FORM_COOLDOWN_MAX_MS.html
+│   │   │   ├── shared_forms_AuthForm_auth-form.constants.AUTH_FORM_TEST_IDS.html
+│   │   │   ├── shared_forms_AuthForm_auth-form.constants.AUTH_OAUTH_PROVIDER_ORDER.html
+│   │   │   ├── shared_forms_ProfileForm_contracts.profileSchema.html
+│   │   │   ├── shared_forms_ProfileForm_contracts.TIMEZONES.html
+│   │   │   ├── shared_hooks_usePasskeys_usePasskeys.passkeysQueryKey.html
+│   │   │   ├── shared_icons.AlertCircle.html
+│   │   │   ├── shared_icons.AlertTriangle.html
+│   │   │   ├── shared_icons.ArrowDown.html
+│   │   │   ├── shared_icons.ArrowUp.html
+│   │   │   ├── shared_icons.Bell.html
+│   │   │   ├── shared_icons.BellOff.html
+│   │   │   ├── shared_icons.Boxes.html
+│   │   │   ├── shared_icons.Building2.html
+│   │   │   ├── shared_icons.CalendarDays.html
+│   │   │   ├── shared_icons.Check.html
+│   │   │   ├── shared_icons.CheckCircle2.html
+│   │   │   ├── shared_icons.ChevronLeft.html
+│   │   │   ├── shared_icons.ChevronRight.html
+│   │   │   ├── shared_icons.ChevronsLeft.html
+│   │   │   ├── shared_icons.ChevronsRight.html
+│   │   │   ├── shared_icons.ChevronsUpDown.html
+│   │   │   ├── shared_icons.Copy.html
+│   │   │   ├── shared_icons.CreditCard.html
+│   │   │   ├── shared_icons.Download.html
+│   │   │   ├── shared_icons.Eye.html
+│   │   │   ├── shared_icons.EyeOff.html
+│   │   │   ├── shared_icons.Fingerprint.html
+│   │   │   ├── shared_icons.GitBranch.html
+│   │   │   ├── shared_icons.Github.html
+│   │   │   ├── shared_icons.Globe.html
+│   │   │   ├── shared_icons.Languages.html
+│   │   │   ├── shared_icons.Laptop.html
+│   │   │   ├── shared_icons.LayoutDashboard.html
+│   │   │   ├── shared_icons.Loader2.html
+│   │   │   ├── shared_icons.LogOut.html
+│   │   │   ├── shared_icons.Mail.html
+│   │   │   ├── shared_icons.Menu.html
+│   │   │   ├── shared_icons.Minus.html
+│   │   │   ├── shared_icons.Monitor.html
+│   │   │   ├── shared_icons.MonitorSmartphone.html
+│   │   │   ├── shared_icons.Moon.html
+│   │   │   ├── shared_icons.MoreHorizontal.html
+│   │   │   ├── shared_icons.Palette.html
+│   │   │   ├── shared_icons.Plug.html
+│   │   │   ├── shared_icons.Plus.html
+│   │   │   ├── shared_icons.Rocket.html
+│   │   │   ├── shared_icons.RotateCw.html
+│   │   │   ├── shared_icons.Search.html
+│   │   │   ├── shared_icons.Settings.html
+│   │   │   ├── shared_icons.Shield.html
+│   │   │   ├── shared_icons.ShieldAlert.html
+│   │   │   ├── shared_icons.ShieldCheck.html
+│   │   │   ├── shared_icons.SlidersHorizontal.html
+│   │   │   ├── shared_icons.Smartphone.html
+│   │   │   ├── shared_icons.Sparkles.html
+│   │   │   ├── shared_icons.Sun.html
+│   │   │   ├── shared_icons.Trash2.html
+│   │   │   ├── shared_icons.TriangleAlert.html
+│   │   │   ├── shared_icons.User.html
+│   │   │   ├── shared_icons.UserCog.html
+│   │   │   ├── shared_icons.UserPlus.html
+│   │   │   ├── shared_icons.Users.html
+│   │   │   ├── shared_icons.X.html
+│   │   │   ├── shared_icons.XCircle.html
+│   │   │   ├── shared_icons.Zap.html
+│   │   │   ├── shared_icons_icon-names.ICON_NAMES.html
+│   │   │   ├── shared_icons_iconset-phosphor.iconSet.html
+│   │   │   ├── shared_icons_iconset-tabler.iconSet.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.NAV_ITEMS.html
+│   │   │   ├── shared_layouts_AppLayout_AppLayout.shared.NAV_STYLES.html
+│   │   │   ├── shared_layouts_AppLayout_resolve-app-shell.APP_SHELL_VARIANT.html
+│   │   │   ├── shared_layouts_AuthLayout_AuthLayout.shared.AUTH_MARKETING_FEATURES.html
+│   │   │   ├── shared_layouts_layout.constants.APP_NAV_SEGMENT_KEYS.html
+│   │   │   ├── shared_layouts_layout.constants.AUTH_LAYOUT_FEATURE_KEYS.html
+│   │   │   ├── shared_layouts_layout.constants.AUTH_LAYOUT_STAT_KEYS.html
+│   │   │   ├── shared_layouts_layout.constants.LAYOUT_KEYS.html
+│   │   │   ├── shared_layouts_layout.constants.LAYOUT_NS.html
+│   │   │   ├── shared_layouts_layout.constants.LAYOUT_TEST_IDS.html
+│   │   │   ├── shared_notify_notify.notify.html
+│   │   │   ├── shared_store_useAuthStore_useAuthStore.useAuthStore.html
+│   │   │   ├── shared_store_useConsentStore_useConsentStore.useConsentStore.html
+│   │   │   ├── shared_store_useLocaleStore_useLocaleStore.useLocaleStore.html
+│   │   │   ├── shared_store_useOnboardingStore_useOnboardingStore.ONBOARDING_STEPS.html
+│   │   │   ├── shared_store_useOnboardingStore_useOnboardingStore.useOnboardingStore.html
+│   │   │   ├── shared_store_useOrganizationStore_useOrganizationStore.useOrganizationStore.html
+│   │   │   ├── shared_store_useThemeStore_useThemeStore.useThemeStore.html
+│   │   │   ├── shared_store_useUIStore_useUIStore.useUIStore.html
+│   │   │   ├── shared_tenancy_deployment-mode.DEFAULT_DEPLOYMENT_FLAGS.html
+│   │   │   ├── shared_tenancy_deployment-mode.personalOrganizationIdWire.html
+│   │   │   ├── shared_tenancy_deployment-mode.userDeploymentFlagsWire.html
+│   │   │   ├── shared_tenancy_me-context.meContextQueryKey.html
+│   │   │   ├── shared_tenancy_me-context.meContextWire.html
+│   │   │   ├── shared_tenancy_me-context.organizationWire.html
+│   │   │   ├── shared_tenancy_my-organizations.createOrganizationSchema.html
+│   │   │   ├── shared_tenancy_my-organizations.organizationSchema.html
+│   │   │   ├── shared_tenancy_my-organizations.updateOrganizationSchema.html
+│   │   │   ├── shared_theme_catalog-doc.CATALOG_OPTION_IDS.html
+│   │   │   ├── shared_theme_catalog-doc.THEME_DOC_ASSERTIONS.html
+│   │   │   ├── shared_theme_presets.ACCENT_COLORS.html
+│   │   │   ├── shared_theme_presets.ACCENT_INTENSITIES.html
+│   │   │   ├── shared_theme_presets.APP_VARIANT_COUNT.html
+│   │   │   ├── shared_theme_presets.AUTH_VARIANT_COUNT.html
+│   │   │   ├── shared_theme_presets.BASE_COLORS.html
+│   │   │   ├── shared_theme_presets.CONTRAST_MODES.html
+│   │   │   ├── shared_theme_presets.DEFAULT_BASE.html
+│   │   │   ├── shared_theme_presets.DEFAULT_CONTRAST.html
+│   │   │   ├── shared_theme_presets.DEFAULT_DENSITY.html
+│   │   │   ├── shared_theme_presets.DEFAULT_ELEVATION.html
+│   │   │   ├── shared_theme_presets.DEFAULT_FOCUS.html
+│   │   │   ├── shared_theme_presets.DEFAULT_HARMONY.html
+│   │   │   ├── shared_theme_presets.DEFAULT_ICON_COLOR.html
+│   │   │   ├── shared_theme_presets.DEFAULT_ICON_LIBRARY.html
+│   │   │   ├── shared_theme_presets.DEFAULT_ICON_WEIGHT.html
+│   │   │   ├── shared_theme_presets.DEFAULT_INTENSITY.html
+│   │   │   ├── shared_theme_presets.DEFAULT_LAYOUT_WIDTH.html
+│   │   │   ├── shared_theme_presets.DEFAULT_MENU.html
+│   │   │   ├── shared_theme_presets.DEFAULT_MOTION.html
+│   │   │   ├── shared_theme_presets.DEFAULT_PRESET.html
+│   │   │   ├── shared_theme_presets.DEFAULT_SEPARATION.html
+│   │   │   ├── shared_theme_presets.DEFAULT_SHAPE.html
+│   │   │   ├── shared_theme_presets.DEFAULT_TOAST_POSITION.html
+│   │   │   ├── shared_theme_presets.DEFAULT_TOAST_VARIANT.html
+│   │   │   ├── shared_theme_presets.DEFAULT_TYPE_SCALE.html
+│   │   │   ├── shared_theme_presets.DENSITY_SCALES.html
+│   │   │   ├── shared_theme_presets.ELEVATION_LEVELS.html
+│   │   │   ├── shared_theme_presets.FOCUS_RINGS.html
+│   │   │   ├── shared_theme_presets.FONT_PAIRINGS.html
+│   │   │   ├── shared_theme_presets.GENERATED_FONTS.html
+│   │   │   ├── shared_theme_presets.GENERATED_PRESET.html
+│   │   │   ├── shared_theme_presets.GENERATED_RADII.html
+│   │   │   ├── shared_theme_presets.HARMONY_RULES.html
+│   │   │   ├── shared_theme_presets.ICON_COLORS.html
+│   │   │   ├── shared_theme_presets.ICON_LIBRARIES.html
+│   │   │   ├── shared_theme_presets.ICON_WEIGHTS.html
+│   │   │   ├── shared_theme_presets.LAYOUT_WIDTHS.html
+│   │   │   ├── shared_theme_presets.MENU_STYLES.html
+│   │   │   ├── shared_theme_presets.MOTION_PRESETS.html
+│   │   │   ├── shared_theme_presets.PUBLIC_VARIANT_COUNT.html
+│   │   │   ├── shared_theme_presets.SEPARATION_STRATEGIES.html
+│   │   │   ├── shared_theme_presets.SHAPE_LANGUAGES.html
+│   │   │   ├── shared_theme_presets.SHUFFLE_TEMP.html
+│   │   │   ├── shared_theme_presets.THEME_PRESETS.html
+│   │   │   ├── shared_theme_presets.TOAST_POSITION_LABELS.html
+│   │   │   ├── shared_theme_presets.TOAST_POSITIONS.html
+│   │   │   ├── shared_theme_presets.TOAST_VARIANTS.html
+│   │   │   └── shared_theme_presets.TYPE_SCALES.html
+│   │   ├── hierarchy.html
+│   │   └── index.html
 │   ├── deployment/
 │   │   ├── runbooks/
 │   │   │   ├── csp-trusted-types-production.md
@@ -1478,6 +2076,7 @@ core-fe/
 │   │   ├── data-mutations.md
 │   │   ├── dependency-upgrades.md
 │   │   ├── design.md
+│   │   ├── documentation-tiers.md
 │   │   ├── e2e-testids-inventory.md
 │   │   ├── frontend-platform.md
 │   │   ├── internationalization.md
@@ -2410,7 +3009,10 @@ core-fe/
 │   │   │   ├── session-context.ts
 │   │   │   ├── switch.ts
 │   │   │   ├── tenancy-service.ts
+│   │   │   ├── TENANCY.FLOWS.md
 │   │   │   ├── TENANCY.OVERVIEW.md
+│   │   │   ├── TENANCY.PATTERNS.md
+│   │   │   ├── TENANCY.POLICIES.md
 │   │   │   └── [12 test files]
 │   │   └── theme/
 │   │       ├── catalog-doc.ts
@@ -2426,7 +3028,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [13 test files]
+│   │   └── [17 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/
@@ -2467,7 +3069,8 @@ core-fe/
 │   └── README.md
 ├── tooling/
 │   ├── agent-os/
-│   │   └── generate.ts
+│   │   ├── generate.ts
+│   │   └── lock.ts
 │   ├── ci/
 │   │   ├── check-api-contract-drift.mjs
 │   │   ├── check-patch-coverage.mjs
@@ -2524,6 +3127,7 @@ core-fe/
 │   │   ├── health-check.sh
 │   │   ├── i18n-keys.mjs
 │   │   ├── lockfile-sync.sh
+│   │   ├── no-static-branch-name.ts
 │   │   ├── public-assets.sh
 │   │   ├── route-islands.sh
 │   │   ├── sync-env-example.ts
@@ -2590,6 +3194,7 @@ core-fe/
 ├── tsconfig.app.json
 ├── tsconfig.json
 ├── tsconfig.node.json
+├── typedoc.json
 ├── vite.config.ts
 └── vitest.config.ts
 ================================================================================

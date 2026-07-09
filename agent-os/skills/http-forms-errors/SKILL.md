@@ -61,7 +61,7 @@ Helpers: `shared/errors/rate-limit.ts` (`isRateLimitError`, `getRateLimitRetryAf
      is error-prone): show `mutation.isPending` (disabled button + spinner).
    - Never leave a write with no feedback. Policy + inventory:
      `docs/reference/data-mutations.md`.
-8. **Idempotency** — fetch client attaches `Idempotency-Key` on writes automatically — do not disable.
+8. **Idempotency** — fetch client attaches `X-Idempotency-Key` on writes automatically — do not disable.
 9. **Tests** — colocated form test: 422 maps to field; 429 shows notice; axe clean.
    Optimistic paths also need patch-on-success + rollback-on-error.
 

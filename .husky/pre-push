@@ -51,7 +51,7 @@ pnpm contracts:drift
 # unresolved Sonar issue exists. Runs only when the pushed commits touch deployed-surface code
 # (src/ runtime — the only thing Sonar analyzes; tests/mocks/fixtures/scripts are excluded). The
 # gate auto-starts the server on first use (first boot ~2 min) and provisions a token in
-# .env.local. There is no per-gate skip: a red Sonar gate must be fixed, not bypassed.
+# .env.development. There is no per-gate skip: a red Sonar gate must be fixed, not bypassed.
 SONAR_BASE=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo origin/main)
 PUSHED_RUNTIME=$(git diff --name-only "$SONAR_BASE"...HEAD 2>/dev/null | grep -E '^src/.*\.(ts|tsx)$' | \
   grep -Ev '(__tests__/|\.test\.tsx?$|\.spec\.tsx?$|\.fixtures\.ts$|/mock-[^/]*\.ts$|\.d\.ts$)' || true)

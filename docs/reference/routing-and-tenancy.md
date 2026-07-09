@@ -51,6 +51,10 @@ volume — a real concern for a clinic app). Internal DB ids never appear in URL
 "sub-pages" segment and the mirror must be literal. "Everything between two `*.route.tsx` files
 belongs to the parent" still holds.
 
+> **Built today:** only `dashboard/` and `suspended/` exist under `$organizationSlug/`.
+> The `patients/`, `appointments/`, `billing/`, and `reports/` islands below are the **Phase 3
+> shapes** (planned, not on disk) — scaffold them against these rules when requirements land.
+
 ```text
 src/pages/
 ├── login/ … mfa/ … callback/ …      (auth-shell islands)
@@ -139,13 +143,18 @@ src/pages/
 render-then-redirect flicker). Thin components like the existing `RBACGuard` remain only for
 in-page gating.
 
-Order for `/organization/acme/patients/pat_x9Q2m/appointments/apt_…`:
+Implemented chain for `/organization/acme/…` (shell guards on `$organizationSlug`, then leaf guards):
 
-1. `authGuard` — logged in? → else redirect `/login` (carry `returnTo`)
-2. `organizationGuard` — param is well-formed; user is a member → else **404** (don't leak existence)
-3. `organizationStatusGuard` — active / subscription valid / onboarded → else `…/suspended` or `/onboarding`
-4. `rbacGuard` — section permission (`manifest.permission` from the manifest) → else **403** `/unauthorized`
-5. `featureGuard` — module enabled in plan → else 404 or upsell state
+1. `requireAuth` (`core/rbac/guards.ts`) — logged in? → else redirect `/login` (carry `returnTo`)
+2. `requireTeamDeployment` + `requireProvisionedWorkspace` (`app/guards/org-gates.ts`) — deployment
+   mode allows the team space and the workspace is provisioned
+3. `resolveActiveOrg` / `requireOrganizationContext` (`app/guards/route-guards.ts`) — slug is
+   well-formed; user is a member; switch-on-navigation syncs context → else **404** (don't leak existence)
+4. `gatewayFromManifest(manifest)` (`core/security/gateway.ts`) — on the **leaf** route:
+   session → module (`requireModuleGate`) → permission (`requirePermissionGate`,
+   `manifest.permission`) → else **403** `/unauthorized`
+5. `requireOrgStatus` (`app/guards/route-guards.ts`) — runs **after** the gateway on the leaf:
+   active / subscription valid → else `…/suspended`
 6. **Resource scope is NOT a frontend guard** — the route loader's data fetch _is_ the check:
    the API returns the resource scoped to the organization (and parent resource), and a
    standardized error mapping turns API 404/403 into the NotFound/Unauthorized islands.
@@ -160,15 +169,20 @@ store, organization APIs, and storage — so it lives in `shared/`, exactly like
 
 ```text
 src/shared/tenancy/
-├── TENANCY.OVERVIEW.md
+├── TENANCY.OVERVIEW.md            (+ FLOWS / PATTERNS / POLICIES docs)
 ├── organization-context.ts        read canonical organization from route → sync store
-├── organization-slug.ts             OrganizationPublicId brand + parser
-├── organization-resolver.ts       "/" resolver logic (storage → my-organizations → onboarding)
+├── organization-resolver.ts       "/" resolver logic (me/context → my-organizations → onboarding)
 ├── organization-membership.ts     membership + per-organization permission loading
+├── deployment-mode.ts             personal/team deployment-mode model (two flags → three modes)
+├── me-context.ts                  GET /auth/me/context schema + query
+├── session-context.ts             session hydrate/invalidate
+├── switch.ts                      /auth/switch-to-organization (token re-mint, generation guard)
 ├── tenancy-service.ts             (moved from shared/api/)
-├── tenancy-contracts.ts
 └── my-organizations.ts            (moved from shared/api/my-orgs.ts)
 ```
+
+Slug parsing lives in `lib/routes/params.ts` (`parseOrganizationSlugParam`), not in this module;
+contracts are colocated per file (there is no `tenancy-contracts.ts`).
 
 ## 7. Settings — one global modal, hash-based
 
@@ -178,9 +192,14 @@ unmounting it (a path change re-runs route matching; a hash change does not). Co
 reproduces page + modal, refresh survives, back/Esc closes.
 
 ```text
-#settings/account/{profile|security|notifications|appearance|sessions}
-#settings/organization/{general|members|roles|branches|billing|integrations}
+#settings/account/{profile|account|security|notifications|sessions|billing}
+#settings/organization/{general|members|roles|branches|integrations}
 ```
+
+(Source of truth: `settings-sections.ts`. Billing is an **account** section — legacy
+`#settings/organization/billing` links are redirected to `account/billing` by
+`parseSettingsHash`. Appearance is not a settings section: it is the separate
+`AppearanceDialog` on the root route.)
 
 - Invalid hash → fall back to `#settings/account/profile` (or close).
 - Organization scope requires organization context + permission (`settings-permissions.ts`,
@@ -209,9 +228,10 @@ reproduces page + modal, refresh survives, back/Esc closes.
 
 ```text
 src/lib/routes/
-├── paths.ts        path constants (absorbs lib/routes/paths.ts — one path module only)
-├── params.ts       Zod param schemas + parsers
-├── builders.ts     organizationDashboard(organizationSlug), patientDetail(organizationSlug, patientId), …
+├── params.ts        Zod param schemas + parsers (incl. parseOrganizationSlugParam)
+├── builders.ts      organizationDashboard(organizationSlug), … (path constants live here — no paths.ts)
+├── page-head.ts     manifestHead(manifest) → document title
+├── page-manifest.ts manifest types/helpers
 └── index.ts
 ```
 
