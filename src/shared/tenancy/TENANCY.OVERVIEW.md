@@ -5,6 +5,10 @@ First-class tenancy area (spec: `docs/reference/routing-and-tenancy.md` §6). Li
 storage; the core kernel stays app-state-free (same reasoning as `shared/auth/`).
 "Tenancy" is the sanctioned infra-layer term; everything user-facing says **organization**.
 
+**Companion tiers** (see [`docs/reference/documentation-tiers.md`](../../../docs/reference/documentation-tiers.md)):
+[PATTERNS](./TENANCY.PATTERNS.md) — the idioms · [FLOWS](./TENANCY.FLOWS.md) — the
+runtime sequences · [POLICIES](./TENANCY.POLICIES.md) — the invariants.
+
 **The URL is the single source of truth for organization context.** Inside
 `/organization/$organizationSlug/*` the route param is canonical; `useOrganizationStore` is a
 derived cache synced FROM the route. localStorage / subdomain resolution only feed the `/`

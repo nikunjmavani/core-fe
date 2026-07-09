@@ -60,6 +60,14 @@ All paths are under **`docs/`**. Index: **`docs/README.md`**.
 
 ---
 
+## In-source doc tiers
+
+Every subsystem has a required `<AREA>.OVERVIEW.md`. A **complex** subsystem may
+add optional `<AREA>.PATTERNS.md` (idioms), `<AREA>.FLOWS.md` (runtime sequences),
+and `<AREA>.POLICIES.md` (invariants) next to the code. Convention + templates:
+`docs/reference/documentation-tiers.md`; worked exemplar: `src/shared/tenancy/`.
+Add a tier only when it earns its keep — most areas need only OVERVIEW.
+
 ## Cross-references
 
 - **README.md** — "Documentation" table must list all user-facing docs; link to `docs/README.md` and the correct path under `docs/`.
