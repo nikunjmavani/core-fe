@@ -15,7 +15,13 @@ vi.mock('@/shared/hooks/useMeContext/index.ts', () => ({
 
 const hydratedContextRef = vi.hoisted(() => ({
   value: {
-    user: { id: 'usr_1', email: 'a@b.test', firstName: 'A', lastName: null },
+    user: {
+      id: 'usr_1',
+      email: 'a@b.test',
+      firstName: 'A',
+      lastName: null,
+      onboardingCompleted: true,
+    },
     activeOrganization: null,
     myPermissions: [],
     globalRole: null,
@@ -61,7 +67,10 @@ vi.mock('@/shared/api/organization-api.ts', () => ({
 }));
 
 vi.mock('@/shared/api/auth-api.ts', () => ({
-  authApi: { updateProfile: vi.fn().mockResolvedValue(undefined) },
+  authApi: {
+    updateProfile: vi.fn().mockResolvedValue(undefined),
+    completeOnboarding: vi.fn().mockResolvedValue(undefined),
+  },
 }));
 
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
@@ -117,7 +126,13 @@ describe('OnboardingPage', () => {
     vi.clearAllMocks();
     deploymentFlagsRef.value = { personalOrganizations: false, teamOrganizations: true };
     hydratedContextRef.value = {
-      user: { id: 'usr_1', email: 'a@b.test', firstName: 'A', lastName: null },
+      user: {
+        id: 'usr_1',
+        email: 'a@b.test',
+        firstName: 'A',
+        lastName: null,
+        onboardingCompleted: true,
+      },
       activeOrganization: null,
       myPermissions: [],
       globalRole: null,
@@ -266,8 +281,11 @@ describe('OnboardingPage', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
     expect(createOrganization).not.toHaveBeenCalled();
     expect(switchToPersonal).not.toHaveBeenCalled();
+    // Onboarding is complete, so the resolver routes this personal-mode session to
+    // `/dashboard` directly (the personal workspace self-heals on the next read);
+    // the old `/` fallback only fired when the resolver still wanted onboarding.
     expect(navigate).toHaveBeenCalledWith(
-      expect.objectContaining({ to: '/', replace: true }),
+      expect.objectContaining({ to: '/dashboard', replace: true }),
     );
   });
 

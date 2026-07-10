@@ -343,6 +343,14 @@ export function OnboardingPage() {
       );
       const failed = results.filter((r) => r.status === 'rejected').length;
 
+      // Stamp onboarding complete on the backend BEFORE re-reading me/context, so
+      // the refreshed context (and every later `/` resolve + workspace guard)
+      // reports onboarding done and routes to the dashboard instead of looping
+      // back here. Awaited on purpose: a failure surfaces as the finish error and
+      // keeps the user on the wizard to retry, rather than a silent redirect loop.
+      const accessToken = getAccessToken();
+      if (accessToken) await authApi.completeOnboarding(accessToken);
+
       const refreshedContext = await refreshSessionAfterOnboardingFinish();
       const activatedContext = await activateWorkspaceAfterOnboardingFinish({
         organizationId,

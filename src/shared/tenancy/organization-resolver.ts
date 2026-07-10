@@ -34,6 +34,13 @@ function targetWhenNoActiveOrg(flags: DeploymentFlags, ctx: MeContext): RootTarg
 }
 
 export function resolveRootTarget(ctx: MeContext): RootTarget {
+  // Onboarding is the first gate for EVERY deployment mode: a fresh user goes
+  // through the wizard once before any dashboard — even in personal modes, where
+  // a personal org is auto-provisioned at signup and would otherwise short-circuit
+  // straight to `/dashboard`. Only the wizard steps differ by mode, not whether
+  // onboarding runs. Driven by the backend `onboarding_completed` flag.
+  if (needsOnboarding(ctx)) return { to: '/onboarding' } as const;
+
   const mode = resolveDeploymentMode(ctx.deploymentFlags);
   const active = ctx.activeOrganization;
   const noActive = targetWhenNoActiveOrg(ctx.deploymentFlags, ctx);

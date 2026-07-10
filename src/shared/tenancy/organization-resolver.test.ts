@@ -14,7 +14,10 @@ vi.mock('./session-context.ts', async (importOriginal) => {
   return { ...actual, ensureSessionContext: vi.fn() };
 });
 
-function meCtx(activeOrganization: MeContext['activeOrganization']): MeContext {
+function meCtx(
+  activeOrganization: MeContext['activeOrganization'],
+  onboardingCompleted = true,
+): MeContext {
   return {
     user: {
       id: 'usr_1',
@@ -25,6 +28,7 @@ function meCtx(activeOrganization: MeContext['activeOrganization']): MeContext {
       lastName: null,
       avatarUrl: null,
       status: 'ACTIVE',
+      onboardingCompleted,
       createdAt: 't',
       updatedAt: 't',
     },
@@ -56,7 +60,7 @@ describe('resolveRootRedirect (`/` → active org from me/context)', () => {
   });
 
   it('redirects to onboarding when there is no active org and no memberships', async () => {
-    vi.mocked(ensureSessionContext).mockResolvedValue(meCtx(null));
+    vi.mocked(ensureSessionContext).mockResolvedValue(meCtx(null, false));
     await expect(resolveRootRedirect()).resolves.toEqual({ to: '/onboarding' });
   });
 
@@ -94,7 +98,7 @@ describe('resolveRootRedirect (`/` → active org from me/context)', () => {
 
 describe('resolveRootTarget (dual-URL `/` decision — slug variant)', () => {
   it('routes to onboarding when there is no active org and no memberships', () => {
-    expect(resolveRootTarget(meCtx(null))).toEqual({ to: '/onboarding' });
+    expect(resolveRootTarget(meCtx(null, false))).toEqual({ to: '/onboarding' });
   });
 
   it('routes to organization picker when there is no active org but memberships exist (team-only)', () => {
@@ -133,7 +137,7 @@ describe('resolveRootTarget (dual-URL `/` decision — slug variant)', () => {
 
 describe('workspace surface guards (URL vs me/context)', () => {
   it('blocks personal /dashboard when onboarding is required', () => {
-    expect(workspaceRedirectForPersonalDashboard(meCtx(null))).toEqual({
+    expect(workspaceRedirectForPersonalDashboard(meCtx(null, false))).toEqual({
       to: '/onboarding',
     });
   });
@@ -177,7 +181,9 @@ describe('workspace surface guards (URL vs me/context)', () => {
   });
 
   it('sends team entry to onboarding when there are no orgs yet', () => {
-    expect(workspaceRedirectForTeamEntry(meCtx(null))).toEqual({ to: '/onboarding' });
+    expect(workspaceRedirectForTeamEntry(meCtx(null, false))).toEqual({
+      to: '/onboarding',
+    });
   });
 
   it('sends team entry to /dashboard when the active org is personal', () => {

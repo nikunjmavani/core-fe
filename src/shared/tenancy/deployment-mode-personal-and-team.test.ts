@@ -24,6 +24,7 @@ function meCtx(
       lastName: null,
       avatarUrl: null,
       status: 'ACTIVE',
+      onboardingCompleted: true,
       createdAt: 't',
       updatedAt: 't',
     },
