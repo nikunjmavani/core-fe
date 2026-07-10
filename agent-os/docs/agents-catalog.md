@@ -6,16 +6,18 @@ symlinks. Agents are read-only validators/investigators — for task instruction
 (how to build something) see [`agent-os/skills/`](../skills/) and the
 [skill registry](../skills/skill-registry/SKILL.md).
 
-## Catalog (6 agents)
+## Catalog (8 agents)
 
-| Agent                  | Purpose                                                                                                                                      | Tools (read-only)                            |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
-| `ci-investigator`      | Diagnoses a single failing PR CI check and returns a short root-cause summary with a fix plan.                                               | Read, Grep, Glob, Bash                       |
-| `verifier`             | Skeptical independent validator — runs health/tests, checks edge cases, reports pass vs incomplete after a task is marked done.              | Read, Grep, Glob, Bash                       |
-| `docs-auditor`         | Audits `docs/` for index completeness, naming, Mermaid, and cross-links after large doc changes.                                             | Read, Grep, Glob, Bash                       |
-| `dependency-auditor`   | Runs `pnpm deps:audit` + lockfile/license/bundle-impact analysis and returns a prioritized fix plan.                                         | Read, Grep, Glob, Bash                       |
-| `bundle-size-reviewer` | Reviews build output for bundle-size regressions, broken code-splitting, and heavy first-paint imports against size budgets.                 | Read, Grep, Glob, Bash                       |
-| `perf-auditor`         | Traces the local production preview with the chrome-devtools MCP — Core Web Vitals (LCP/CLS/TBT) insights, throttled re-run, budget verdict. | Read, Grep, Glob, Bash + chrome-devtools MCP |
+| Agent                  | Purpose                                                                                                                                            | Tools (read-only)                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `ci-investigator`      | Diagnoses a single failing PR CI check and returns a short root-cause summary with a fix plan.                                                     | Read, Grep, Glob, Bash                       |
+| `verifier`             | Skeptical independent validator — runs health/tests, checks edge cases, reports pass vs incomplete after a task is marked done.                    | Read, Grep, Glob, Bash                       |
+| `docs-auditor`         | Audits `docs/` for index completeness, naming, Mermaid, and cross-links after large doc changes.                                                   | Read, Grep, Glob, Bash                       |
+| `dependency-auditor`   | Runs `pnpm deps:audit` + lockfile/license/bundle-impact analysis and returns a prioritized fix plan.                                               | Read, Grep, Glob, Bash                       |
+| `bundle-size-reviewer` | Reviews build output for bundle-size regressions, broken code-splitting, and heavy first-paint imports against size budgets.                       | Read, Grep, Glob, Bash                       |
+| `perf-auditor`         | Traces the local production preview with the chrome-devtools MCP — Core Web Vitals (LCP/CLS/TBT) insights, throttled re-run, budget verdict.       | Read, Grep, Glob, Bash + chrome-devtools MCP |
+| `a11y-auditor`         | Whole-page accessibility audit — axe E2E lane when core-be is up, static ARIA/focus/label sweep otherwise; complements vitest-axe component tests. | Read, Grep, Glob, Bash                       |
+| `i18n-auditor`         | i18n audit — hardcoded user-facing strings bypassing react-i18next, locale key parity across `src/locales/*`, dead keys, namespace drift.          | Read, Grep, Glob, Bash                       |
 
 ## When to use which
 
@@ -24,6 +26,8 @@ symlinks. Agents are read-only validators/investigators — for task instruction
 - **Large doc change / doc review** → `docs-auditor`.
 - **Before a release/deploy** → `dependency-auditor` + `bundle-size-reviewer` + `perf-auditor` (the `prod-readiness` pipeline).
 - **"Why is first paint slow?" / Web-Vitals check** → `perf-auditor` (production preview trace, never the dev server).
+- **A11y sweep beyond component tests** → `a11y-auditor` (whole-page landmarks/focus/contrast; findings → `web-design-guidelines`).
+- **Before/after adding locales or extracting copy** → `i18n-auditor` (findings → `i18n-constants`).
 
 ## Conventions
 
