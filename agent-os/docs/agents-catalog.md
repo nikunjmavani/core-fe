@@ -6,22 +6,24 @@ symlinks. Agents are read-only validators/investigators — for task instruction
 (how to build something) see [`agent-os/skills/`](../skills/) and the
 [skill registry](../skills/skill-registry/SKILL.md).
 
-## Catalog (5 agents)
+## Catalog (6 agents)
 
-| Agent                  | Purpose                                                                                                                         | Tools (read-only)      |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `ci-investigator`      | Diagnoses a single failing PR CI check and returns a short root-cause summary with a fix plan.                                  | Read, Grep, Glob, Bash |
-| `verifier`             | Skeptical independent validator — runs health/tests, checks edge cases, reports pass vs incomplete after a task is marked done. | Read, Grep, Glob, Bash |
-| `docs-auditor`         | Audits `docs/` for index completeness, naming, Mermaid, and cross-links after large doc changes.                                | Read, Grep, Glob, Bash |
-| `dependency-auditor`   | Runs `pnpm deps:audit` + lockfile/license/bundle-impact analysis and returns a prioritized fix plan.                            | Read, Grep, Glob, Bash |
-| `bundle-size-reviewer` | Reviews build output for bundle-size regressions, broken code-splitting, and heavy first-paint imports against size budgets.    | Read, Grep, Glob, Bash |
+| Agent                  | Purpose                                                                                                                                      | Tools (read-only)                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `ci-investigator`      | Diagnoses a single failing PR CI check and returns a short root-cause summary with a fix plan.                                               | Read, Grep, Glob, Bash                       |
+| `verifier`             | Skeptical independent validator — runs health/tests, checks edge cases, reports pass vs incomplete after a task is marked done.              | Read, Grep, Glob, Bash                       |
+| `docs-auditor`         | Audits `docs/` for index completeness, naming, Mermaid, and cross-links after large doc changes.                                             | Read, Grep, Glob, Bash                       |
+| `dependency-auditor`   | Runs `pnpm deps:audit` + lockfile/license/bundle-impact analysis and returns a prioritized fix plan.                                         | Read, Grep, Glob, Bash                       |
+| `bundle-size-reviewer` | Reviews build output for bundle-size regressions, broken code-splitting, and heavy first-paint imports against size budgets.                 | Read, Grep, Glob, Bash                       |
+| `perf-auditor`         | Traces the local production preview with the chrome-devtools MCP — Core Web Vitals (LCP/CLS/TBT) insights, throttled re-run, budget verdict. | Read, Grep, Glob, Bash + chrome-devtools MCP |
 
 ## When to use which
 
 - **CI is red** → `ci-investigator` (one check at a time → root cause + fix plan).
 - **"Is this actually done?"** → `verifier` before claiming a feature complete.
 - **Large doc change / doc review** → `docs-auditor`.
-- **Before a release/deploy** → `dependency-auditor` + `bundle-size-reviewer` (the `prod-readiness` pipeline).
+- **Before a release/deploy** → `dependency-auditor` + `bundle-size-reviewer` + `perf-auditor` (the `prod-readiness` pipeline).
+- **"Why is first paint slow?" / Web-Vitals check** → `perf-auditor` (production preview trace, never the dev server).
 
 ## Conventions
 
@@ -44,10 +46,11 @@ command runs. The `pre-merge-review` pipeline fans out `verifier` →
 names the skill that fixes its findings (`verifier → test-generation`,
 `docs-auditor → documentation-maintenance`). The
 [`/prod-readiness`](../commands/prod-readiness.md) command runs the
-`prod-readiness` pipeline — `dependency-auditor` → `bundle-size-reviewer` before
-a release/deploy
+`prod-readiness` pipeline — `dependency-auditor` → `bundle-size-reviewer` →
+`perf-auditor` before a release/deploy
 (`dependency-auditor → dependency-management`,
-`bundle-size-reviewer → bundle-performance`). `check.ts` gates the manifest —
+`bundle-size-reviewer → bundle-performance`,
+`perf-auditor → bundle-performance`). `check.ts` gates the manifest —
 every step resolves to an agent file and every handoff to a skill directory.
 
 ## Adding an agent

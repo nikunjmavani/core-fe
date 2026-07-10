@@ -11,12 +11,13 @@
       }
     },
     "prod-readiness": {
-      "description": "Production-readiness sweep before a release/deploy — dependencies and bundle.",
-      "steps": ["dependency-auditor", "bundle-size-reviewer"],
+      "description": "Production-readiness sweep before a release/deploy — dependencies, bundle, and runtime performance.",
+      "steps": ["dependency-auditor", "bundle-size-reviewer", "perf-auditor"],
       "aggregate": "satisfied items, blocking gaps, optional improvements",
       "handoff": {
         "dependency-auditor": "dependency-management",
-        "bundle-size-reviewer": "bundle-performance"
+        "bundle-size-reviewer": "bundle-performance",
+        "perf-auditor": "bundle-performance"
       }
     }
   }

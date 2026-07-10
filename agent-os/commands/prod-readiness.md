@@ -14,10 +14,15 @@ each `steps[]` agent in order:
    sync, license and bundle-impact of any new dependency; prioritized fix plan.
 2. **bundle-size-reviewer** — `pnpm build` + `pnpm size` against the size-limit
    budgets; code-splitting regressions and heavy first-paint static imports.
+3. **perf-auditor** — Chrome DevTools trace of the production preview
+   (`pnpm build` + `pnpm preview`): LCP/CLS/TBT insights plus a throttled
+   re-run; skips gracefully to static checks when the chrome-devtools MCP is
+   unavailable.
 
 Each finding names the procedural skill that fixes it (agent finds, skill
 fixes), per the pipeline's `handoff` map:
-`dependency-auditor → code-quality-security`,
-`bundle-size-reviewer → platform-hygiene`. Produce a single report grouped as
+`dependency-auditor → dependency-management`,
+`bundle-size-reviewer → bundle-performance`,
+`perf-auditor → bundle-performance`. Produce a single report grouped as
 satisfied items, blocking gaps, then optional improvements. This is review-only:
 do not edit files.

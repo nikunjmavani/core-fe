@@ -134,8 +134,8 @@ as data for tooling and the eval gates:
   workflow, external).
 - **Review pipelines** — `agent-os/agents/pipelines.json`: read-only reviewer
   agents run by `/pre-merge-review` (`verifier` → `docs-auditor`) and
-  `/prod-readiness` (`dependency-auditor` → `bundle-size-reviewer`); each
-  finding hands off to the skill that fixes it. Catalog:
+  `/prod-readiness` (`dependency-auditor` → `bundle-size-reviewer` →
+  `perf-auditor`); each finding hands off to the skill that fixes it. Catalog:
   `agent-os/docs/agents-catalog.md`.
 - **File-pattern routing** — `agent-os/docs/skill-triggers.md` is the source for
   "which skill(s) when file X changes"; add a row (and a `triggers.json` case)
