@@ -14,8 +14,12 @@ stack notes are in [`agents-cloud.md`](agents-cloud.md).
 | `codegraph` | `pnpm exec codegraph serve --mcp` | Code intelligence (devDependency)   |
 | `headroom`  | `pnpm exec headroom mcp serve`    | Context compression (devDependency) |
 
-On-demand servers (`context7`, `core-be-api`, `semgrep`, `shadcn`, `sonarqube`,
-`tailwindcss`): `pnpm mcp:setup <name>`. Full template:
+On-demand servers (`chrome-devtools`, `context7`, `core-be-api`, `semgrep`,
+`shadcn`, `sonarqube`, `tailwindcss`): `pnpm mcp:setup <name>`. `chrome-devtools`
+reuses the Playwright Chromium (install once with
+`pnpm exec playwright install --with-deps chromium`; the launcher
+`tooling/dev/chrome-devtools-mcp.mjs` runs it headless and errors with that hint
+if the browser is missing). Full template:
 [`.mcp.example.json`](../../.mcp.example.json), mirrored at
 [`agent-os/mcp/mcp.example.json`](../mcp/mcp.example.json) (drift-tested by
 `tests/ci/mcp-config.policy.test.ts`).

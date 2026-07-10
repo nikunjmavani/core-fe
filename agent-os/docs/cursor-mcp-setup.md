@@ -17,6 +17,7 @@ flowchart LR
     BE[core-be-api]
     SG[semgrep]
     SQ[sonarqube]
+    CD[chrome-devtools]
     CG[codegraph]
     HR[headroom]
   end
@@ -33,30 +34,35 @@ any other repo. The committed template is `.mcp.example.json`; the
 real, gitignored config is `.mcp.json` (the `.mcp.json` and
 `.cursor/mcp.json` symlinks point into it).
 
-| MCP             | Why it's here (frontend)                                          | How it runs                      |
-| --------------- | ----------------------------------------------------------------- | -------------------------------- |
-| **context7**    | Up-to-date library docs (React, Vite, TanStack Query, Zod, …).    | devDep · `pnpm exec` · API key   |
-| **shadcn**      | Browse + add shadcn/ui components via CLI.                        | devDep · `pnpm exec`             |
-| **tailwindcss** | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.     | devDep · `pnpm exec`             |
-| **core-be-api** | Discover the backend API this UI consumes (`call_api`) — the only | hosted URL · backend on `:3000`  |
-|                 | cross-service link, and only when you opt to run the backend.     |                                  |
-| **semgrep**     | Static security scanning (mirrors the CI semgrep lane).           | `uvx` (ephemeral, needs `uv`)    |
-| **sonarqube**   | Local code-quality gate (mirrors the pre-push SonarQube scan).    | `docker` · `SONARQUBE_TOKEN/URL` |
-| **codegraph**   | Code-graph navigation across this repo.                           | devDep · `pnpm exec`             |
-| **headroom**    | Context compression for long sessions.                            | `uvx` (ephemeral, needs `uv`)    |
+| MCP                 | Why it's here (frontend)                                                                           | How it runs                      |
+| ------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **context7**        | Up-to-date library docs (React, Vite, TanStack Query, Zod, …).                                     | devDep · `pnpm exec` · API key   |
+| **shadcn**          | Browse + add shadcn/ui components via CLI.                                                         | devDep · `pnpm exec`             |
+| **tailwindcss**     | Tailwind utilities, colors, docs, CSS-to-Tailwind conversion.                                      | devDep · `pnpm exec`             |
+| **core-be-api**     | Discover the backend API this UI consumes (`call_api`) — the only                                  | hosted URL · backend on `:3000`  |
+|                     | cross-service link, and only when you opt to run the backend.                                      |                                  |
+| **semgrep**         | Static security scanning (mirrors the CI semgrep lane).                                            | `uvx` (ephemeral, needs `uv`)    |
+| **sonarqube**       | Local code-quality gate (mirrors the pre-push SonarQube scan).                                     | `docker` · `SONARQUBE_TOKEN/URL` |
+| **chrome-devtools** | Live-browser perf traces (LCP/CLS insights), network + console inspection, CPU/network throttling. | devDep · Playwright Chromium     |
+| **codegraph**       | Code-graph navigation across this repo.                                                            | devDep · `pnpm exec`             |
+| **headroom**        | Context compression for long sessions.                                                             | `uvx` (ephemeral, needs `uv`)    |
 
 > This list is intentionally frontend-shaped — no database / cache / email /
 > deploy-platform servers (those belong to the backend). Add or remove servers in
 > `.mcp.json` freely; it is yours.
 >
-> **Project-local, container-safe, zero global installs.** The four CLI servers
-> (`context7`, `shadcn`, `tailwindcss`, `codegraph`) are **`devDependencies`**,
-> invoked via `pnpm exec` — `pnpm install` provides them in any fresh container,
-> pinned, with nothing on the global PATH. `semgrep`/`headroom` run via `uvx` and
-> `sonarqube` via `docker` (ephemeral, not global — the container's base image
-> needs `uv` / `docker` for those three). `core-be-api` is a hosted URL and only
-> resolves when you run the backend locally. `sonarqube` reads its env vars from
-> your shell.
+> **Project-local, container-safe, zero global installs.** The five CLI servers
+> (`context7`, `shadcn`, `tailwindcss`, `codegraph`, `chrome-devtools`) are
+> **`devDependencies`**, invoked via `pnpm exec` — `pnpm install` provides them in
+> any fresh container, pinned, with nothing on the global PATH.
+> `semgrep`/`headroom` run via `uvx` and `sonarqube` via `docker` (ephemeral, not
+> global — the container's base image needs `uv` / `docker` for those three).
+> `core-be-api` is a hosted URL and only resolves when you run the backend
+> locally. `sonarqube` reads its env vars from your shell. `chrome-devtools`
+> launches through `tooling/dev/chrome-devtools-mcp.mjs`, which points it at the
+> Playwright-managed Chromium (no system Chrome needed — works on Linux cloud VMs;
+> one-time `pnpm exec playwright install --with-deps chromium`, headless by
+> default, `CHROME_DEVTOOLS_MCP_HEADED=1` to watch it locally).
 
 ---
 
