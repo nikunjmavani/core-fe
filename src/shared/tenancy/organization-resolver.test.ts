@@ -7,11 +7,11 @@ import {
   workspaceRedirectForPersonalDashboard,
   workspaceRedirectForTeamEntry,
 } from './organization-resolver.ts';
-import { hydrateSessionContext } from './session-context.ts';
+import { ensureSessionContext } from './session-context.ts';
 
 vi.mock('./session-context.ts', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
-  return { ...actual, hydrateSessionContext: vi.fn() };
+  return { ...actual, ensureSessionContext: vi.fn() };
 });
 
 function meCtx(activeOrganization: MeContext['activeOrganization']): MeContext {
@@ -52,16 +52,16 @@ function activeOrg(type: OrganizationType, slug: string | null) {
 
 describe('resolveRootRedirect (`/` → active org from me/context)', () => {
   beforeEach(() => {
-    vi.mocked(hydrateSessionContext).mockReset();
+    vi.mocked(ensureSessionContext).mockReset();
   });
 
   it('redirects to onboarding when there is no active org and no memberships', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue(meCtx(null));
+    vi.mocked(ensureSessionContext).mockResolvedValue(meCtx(null));
     await expect(resolveRootRedirect()).resolves.toEqual({ to: '/onboarding' });
   });
 
   it('redirects to organization picker when there is no active org but user has orgs (team-only)', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       ...meCtx(null),
       organizations: [{ ...activeOrg('TEAM', 'acme'), isActive: false }],
       deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
@@ -70,14 +70,12 @@ describe('resolveRootRedirect (`/` → active org from me/context)', () => {
   });
 
   it('routes a personal active org to the root /dashboard', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue(
-      meCtx(activeOrg('PERSONAL', null)),
-    );
+    vi.mocked(ensureSessionContext).mockResolvedValue(meCtx(activeOrg('PERSONAL', null)));
     await expect(resolveRootRedirect()).resolves.toEqual({ to: '/dashboard' });
   });
 
   it('routes a team active org to its $organizationSlug dashboard', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue(meCtx(activeOrg('TEAM', 'acme')));
+    vi.mocked(ensureSessionContext).mockResolvedValue(meCtx(activeOrg('TEAM', 'acme')));
     await expect(resolveRootRedirect()).resolves.toEqual({
       to: '/organization/$organizationSlug/dashboard',
       params: { organizationSlug: 'acme' },
@@ -85,7 +83,7 @@ describe('resolveRootRedirect (`/` → active org from me/context)', () => {
   });
 
   it('routes a team active org WITHOUT a slug to organization picker when not onboarding', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       ...meCtx(activeOrg('TEAM', null)),
       organizations: [{ ...activeOrg('TEAM', null), isActive: true }],
       deploymentFlags: { personalOrganizations: false, teamOrganizations: true },

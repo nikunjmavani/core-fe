@@ -5,6 +5,7 @@ import type * as MeContextModule from '@/shared/tenancy/me-context.ts';
 import { meContextQueryKey } from '@/shared/tenancy/me-context.ts';
 
 import {
+  ensureSessionContext,
   hydrateSessionContext,
   invalidateSessionContext,
   resetSessionContextForTests,
@@ -50,5 +51,29 @@ describe('session-context', () => {
     await hydrateSessionContext();
     resetSessionContextForTests();
     expect(queryClient.getQueryData(meContextQueryKey)).toBeUndefined();
+  });
+
+  // Regression: the post-auth guard chain must reuse the me/context that
+  // establishSession just cached instead of refetching — a redundant fetch keeps
+  // the login form mounted during the destination route's beforeLoad ("flash of
+  // login" between the OTP code and the dashboard).
+  it('ensureSessionContext returns the cached context WITHOUT refetching', async () => {
+    await hydrateSessionContext(); // establishSession-style seed
+    vi.mocked(fetchMeContext).mockClear();
+
+    const ctx = await ensureSessionContext();
+
+    expect(ctx.user.id).toBe('u1');
+    expect(fetchMeContext).not.toHaveBeenCalled();
+  });
+
+  it('ensureSessionContext fetches once when the cache is empty (cold boot)', async () => {
+    expect(queryClient.getQueryData(meContextQueryKey)).toBeUndefined();
+
+    const ctx = await ensureSessionContext();
+
+    expect(ctx.user.id).toBe('u1');
+    expect(fetchMeContext).toHaveBeenCalledOnce();
+    expect(queryClient.getQueryData(meContextQueryKey)).toEqual(ctx);
   });
 });

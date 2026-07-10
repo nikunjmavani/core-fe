@@ -18,7 +18,7 @@ import {
 } from './route-guards.ts';
 
 vi.mock('@/shared/tenancy/session-context.ts', () => ({
-  hydrateSessionContext: vi.fn(),
+  ensureSessionContext: vi.fn(),
 }));
 
 vi.mock('@/core/config/env.ts', () => ({
@@ -29,7 +29,7 @@ vi.mock('@/core/config/env.ts', () => ({
 }));
 
 import { platformConfig } from '@/core/config/env.ts';
-import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
+import { ensureSessionContext } from '@/shared/tenancy/session-context.ts';
 
 vi.mock('@/shared/tenancy/my-organizations.ts', async (importOriginal) => {
   const actual = await importOriginal<typeof MyOrganizationsModule>();
@@ -217,11 +217,11 @@ describe('deployment mode guards', () => {
 
 describe('workspace provision guards', () => {
   beforeEach(() => {
-    vi.mocked(hydrateSessionContext).mockReset();
+    vi.mocked(ensureSessionContext).mockReset();
   });
 
   it('requireProvisionedPersonalDashboard redirects to onboarding when no orgs yet', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       activeOrganization: null,
       organizations: [],
       deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
@@ -234,7 +234,7 @@ describe('workspace provision guards', () => {
   });
 
   it('requireProvisionedPersonalDashboard passes when personal org is active', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       activeOrganization: { id: 'org_p', type: 'PERSONAL', slug: null, status: 'ACTIVE' },
       deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
     } as MeContext);
@@ -243,7 +243,7 @@ describe('workspace provision guards', () => {
   });
 
   it('requireProvisionedTeamWorkspace redirects to onboarding when no orgs yet', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       activeOrganization: null,
       organizations: [],
       deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
@@ -255,7 +255,7 @@ describe('workspace provision guards', () => {
   });
 
   it('requireOnboardingWorkspace passes when onboarding is required (no orgs)', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       activeOrganization: null,
       organizations: [],
       deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
@@ -265,7 +265,7 @@ describe('workspace provision guards', () => {
   });
 
   it('requireOnboardingWorkspace redirects away when user already has org memberships', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       activeOrganization: null,
       organizations: [
         {
@@ -289,7 +289,7 @@ describe('workspace provision guards', () => {
   });
 
   it('requireOnboardingWorkspace redirects to dashboard when personal org is active', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       activeOrganization: { id: 'org_p', type: 'PERSONAL', slug: null, status: 'ACTIVE' },
       deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
     } as MeContext);
@@ -300,7 +300,7 @@ describe('workspace provision guards', () => {
   });
 
   it('requireOnboardingWorkspace redirects to team dashboard when team org is active', async () => {
-    vi.mocked(hydrateSessionContext).mockResolvedValue({
+    vi.mocked(ensureSessionContext).mockResolvedValue({
       activeOrganization: {
         id: 'org_t',
         type: 'TEAM',
