@@ -18,11 +18,15 @@ each `steps[]` agent in order:
    (`pnpm build` + `pnpm preview`): LCP/CLS/TBT insights plus a throttled
    re-run; skips gracefully to static checks when the chrome-devtools MCP is
    unavailable.
+4. **production-hardening-reviewer** — client-security sweep against
+   `docs/reference/security-model.md`: CSP header/meta parity, token-in-memory
+   discipline, single refresh path, cross-tab logout, env allowlist.
 
 Each finding names the procedural skill that fixes it (agent finds, skill
 fixes), per the pipeline's `handoff` map:
 `dependency-auditor → dependency-management`,
 `bundle-size-reviewer → bundle-performance`,
-`perf-auditor → bundle-performance`. Produce a single report grouped as
-satisfied items, blocking gaps, then optional improvements. This is review-only:
-do not edit files.
+`perf-auditor → bundle-performance`,
+`production-hardening-reviewer → code-quality-security`. Produce a single
+report grouped as satisfied items, blocking gaps, then optional improvements.
+This is review-only: do not edit files.
