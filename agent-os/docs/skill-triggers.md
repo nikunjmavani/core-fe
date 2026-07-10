@@ -39,6 +39,7 @@ Read in order; **project guardrails always win** over skill suggestions.
 | styling / theme / tokens / Tailwind            | `frontend-design` (tailwind-styling + ui-sources rules)               |
 | add animation with Anime.js                    | `animejs` → `emil-design-eng` (bar)                                   |
 | tests / test ids / Playwright E2E              | `test-generation` → `e2e-testids` → `playwright-e2e`                  |
+| visual regression / snapshot / baseline update | `visual-regression` (needs core-be up; local-only lane)               |
 | an a11y / UX review                            | `web-design-guidelines` (+ `ui-ux-pro-max` for checklist hints)       |
 | docs / README / overview                       | `documentation-maintenance`                                           |
 | extract constants / copy / locale namespace    | `i18n-constants` → `code-structure`                                   |
@@ -66,6 +67,7 @@ Read in order; **project guardrails always win** over skill suggestions.
 | `src/shared/components/**/*.tsx` (promoted from a page)                                        | `component-promotion`, `composition-patterns`                                                           |
 | `src/index.css` · `**/*.css`                                                                   | `frontend-design`, `theme-axis-audit` (if axis work)                                                    |
 | `**/*.test.ts` · `**/*.test.tsx`                                                               | `test-generation`                                                                                       |
+| `tests/e2e/visual.e2e.test.ts` · `tests/e2e/*-snapshots/**`                                    | `visual-regression`                                                                                     |
 | `tests/e2e/**`                                                                                 | `playwright-e2e`, `e2e-testids`                                                                         |
 | `.env.example`                                                                                 | `platform-hygiene`, `env-schema-add`, `documentation-maintenance`                                       |
 | `package.json` · `pnpm-lock.yaml` · `pnpm.overrides`                                           | `dependency-management`                                                                                 |

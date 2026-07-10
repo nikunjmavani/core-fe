@@ -18,7 +18,7 @@
       "resource-crud",
       "http-forms-errors"
     ],
-    "testing": ["test-generation", "e2e-testids", "playwright-e2e"],
+    "testing": ["test-generation", "e2e-testids", "playwright-e2e", "visual-regression"],
     "quality": [
       "lint-guard",
       "code-smells-best-practices",

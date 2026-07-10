@@ -70,6 +70,11 @@
       "file": "docs/reference/routes-and-ui.md",
       "expectSkills": ["documentation-maintenance"],
       "why": "Docs changes route to documentation-maintenance."
+    },
+    {
+      "file": "tests/e2e/visual.e2e.test.ts",
+      "expectSkills": ["visual-regression"],
+      "why": "Screenshot-baseline spec edits follow the visual-regression skill (baseline discipline, snapshot matrix)."
     }
   ]
 }
