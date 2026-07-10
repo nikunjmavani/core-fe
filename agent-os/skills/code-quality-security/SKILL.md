@@ -14,7 +14,9 @@ Layer 1: While Coding (Cursor/IDE)
   ESLint with sonarjs + security + jsx-a11y + import-sort + unused-imports, TypeScript strict, Prettier on save
 
 Layer 2: Pre-Commit (Husky)
-  lint-staged -> typecheck -> commitlint -> gitleaks -> merge conflict check -> large file check
+  before-commit-guard.sh (env docs -> public assets -> lint-staged -> vite-env ->
+  typecheck -> lockfile -> gitleaks -> env-files -> conflict markers -> large files)
+  + commitlint (.husky/commit-msg)
 
 Layer 3: CI (GitHub Actions on PRs)
   lint | format-check | typecheck | test | build | gitleaks | semgrep | Lighthouse CI | bundle size | E2E
@@ -74,26 +76,28 @@ Checks run on every `git commit` via `.husky/pre-commit` and `.husky/commit-msg`
 
 ### Checks
 
-| #   | Check                   | What it does                                                                                   | Blocks commit?     |
-| --- | ----------------------- | ---------------------------------------------------------------------------------------------- | ------------------ |
-| 1   | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` — env docs, public assets, lint-staged, type-check | Yes                |
-| 2   | `commitlint`            | Enforces conventional commit format (`feat:`, `fix:`, etc.)                                    | Yes                |
-| 3   | Gitleaks                | Scans staged files for secrets/API keys                                                        | Yes (if installed) |
-| 4   | Merge conflict markers  | Rejects files containing `<<<<<<<` or `>>>>>>>`                                                | Yes                |
-| 5   | Large file check        | Rejects staged files > 1MB                                                                     | Yes                |
+| #    | Check                   | What it does                                                                                                                | Blocks commit?     |
+| ---- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| 1    | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` — ALL pre-commit steps (1–10) under `set -e`; see the before-commit-guard skill | Yes                |
+| 1.7  | ↳ Gitleaks              | Scans staged files for secrets/API keys (step 7)                                                                            | Yes (if installed) |
+| 1.8  | ↳ Env-file guard        | Rejects any staged `.env*` except `.env.example` (step 8)                                                                   | Yes                |
+| 1.9  | ↳ Conflict markers      | Rejects files containing `<<<<<<<` or `>>>>>>>` (step 9)                                                                    | Yes                |
+| 1.10 | ↳ Large file check      | Rejects staged blobs > 1MB via `git cat-file -s` (step 10)                                                                  | Yes                |
+| 2    | `commitlint`            | Enforces conventional commit format (`feat:`, `fix:`, etc.) via `.husky/commit-msg`                                         | Yes                |
 
-See **before-commit-guard** skill (`agent-os/skills/before-commit-guard/SKILL.md`) for guard details and failure fixes.
+See **before-commit-guard** skill (`agent-os/skills/before-commit-guard/SKILL.md`) for the full step list (1–10) and failure fixes.
 
 ### Config Files
 
-| File                                      | Purpose                                                                          |
-| ----------------------------------------- | -------------------------------------------------------------------------------- |
-| `.husky/pre-commit`                       | Pre-commit hook (invokes before-commit-guard + gitleaks + conflict + large file) |
-| `tooling/validate/before-commit-guard.sh` | Guard script: env, public, lint-staged, type-check                               |
-| `.husky/commit-msg`                       | Commit message validation hook                                                   |
-| `.commitlintrc.json`                      | Conventional commit config                                                       |
-| `.gitleaks.toml`                          | Gitleaks secret scan allowlist                                                   |
-| `package.json` `lint-staged`              | Defines which tools run on which file patterns                                   |
+| File                                      | Purpose                                                                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `.husky/pre-commit`                       | Pre-commit hook — one-liner invoking the guard (all steps live inside it, core-be pattern)                          |
+| `tooling/validate/before-commit-guard.sh` | Guard script: env, public, lint-staged, vite-env, type-check, lockfile, gitleaks, env-files, conflicts, large files |
+| `.husky/commit-msg`                       | Commit message validation hook                                                                                      |
+| `.commitlintrc.json`                      | Conventional commit config                                                                                          |
+| `.gitleaks.toml`                          | Gitleaks secret scan allowlist                                                                                      |
+| `package.json` `lint-staged`              | Defines which tools run on which file patterns                                                                      |
+| `.prettierignore`                         | Excludes vendored `agent-os/skills/**` so formatting never breaks skills-lock hashes                                |
 
 ### How to Add a Pre-Commit Check
 

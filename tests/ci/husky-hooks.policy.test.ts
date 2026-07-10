@@ -13,10 +13,15 @@ describe('husky hooks policy', () => {
   const prePush = hook('pre-push');
 
   it('pre-push enforces the <type>/<description> branch-name policy', () => {
-    // The conventional-type prefixes a branch must start with.
+    // The conventional-type prefixes a branch must start with, plus the
+    // claude/* web-session allowlist (parity with core-be).
     expect(prePush).toMatch(
-      /\^\(feat\|fix\|chore\|ci\|docs\|refactor\|test\|perf\|build\|style\|revert\)/,
+      /\^\(claude\/\.\+\|\(feat\|feature\|fix\|hotfix\|chore\|ci\|docs\|refactor\|test\|perf\|build\|style\|revert\)/,
     );
+  });
+
+  it('pre-push keeps the one-off SKIP_BRANCH_CHECK bypass', () => {
+    expect(prePush).toContain('SKIP_BRANCH_CHECK');
   });
 
   it('pre-push resolves the trunk from config, never a hardcoded branch name', () => {

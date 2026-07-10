@@ -46,4 +46,31 @@ describe('branch rulesets policy (one trunk, one ruleset)', () => {
   it('is named "Protect main" (the name the drift guard and sync match on)', () => {
     expect(rulesets[0]?.payload?.name).toBe('Protect main');
   });
+
+  it('pins the governance rules the trunk depends on (squash-only, linear history, signatures)', () => {
+    // The weekly canary checks ruleset PRESENCE only (the Actions token cannot
+    // read secrets to diff parameters), so the committed JSON is the one place
+    // rule CONTENT is pinned — a dropped rule here would otherwise vanish
+    // silently on the next `pnpm github:sync --prune`.
+    const ruleTypes = (
+      (rulesets[0]?.payload?.rules ?? []) as Array<{ type: string }>
+    ).map((rule) => rule.type);
+    expect(ruleTypes).toEqual(
+      expect.arrayContaining([
+        'required_linear_history',
+        'required_signatures',
+        'pull_request',
+        'required_status_checks',
+        'deletion',
+        'non_fast_forward',
+      ]),
+    );
+    const pullRequestRule = (
+      (rulesets[0]?.payload?.rules ?? []) as Array<{
+        type: string;
+        parameters?: { allowed_merge_methods?: string[] };
+      }>
+    ).find((rule) => rule.type === 'pull_request');
+    expect(pullRequestRule?.parameters?.allowed_merge_methods).toEqual(['squash']);
+  });
 });
