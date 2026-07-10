@@ -28,7 +28,8 @@
       "project-health-check",
       "react-best-practices",
       "code-structure",
-      "component-promotion"
+      "component-promotion",
+      "systematic-debugging"
     ],
     "docs": ["documentation-maintenance", "requirement-format"],
     "i18n": ["i18n-constants"],
