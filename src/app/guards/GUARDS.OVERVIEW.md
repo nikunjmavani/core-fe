@@ -12,7 +12,7 @@ Platform overview: [`docs/reference/frontend-platform.md`](../../docs/reference/
 | #   | Guard                                           | Lives in                   | Failure                                                                                                                                          |
 | --- | ----------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 1   | `requireAuth`                                   | `core/rbac/guards.ts`      | redirect `/login`                                                                                                                                |
-| 2   | `requireProvisionedWorkspace`                   | `route-guards.ts`          | no active org → `/onboarding`; personal active org → `/dashboard`                                                                                |
+| 2   | `requireProvisionedWorkspace`                   | `route-guards.ts`          | not onboarded → `/onboarding`; personal active org → `/dashboard`; no team workspace → `/organization` picker                                    |
 | 3   | `requireOrganizationContext($organizationSlug)` | `route-guards.ts`          | malformed param / unknown org / non-member → **404** (existence never leaked)                                                                    |
 | 4   | `requireActiveOrganization`                     | `route-guards.ts`          | slug not synced for URL → **404** (fail closed); suspended → `…/suspended` (which itself skips this guard to avoid redirect loops)               |
 | 5   | `gatewayFromManifest(manifest)`                 | `core/security/gateway.ts` | L1 session + L5 `manifest.permission` + L6b `manifest.module` → `/unauthorized` or `notFound` per `onDeny`                                       |
@@ -30,17 +30,17 @@ Dashboard (`…/dashboard`) runs `gatewayFromManifest(dashboardManifest)` then
 | --- | ---------------------------------------- | -------------------------- | --------------------------------------------------------------------------------------------- |
 | 1   | `requireAuth`                            | `core/rbac/guards.ts`      | redirect `/login`                                                                             |
 | 2   | `requirePersonalDeployment`              | `route-guards.ts`          | team-only deployment → `/`                                                                    |
-| 3   | `requireProvisionedPersonalDashboard`    | `route-guards.ts`          | no active org → `/onboarding`; team active org → that slug's dashboard (same as `/` resolver) |
+| 3   | `requireProvisionedPersonalDashboard`    | `route-guards.ts`          | not onboarded → `/onboarding`; team active org → that slug's dashboard (same as `/` resolver) |
 | 4   | `gatewayFromManifest(dashboardManifest)` | `core/security/gateway.ts` | permission + module gates (same manifest as team dashboard)                                   |
 
-Both workspace guards delegate to `resolveRootTarget` in `shared/tenancy/organization-resolver.ts` — one rule for all deployments. Session hydration uses `shared/tenancy/session-context.ts`.
+Both workspace guards delegate to `resolveRootTarget` in `shared/tenancy/organization-resolver.ts` — one rule for all deployments, which gates onboarding on `user.onboarding_completed` before any active-org routing. Session reads use the cache-first `ensureSessionContext` in `shared/tenancy/session-context.ts`.
 
 ## Guard chain for `/onboarding`
 
-| #   | Guard                        | Lives in              | Failure                                                                                     |
-| --- | ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------- |
-| 1   | `requireAuth`                | `core/rbac/guards.ts` | redirect `/login`                                                                           |
-| 2   | `requireOnboardingWorkspace` | `route-guards.ts`     | active org exists → `/dashboard` or team slug dashboard (same as `/` resolver; no re-entry) |
+| #   | Guard                        | Lives in              | Failure                                                                                                              |
+| --- | ---------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| 1   | `requireAuth`                | `core/rbac/guards.ts` | redirect `/login`                                                                                                    |
+| 2   | `requireOnboardingWorkspace` | `route-guards.ts`     | already onboarded (`onboarding_completed`) → `/dashboard` or team slug dashboard (same as `/` resolver; no re-entry) |
 
 `requireOrganizationContext` also **syncs the derived `useOrganizationStore` from the URL**
 (the param is canonical — routing-and-tenancy.md §4) and refetches per-organization

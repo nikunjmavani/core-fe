@@ -8,14 +8,19 @@ The runtime sequences that span several tenancy modules. Companion tiers:
 
 Where a bare `/` lands, decided from the JWT-backed session context.
 
-1. `resolveRootRedirect()` → `hydrateSessionContext()` (loads `me/context`:
-   deployment flags + active org).
-2. `resolveRootTarget(ctx)` picks a target from `(deploymentMode, activeOrg)`:
-   - `personal-only`: active → `/dashboard`; none → onboarding-or-`/dashboard`.
-   - `team-only`: active TEAM with slug → `/organization/$slug/dashboard`; else
-     onboarding or `/organization` (picker).
-   - `both`: PERSONAL active → `/dashboard`; TEAM active → `/organization/$slug/dashboard`;
-     none → onboarding / picker / `/dashboard`.
+1. `resolveRootRedirect()` → `ensureSessionContext()` (cache-first read of
+   `me/context`: onboarding flag + deployment flags + active org; refetches only
+   on a cold boot).
+2. `resolveRootTarget(ctx)`:
+   - **Onboarding first, every mode:** `needsOnboarding(ctx)` (i.e.
+     `!user.onboarding_completed`) → `/onboarding`. This is checked _before_ any
+     active-org routing, so a personal deployment's auto-provisioned org does not
+     short-circuit a fresh user past the wizard.
+   - Then by `(deploymentMode, activeOrg)`:
+     - `personal-only`: active PERSONAL → `/dashboard`; none → `/dashboard`.
+     - `team-only`: active TEAM with slug → `/organization/$slug/dashboard`; else
+       `/organization` (picker).
+     - `both`: PERSONAL active → `/dashboard`; TEAM active → `/organization/$slug/dashboard`.
 3. Resolver returns the redirect (`organizationDashboard(slug)` for team targets).
 
 Entry point: `organization-resolver.ts` · Ends at: a redirect target, never an island.

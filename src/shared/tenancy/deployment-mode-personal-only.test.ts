@@ -13,6 +13,7 @@ const PERSONAL_ONLY = { personalOrganizations: true, teamOrganizations: false };
 
 function meCtx(
   overrides: Partial<MeContext> & Pick<MeContext, 'activeOrganization'>,
+  onboardingCompleted = true,
 ): MeContext {
   return {
     user: {
@@ -24,7 +25,7 @@ function meCtx(
       lastName: null,
       avatarUrl: null,
       status: 'ACTIVE',
-      onboardingCompleted: true,
+      onboardingCompleted,
       createdAt: 't',
       updatedAt: 't',
     },
@@ -65,5 +66,27 @@ describe('deployment-mode — personal-only', () => {
         }),
       ),
     ).toEqual({ to: '/dashboard' });
+  });
+
+  it('routes a fresh (not-onboarded) user to /onboarding despite the auto-provisioned personal org', () => {
+    expect(
+      resolveRootTarget(
+        meCtx(
+          {
+            activeOrganization: {
+              id: 'org_p',
+              name: 'Personal',
+              slug: null,
+              type: 'PERSONAL',
+              status: 'ACTIVE',
+              logoUrl: null,
+              createdAt: 't',
+              updatedAt: 't',
+            },
+          },
+          false,
+        ),
+      ),
+    ).toEqual({ to: '/onboarding' });
   });
 });
