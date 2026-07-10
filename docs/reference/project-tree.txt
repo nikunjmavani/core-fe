@@ -178,14 +178,6 @@ core-fe/
 │           ├── mcp.md
 │           ├── registry.md
 │           └── SKILL.md
-├── .codegraph/
-│   ├── .gitignore
-│   ├── codegraph.db
-│   ├── codegraph.db-shm
-│   ├── codegraph.db-wal
-│   ├── daemon.log
-│   ├── daemon.pid
-│   └── daemon.sock
 ├── .codex/
 │   ├── config.toml
 │   └── hooks.json
@@ -240,10 +232,13 @@ core-fe/
 │   └── settings.json
 ├── agent-os/
 │   ├── agents/
+│   │   ├── a11y-auditor.md
 │   │   ├── bundle-size-reviewer.md
 │   │   ├── ci-investigator.md
 │   │   ├── dependency-auditor.md
 │   │   ├── docs-auditor.md
+│   │   ├── i18n-auditor.md
+│   │   ├── perf-auditor.md
 │   │   ├── pipelines.json
 │   │   ├── README.md
 │   │   └── verifier.md
@@ -330,7 +325,7 @@ core-fe/
 │   │   ├── testing-requirements.mdc
 │   │   ├── theme-axis-audit.mdc
 │   │   └── ui-sources.mdc
-│   ├── skills/  (39 skills: auto-implement, shadcn, route-island, …)
+│   ├── skills/  (41 skills: auto-implement, shadcn, route-island, …)
 │   └── skills-lock.json
 ├── docs/
 │   ├── api/
@@ -3080,6 +3075,7 @@ core-fe/
 │   │   ├── lint-changed-markdown.sh
 │   │   └── run-size-limit.mjs
 │   ├── dev/
+│   │   ├── chrome-devtools-mcp.mjs
 │   │   ├── mcp-config.ts
 │   │   ├── screenshot-auth-pages.mjs
 │   │   ├── setup-local.ts

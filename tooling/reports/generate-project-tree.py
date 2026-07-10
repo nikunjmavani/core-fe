@@ -21,6 +21,9 @@ IGNORE_DIRS = {
     "test-results",
     "__pycache__",
     ".stryker-tmp",
+    # Gitignored, machine-local codegraph index + daemon runtime (daemon.pid /
+    # .sock / .db-shm|wal are transient and per-machine) — never part of the tree.
+    ".codegraph",
 }
 IGNORE_FILES = {".DS_Store", "settings.local.json", "state.json", "pnpm-lock.yaml"}
 SKIP_TOP = {".claude", ".cursor"}
