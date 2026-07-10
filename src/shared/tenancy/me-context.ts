@@ -35,6 +35,10 @@ const userWire = z.object({
   last_name: z.string().nullable(),
   avatar_url: z.string().nullable(),
   status: z.enum(['ACTIVE', 'LOCKED', 'SUSPENDED']),
+  /** Whether the user has finished the onboarding wizard. Optional for
+   * backward-compat with an older backend — absent is treated as onboarded so a
+   * version skew never traps existing users in onboarding. */
+  onboarding_completed: z.boolean().optional(),
   created_at: isoDateString,
   updated_at: isoDateString,
   /** Deployment flags — NOT per-org capabilities (those are ignored on org wire). */
@@ -82,6 +86,8 @@ export interface MeUser {
   lastName: string | null;
   avatarUrl: string | null;
   status: 'ACTIVE' | 'LOCKED' | 'SUSPENDED';
+  /** Whether the user has finished the onboarding wizard (drives post-login routing). */
+  onboardingCompleted: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -126,6 +132,9 @@ export function toMeContext(wire: MeContextWire): MeContext {
       lastName: wire.user.last_name,
       avatarUrl: wire.user.avatar_url,
       status: wire.user.status,
+      // Absent (older backend) → treat as onboarded so a version skew can't trap
+      // an existing user in the wizard.
+      onboardingCompleted: wire.user.onboarding_completed ?? true,
       createdAt: wire.user.created_at,
       updatedAt: wire.user.updated_at,
     },
@@ -143,9 +152,15 @@ export function toMeContext(wire: MeContextWire): MeContext {
   };
 }
 
-/** True when the session has no active org and no memberships yet (fresh signup). */
+/**
+ * True until the user finishes the onboarding wizard. Driven by the backend
+ * `onboarding_completed` flag (not workspace presence) so EVERY fresh user is
+ * routed through onboarding once — personal deployments auto-provision a personal
+ * org at signup, which previously made those users skip onboarding entirely. Only
+ * the wizard *steps* differ by deployment mode; whether onboarding happens does not.
+ */
 export function needsOnboarding(ctx: MeContext): boolean {
-  return !ctx.activeOrganization && ctx.organizations.length === 0;
+  return !ctx.user.onboardingCompleted;
 }
 
 /** React Query key for the caller's session context (`GET /auth/me/context`). */

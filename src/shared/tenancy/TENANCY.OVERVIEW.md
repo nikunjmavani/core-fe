@@ -20,7 +20,7 @@ resolver's redirect choice.
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `organization-context.ts`       | `syncOrganizationFromRoute` (URL → store, persists last-used), `getActiveOrganizationId`                                                                         |
 | `organization-membership.ts`    | `findMembership`, `ensurePermissionsFor` — refetches permissions when the organization changes (a once-if-empty check would leak org A's permissions into org B) |
-| `organization-resolver.ts`      | `resolveRootRedirect` for `/`: last-used (validated) → dashboard, else picker, else onboarding                                                                   |
+| `organization-resolver.ts`      | `resolveRootRedirect` for `/`: **not onboarded** (`!user.onboarding_completed`) → onboarding; else last-used (validated) → dashboard, else picker                |
 | `my-organizations.ts` (+ .test) | `listMyOrganizations()`, `createOrganization()` + schemas                                                                                                        |
 | `tenancy-service.ts` (+ .test)  | Subdomain fallback resolution (`resolveOrganizationFromSubdomain`) — boot-time default for the organization header                                               |
 

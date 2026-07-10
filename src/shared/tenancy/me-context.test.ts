@@ -136,24 +136,28 @@ describe('toMeContext', () => {
 });
 
 describe('needsOnboarding', () => {
-  it('is true when there is no active org and no memberships', () => {
+  it('is true until onboarding_completed is set — even with an auto-provisioned org', () => {
     const ctx = toMeContext({
       ...WIRE,
-      active_organization: null,
-      organizations: [],
+      user: { ...WIRE.user, onboarding_completed: false },
     });
+    // An active org is present, yet the fresh user still needs onboarding: the
+    // signal is the flag, not workspace presence.
+    expect(ctx.activeOrganization).not.toBeNull();
     expect(needsOnboarding(ctx)).toBe(true);
   });
 
-  it('is false when the user has an active organization', () => {
-    expect(needsOnboarding(toMeContext(WIRE))).toBe(false);
-  });
-
-  it('is false when orgs exist but none is active yet', () => {
+  it('is false once onboarding_completed is true', () => {
     const ctx = toMeContext({
       ...WIRE,
-      active_organization: null,
+      user: { ...WIRE.user, onboarding_completed: true },
     });
     expect(needsOnboarding(ctx)).toBe(false);
+  });
+
+  it('defaults to onboarded when the backend omits the flag (version skew)', () => {
+    // WIRE.user carries no onboarding_completed → treated as already onboarded so
+    // an older backend never traps existing users in the wizard.
+    expect(needsOnboarding(toMeContext(WIRE))).toBe(false);
   });
 });

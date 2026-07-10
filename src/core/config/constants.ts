@@ -19,6 +19,8 @@ export const API_ENDPOINTS = {
     LOGIN: '/auth/login',
     /** Current user profile lives in the users domain, not auth. */
     ME: '/users/me',
+    /** Stamp onboarding as finished (idempotent) so post-login routing lands on the dashboard. */
+    ONBOARDING_COMPLETE: '/users/me/onboarding/complete',
     /** Complete the login second factor: POST { mfa_session_token, code } → token. */
     MFA_LOGIN: '/auth/mfa/login',
     /** Redirect user here to start Google OAuth; backend redirects to Google then callback. */

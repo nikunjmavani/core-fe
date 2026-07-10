@@ -38,10 +38,12 @@ volume — a real concern for a clinic app). Internal DB ids never appear in URL
 - **Canonical-URL rule:** every resource has exactly one detail URL. Appointment detail lives
   **only** under `patients/$patientId/appointments/$appointmentId`; the org-wide appointments list
   links into it. Never add a second detail URL for the same resource.
-- **`/` (root):** a resolver route — reads the active org from `me/context` and redirects:
-  PERSONAL → root `/dashboard`, TEAM → `/organization/$organizationSlug/dashboard`, else
-  `/onboarding`. Dual-URL: the personal org lives on root URLs (no org param), the team org on
-  its `$organizationSlug/` space. The shared `<Dashboard/>` renders in both; `/` keeps no UI.
+- **`/` (root):** a resolver route — reads `me/context` and redirects. **Onboarding first:**
+  a not-yet-onboarded user (`!user.onboarding_completed`) → `/onboarding` in every deployment
+  mode (even personal, whose org is auto-provisioned). Once onboarded: PERSONAL → root
+  `/dashboard`, TEAM → `/organization/$organizationSlug/dashboard`, else `/organization` picker.
+  Dual-URL: the personal org lives on root URLs (no org param), the team org on its
+  `$organizationSlug/` space. The shared `<Dashboard/>` renders in both; `/` keeps no UI.
 - Auth islands (`/login`, `/mfa`, `/callback`, …), `/onboarding`, `/accept-invite/$invitationId`
   stay top-level, unchanged.
 

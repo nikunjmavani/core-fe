@@ -185,6 +185,7 @@ describe('AuthEmailPanel', () => {
         lastName: null,
         avatarUrl: null,
         status: 'ACTIVE',
+        onboardingCompleted: true,
         createdAt: TS,
         updatedAt: TS,
       },

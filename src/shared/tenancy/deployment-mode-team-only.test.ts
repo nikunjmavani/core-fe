@@ -11,7 +11,7 @@ import { resolveRootTarget } from './organization-resolver.ts';
 
 const TEAM_ONLY = { personalOrganizations: false, teamOrganizations: true };
 
-function meCtx(overrides: Partial<MeContext>): MeContext {
+function meCtx(overrides: Partial<MeContext>, onboardingCompleted = true): MeContext {
   return {
     user: {
       id: 'usr_1',
@@ -22,6 +22,7 @@ function meCtx(overrides: Partial<MeContext>): MeContext {
       lastName: null,
       avatarUrl: null,
       status: 'ACTIVE',
+      onboardingCompleted,
       createdAt: 't',
       updatedAt: 't',
     },
@@ -47,7 +48,7 @@ describe('deployment-mode — team-only', () => {
   });
 
   it('routes root to onboarding when user has no orgs yet', () => {
-    expect(resolveRootTarget(meCtx({}))).toEqual({ to: '/onboarding' });
+    expect(resolveRootTarget(meCtx({}, false))).toEqual({ to: '/onboarding' });
   });
 
   it('routes root to organization picker when memberships exist but none active', () => {

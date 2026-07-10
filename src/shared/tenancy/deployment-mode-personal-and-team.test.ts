@@ -13,6 +13,7 @@ const BOTH = DEFAULT_DEPLOYMENT_FLAGS;
 
 function meCtx(
   overrides: Partial<MeContext> & Pick<MeContext, 'activeOrganization'>,
+  onboardingCompleted = true,
 ): MeContext {
   return {
     user: {
@@ -24,6 +25,7 @@ function meCtx(
       lastName: null,
       avatarUrl: null,
       status: 'ACTIVE',
+      onboardingCompleted,
       createdAt: 't',
       updatedAt: 't',
     },
@@ -39,6 +41,28 @@ function meCtx(
 describe('deployment-mode — personal-and-team', () => {
   it('resolves dual mode (default flags)', () => {
     expect(resolveDeploymentMode(BOTH)).toBe('personal-and-team');
+  });
+
+  it('routes a fresh (not-onboarded) user to /onboarding despite the auto-provisioned personal org', () => {
+    expect(
+      resolveRootTarget(
+        meCtx(
+          {
+            activeOrganization: {
+              id: 'org_p',
+              name: 'Personal',
+              slug: null,
+              type: 'PERSONAL',
+              status: 'ACTIVE',
+              logoUrl: null,
+              createdAt: 't',
+              updatedAt: 't',
+            },
+          },
+          false,
+        ),
+      ),
+    ).toEqual({ to: '/onboarding' });
   });
 
   it('routes personal active org to /dashboard and team active org to slug dashboard', () => {

@@ -1,16 +1,19 @@
 # `pages/onboarding` — Post-signup onboarding wizard
 
-Route: `/onboarding`. Where a freshly authenticated user with **no organization** lands
-(redirect enforced in `app/routes/routeTree.tsx`).
+Route: `/onboarding`. Where **every** freshly authenticated user lands once, in any
+deployment mode — gated by the backend `user.onboarding_completed` flag, not by
+whether the user has a workspace (personal deployments auto-provision an org yet
+still onboard). Redirect enforced by `resolveRootTarget` in `app/routes/routeTree.tsx`;
+only the wizard steps differ per mode.
 
 ## Files
 
-| File                      | Responsibility                                                                                                                                                                                                                                                                                          |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `onboarding.route.tsx`    | Route marker — exports `Component` rendering `OnboardingPage`.                                                                                                                                                                                                                                          |
-| `onboarding.manifest.ts`  | Page manifest — `testId` + document title from `onboarding.constants.ts` + i18n.                                                                                                                                                                                                                        |
-| `onboarding.constants.ts` | i18n keys, test ids, analytics events, API defaults for this island.                                                                                                                                                                                                                                    |
-| `OnboardingPage.tsx`      | Multi-step wizard (welcome → profile → questions → workspace → invite → done). Reads/writes progress from `@/shared/store/useOnboardingStore/` so a refresh resumes mid-flow. On finish it creates the org (team modes), activates the workspace, and navigates **directly** to the resolved dashboard. |
+| File                      | Responsibility                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `onboarding.route.tsx`    | Route marker — exports `Component` rendering `OnboardingPage`.                                                                                                                                                                                                                                                                                                                                                                       |
+| `onboarding.manifest.ts`  | Page manifest — `testId` + document title from `onboarding.constants.ts` + i18n.                                                                                                                                                                                                                                                                                                                                                     |
+| `onboarding.constants.ts` | i18n keys, test ids, analytics events, API defaults for this island.                                                                                                                                                                                                                                                                                                                                                                 |
+| `OnboardingPage.tsx`      | Multi-step wizard (welcome → profile → questions → workspace → invite → done; steps derived per mode). Reads/writes progress from `@/shared/store/useOnboardingStore/` so a refresh resumes mid-flow. On finish it creates the org (team modes), marks onboarding complete (`POST /users/me/onboarding/complete`) **before** refreshing `me/context`, activates the workspace, and navigates **directly** to the resolved dashboard. |
 
 Step UIs live in `components/` (folder-per-unit): `WelcomeStep`, `ProfileStep`
 (**first name + last name** — maps 1:1 to core-be `first_name` / `last_name`),
