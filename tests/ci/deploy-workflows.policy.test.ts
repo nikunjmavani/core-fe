@@ -35,6 +35,27 @@ describe('deploy workflows policy', () => {
     );
   });
 
+  it('every caller of the reusable deploy grants the permissions its jobs request', () => {
+    // A reusable workflow's job permissions must be a SUBSET of the caller's
+    // grant, validated statically when the run starts — a caller that grants
+    // less makes the ENTIRE calling workflow a startup_failure (this broke
+    // every post-merge run and release deploy after the provenance job gained
+    // id-token/attestations in #101). Each `uses:` job must widen explicitly.
+    const requested = ['contents: read', 'id-token: write', 'attestations: write'];
+    for (const caller of ['post-merge-ci.yml', 'release-deploy.yml']) {
+      const text = workflow(caller);
+      expect(text, `${caller} no longer calls the reusable?`).toContain(
+        'reusable-netlify-deploy.yml',
+      );
+      for (const permission of requested) {
+        expect(
+          text,
+          `${caller} must grant "${permission}" on the job calling reusable-netlify-deploy.yml`,
+        ).toContain(permission);
+      }
+    }
+  });
+
   it('release-deploy.yml deploys production on release publish, pinned to the tag', () => {
     const release = workflow('release-deploy.yml');
     // event-driven, and re-runnable for the same tag

@@ -314,6 +314,15 @@ jobs:
       inputs.skip_deploy != true &&
       github.ref_name == github.event.repository.default_branch &&
       needs.changes.outputs.src-code == 'true'
+    # A reusable's job permissions must be a SUBSET of what the caller grants —
+    # the reusable's run job needs id-token/attestations for build provenance
+    # (prod-gated at runtime, but validated statically at startup for every
+    # caller), so the grant must be here even though this call deploys the
+    # development alias. Without it the whole workflow is a startup_failure.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     uses: ./.github/workflows/reusable-netlify-deploy.yml
     secrets: inherit
     with:

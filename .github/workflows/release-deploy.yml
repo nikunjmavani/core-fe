@@ -61,6 +61,13 @@ jobs:
     # Rebuilds dist/ from the tagged tree (FE bakes VITE_* per build, so there is
     # no image to promote — the tag ref is the pin). The production reviewer gate
     # and never-cancel concurrency both live in the reusable.
+    # id-token/attestations: the reusable's run job mints the build-provenance
+    # attestation for the production bundle; a reusable's permissions must be a
+    # subset of the caller's grant or the workflow startup-fails.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
     uses: ./.github/workflows/reusable-netlify-deploy.yml
     secrets: inherit
     with:
