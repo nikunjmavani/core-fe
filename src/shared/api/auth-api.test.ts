@@ -227,3 +227,33 @@ describe('authApi.updateProfile wire mapping', () => {
     expect(await captureProfileBody({ jobTitle: 'CEO' })).toEqual({ job_title: 'CEO' });
   });
 });
+
+describe('authApi.completeOnboarding', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('POSTs to the onboarding-complete route with the bearer token', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await authApi.completeOnboarding('tok_123');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/users/me/onboarding/complete');
+    expect(init.method).toBe('POST');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok_123');
+  });
+
+  it('throws when the backend rejects the completion', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () => new Response(JSON.stringify({ message: 'nope' }), { status: 500 }),
+      ),
+    );
+
+    await expect(authApi.completeOnboarding('tok_123')).rejects.toThrow();
+  });
+});
