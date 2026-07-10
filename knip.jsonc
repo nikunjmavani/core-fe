@@ -39,7 +39,8 @@
   //  - MCP server binaries: launched via `pnpm exec` in agent-os/mcp/mcp.json
   //    (symlinked as .mcp.json), never imported — @upstash/context7-mcp →
   //    context7, shadcn → shadcn, tailwindcss-mcp-server → tailwindcss,
-  //    @colbymchenry/codegraph → codegraph.
+  //    @colbymchenry/codegraph → codegraph, chrome-devtools-mcp →
+  //    chrome-devtools (spawned by tooling/dev/chrome-devtools-mcp.mjs).
   "ignoreDependencies": [
     "tailwindcss",
     "tw-animate-css",
@@ -48,6 +49,7 @@
     "shadcn",
     "tailwindcss-mcp-server",
     "@colbymchenry/codegraph",
+    "chrome-devtools-mcp",
   ],
   // External CLIs invoked from tooling/workflows but not npm dependencies:
   // gh (GitHub CLI), gitleaks/semgrep (security scanners),

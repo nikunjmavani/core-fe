@@ -27,6 +27,10 @@
       "command": "uvx",
       "args": ["semgrep-mcp"]
     },
+    "chrome-devtools": {
+      "command": "node",
+      "args": ["tooling/dev/chrome-devtools-mcp.mjs"]
+    },
     "sonarqube": {
       "command": "docker",
       "args": [

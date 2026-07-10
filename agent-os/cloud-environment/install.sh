@@ -44,3 +44,4 @@ pnpm setup:local || log "setup:local skipped — .env.development may already ex
 log "done — lint / type-check / unit tests / pnpm agent-os:check run cold."
 log "     Playwright e2e needs browsers (pnpm exec playwright install --with-deps chromium)"
 log "     and core-be on :3000 — see agent-os/cloud-environment/agents-cloud.md."
+log "     The chrome-devtools MCP reuses that same Playwright Chromium (pnpm mcp:setup chrome-devtools)."

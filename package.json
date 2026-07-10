@@ -208,6 +208,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
     "babel-plugin-react-compiler": "^1.0.0",
+    "chrome-devtools-mcp": "^1.5.0",
     "dotenv": "^17.4.2",
     "eslint": "^10.6.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",

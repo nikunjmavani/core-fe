@@ -210,6 +210,9 @@ importers:
       babel-plugin-react-compiler:
         specifier: ^1.0.0
         version: 1.0.0
+      chrome-devtools-mcp:
+        specifier: ^1.5.0
+        version: 1.5.0
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -7425,6 +7428,19 @@ packages:
         integrity: sha512-+IxzY9BZOQd/XuYPRmrvEVjF/nqj5kgT4kEq7VofrDoM1MxoRjEWkrCC3EtLi59TVawxTAn+orJwFQcrqEN1+g==,
       }
     engines: { node: '>=18' }
+
+  chrome-devtools-mcp@1.5.0:
+    resolution:
+      {
+        integrity: sha512-Yfpeg6cKnWaFrq/CpTY19bVO0kr84CpHNgTSQXTQshovKcRIf1efh1vAI+IOuCXrQvrul2hE0XoKPn94LRxC1A==,
+      }
+    engines: { node: ^20.19.0 || ^22.12.0 || >=23 }
+    hasBin: true
+    peerDependencies:
+      '@toon-format/toon': ^2.2.0
+    peerDependenciesMeta:
+      '@toon-format/toon':
+        optional: true
 
   chromium-bidi@8.0.0:
     resolution:
@@ -21053,6 +21069,8 @@ snapshots:
       readdirp: 5.0.0
 
   chownr@3.0.0: {}
+
+  chrome-devtools-mcp@1.5.0: {}
 
   chromium-bidi@8.0.0(devtools-protocol@0.0.1495869):
     dependencies:
