@@ -4,7 +4,7 @@
     "claude": {
       "label": "Claude Code",
       "entrypoint": ".claude/",
-      "consumes": ["skills", "agents", "hooks", "mcp", "docs"],
+      "consumes": ["skills", "agents", "commands", "hooks", "mcp", "docs"],
       "hooksTarget": "agent-os/platforms/claude/settings.json",
       "capabilities": {
         "skills": true,
@@ -29,7 +29,7 @@
     "cursor": {
       "label": "Cursor",
       "entrypoint": ".cursor/",
-      "consumes": ["skills", "agents", "rules", "hooks", "mcp"],
+      "consumes": ["skills", "agents", "rules", "commands", "hooks", "mcp"],
       "hooksTarget": "agent-os/platforms/cursor/hooks.json",
       "capabilities": {
         "skills": true,
@@ -51,13 +51,14 @@
     "codex": {
       "label": "Codex",
       "entrypoint": "AGENTS.md",
-      "consumes": ["skills", "hooks", "docs"],
+      "consumes": ["skills", "commands", "hooks", "mcp", "docs"],
       "hooksTarget": "agent-os/platforms/codex/hooks.json",
       "capabilities": {
         "skills": true,
         "subagents": false,
         "plugins": false,
         "outputStyles": false,
+        "mcpFormat": "toml",
         "hookEvents": [
           "SessionStart",
           "UserPromptSubmit",
