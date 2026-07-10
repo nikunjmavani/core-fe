@@ -43,6 +43,12 @@
       "skillPath": "agent-os/skills/shadcn/SKILL.md",
       "computedHash": "75e9d038e282bb900e46fa63f10ff4fe8ed3945ef092a8dddf22de9c2546760c"
     },
+    "systematic-debugging": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "agent-os/skills/systematic-debugging/SKILL.md",
+      "computedHash": "3b20719eca4f0461cb51a195221320d775dcf03b6859271066a03a5132a6ce7a"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",

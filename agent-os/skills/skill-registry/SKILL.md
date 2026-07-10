@@ -27,6 +27,7 @@ Complete inventory of project skills. Use this to find the right skill for any t
 - ...E2E test ids / data-testid / Playwright selectors -> **e2e-testids**
 - ...write/refactor Playwright E2E specs -> **playwright-e2e**
 - ...visual regression / screenshot baselines / snapshot diff -> **visual-regression** (local-only; needs core-be)
+- ...debug a bug / test failure / unexpected behavior (before any fix) -> **systematic-debugging** (root cause first)
 - ...route island / self-contained path / nested sub-route folder -> **route-island**
 - ...org-scoped route, guards, gateway, session context, settings hash -> **routing-tenancy**
 - ...backend resource CRUD (list, URL dialogs, resource manifest) -> **resource-crud**
@@ -89,7 +90,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 > If a task has **no** matching row here or in `skill-router.mdc`, use **find-skills** to look for one before building from scratch; if none exists, proceed with general capabilities.
 
-## Skill Inventory (40 skills)
+## Skill Inventory (41 skills)
 
 ### 0a. auto-implement (Master Orchestrator)
 
@@ -541,6 +542,17 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Commands: `pnpm test:visual`, `pnpm test:visual:update`
 
 **Auto-invocation:** When a visual test fails, when adding a route/theme axis worth pinning, or on `tests/e2e/visual.e2e.test.ts` / snapshot edits. Local-only (needs core-be on `:3000`; darwin-pinned baselines).
+
+---
+
+### 6e. systematic-debugging (installed skill)
+
+**Path:** `agent-os/skills/systematic-debugging/SKILL.md`
+**Purpose:** Root-cause-first debugging discipline (vendored from obra/superpowers) — four phases (investigation → pattern analysis → hypothesis testing → implementation), no fixes before root cause, escalation rule after 3 failed attempts. Companions in the skill directory: `root-cause-tracing.md`, `defense-in-depth.md`, `condition-based-waiting.md`.
+
+**Trigger keywords:** "debug", "root cause", "test failure", "flaky", "unexpected behavior", "why is this broken"
+
+**Auto-invocation:** Any bug/test-failure investigation **before** proposing a fix; pairs with `ci-investigator` (CI-shaped failures) and hands implementation to the matching procedural skill afterwards.
 
 ---
 

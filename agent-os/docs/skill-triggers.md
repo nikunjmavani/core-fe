@@ -46,6 +46,7 @@ Read in order; **project guardrails always win** over skill suggestions.
 | PWA manifest / app icon / favicon              | `pwa-manifest`                                                        |
 | where does this code go?                       | `code-structure` / `component-promotion`                              |
 | lint / quality cleanup                         | `lint-guard` / `code-smells-best-practices`                           |
+| debug a bug / test failure (before any fix)    | `systematic-debugging` (root cause first; then the fixing skill)      |
 | full project check                             | `project-health-check` (`pnpm health`)                                |
 
 ## By file pattern (after an edit)
