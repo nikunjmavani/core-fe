@@ -26,6 +26,7 @@ Complete inventory of project skills. Use this to find the right skill for any t
 - ...add tests/write tests/coverage -> **test-generation**
 - ...E2E test ids / data-testid / Playwright selectors -> **e2e-testids**
 - ...write/refactor Playwright E2E specs -> **playwright-e2e**
+- ...visual regression / screenshot baselines / snapshot diff -> **visual-regression** (local-only; needs core-be)
 - ...route island / self-contained path / nested sub-route folder -> **route-island**
 - ...org-scoped route, guards, gateway, session context, settings hash -> **routing-tenancy**
 - ...backend resource CRUD (list, URL dialogs, resource manifest) -> **resource-crud**
@@ -88,7 +89,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 > If a task has **no** matching row here or in `skill-router.mdc`, use **find-skills** to look for one before building from scratch; if none exists, proceed with general capabilities.
 
-## Skill Inventory (39 skills)
+## Skill Inventory (40 skills)
 
 ### 0a. auto-implement (Master Orchestrator)
 
@@ -523,6 +524,23 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Specs: `tests/e2e/*.e2e.test.ts`
 
 **Auto-invocation:** When adding or refactoring E2E specs; pairs with **e2e-testids** for UI testid placement.
+
+---
+
+### 6d. visual-regression
+
+**Path:** `agent-os/skills/visual-regression/SKILL.md`
+**Purpose:** Playwright screenshot-baseline lane (`pnpm test:visual`) — snapshot matrix (route × color scheme × theme-axis extreme), safe baseline updates, diff-first triage. Assertable counterpart of the `theme-axis-audit` playbook.
+
+**Trigger keywords:** "visual regression", "screenshot", "snapshot", "baseline", "pixel diff", "toHaveScreenshot"
+
+**Key artifacts:**
+
+- Skill: `agent-os/skills/visual-regression/SKILL.md`
+- Spec: `tests/e2e/visual.e2e.test.ts` (+ committed `*-snapshots/` PNGs)
+- Commands: `pnpm test:visual`, `pnpm test:visual:update`
+
+**Auto-invocation:** When a visual test fails, when adding a route/theme axis worth pinning, or on `tests/e2e/visual.e2e.test.ts` / snapshot edits. Local-only (needs core-be on `:3000`; darwin-pinned baselines).
 
 ---
 

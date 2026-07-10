@@ -21,7 +21,7 @@
       "description": "Building or restyling UI — craft, accessibility, and motion review.",
       "trigger": "src/**/components/**/*.tsx",
       "steps": ["frontend-design", "web-design-guidelines", "review-animations"],
-      "optional": ["theme-axis-audit"]
+      "optional": ["theme-axis-audit", "visual-regression"]
     },
     "form-mutation": {
       "description": "Building a form that mutates via apiClient and maps server/validation errors.",
@@ -37,7 +37,7 @@
       "description": "Styling / theming with semantic tokens and Tailwind.",
       "trigger": "src/index.css",
       "steps": ["frontend-design", "web-design-guidelines"],
-      "optional": ["theme-axis-audit"]
+      "optional": ["theme-axis-audit", "visual-regression"]
     },
     "env-change": {
       "description": "Adding, renaming, or removing an env var and keeping schema + templates in sync.",
