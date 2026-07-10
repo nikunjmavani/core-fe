@@ -94,7 +94,9 @@ export async function completeOnboardingWizard(page: Page): Promise<void> {
 
   await clickTestId(page, 'onboarding-next');
 
-  await fillTestId(page, 'onboarding-fullname', e2eDisplayName());
+  // Profile step splits into first/last name (onboarding-first-name /
+  // onboarding-last-name); firstName is what gates the Continue button.
+  await fillTestId(page, 'onboarding-first-name', e2eDisplayName());
   await clickTestId(page, 'onboarding-next');
 
   await clickTestId(page, 'onboarding-next');

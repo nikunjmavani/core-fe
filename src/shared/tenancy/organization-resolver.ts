@@ -2,7 +2,7 @@ import { organizationDashboard } from '@/lib/routes/index.ts';
 
 import { type DeploymentFlags, resolveDeploymentMode } from './deployment-mode.ts';
 import { type MeContext, needsOnboarding } from './me-context.ts';
-import { hydrateSessionContext } from './session-context.ts';
+import { ensureSessionContext } from './session-context.ts';
 
 export { hydrateSessionContext } from './session-context.ts';
 
@@ -103,7 +103,7 @@ type RootRedirect =
  * from `me/context` (JWT-backed session context).
  */
 export async function resolveRootRedirect(): Promise<RootRedirect> {
-  const ctx = await hydrateSessionContext();
+  const ctx = await ensureSessionContext();
   const target = resolveRootTarget(ctx);
   if (target.to === '/onboarding') return { to: '/onboarding' } as const;
   if (target.to === '/dashboard') return { to: '/dashboard' } as const;

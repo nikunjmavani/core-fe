@@ -18,7 +18,7 @@ import {
   workspaceRedirectForPersonalDashboard,
   workspaceRedirectForTeamEntry,
 } from '@/shared/tenancy/organization-resolver.ts';
-import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
+import { ensureSessionContext } from '@/shared/tenancy/session-context.ts';
 import { switchToOrganization } from '@/shared/tenancy/switch.ts';
 
 function throwWorkspaceRedirect(target: RootTarget): never {
@@ -127,7 +127,7 @@ export function requirePersonalOrganizationsDeployment(): void {
  * the session already has a provisioned workspace — symmetric to workspace guards.
  */
 export async function requireOnboardingWorkspace(): Promise<void> {
-  const ctx = await hydrateSessionContext();
+  const ctx = await ensureSessionContext();
   const target = resolveRootTarget(ctx);
   if (target.to !== '/onboarding') throwWorkspaceRedirect(target);
 }
@@ -137,7 +137,7 @@ export async function requireOnboardingWorkspace(): Promise<void> {
  * or a team slug dashboard (same rule as `/` resolver).
  */
 export async function requireProvisionedPersonalDashboard(): Promise<void> {
-  const ctx = await hydrateSessionContext();
+  const ctx = await ensureSessionContext();
   const redirectTarget = workspaceRedirectForPersonalDashboard(ctx);
   if (redirectTarget) throwWorkspaceRedirect(redirectTarget);
 }
@@ -149,7 +149,7 @@ export async function requireProvisionedPersonalDashboard(): Promise<void> {
 export async function requireProvisionedTeamWorkspace(options?: {
   organizationPicker?: boolean;
 }): Promise<void> {
-  const ctx = await hydrateSessionContext();
+  const ctx = await ensureSessionContext();
   const redirectTarget = workspaceRedirectForTeamEntry(ctx, options);
   if (redirectTarget) throwWorkspaceRedirect(redirectTarget);
 }
