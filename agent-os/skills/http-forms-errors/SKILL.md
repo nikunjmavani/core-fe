@@ -89,12 +89,25 @@ Migrated reference panels: Settings org/account panels, dashboard widgets.
 
 `ValidationError` and `HttpError` 422 bodies support nested `error.fields` / `field_errors`.
 
+**Branch on `error.reason`, don't map backend i18n keys on the FE.** core-be resolves its
+error `detail` to human copy server-side and exposes a stable `error.reason` slug for
+distinct 4xx causes (e.g. `disposable_email`). To branch on a specific cause, read
+`apiErrorReason(error)` — do **not** grow a table that maps raw backend `errors:*` keys to
+FE copy. If `detail` ever arrives as a raw `errors:*` key, that's a **backend** bug (an
+unresolved key leak) — fix it in core-be's serializer, not with a per-key FE band-aid.
+
 ---
 
 ## Anti-patterns
 
 - Catching 401 in components or mutations
 - Toast-only for field-level validation when 422 body has field keys
+- **Toast-only for a _critical_ error fired from an async event-handler `catch`** (login
+  send/verify, OAuth/passkey start, any submit whose failure blocks the user) — a sonner
+  toast created in that path can land in history yet never become active (it never paints,
+  giving the user NO feedback). Critical failures MUST render an inline `role="alert"`
+  surface (`FormError` banner) as the reliable channel; keep the toast as a secondary echo.
+  Clear the banner when the user retries / edits. (See the AuthForm/AuthEmailPanel banners.)
 - Inline `isLoading && <Skeleton>` + `isError && <p>` when `QueryBoundary` fits
 - Raw `fetch` for domain APIs (use `apiClient`; auth paths excepted)
 - Storing mutation errors only in Zustand
