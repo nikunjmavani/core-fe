@@ -28,156 +28,6 @@ Stats: ~533 src files · ~293 tests in src/ · 36 E2E specs · 24 shadcn UI prim
 ================================================================================
 
 core-fe/
-├── .agents/
-│   └── skills/
-│       ├── animejs/
-│       │   ├── assets/
-│       │   │   └── README.md
-│       │   ├── references/
-│       │   │   ├── api_reference.md
-│       │   │   ├── stagger_guide.md
-│       │   │   └── timeline_guide.md
-│       │   ├── scripts/
-│       │   │   ├── animation_generator.py
-│       │   │   └── timeline_builder.py
-│       │   └── SKILL.md
-│       ├── emil-design-eng/
-│       │   └── SKILL.md
-│       ├── impeccable/
-│       │   ├── agents/
-│       │   │   ├── impeccable_asset_producer.toml
-│       │   │   ├── impeccable_manual_edit_applier.toml
-│       │   │   └── openai.yaml
-│       │   ├── reference/
-│       │   │   ├── adapt.md
-│       │   │   ├── animate.md
-│       │   │   ├── audit.md
-│       │   │   ├── bolder.md
-│       │   │   ├── brand.md
-│       │   │   ├── clarify.md
-│       │   │   ├── codex.md
-│       │   │   ├── colorize.md
-│       │   │   ├── craft.md
-│       │   │   ├── critique.md
-│       │   │   ├── delight.md
-│       │   │   ├── distill.md
-│       │   │   ├── document.md
-│       │   │   ├── extract.md
-│       │   │   ├── harden.md
-│       │   │   ├── hooks.md
-│       │   │   ├── init.md
-│       │   │   ├── interaction-design.md
-│       │   │   ├── layout.md
-│       │   │   ├── live.md
-│       │   │   ├── onboard.md
-│       │   │   ├── optimize.md
-│       │   │   ├── overdrive.md
-│       │   │   ├── polish.md
-│       │   │   ├── product.md
-│       │   │   ├── quieter.md
-│       │   │   ├── shape.md
-│       │   │   └── typeset.md
-│       │   ├── scripts/
-│       │   │   ├── detector/
-│       │   │   │   ├── browser/
-│       │   │   │   │   └── injected/
-│       │   │   │   ├── cli/
-│       │   │   │   │   └── main.mjs
-│       │   │   │   ├── engines/
-│       │   │   │   │   ├── browser/
-│       │   │   │   │   ├── regex/
-│       │   │   │   │   ├── static-html/
-│       │   │   │   │   └── visual/
-│       │   │   │   ├── node/
-│       │   │   │   │   └── file-system.mjs
-│       │   │   │   ├── profile/
-│       │   │   │   │   └── profiler.mjs
-│       │   │   │   ├── registry/
-│       │   │   │   │   └── antipatterns.mjs
-│       │   │   │   ├── rules/
-│       │   │   │   │   └── checks.mjs
-│       │   │   │   ├── shared/
-│       │   │   │   │   ├── color.mjs
-│       │   │   │   │   ├── constants.mjs
-│       │   │   │   │   ├── inline-ignores.mjs
-│       │   │   │   │   └── page.mjs
-│       │   │   │   ├── design-system.mjs
-│       │   │   │   ├── detect-antipatterns-browser.js
-│       │   │   │   ├── detect-antipatterns.mjs
-│       │   │   │   └── findings.mjs
-│       │   │   ├── lib/
-│       │   │   │   ├── design-parser.mjs
-│       │   │   │   ├── impeccable-config.mjs
-│       │   │   │   ├── impeccable-paths.mjs
-│       │   │   │   ├── is-generated.mjs
-│       │   │   │   └── target-args.mjs
-│       │   │   ├── live/
-│       │   │   │   ├── browser-script-parts.mjs
-│       │   │   │   ├── completion.mjs
-│       │   │   │   ├── event-validation.mjs
-│       │   │   │   ├── insert-ui.mjs
-│       │   │   │   ├── manual-apply.mjs
-│       │   │   │   ├── manual-edit-routes.mjs
-│       │   │   │   ├── manual-edits-buffer.mjs
-│       │   │   │   ├── session-store.mjs
-│       │   │   │   ├── svelte-component.mjs
-│       │   │   │   ├── sveltekit-adapter.mjs
-│       │   │   │   ├── ui-core.mjs
-│       │   │   │   └── vocabulary.mjs
-│       │   │   ├── command-metadata.json
-│       │   │   ├── context-signals.mjs
-│       │   │   ├── context.mjs
-│       │   │   ├── critique-storage.mjs
-│       │   │   ├── detect-csp.mjs
-│       │   │   ├── detect.mjs
-│       │   │   ├── hook-admin.mjs
-│       │   │   ├── hook-before-edit.mjs
-│       │   │   ├── hook-lib.mjs
-│       │   │   ├── hook.mjs
-│       │   │   ├── live-accept.mjs
-│       │   │   ├── live-browser-dom.js
-│       │   │   ├── live-browser-session.js
-│       │   │   ├── live-browser.js
-│       │   │   ├── live-commit-manual-edits.mjs
-│       │   │   ├── live-complete.mjs
-│       │   │   ├── live-copy-edit-agent.mjs
-│       │   │   ├── live-discard-manual-edits.mjs
-│       │   │   ├── live-inject.mjs
-│       │   │   ├── live-insert.mjs
-│       │   │   ├── live-manual-edit-evidence.mjs
-│       │   │   ├── live-poll.mjs
-│       │   │   ├── live-resume.mjs
-│       │   │   ├── live-server.mjs
-│       │   │   ├── live-status.mjs
-│       │   │   ├── live-target.mjs
-│       │   │   ├── live-wrap.mjs
-│       │   │   ├── live.mjs
-│       │   │   ├── modern-screenshot.umd.js
-│       │   │   ├── palette.mjs
-│       │   │   └── pin.mjs
-│       │   └── SKILL.md
-│       ├── review-animations/
-│       │   ├── SKILL.md
-│       │   └── STANDARDS.md
-│       └── shadcn/
-│           ├── agents/
-│           │   └── openai.yml
-│           ├── assets/
-│           │   ├── shadcn-small.png
-│           │   └── shadcn.png
-│           ├── evals/
-│           │   └── evals.json
-│           ├── rules/
-│           │   ├── base-vs-radix.md
-│           │   ├── composition.md
-│           │   ├── forms.md
-│           │   ├── icons.md
-│           │   └── styling.md
-│           ├── cli.md
-│           ├── customization.md
-│           ├── mcp.md
-│           ├── registry.md
-│           └── SKILL.md
 ├── .codex/
 │   ├── config.toml
 │   └── hooks.json
@@ -231,16 +81,22 @@ core-fe/
 │   ├── extensions.json
 │   └── settings.json
 ├── agent-os/
+│   ├── .claude-plugin/
+│   │   ├── marketplace.json
+│   │   └── plugin.json
 │   ├── agents/
 │   │   ├── a11y-auditor.md
 │   │   ├── bundle-size-reviewer.md
+│   │   ├── changelog-reviewer.md
 │   │   ├── ci-investigator.md
 │   │   ├── dependency-auditor.md
 │   │   ├── docs-auditor.md
 │   │   ├── i18n-auditor.md
 │   │   ├── perf-auditor.md
 │   │   ├── pipelines.json
+│   │   ├── production-hardening-reviewer.md
 │   │   ├── README.md
+│   │   ├── tsdoc-coverage-reviewer.md
 │   │   └── verifier.md
 │   ├── cloud-environment/
 │   │   ├── agents-cloud.md

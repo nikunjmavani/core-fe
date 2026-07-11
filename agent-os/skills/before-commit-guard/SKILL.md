@@ -15,17 +15,13 @@ This skill runs **automatically when the user runs `git commit`** via the Husky 
 
 ## What Runs on `git commit`
 
-The pre-commit hook (`.husky/pre-commit`) runs:
+The pre-commit hook (`.husky/pre-commit`) is a one-liner: it runs
+`./tooling/validate/before-commit-guard.sh`, which owns **all** labeled steps
+under `set -e` — so any failing step reliably blocks the commit (the previous
+split hook/script layout let a mid-hook failure fall through). Same pattern as
+core-be's `pnpm guard:pre-commit` runner.
 
-| # | Check | Script/Command | Purpose |
-| --- | ----------------------- | ------------------------------------------- | ------------------------------------------------ | ------- | --------------------------- |
-| 1 | **before-commit-guard** | `./tooling/validate/before-commit-guard.sh` | Env docs, public assets, lint-staged, env/mode-sniffing gate, type-check, lockfile sync |
-| 2 | Env-file guard | `git diff --cached` vs `.env*` | Reject committing any `.env*` except `.env.example` |
-| 3 | Gitleaks | `gitleaks protect --staged` | Secret/API key detection (if installed) |
-| 4 | Merge conflict markers | `grep -rlE '^(<{7}                          | >{7}                                             | ={7})'` | Reject unresolved conflicts |
-| 5 | Large file check | `wc -c` | Reject files > 1MB |
-
-### Inside before-commit-guard.sh
+### Inside before-commit-guard.sh (steps 1–10)
 
 1. **validate:env-example** — `.env.example` documents all keys from `src/core/config/env-schema.ts` (via `pnpm tool:sync-env-example`).
 2. **validate:public** — Required public assets exist: config.js, theme-init.js, vite.svg, manifest.webmanifest, \_headers, offline.html, robots.txt.
@@ -33,6 +29,10 @@ The pre-commit hook (`.husky/pre-commit`) runs:
 4. **validate:vite-env** — env/mode-sniffing gate: no `import.meta.env.DEV/PROD/MODE` or `platformConfig.environment === '<name>'` / `.MODE ===` outside the config-kernel allowlist. Behavior must be driven by named `platformConfig` flags.
 5. **type-check** — `tsc --noEmit` for full project.
 6. **validate:lockfile** — _only when the commit stages `package.json` or `pnpm-lock.yaml`_ — runs `pnpm install --frozen-lockfile` (the exact check CI runs) to prove the lockfile is in sync. Catches a dependency or `pnpm.overrides` change that forgot to regenerate the lockfile before it can reach dev.
+7. **Gitleaks** — `gitleaks protect --staged` secret/API-key scan (notice + skip when not installed).
+8. **Env-file guard** — reject committing any `.env*` except `.env.example` (mirrors the pr-governance CI guard, locally).
+9. **Merge conflict markers** — reject staged files containing `<<<<<<< ` / `>>>>>>> ` / bare `=======` lines (anchored so doc banner lines pass).
+10. **Large staged files** — reject staged blobs > 1MB, measured with `git cat-file -s :<path>` (the staged content, not the working tree — rename/partial-stage safe).
 
 ## How to Fix Failures
 

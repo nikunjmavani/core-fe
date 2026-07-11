@@ -45,6 +45,7 @@ flowchart TB
 | Doc                                                                                                          | Purpose                                                                       |
 | ------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
 | [setup.md](getting-started/setup.md)                                                                         | Local development: clone, env, run the app                                    |
+| [setup-detailed.md](getting-started/setup-detailed.md)                                                       | Platform-specific detailed setup companion to setup.md                        |
 | [requirement-intake.md](getting-started/requirement-intake.md)                                               | How to submit a requirement so the AI can implement it in one go              |
 | [requirement-format.md](getting-started/requirement-format.md)                                               | Template and field guide for writing requirements                             |
 | [route-island-template.md](getting-started/route-island-template.md)                                         | Copy-paste tree (`<page>.manifest.ts`, colocated tests, direct children)      |
@@ -63,6 +64,7 @@ flowchart TB
 | [path-to-production.md](deployment/path-to-production.md)                                       | Gate: run runbook + checklist before release                          |
 | [production-readiness.md](deployment/production-readiness.md)                                   | **Go / no-go** — what blocks production, categorized                  |
 | [netlify-cli-setup.md](deployment/netlify-cli-setup.md)                                         | Netlify CLI one-time connect and deploy                               |
+| [branch-protection.md](deployment/branch-protection.md)                                         | Branch protection + required CI checks (as-code: `pnpm github:sync`)  |
 | [runbooks/environment-variables.md](deployment/runbooks/environment-variables.md)               | **Env schema** — `.env.example`, auth switches, GitHub/Netlify deploy |
 | [runbooks/csp-trusted-types-production.md](deployment/runbooks/csp-trusted-types-production.md) | CSP report URI, Trusted Types, `config.js` SRI contract               |
 | [tooling/setup/live/README.md](../tooling/setup/live/README.md)                                 | One-command deployment: `pnpm run setup`                              |
@@ -132,6 +134,10 @@ flowchart TB
 | [dependency-upgrades.md](reference/dependency-upgrades.md)                   | Audits, Dependabot, and intentional version pins                                                                 |
 | [route-island-structure.md](reference/route-island-structure.md)             | **Per-route folders** — same layout for every route/sub-route; import boundaries                                 |
 | [routes-and-ui.md](reference/routes-and-ui.md)                               | **Live frontend routes** (and backend APIs they use) and **UI** (shadcn component library and primitives)        |
+| [routing-and-tenancy.md](reference/routing-and-tenancy.md)                   | **Routing & tenancy (implemented spec)** — URL-driven org context, guard chain, `/` resolver, settings modal     |
+| [csrf-mitigation.md](reference/csrf-mitigation.md)                           | **CSRF mitigation strategy** — the three defense layers and the backend contract                                 |
+| [theme-axis-follow-up-plan.md](reference/theme-axis-follow-up-plan.md)       | **Theme-axis follow-ups** — post-audit hardening plan (companion to the playbook)                                |
+| **[api/](api/)** (generated)                                                 | Auto-generated TypeDoc API reference — regenerate with `pnpm docs:api`; do not hand-edit                         |
 | [unified-auth-flows.md](reference/unified-auth-flows.md)                     | **Unified login + sign-up** — email/phone OTP, OAuth, route/API matrix, env toggles                              |
 | [frontend-platform.md](reference/frontend-platform.md)                       | **Platform kernel** — boot order, gateway, session context, modules, errors, QueryBoundary policy                |
 | [pwa-manifest-and-app-icon.md](reference/pwa-manifest-and-app-icon.md)       | **PWA manifest + icon** — `app-manifest.ts` source of truth, preset colors, PNG regen (skill: `pwa-manifest`)    |

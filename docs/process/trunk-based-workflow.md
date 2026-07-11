@@ -41,8 +41,13 @@ Use the format **type/short-description**.
 
 ### Accepted type prefixes
 
-`feature` · `feat` · `fix` · `refactor` · `docs` · `test` · `chore` · `ci` · `perf` ·
+`feature` · `feat` · `fix` · `hotfix` · `refactor` · `docs` · `test` · `chore` · `ci` · `perf` ·
 `build` · `style` · `revert`
+
+Claude Code web session branches (`claude/*`) are allowlisted — the cloud git
+proxy pins a web session to push only its own `claude/*` branch. One-off bypass:
+`SKIP_BRANCH_CHECK=1 git push`. Enforced by [`.husky/pre-push`](../../.husky/pre-push)
+(parity with core-be).
 
 Hotfixes are **fix-forward on `main`** (no release branches) — see below.
 
