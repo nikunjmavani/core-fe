@@ -17,6 +17,7 @@ import { isSafeExternalHttpsUrl, stashReturnTo } from '@/shared/auth/redirect-sa
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
+import { FormError } from '@/shared/forms/FormError/index.ts';
 import { useAuthMethods } from '@/shared/hooks/useAuthMethods/index.ts';
 import { Fingerprint, Github } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
@@ -92,8 +93,20 @@ export function AuthForm() {
   const [verifyEmail, setVerifyEmail] = useState('');
   const [pending, setPending] = useState<AuthContinuePending | null>(null);
   const [autoGooglePending, setAutoGooglePending] = useState(false);
+  // Inline error surface for the OAuth / passkey methods — the reliable one.
+  // A toast fired from these async catches can be dropped by sonner (created
+  // into history but never made active), leaving a failed sign-in with NO
+  // feedback; the banner does not depend on that timing.
+  const [formError, setFormError] = useState<string | null>(null);
   const autoGoogleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoGoogleStartedRef = useRef(false);
+
+  // Surface a failure on BOTH the reliable inline banner and the toast.
+  const surfaceError = (err: unknown) => {
+    const message = mapFrontendError(err);
+    setFormError(message);
+    notify.error(message);
+  };
 
   const startOAuth = async (provider: string) => {
     if (pending) return;
@@ -112,7 +125,7 @@ export function AuthForm() {
       skipAutoGoogleSignIn();
       setAutoGooglePending(false);
       setPending(null);
-      notify.error(mapFrontendError(err));
+      surfaceError(err);
     }
   };
 
@@ -123,6 +136,7 @@ export function AuthForm() {
     }
     skipAutoGoogleSignIn();
     setAutoGooglePending(false);
+    setFormError(null);
   };
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: auto-start fires at most once (autoGoogleStartedRef guard); startOAuth is render-local and its identity must not retrigger the timer
@@ -160,7 +174,7 @@ export function AuthForm() {
       await signInWithPasskey();
       void navigate({ to: '/', replace: true });
     } catch (err) {
-      notify.error(mapFrontendError(err));
+      surfaceError(err);
     } finally {
       setPending(null);
     }
@@ -234,6 +248,13 @@ export function AuthForm() {
         variant={isEmailVerify ? 'emailVerify' : 'welcome'}
         email={isEmailVerify ? verifyEmail : undefined}
       />
+
+      {showMethodPicker ? (
+        <FormError
+          message={formError}
+          data-testid={AUTH_FORM_TEST_IDS.methodErrorBanner}
+        />
+      ) : null}
 
       {showMethodPicker && hasSocialMethods ? (
         <div

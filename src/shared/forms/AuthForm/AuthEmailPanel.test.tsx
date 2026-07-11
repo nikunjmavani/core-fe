@@ -26,6 +26,11 @@ vi.mock('@/shared/api/auth-api.ts', () => ({
     emailVerificationCodeSend,
     emailLogin,
   },
+  // Real class so the verify-error path's `err instanceof MfaRequiredError`
+  // check is evaluable (the panel imports it from this module).
+  MfaRequiredError: class MfaRequiredError extends Error {
+    mfaSessionToken = 'mock-mfa-token';
+  },
 }));
 
 vi.mock('@/shared/auth/service.ts', () => ({
@@ -263,6 +268,27 @@ describe('AuthEmailPanel', () => {
     expect(screen.queryByText(/use a different email/i)).not.toBeInTheDocument();
   });
 
+  it('returns to the email step and clears any error when changing email', async () => {
+    emailVerificationCodeSend.mockRejectedValueOnce(new Error('Send failed'));
+    const user = userEvent.setup();
+    const router = createTestRouter();
+    render(<RouterProvider router={router} />);
+
+    // First send fails → banner shows on the email step.
+    await user.type(await screen.findByTestId('auth-email'), 'user@example.com');
+    await user.click(screen.getByTestId('auth-email-submit'));
+    expect(await screen.findByTestId('auth-email-error-banner')).toBeInTheDocument();
+
+    // A successful resend advances to verify, then change-email returns to the
+    // email step with the error cleared.
+    await user.click(screen.getByTestId('auth-email-submit'));
+    await screen.findByTestId('auth-email-verify-panel');
+    await user.click(screen.getByTestId('auth-email-change'));
+
+    expect(await screen.findByTestId('auth-email-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('auth-email-error-banner')).not.toBeInTheDocument();
+  });
+
   it('notifies the parent when the step changes', async () => {
     const onStepChange = vi.fn();
     const user = userEvent.setup();
@@ -286,6 +312,44 @@ describe('AuthEmailPanel', () => {
     await waitFor(() =>
       expect(onStepChange).toHaveBeenCalledWith('verify', 'user@example.com'),
     );
+  });
+
+  // Regression: a failed send-code must surface a VISIBLE error. Toasts fired
+  // from the async catch can be dropped by sonner (created into history but
+  // never made active), so the inline banner is the reliable feedback surface.
+  // Without it the user pressed Continue and saw nothing.
+  it('surfaces an inline error banner when sending the code fails', async () => {
+    emailVerificationCodeSend.mockRejectedValueOnce(new Error('Network error'));
+    const user = userEvent.setup();
+    const router = createTestRouter();
+    render(<RouterProvider router={router} />);
+
+    await user.type(await screen.findByTestId('auth-email'), 'user@example.com');
+    await user.click(screen.getByTestId('auth-email-submit'));
+
+    const banner = await screen.findByTestId('auth-email-error-banner');
+    expect(banner).toHaveTextContent(/network error/i);
+    expect(banner).toHaveAttribute('role', 'alert');
+    // Stays on the email step (never advanced to verify).
+    expect(screen.queryByTestId('auth-email-verify-panel')).not.toBeInTheDocument();
+  });
+
+  // Regression: a failed verify (wrong/expired code, backend error) must surface
+  // a visible inline error on the verify step, not rely on a toast alone.
+  it('surfaces an inline error banner when verifying the code fails', async () => {
+    emailLogin.mockRejectedValueOnce(new Error('Bad code'));
+    const user = userEvent.setup();
+    const router = createTestRouter();
+    render(<RouterProvider router={router} />);
+
+    await user.type(await screen.findByTestId('auth-email'), 'user@example.com');
+    await user.click(screen.getByTestId('auth-email-submit'));
+    await screen.findByTestId('auth-email-verify-panel');
+    await user.type(await screen.findByTestId('auth-email-code'), '123456');
+
+    const banner = await screen.findByTestId('auth-email-error-banner');
+    expect(banner).toHaveTextContent(/bad code/i);
+    expect(banner).toHaveAttribute('role', 'alert');
   });
 
   it('has no accessibility violations on the email step', async () => {
