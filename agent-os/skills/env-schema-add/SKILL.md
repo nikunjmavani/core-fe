@@ -57,10 +57,16 @@ Every key sits under exactly one half. Sub-sections (`# --- Title ---`) group re
 1. **Schema** — add Zod field to `src/core/config/env-schema.ts`.
 2. **Runtime** — wire `env.config.ts` / `platform-config.ts` if app reads it.
    - **Behavior flag?** Read it via `platformConfig` (never `import.meta.env.DEV/PROD/MODE`).
-3. **Per-environment allowed values (strict)** — if the key's valid set differs by
-   environment (e.g. a diagnostics flag that must be off in production), add it to
-   `envProfiles.<env>.allowed` in `env-schema.ts`. `pnpm validate:client-env` hard-fails
-   on an out-of-range value. Two environments only: `development`, `production`.
+3. **Per-environment allowed values (strict) — MANDATORY for security/behaviour flags.**
+   Any new (or newly-security-relevant existing) flag whose weakened value would loosen a
+   guard MUST pin its production-safe value in `envProfiles.production.allowed` in
+   `env-schema.ts`, so a production deploy setting the unsafe value **hard-fails**
+   `pnpm validate:client-env` instead of silently weakening prod (e.g. diagnostics/devtools
+   off, version-check on). Development may allow both values (`BOOL`) so typos still fail.
+   Cover it in the `envProfiles allowed values (strict per-environment)` block of
+   `env-schema.test.ts` (production pins the safe value). Doc/URL/tuning-only keys are exempt
+   (the test is "does the wrong value weaken a security/behaviour guard"). Two environments
+   only: `development`, `production`. This mirrors core-be's Category-B `.refine()` rule.
 4. **Template** — add to `.env.example` under correct half + sub-section; use `# OPTIONAL — <condition>` when conditionally required.
 5. **Sync** — run `pnpm tool:sync-env-example --fix` then `pnpm tool:sync-env-example`.
 6. **Types** — extend `src/vite-env.d.ts` for new `VITE_*` keys if needed.
