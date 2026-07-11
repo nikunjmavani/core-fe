@@ -339,10 +339,18 @@ import { User } from './contracts';
 
 ## Environment Variables
 
-Two environments only — **development** and **production** — each configured in its
-own gitignored file. `.env.example` is the **only committed** file. Deploys inject env
-from **GitHub Environments** (never from files). No `.env.local`, no shared `.env`, no
+Two **deploy** environments only — **development** and **production** — each configured
+in its own gitignored file. `.env.example` is the **only committed** file. Deploys inject
+env from **GitHub Environments** (never from files). No `.env.local`, no shared `.env`, no
 `.env.staging`. `pnpm setup:local` scaffolds `.env.development`; `pnpm dev` loads it.
+
+The Vite `MODE` enum is `local | development | production | test` (an out-of-enum value
+fails loudly at load in `env.config.ts`). `local` mirrors core-be's `NODE_ENV=local` so
+both repos share one env vocabulary, and `test` is the Vitest runner's Vite mode — but
+neither is a deploy environment (`DeployEnvironment` stays `development | production`).
+Unlike core-be, core-fe local dev runs as **`development`** mode against `.env.development`
+(Vite's dev-server convention), so `local` is a valid mode _name_ with no `.env.local` file
+behind it — the file convention above is unchanged.
 
 ```text
 .env.example         # Reference for all env vars — the ONLY committed file
