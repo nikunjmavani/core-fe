@@ -47,24 +47,28 @@ describe('branch rulesets policy (one trunk, one ruleset)', () => {
     expect(rulesets[0]?.payload?.name).toBe('Protect main');
   });
 
-  it('pins the governance rules the trunk depends on (squash-only, linear history, signatures)', () => {
+  it('pins the governance rules the trunk depends on (squash-only, linear history, checks)', () => {
     // The weekly canary checks ruleset PRESENCE only (the Actions token cannot
     // read secrets to diff parameters), so the committed JSON is the one place
     // rule CONTENT is pinned — a dropped rule here would otherwise vanish
     // silently on the next `pnpm github:sync --prune`.
+    // NOTE: `required_signatures` is intentionally NOT pinned — branch commits are
+    // unsigned and the GitHub squash-merge commit that lands on main is signed anyway,
+    // so the rule only ever deadlocked merges once `bypass_actors` was removed.
     const ruleTypes = (
       (rulesets[0]?.payload?.rules ?? []) as Array<{ type: string }>
     ).map((rule) => rule.type);
     expect(ruleTypes).toEqual(
       expect.arrayContaining([
         'required_linear_history',
-        'required_signatures',
         'pull_request',
         'required_status_checks',
         'deletion',
         'non_fast_forward',
       ]),
     );
+    // required_signatures must NOT come back (it would deadlock every unsigned-commit PR).
+    expect(ruleTypes).not.toContain('required_signatures');
     const pullRequestRule = (
       (rulesets[0]?.payload?.rules ?? []) as Array<{
         type: string;
@@ -72,5 +76,22 @@ describe('branch rulesets policy (one trunk, one ruleset)', () => {
       }>
     ).find((rule) => rule.type === 'pull_request');
     expect(pullRequestRule?.parameters?.allowed_merge_methods).toEqual(['squash']);
+  });
+
+  it('has NO bypass actors — a red/pending required check cannot be merged by anyone', () => {
+    // The bug this locks out: a repo-admin `pull_request` bypass let a red `Quality gate`
+    // merge through the merge API. With zero bypass actors, a failing/pending required
+    // check blocks the merge for everyone — the repo owner included. Never re-add these.
+    expect(rulesets[0]?.payload?.bypass_actors ?? []).toEqual([]);
+  });
+
+  it('does not require branches to be up to date (strict off) so a green PR merges cleanly', () => {
+    const checksRule = (
+      (rulesets[0]?.payload?.rules ?? []) as Array<{
+        type: string;
+        parameters?: { strict_required_status_checks_policy?: boolean };
+      }>
+    ).find((rule) => rule.type === 'required_status_checks');
+    expect(checksRule?.parameters?.strict_required_status_checks_policy).toBe(false);
   });
 });
