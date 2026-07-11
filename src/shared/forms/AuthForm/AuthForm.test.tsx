@@ -224,6 +224,22 @@ describe('AuthForm', () => {
     }
   });
 
+  // Regression: a failed OAuth start must surface a VISIBLE inline error. A toast
+  // fired from the async catch can be dropped by sonner, leaving the user with no
+  // feedback after clicking a provider.
+  it('surfaces an inline error banner when OAuth start fails', async () => {
+    const user = userEvent.setup();
+    const { authApi } = await import('@/shared/api/auth-api.ts');
+    vi.mocked(authApi.oauthStart).mockRejectedValueOnce(new Error('OAuth down'));
+
+    renderForm();
+    await user.click(await screen.findByTestId('auth-continue-google'));
+
+    const banner = await screen.findByTestId('auth-method-error-banner');
+    expect(banner).toHaveTextContent(/oauth down/i);
+    expect(banner).toHaveAttribute('role', 'alert');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = renderForm();
     await screen.findByTestId('auth-form');

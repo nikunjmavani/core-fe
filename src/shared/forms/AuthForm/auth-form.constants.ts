@@ -11,6 +11,7 @@ export const AUTH_FORM_TEST_IDS = {
   continuePasskey: 'auth-continue-passkey',
   methodDivider: 'auth-method-divider',
   socialMethods: 'auth-social-methods',
+  methodErrorBanner: 'auth-method-error-banner',
   emailPanel: 'auth-email-panel',
   email: 'auth-email',
   emailError: 'auth-email-error',

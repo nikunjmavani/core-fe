@@ -25,6 +25,7 @@ import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
+import { FormError } from '@/shared/forms/FormError/index.ts';
 import { useCooldownClock } from '@/shared/hooks/useCooldownClock/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { type MeContext, meContextQueryKey } from '@/shared/tenancy/me-context.ts';
@@ -134,6 +135,10 @@ export function AuthEmailPanel({
   const [submittedEmail, setSubmittedEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [codeShake, setCodeShake] = useState(false);
+  // Inline error surface — the reliable one. Toasts fired from this submit's
+  // async catch can be dropped by sonner (created into history but never made
+  // active), so a failed send/verify would otherwise give the user NO feedback.
+  const [formError, setFormError] = useState<string | null>(null);
   const [resendCooldownUntil, setResendCooldownUntil] = useState<number | null>(null);
   const resendCooldownNow = useCooldownClock(resendCooldownUntil);
   const turnstileReady = useTurnstileReady();
@@ -156,6 +161,13 @@ export function AuthEmailPanel({
     defaultValues: { email: '' },
   });
 
+  // Surface a failure on BOTH the reliable inline banner and the toast.
+  const surfaceError = (err: unknown) => {
+    const message = mapFrontendError(err);
+    setFormError(message);
+    notify.error(message);
+  };
+
   const sendCode = async (email: string) => {
     const value = email.trim();
     if (!value) return;
@@ -167,6 +179,7 @@ export function AuthEmailPanel({
       return;
     }
     if (pending) return;
+    setFormError(null);
     onPendingChange?.({ method: 'email-send' });
     try {
       await authApi.emailVerificationCodeSend(value);
@@ -181,7 +194,7 @@ export function AuthEmailPanel({
         i18n.t(AUTH_KEYS.auth.email.toast.codeSent, { ns: AUTH_NS, email: value }),
       );
     } catch (err) {
-      notify.error(mapFrontendError(err));
+      surfaceError(err);
     } finally {
       onPendingChange?.(null);
     }
@@ -200,6 +213,7 @@ export function AuthEmailPanel({
       pending
     )
       return;
+    setFormError(null);
     onPendingChange?.({ method: 'email-verify' });
     try {
       const { accessToken } = await authApi.emailLogin({
@@ -220,7 +234,7 @@ export function AuthEmailPanel({
       setVerificationCode('');
       setCodeShake(true);
       window.setTimeout(() => setCodeShake(false), 450);
-      notify.error(mapFrontendError(err));
+      surfaceError(err);
     } finally {
       onPendingChange?.(null);
     }
@@ -230,6 +244,7 @@ export function AuthEmailPanel({
     setStep('email');
     setVerificationCode('');
     setResendCooldownUntil(null);
+    setFormError(null);
   };
 
   const resendCooldownRemainingMs =
@@ -241,6 +256,10 @@ export function AuthEmailPanel({
   if (step === 'email') {
     return (
       <div className="space-y-4" data-testid={AUTH_FORM_TEST_IDS.emailPanel}>
+        <FormError
+          message={formError}
+          data-testid={AUTH_FORM_TEST_IDS.emailErrorBanner}
+        />
         <form onSubmit={handleSubmit(onEmailSubmit)}>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -322,6 +341,7 @@ export function AuthEmailPanel({
       className="flex flex-col gap-5"
       data-testid={AUTH_FORM_TEST_IDS.emailVerifyPanel}
     >
+      <FormError message={formError} data-testid={AUTH_FORM_TEST_IDS.emailErrorBanner} />
       <div className="space-y-2 pt-2 text-left">
         <Label htmlFor="auth-email-code">{t(AUTH_KEYS.auth.email.codeLabel)}</Label>
         <TotpCodeInput
