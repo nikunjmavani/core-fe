@@ -42,6 +42,15 @@ budgets, cache cleanup, release-flow guards (environment-drift canary),
 and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)
 run as scheduled/event workflows.
 
+**Merge policy — never merge on red (enforced, not just convention):** the `main` ruleset carries
+**no `bypass_actors`**, so a PR with any failing or pending required check (`Quality gate`, `Checks`)
+**cannot be merged by anyone — the repo owner included**. Never re-add `bypass_actors` to
+`.github/rulesets/main.json`, and never merge with `--admin` or the merge API to skip a red gate: a
+flaky-red required check is **re-run (or its branch updated) to green**, never bypassed. `strict up-to-date`
+is off so a green PR merges cleanly with `gh pr merge --squash` (no bypass needed); `required_signatures`
+is intentionally absent (branch commits are unsigned — the squash-merge commit GitHub creates on `main`
+is signed regardless). The ruleset content is pinned by `tests/ci/rulesets.policy.test.ts`.
+
 **Lockfile discipline:** a `package.json` dependency or `pnpm.overrides` change and its
 `pnpm-lock.yaml` regeneration are **one atomic commit** — run `pnpm install` and stage both.
 A desynced lockfile fails every frozen-install CI job (`ERR_PNPM_LOCKFILE_CONFIG_MISMATCH`) and

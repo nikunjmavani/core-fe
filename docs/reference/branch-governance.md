@@ -82,8 +82,12 @@ GitHub API itself.
 - **Rulesets need a paid plan on private repos.** Repository rulesets require
   GitHub Pro / Team / Enterprise on private repos; `pnpm github:sync` surfaces
   the 403 verbatim.
-- **Admin break-glass is intentionally not managed.** `bypass_actors` stays as
-  documented break-glass and is never touched by this tool.
+- **No admin break-glass.** `bypass_actors` is intentionally **empty** — a PR with a
+  failing or pending required check (`Quality gate`, `Checks`) cannot be merged by anyone,
+  the repo owner included (no `--admin` / merge-API override). `required_signatures` is
+  likewise absent: branch commits are unsigned, and the squash-merge commit GitHub creates
+  on `main` is signed regardless. Pinned by `tests/ci/rulesets.policy.test.ts`; this tool
+  never touches either.
 
 ## Related
 
