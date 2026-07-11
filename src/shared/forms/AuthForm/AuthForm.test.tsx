@@ -240,6 +240,20 @@ describe('AuthForm', () => {
     expect(banner).toHaveAttribute('role', 'alert');
   });
 
+  // Regression: a failed passkey sign-in must surface a visible inline error too
+  // (same silently-dropped-toast class as OAuth).
+  it('surfaces an inline error banner when passkey sign-in fails', async () => {
+    const user = userEvent.setup();
+    vi.mocked(signInWithPasskey).mockRejectedValueOnce(new Error('Passkey failed'));
+
+    renderForm();
+    await user.click(await screen.findByTestId('auth-continue-passkey'));
+
+    const banner = await screen.findByTestId('auth-method-error-banner');
+    expect(banner).toHaveTextContent(/passkey failed/i);
+    expect(banner).toHaveAttribute('role', 'alert');
+  });
+
   it('has no accessibility violations', async () => {
     const { container } = renderForm();
     await screen.findByTestId('auth-form');

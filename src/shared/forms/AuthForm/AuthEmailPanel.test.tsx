@@ -268,6 +268,27 @@ describe('AuthEmailPanel', () => {
     expect(screen.queryByText(/use a different email/i)).not.toBeInTheDocument();
   });
 
+  it('returns to the email step and clears any error when changing email', async () => {
+    emailVerificationCodeSend.mockRejectedValueOnce(new Error('Send failed'));
+    const user = userEvent.setup();
+    const router = createTestRouter();
+    render(<RouterProvider router={router} />);
+
+    // First send fails → banner shows on the email step.
+    await user.type(await screen.findByTestId('auth-email'), 'user@example.com');
+    await user.click(screen.getByTestId('auth-email-submit'));
+    expect(await screen.findByTestId('auth-email-error-banner')).toBeInTheDocument();
+
+    // A successful resend advances to verify, then change-email returns to the
+    // email step with the error cleared.
+    await user.click(screen.getByTestId('auth-email-submit'));
+    await screen.findByTestId('auth-email-verify-panel');
+    await user.click(screen.getByTestId('auth-email-change'));
+
+    expect(await screen.findByTestId('auth-email-panel')).toBeInTheDocument();
+    expect(screen.queryByTestId('auth-email-error-banner')).not.toBeInTheDocument();
+  });
+
   it('notifies the parent when the step changes', async () => {
     const onStepChange = vi.fn();
     const user = userEvent.setup();
