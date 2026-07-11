@@ -5,7 +5,7 @@
 #   pnpm sonar:down                                     # stop (keep data)
 #   pnpm sonar:reset                                    # teardown incl. volumes
 #
-# Dashboard: http://localhost:9000  (admin / admin on first login)
+# Dashboard: http://localhost:9001  (admin / admin on first login)
 #
 # Port 9000 is shared with core-be's local SonarQube. If core-be's server is
 # already running, the gate script reuses it (one server, two projects) — copy
@@ -17,7 +17,7 @@ services:
     image: sonarqube:25.5.0.107428-community
     container_name: core-fe-sonarqube
     ports:
-      - '9000:9000'
+      - '${SONAR_HOST_PORT:-9001}:9000'
     environment:
       SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: 'true'
     volumes:
@@ -46,14 +46,14 @@ services:
       - .:/usr/src
     working_dir: /usr/src
     environment:
-      SONAR_HOST_URL: http://host.docker.internal:9000
+      SONAR_HOST_URL: http://host.docker.internal:9001
       SONAR_TOKEN: ${SONAR_TOKEN:-}
     command: >
       sonar-scanner
         -Dsonar.projectKey=core-fe
         -Dsonar.projectName="core-fe"
         -Dsonar.projectVersion=1.0.0-alpha.0
-        -Dsonar.host.url=http://host.docker.internal:9000
+        -Dsonar.host.url=http://host.docker.internal:9001
         -Dsonar.token=${SONAR_TOKEN:-admin:admin@}
 
 volumes:
