@@ -109,13 +109,16 @@ export const clientEnvSchema = z.object({
   VITE_DEVTOOLS: z.string().optional(),
   VITE_E2E_HOOKS: z.string().optional(),
   VITE_VERSION_CHECK: z.string().optional(),
-  // Two deploy environments only — no 'staging'. 'test' is kept solely because it
-  // is the Vitest runner's Vite mode (not a deploy environment); the deploy axis is
-  // DeployEnvironment = 'development' | 'production'.
-  // Reported deployment name only (never branched on). `test` = the Vitest
-  // runner's Vite mode. The raw `DEV`/`PROD` booleans are intentionally absent —
-  // behavior is driven by named flags, not the build mode.
-  MODE: z.enum(['development', 'production', 'test']).default('development'),
+  // Runtime mode: `local | development | production | test` (no 'staging'). `local` is a
+  // developer's machine — mirrors core-be's `NODE_ENV=local` so both repos share one env
+  // vocabulary; `development` / `production` are the two DEPLOY targets (DeployEnvironment),
+  // and you never deploy to `local`. `test` is kept solely because it is the Vitest runner's
+  // Vite mode (not a deploy environment). The default stays `development` (Vite's dev-server
+  // convention), so a stock `pnpm dev` is unchanged; `local` is opt-in via `vite --mode local`.
+  // Reported name only, never branched on — the raw `DEV`/`PROD` booleans are intentionally
+  // absent (behavior is driven by named flags). An out-of-enum value fails loudly at load
+  // (env.config.ts throws).
+  MODE: z.enum(['local', 'development', 'production', 'test']).default('development'),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;

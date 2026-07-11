@@ -1,6 +1,7 @@
 import {
   assertAuthPlatformInvariants,
   branchEnvironmentMap,
+  clientEnvSchema,
   type DeployEnvironment,
   environmentForBranch,
   envProfiles,
@@ -146,5 +147,29 @@ describe('envSchemaKeys', () => {
   it('includes the local Sonar tooling secrets', () => {
     expect(envSchemaKeys).toContain('SONAR_TOKEN');
     expect(envSchemaKeys).toContain('SONAR_ADMIN_PASSWORD');
+  });
+});
+
+describe('MODE enum', () => {
+  it('accepts `local` (developer machine — mirrors core-be NODE_ENV=local)', () => {
+    const parsed = clientEnvSchema.safeParse({ MODE: 'local' });
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.MODE).toBe('local');
+  });
+
+  it('defaults MODE to development when unset (Vite dev-server convention)', () => {
+    const parsed = clientEnvSchema.safeParse({});
+    expect(parsed.success).toBe(true);
+    expect(parsed.success && parsed.data.MODE).toBe('development');
+  });
+
+  it('keeps `test` (the Vitest runner Vite mode) and `production`', () => {
+    expect(clientEnvSchema.safeParse({ MODE: 'test' }).success).toBe(true);
+    expect(clientEnvSchema.safeParse({ MODE: 'production' }).success).toBe(true);
+  });
+
+  it('fails loudly on an out-of-enum MODE (e.g. qa) — never a silent default', () => {
+    // env.config.ts eager-parses clientEnvSchema and throws on failure.
+    expect(clientEnvSchema.safeParse({ MODE: 'qa' }).success).toBe(false);
   });
 });
