@@ -123,4 +123,17 @@ describe('supply-chain dependency floors (no downgrade past a known CVE)', () =>
     // @opentelemetry/core is a transitive of netlify-cli (dev-only CLI); the override is the floor.
     expect(atLeast(pkg.pnpm.overrides['@opentelemetry/core'], [2, 8, 0])).toBe(true);
   });
+
+  // Bounded floors (>=x.y.z <nextMajor): patches flow, the known-CVE floor holds.
+  it('floors protobufjs >=7.6.4 via pnpm override (unbounded-recursion DoS — <=7.5.7)', () => {
+    expect(atLeast(pkg.pnpm.overrides.protobufjs, [7, 6, 4])).toBe(true);
+  });
+
+  it('floors basic-ftp >=5.3.1 via pnpm override (path-traversal / DoS advisories)', () => {
+    expect(atLeast(pkg.pnpm.overrides['basic-ftp'], [5, 3, 1])).toBe(true);
+  });
+
+  it('floors minimatch >=10.2.5 via pnpm override (ReDoS on the 10.1.x line)', () => {
+    expect(atLeast(pkg.pnpm.overrides.minimatch, [10, 2, 5])).toBe(true);
+  });
 });
