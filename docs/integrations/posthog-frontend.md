@@ -1,7 +1,8 @@
 # PostHog — React frontend product analytics
 
-Core-fe uses **PostHog** for consent-gated product analytics, feature flags, and
-Core Web Vitals. **Sentry** owns error/reliability observability — see
+Core-fe uses **PostHog** for consent-gated product analytics and
+Core Web Vitals (feature flags are planned — see [Feature flags](#feature-flags)).
+**Sentry** owns error/reliability observability — see
 [sentry-frontend.md](./sentry-frontend.md).
 
 **Related:** [Credentials](./credentials-and-env.md) · [Frontend platform](../reference/frontend-platform.md)
@@ -47,7 +48,6 @@ flowchart TB
 | Event catalog | `shared/analytics/analytics.constants.ts` | Event names + super-property keys                 |
 | Capture API   | `shared/analytics/capture.ts`             | Consent gate, context enrichment, URL scrub       |
 | Bootstrap     | `app/analytics/posthog.ts`                | `posthog.init`, identity, router, reset on logout |
-| Feature flags | `app/analytics/FeatureFlagProvider.tsx`   | `useFeatureFlags()` / `useFeatureFlag()`          |
 | Web Vitals    | `app/observability/performance.ts`        | `web_vital` events                                |
 
 **Privacy:** `autocapture: false`, `disable_session_recording: true`, no emails in
@@ -157,13 +157,11 @@ Suggested insights for analyzing the data above:
 
 ## Feature flags
 
-```tsx
-import { useFeatureFlag } from '@/app/analytics/FeatureFlagProvider.tsx';
-
-const enabled = useFeatureFlag('new-dashboard');
-```
-
-Flags load after PostHog init; default **false** when analytics is off.
+> **Not wired yet.** PostHog feature-flag support (a `useFeatureFlag` provider) is
+> planned but not currently implemented — the previous `FeatureFlagProvider` was
+> removed while unused to keep `posthog-js` off the first-paint path. It will be
+> re-added (as an `import type` + runtime `import()` boundary, like
+> `shared/analytics/capture.ts`) when the first flag consumer lands.
 
 ---
 
@@ -185,7 +183,6 @@ Never import `posthog-js` directly in feature code — use `captureAnalyticsEven
 | `shared/analytics/analytics.constants.ts`      | Event name catalog                    |
 | `shared/analytics/capture.ts`                  | Capture API + identity/router helpers |
 | `app/analytics/posthog.ts`                     | SDK init + logout reset               |
-| `app/analytics/FeatureFlagProvider.tsx`        | React feature flags                   |
 | `shared/analytics/capture-consent-decision.ts` | Consent audit event                   |
 | `main.tsx`                                     | Idle bootstrap with router            |
 | `shared/components/ConsentBanner/`             | Consent gate                          |

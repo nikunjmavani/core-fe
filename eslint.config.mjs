@@ -171,14 +171,6 @@ export default defineConfig([
     },
   },
 
-  // FeatureFlagProvider exports provider + hooks by design
-  {
-    files: ['**/app/analytics/**/*.tsx'],
-    rules: {
-      'react-refresh/only-export-components': 'off',
-    },
-  },
-
   // ── Layer boundaries: ui → lib → core → shared → pages → app ──
   // One-way dependency rule from agent-os/rules/file-structure.mdc, enforced on
   // production code (test files may cross layers for mocks/fixtures).
