@@ -22,9 +22,9 @@ Verdict summary for major libraries used in this repo. Full stack list: [tools-a
 
 ## Analytics
 
-| Current                                | Alternatives          | Verdict                                                                   |
-| -------------------------------------- | --------------------- | ------------------------------------------------------------------------- |
-| **posthog-js** (idle + dynamic import) | Plausible, Umami, GA4 | **KEEP** — feature flags via `FeatureFlagProvider`; lazy `posthog` chunk. |
+| Current                                | Alternatives          | Verdict                                                                                |
+| -------------------------------------- | --------------------- | -------------------------------------------------------------------------------------- |
+| **posthog-js** (idle + dynamic import) | Plausible, Umami, GA4 | **KEEP** — product analytics via lazy `posthog` chunk (feature-flag provider planned). |
 
 ## Routing
 
