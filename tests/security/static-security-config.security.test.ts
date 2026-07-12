@@ -118,4 +118,9 @@ describe('supply-chain dependency floors (no downgrade past a known CVE)', () =>
     // dompurify is a transitive of posthog-js; the override is the only floor.
     expect(atLeast(pkg.pnpm.overrides.dompurify, [3, 4, 7])).toBe(true);
   });
+
+  it('forces @opentelemetry/core >=2.8.0 via pnpm override (unbounded memory allocation — GHSA-8988-4f7v-96qf)', () => {
+    // @opentelemetry/core is a transitive of netlify-cli (dev-only CLI); the override is the floor.
+    expect(atLeast(pkg.pnpm.overrides['@opentelemetry/core'], [2, 8, 0])).toBe(true);
+  });
 });

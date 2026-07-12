@@ -34,11 +34,12 @@ The approval is the manual gate — `main` requires 0 approvals (solo-maintained
 
 [`package.json`](../../package.json) defines `pnpm.overrides` to force patched versions where upstream has not yet bumped:
 
-| Override               | Why                                                                                                                                                                                                                   |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `protobufjs` **7.6.4** | `posthog-js` → OpenTelemetry OTLP stack pulls it transitively (tree-shaken out of the shipped bundle). Pinned past the `<=7.5.7` unbounded-recursion DoS advisory; raise on the same 7.x line as new advisories land. |
-| `basic-ftp` **5.3.1**  | `@size-limit/preset-app` → puppeteer → `get-uri` pulled older `basic-ftp` (path traversal / DoS advisories).                                                                                                          |
-| `minimatch` **10.2.5** | `eslint-plugin-sonarjs` v3 pulled vulnerable `minimatch@10.1.x` (ReDoS). **v4** of the plugin is now direct; override keeps the tree on a patched line.                                                               |
+| Override                          | Why                                                                                                                                                                                                                                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `protobufjs` **7.6.4**            | `posthog-js` → OpenTelemetry OTLP stack pulls it transitively (tree-shaken out of the shipped bundle). Pinned past the `<=7.5.7` unbounded-recursion DoS advisory; raise on the same 7.x line as new advisories land.                                                                   |
+| `basic-ftp` **5.3.1**             | `@size-limit/preset-app` → puppeteer → `get-uri` pulled older `basic-ftp` (path traversal / DoS advisories).                                                                                                                                                                            |
+| `minimatch` **10.2.5**            | `eslint-plugin-sonarjs` v3 pulled vulnerable `minimatch@10.1.x` (ReDoS). **v4** of the plugin is now direct; override keeps the tree on a patched line.                                                                                                                                 |
+| `@opentelemetry/core` **>=2.8.0** | `netlify-cli` → `@netlify/blobs` → `@netlify/otel` pulled `@opentelemetry/core@2.7.1`, hit by GHSA-8988-4f7v-96qf (unbounded memory allocation). Dev/deploy CLI only — never shipped to clients — and below the `--audit-level=high` gate, so this is a floor rather than an exact pin. |
 
 Revisit these when Dependabot or direct dependency upgrades remove the need.
 
