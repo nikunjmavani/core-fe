@@ -4,6 +4,7 @@ import '@/lib/i18n/i18n.ts';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
+import { initSentry } from '@/app/observability/sentry.ts';
 import { router } from '@/app/routes/routeTree.tsx';
 import { showUpdateAvailableToast } from '@/app/version/show-update-available-toast.ts';
 import { platformConfig } from '@/core/config/env.ts';
@@ -12,7 +13,12 @@ import { startVersionCheck } from '@/core/version/check.ts';
 import { afterPaint, dismissAppSplash, onAppSplashDismissed } from '@/lib/app-splash.ts';
 import { IDLE_PREFETCH_TIMEOUT_MS } from '@/lib/chunk-prefetch.ts';
 import { subscribeToAuthBroadcast } from '@/shared/auth/auth-channel.ts';
-import { handleCrossTabLogout, startAuthBootstrap } from '@/shared/auth/service.ts';
+import { peekTurnstileToken } from '@/shared/auth/captcha/turnstile-token-store.ts';
+import {
+  establishSession,
+  handleCrossTabLogout,
+  startAuthBootstrap,
+} from '@/shared/auth/service.ts';
 import { initDeferredIconSets } from '@/shared/icons/icon-registry.ts';
 import {
   hasAnalyticsConsent,
@@ -52,9 +58,9 @@ function initObservabilityWhenIdle(): void {
   });
 
   const run = () => {
-    import('@/app/observability/sentry.ts')
-      .then((m) => m.initSentry(router))
-      .catch(() => undefined);
+    // sentry.ts is already entry-resident (App.tsx imports reportReactError);
+    // the heavy @sentry/react SDK stays lazy behind an import() inside initSentry.
+    initSentry(router).catch(() => undefined);
     startAnalytics();
   };
 
@@ -93,35 +99,21 @@ if (themeSeedParam && /^\d+$/.test(themeSeedParam)) {
 // Playwright E2E hooks (`navigateInApp`, `establishSession`, Turnstile readiness).
 // Env-gated (VITE_E2E_HOOKS) — on locally, off in every deployed build.
 if (platformConfig.e2eHooks) {
-  (
+  // service.ts and turnstile-token-store.ts are already entry-resident (imported
+  // statically by fetch-client / InvisibleTurnstile), so assign directly — no
+  // dynamic import() needed (they emitted INEFFECTIVE_DYNAMIC_IMPORT warnings).
+  Object.assign(
     globalThis as typeof globalThis & {
       __coreFeRouter?: typeof router;
       __coreFeEstablishSession?: (accessToken: string) => Promise<void>;
       __coreFePeekTurnstileToken?: () => string | undefined;
-    }
-  ).__coreFeRouter = router;
-  import('@/shared/auth/service.ts')
-    .then(({ establishSession }) => {
-      (
-        globalThis as typeof globalThis & {
-          __coreFeEstablishSession?: (accessToken: string) => Promise<void>;
-        }
-      ).__coreFeEstablishSession = establishSession;
-    })
-    .catch(() => {
-      /* dev-only E2E hook — best effort */
-    });
-  import('@/shared/auth/captcha/turnstile-token-store.ts')
-    .then(({ peekTurnstileToken }) => {
-      (
-        globalThis as typeof globalThis & {
-          __coreFePeekTurnstileToken?: () => string | undefined;
-        }
-      ).__coreFePeekTurnstileToken = peekTurnstileToken;
-    })
-    .catch(() => {
-      /* dev-only E2E hook — best effort */
-    });
+    },
+    {
+      __coreFeRouter: router,
+      __coreFeEstablishSession: establishSession,
+      __coreFePeekTurnstileToken: peekTurnstileToken,
+    },
+  );
 }
 
 // Mount React immediately so user sees app (spinner or login) instead of blank screen.
