@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils.ts';
 import { preloadCommandPalette } from '@/shared/components/CommandPalette/index.ts';
-import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
+import { settingsHash } from '@/shared/components/SettingsModal/settings-hash-grammar.ts';
 import type { SettingsSection } from '@/shared/components/SettingsModal/settings-sections.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { useDeploymentMode } from '@/shared/hooks/useDeploymentFlags/index.ts';

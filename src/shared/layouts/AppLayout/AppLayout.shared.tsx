@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils.ts';
 import { logout } from '@/shared/auth/service.ts';
 import { preloadCommandPalette } from '@/shared/components/CommandPalette/index.ts';
 import { EmailVerificationBanner } from '@/shared/components/EmailVerificationBanner/index.ts';
-import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
+import { settingsHash } from '@/shared/components/SettingsModal/settings-hash-grammar.ts';
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {

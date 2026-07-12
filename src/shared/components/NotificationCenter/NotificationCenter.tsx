@@ -7,7 +7,7 @@ import type { Notification } from '@/shared/api/notification-contracts.ts';
 import { EmptyState } from '@/shared/components/EmptyState/index.ts';
 import { FormattedDate } from '@/shared/components/FormattedDate/index.ts';
 import { RetryError } from '@/shared/components/RetryError/index.ts';
-import { settingsHash } from '@/shared/components/SettingsModal/settings-hash.ts';
+import { settingsHash } from '@/shared/components/SettingsModal/settings-hash-grammar.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
   Popover,

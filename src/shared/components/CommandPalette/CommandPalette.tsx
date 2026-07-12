@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { logout } from '@/shared/auth/service.ts';
-import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
+import { settingsHash } from '@/shared/components/SettingsModal/settings-hash-grammar.ts';
 import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import {
   Building2,
