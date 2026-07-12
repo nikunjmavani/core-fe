@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import { cn } from '@/lib/utils.ts';
 import { preloadCommandPalette } from '@/shared/components/CommandPalette/index.ts';
-import { settingsHash } from '@/shared/components/SettingsModal/index.ts';
+import { settingsHash } from '@/shared/components/SettingsModal/settings-hash-grammar.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Search, Settings } from '@/shared/icons/index.ts';
 import { LAYOUT_KEYS, LAYOUT_NS } from '@/shared/layouts/layout.constants.ts';

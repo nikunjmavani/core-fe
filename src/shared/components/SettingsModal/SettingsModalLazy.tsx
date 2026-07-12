@@ -4,7 +4,7 @@ import { lazy, Suspense, useLayoutEffect } from 'react';
 import { useAuthenticatedIdleChunkPrefetch } from '@/lib/chunk-prefetch.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
-import { isSettingsHash } from './settings-hash.ts';
+import { isSettingsHash } from './settings-hash-grammar.ts';
 import { isSettingsPathAllowed } from './settings-route-policy.ts';
 
 const SettingsModalInner = lazy(() =>

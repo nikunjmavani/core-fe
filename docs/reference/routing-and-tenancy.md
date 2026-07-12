@@ -209,7 +209,10 @@ reproduces page + modal, refresh survives, back/Esc closes.
   first" / redirect to `/organization`.
 - **Route guards never see hashes** — all gating lives inside the modal.
 - **Analytics are hash-blind** — fire an explicit PostHog event on open/section change.
-- Lives in `src/shared/components/SettingsModal/`, with `settings-hash.ts` +
+- Lives in `src/shared/components/SettingsModal/`, with `settings-hash-grammar.ts`
+  (the **dependency-free** hash grammar — `settingsHash` / `isSettingsHash` etc. — kept
+  free of runtime imports so entry-resident shell callers don't drag the section registry
+  onto first paint) + `settings-hash.ts` (registry-dependent `parseSettingsHash`) +
   `settings-sections.ts` + `settings-permissions.ts`, and panels as **flat files** under
   `account/` + `organization/` (same precedent as `shared/components/data-table/` —
   cohesive panel groups are exempt from folder-per-unit; see file-structure.mdc).
