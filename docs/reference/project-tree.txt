@@ -238,6 +238,7 @@ core-fe/
 │   │   ├── route-island-structure.md
 │   │   ├── routes-and-ui.md
 │   │   ├── routing-and-tenancy.md
+│   │   ├── scheduled-jobs.md
 │   │   ├── security-model.md
 │   │   ├── testing.md
 │   │   ├── theme-axis-audit-playbook.md
@@ -1173,7 +1174,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [18 test files]
+│   │   └── [19 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/

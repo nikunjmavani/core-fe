@@ -108,6 +108,7 @@ flowchart TB
 | **[reference/testing.md](reference/testing.md)**                             | **Full test matrix** — every kind, spec inventory, skills, gates                             |
 | **[reference/local-production-perf.md](reference/local-production-perf.md)** | **Production build perf** — `pnpm build` + `pnpm preview`, `pnpm size`, Lighthouse (not dev) |
 | **[reference/cross-browser-support.md](reference/cross-browser-support.md)** | **Cross-browser matrix** — Chrome/Firefox/Safari status + `pnpm test:cross-browser`          |
+| **[reference/scheduled-jobs.md](reference/scheduled-jobs.md)**               | **Scheduled + periodic jobs registry** — every cron, cadence, and signal (enforced)          |
 | [e2e-testids-inventory.md](reference/e2e-testids-inventory.md)               | **`data-testid` catalog** for Playwright E2E (by route); keep in sync with UI                |
 | [tools-and-usage.md](reference/tools-and-usage.md)                           | Dependency usage (Vitest, Playwright, etc.)                                                  |
 
