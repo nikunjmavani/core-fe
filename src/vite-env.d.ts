@@ -26,7 +26,6 @@ interface ImportMetaEnv {
   readonly VITE_PRIVACY_POLICY_URL: string;
   readonly VITE_DISABLED_MODULES: string;
   readonly VITE_AUTH_EMAIL: string;
-  readonly VITE_AUTH_EMAIL_PASSWORD: string;
   readonly VITE_AUTH_OAUTH_GOOGLE: string;
   readonly VITE_AUTH_OAUTH_GITHUB: string;
   readonly VITE_AUTH_OAUTH_APPLE: string;

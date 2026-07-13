@@ -10,7 +10,6 @@ export type { OAuthProviderFlags, OAuthProviderId };
 
 /** Which auth methods this deployment exposes on the unified auth screen. */
 export interface AuthMethods {
-  emailPassword: boolean;
   email: boolean;
   oauth: OAuthProviderFlags;
   passkey: boolean;

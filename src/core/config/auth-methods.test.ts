@@ -6,7 +6,6 @@ describe('resolveAuthMethods', () => {
   it('returns per-provider oauth flags', () => {
     const methods = resolveAuthMethods();
     expect(methods).toMatchObject({
-      emailPassword: expect.any(Boolean),
       email: expect.any(Boolean),
       oauth: {
         google: expect.any(Boolean),
