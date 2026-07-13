@@ -20,6 +20,6 @@ Each finding names the procedural skill that fixes it (agent finds, skill
 fixes), per the pipeline's `handoff` map: `verifier → test-generation`,
 `docs-auditor → documentation-maintenance`. Skill lenses that are not agents
 (`code-smells-best-practices`, `web-design-guidelines`, `lint-guard`) still
-apply via their own file-pattern routing in `docs/skill-triggers.md`. Produce a
+apply via their own file-pattern routing in `agent-os/docs/skill-triggers.md`. Produce a
 single prioritized report — blocking gaps first, then optional improvements.
 This is review-only: do not edit files.

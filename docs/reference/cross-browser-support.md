@@ -7,7 +7,7 @@ version-update notification, toast dismiss, PWA manifest, and local production p
 **CI:** `.github/workflows/cross-browser.yml` — weekly + `workflow_dispatch`.
 
 **Live integration (core-be + DATABASE_URL):** `pnpm test:e2e:integration:cross-browser` runs `routes-integration` + `org-switching` on all three engines.  
-**CI:** `.github/workflows/scheduled-fe-be-integration.yml` — nightly + `workflow_dispatch`.
+**CI:** not run on CI — core-be is never booted on CI runners, so this integration lane is local-only.
 
 ---
 

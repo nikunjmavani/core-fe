@@ -1,0 +1,39 @@
+{
+  "_comment": "Intentional doc references the staleness scanner (pnpm docs:staleness) should NOT flag. `paths` = repo-path tokens that resolve to no file/dir on purpose (illustrative example paths in docs). `symbols` = referenced identifiers that intentionally do not exist as a src/ export yet (planned APIs, prose examples). Each entry needs a reason; the scanner is advisory (weekly sync-drift canary) so this list absorbs deliberate references, not real drift. Keep it shrinking toward zero.",
+  "paths": [
+    {
+      "value": ".claude/rules",
+      "reason": "AGENTS.md documents this symlink is intentionally absent (Claude Code follows CLAUDE.md)."
+    },
+    {
+      "value": ".claude/.cursor/.codex",
+      "reason": "Prose shorthand for the three real config dirs .claude/ .cursor/ .codex/ in agent-os/evals/README.md."
+    },
+    {
+      "value": "docs/routes.txt",
+      "reason": "core-be path listed in a cross-repo requirement table (unified-auth-otp-requirement.md)."
+    },
+    {
+      "value": "src/shared/utils/http/response.util.ts",
+      "reason": "core-be path referenced in backend-list-pagination-spec.md (backend conventions)."
+    },
+    {
+      "value": "src/infrastructure/payment/stripe.client.ts",
+      "reason": "core-be path referenced in backend-list-pagination-spec.md (backend conventions)."
+    },
+    {
+      "value": "src/pages/notifications",
+      "reason": "Illustrative example page (e.g. /notifications) in requirement-format SKILL.md."
+    }
+  ],
+  "symbols": [
+    {
+      "value": "useFeatureFlag",
+      "reason": "Planned PostHog provider; posthog-frontend.md marks it not-yet-implemented."
+    },
+    {
+      "value": "useNow",
+      "reason": "Illustrative hypothetical hook name ('useNow-style') in codebase-audit-loop.md."
+    }
+  ]
+}

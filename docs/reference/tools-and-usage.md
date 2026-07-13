@@ -150,7 +150,7 @@ Further gates, all mirroring core-be:
 
 The official **shadcn skill** is vendored at **`agent-os/skills/shadcn/`** (installed via `pnpm dlx skills add shadcn/ui`; the equivalent `npx skills add https://github.com/shadcn/ui --skill shadcn` resolves to the same `skills.sh/shadcn/ui` source and installs the identical files to the same path).
 
-- **One skill for everything shadcn:** _how_ to add/fix/style/compose (CLI + Critical Rules in `SKILL.md` + `rules/`) **and** _where_ a block comes from (its "Project rules — core-fe" section folds in the 20 allowed sources + selection workflow). The former `agent-os/skills/shadcn-component-selection/` skill was merged into `agent-os/skills/shadcn/` and removed.
+- **One skill for everything shadcn:** _how_ to add/fix/style/compose (CLI + Critical Rules in `SKILL.md` + `rules/`) **and** _where_ a block comes from (its "Project rules — core-fe" section folds in the 20 allowed sources + selection workflow). The former shadcn-component-selection skill was merged into `agent-os/skills/shadcn/` and removed.
 - **Use the project runner:** `pnpm dlx shadcn@latest <info|search|docs|view|add> …`.
 - **Always-applied policy:** `agent-os/rules/ui-sources.mdc`. **Router:** `agent-os/rules/skill-router.mdc` (rule 13).
 - **Updating:** re-running `skills add` overwrites `agent-os/skills/shadcn/`; the local "Project rules — core-fe" block at the end of its `SKILL.md` must be re-appended (the same policy is preserved in `ui-sources.mdc`, which is always applied).
