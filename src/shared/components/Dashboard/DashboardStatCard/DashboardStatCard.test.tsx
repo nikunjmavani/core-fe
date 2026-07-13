@@ -4,12 +4,12 @@ import { axe } from 'vitest-axe';
 import { Boxes } from '@/shared/icons/index.ts';
 import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
 
-import { DashboardStatCard } from './DashboardStatCard.tsx';
+import { DashboardKpiTile } from './DashboardStatCard.tsx';
 
-describe('DashboardStatCard', () => {
+describe('DashboardKpiTile', () => {
   it('renders label and numeric value', async () => {
     renderWithProviders(
-      <DashboardStatCard
+      <DashboardKpiTile
         icon={Boxes}
         label="Workspaces"
         value={3}
@@ -24,7 +24,7 @@ describe('DashboardStatCard', () => {
 
   it('has no accessibility violations', async () => {
     const { container } = renderWithProviders(
-      <DashboardStatCard
+      <DashboardKpiTile
         icon={Boxes}
         label="Workspaces"
         value={3}

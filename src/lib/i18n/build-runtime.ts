@@ -17,6 +17,3 @@ export function isMultiLocaleBuild(): boolean {
 export function isSingleLocaleBuild(): boolean {
   return resolveRuntimeI18nBuildMode() === 'single';
 }
-
-/** @deprecated Prefer `resolveRuntimeI18nBuildMode()` — kept for barrel exports. */
-export const I18N_BUILD_MODE: I18nBuildMode = resolveRuntimeI18nBuildMode();

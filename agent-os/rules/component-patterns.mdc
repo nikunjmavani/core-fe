@@ -175,36 +175,16 @@ Full spec: `docs/reference/unified-auth-flows.md` → "Method button states".
 
 ## Animation Patterns
 
-Use the animation kit from `@/lib/animations/`:
+Use the animation kit from `@/lib/animations/` (everything here respects
+`prefers-reduced-motion`):
 
-```tsx
-import { AnimatedSection, StaggerList, StaggerItem } from '@/lib/animations/index.ts';
-import { hoverLift } from '@/lib/animations/interactions.ts';
+- `PageTransition` — route-level enter transition.
+- `Skeleton` / `SkeletonShimmer` — loading placeholders.
+- `useAnimeCountUp` — Anime.js number count-up (dashboard stats).
+- `prefersReducedMotion` — gate custom motion on the user's setting.
 
-// Scroll-triggered section
-<AnimatedSection>
-  <Card>...</Card>
-</AnimatedSection>
-
-// Staggered list
-<StaggerList className="grid gap-4 sm:grid-cols-3">
-  {items.map(item => (
-    <StaggerItem key={item.id}>
-      <motion.div {...hoverLift}>
-        <Card>...</Card>
-      </motion.div>
-    </StaggerItem>
-  ))}
-</StaggerList>
-
-// Auto-animate for dynamic lists
-const [animateRef] = useAutoAnimate();
-<tbody ref={animateRef}>
-  {filteredItems.map(item => <tr key={item.id}>...</tr>)}
-</tbody>
-```
-
-All animation components automatically respect `prefers-reduced-motion`.
+Richer motion (dashboard, onboarding steps) is built with Anime.js (`animejs`) —
+see the `animejs` skill.
 
 ## React Performance (Vite SPA)
 

@@ -9,11 +9,7 @@ export {
   resolveBuildI18nMode,
   uiLocaleFromBcp47,
 } from './build-config.ts';
-export {
-  I18N_BUILD_MODE,
-  isMultiLocaleBuild,
-  isSingleLocaleBuild,
-} from './build-runtime.ts';
+export { isMultiLocaleBuild, isSingleLocaleBuild } from './build-runtime.ts';
 export {
   formatCurrencyValue,
   formatDateValue,

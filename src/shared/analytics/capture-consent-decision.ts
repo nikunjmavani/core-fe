@@ -5,9 +5,6 @@ import {
 } from '@/shared/analytics/capture.ts';
 import type { ConsentDecision } from '@/shared/store/useConsentStore/index.ts';
 
-/** @deprecated Use {@link ANALYTICS_EVENTS.consentDecision}. */
-export const ANALYTICS_CONSENT_EVENT = ANALYTICS_EVENTS.consentDecision;
-
 /**
  * Record an explicit analytics-consent choice for audit/compliance.
  *

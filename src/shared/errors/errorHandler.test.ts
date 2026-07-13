@@ -1,13 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { AppError } from './AppError.ts';
-import {
-  apiErrorReason,
-  getErrorMessage,
-  mapApiError,
-  notifyError,
-  reportError,
-} from './errorHandler.ts';
+import { apiErrorReason, mapApiError, notifyError, reportError } from './errorHandler.ts';
 import { HttpError } from './HttpError.ts';
 
 vi.mock('@sentry/react', () => ({
@@ -45,24 +39,24 @@ vi.mock('@/shared/notify/index.ts', () => ({
   },
 }));
 
-describe('getErrorMessage', () => {
+describe('mapApiError', () => {
   it('returns AppError message as-is', () => {
     const err = new AppError('Custom error', 400, 'BAD_REQUEST');
-    expect(getErrorMessage(err)).toBe('Custom error');
+    expect(mapApiError(err)).toBe('Custom error');
   });
 
   it('returns sanitized server message for HttpError', () => {
     const err = new HttpError('Bad Request', 400, '/api/test', 'POST', {
       message: 'Email is required',
     });
-    expect(getErrorMessage(err)).toBe('Email is required');
+    expect(mapApiError(err)).toBe('Email is required');
   });
 
   it('rejects server messages containing SQL keywords', () => {
     const err = new HttpError('Bad Request', 400, '/api/test', 'POST', {
       message: 'SELECT * FROM users WHERE id = 1',
     });
-    expect(getErrorMessage(err)).toBe(
+    expect(mapApiError(err)).toBe(
       'The request was invalid. Please check your input and try again.',
     );
   });
@@ -71,7 +65,7 @@ describe('getErrorMessage', () => {
     const err = new HttpError('Server Error', 500, '/api/test', 'GET', {
       message: 'TypeError: cannot read property at handler.ts:42',
     });
-    expect(getErrorMessage(err)).toBe(
+    expect(mapApiError(err)).toBe(
       'An internal server error occurred. Please try again later.',
     );
   });
@@ -80,29 +74,29 @@ describe('getErrorMessage', () => {
     const err = new HttpError('Bad Request', 400, '/api/test', 'POST', {
       message: 'x'.repeat(201),
     });
-    expect(getErrorMessage(err)).toBe(
+    expect(mapApiError(err)).toBe(
       'The request was invalid. Please check your input and try again.',
     );
   });
 
   it('returns status-based fallback for HttpError without data.message', () => {
     const err = new HttpError('Not Found', 404, '/api/test', 'GET');
-    expect(getErrorMessage(err)).toBe('The requested resource was not found.');
+    expect(mapApiError(err)).toBe('The requested resource was not found.');
   });
 
   it('returns generic fallback for unknown HTTP status', () => {
     const err = new HttpError('Teapot', 418, '/api/test', 'GET');
-    expect(getErrorMessage(err)).toBe('Something went wrong. Please try again.');
+    expect(mapApiError(err)).toBe('Something went wrong. Please try again.');
   });
 
   it('returns Error.message for generic errors', () => {
-    expect(getErrorMessage(new Error('Network failure'))).toBe('Network failure');
+    expect(mapApiError(new Error('Network failure'))).toBe('Network failure');
   });
 
   it('returns fallback for non-Error values', () => {
-    expect(getErrorMessage('string error')).toBe('An unexpected error occurred');
-    expect(getErrorMessage(null)).toBe('An unexpected error occurred');
-    expect(getErrorMessage(42)).toBe('An unexpected error occurred');
+    expect(mapApiError('string error')).toBe('An unexpected error occurred');
+    expect(mapApiError(null)).toBe('An unexpected error occurred');
+    expect(mapApiError(42)).toBe('An unexpected error occurred');
   });
 });
 
@@ -132,8 +126,8 @@ describe('mapApiError / apiErrorReason (core-be envelope)', () => {
     expect(apiErrorReason('nope')).toBeUndefined();
   });
 
-  it('getErrorMessage remains an alias of mapApiError', () => {
-    expect(getErrorMessage).toBe(mapApiError);
+  it('mapApiError remains an alias of mapApiError', () => {
+    expect(mapApiError).toBe(mapApiError);
   });
 });
 

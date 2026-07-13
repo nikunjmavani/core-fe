@@ -22,11 +22,10 @@ vi.mock('@/shared/store/useConsentStore/index.ts', () => ({
 
 import posthog from 'posthog-js';
 
+import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
+
 import { markPostHogActive } from './capture.ts';
-import {
-  ANALYTICS_CONSENT_EVENT,
-  captureAnalyticsConsentDecision,
-} from './capture-consent-decision.ts';
+import { captureAnalyticsConsentDecision } from './capture-consent-decision.ts';
 
 describe('captureAnalyticsConsentDecision', () => {
   afterEach(() => {
@@ -38,7 +37,7 @@ describe('captureAnalyticsConsentDecision', () => {
     await captureAnalyticsConsentDecision('granted');
     await vi.waitFor(() => {
       expect(posthog.capture).toHaveBeenCalledWith(
-        ANALYTICS_CONSENT_EVENT,
+        ANALYTICS_EVENTS.consentDecision,
         expect.objectContaining({
           decision: 'granted',
           source: 'consent_banner',

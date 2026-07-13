@@ -155,9 +155,6 @@ export function mapApiError(error: unknown): string {
   return tError(ERRORS_KEYS.api.unexpected);
 }
 
-/** @deprecated Prefer {@link mapApiError}; kept as an alias for back-compat. */
-export const getErrorMessage = mapApiError;
-
 /**
  * Toast a user-facing error through the single `notify` surface, with the
  * message run through {@link mapApiError}. Used by the global query/mutation
