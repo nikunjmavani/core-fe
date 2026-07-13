@@ -31,7 +31,7 @@ src/
 └── index.css
 ```
 
-**`src/core/`** is the irreducible platform kernel — only framework-agnostic, app-state-free services: `http/`, `rbac/`, `config/`, `data-provider/`, `resources/`, `types/`, `version/`. **Anything app-layout-y, React-Provider-y, or app-state-dependent lives outside `core/`:**
+**`src/core/`** is the irreducible platform kernel — only framework-agnostic, app-state-free services: `http/`, `rbac/`, `security/`, `config/`, `data-provider/`, `resources/`, `types/`, `version/`. **Anything app-layout-y, React-Provider-y, or app-state-dependent lives outside `core/`:**
 - App-shell bootstrap (Sentry init, web-vitals, PostHog setup) → **`src/app/`** (`app/analytics/`, `app/observability/`)
 - Runtime infrastructure used by every layer (auth token + service, errors handling) → **`src/shared/`** (`shared/auth/`, `shared/errors/`)
 - Zustand client state → **`src/shared/store/<X>Store/`** (folder-per-unit) — all 7 stores including `useAuthStore` and `useOrganizationStore`
@@ -313,6 +313,7 @@ src/core/
 ├── data-provider/                          CRUD abstraction (HTTP REST adapter)
 ├── http/                                   apiClient (fetch), interceptors, queryClient
 ├── rbac/                                   policies + guards (requireAuth, requirePermission)
+├── security/                               RBAC security gateway (gatewayFromManifest, gates)
 ├── resources/                              resource registry (central manifest)
 ├── types/                                  branded public-id types, permission codes
 └── version/                                new-deployment detection

@@ -51,7 +51,7 @@ Every directory under `src/pages/` that maps to a frontend URL **must** contain 
 ## Component Patterns
 
 - Functional components only (no class components)
-- shadcn/ui components use plain functions with `data-slot` attributes (not `React.forwardRef`)
+- shadcn/ui components use plain functions with `data-slot` attributes (not `React.forwardRef`; `ui/input.tsx` + `ui/textarea.tsx` are the two exceptions — they keep `forwardRef` for RHF `register()`)
 - Compose styles with `cn()` from `@/lib/utils.ts` (clsx + tailwind-merge)
 - Use `class-variance-authority` (cva) for variant-based component APIs
 - All interactive elements must have proper ARIA attributes

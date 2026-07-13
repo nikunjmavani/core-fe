@@ -36,7 +36,7 @@ Use this skill when:
 | `src/pages/**/components/<X>/<X>.tsx`               | Component test   | `<X>.test.tsx` beside source — [Component Template](#component-template)         |
 | `src/pages/**/forms/<X>Form/<X>Form.tsx`            | Form test        | `<X>Form.test.tsx` beside source — [Form Template](#form-template)               |
 | `src/pages/**/<Page>Page.tsx` or `<Page>Layout.tsx` | Page/layout test | `<Page>Page.test.tsx` beside it at island root — [Page Template](#page-template) |
-| `src/stores/**/*.ts`                                | Store test       | [Store Template](#store-template)                                                |
+| `src/shared/store/**/*.ts`                          | Store test       | [Store Template](#store-template)                                                |
 | `src/core/**/*.ts`                                  | Service test     | [Service Template](#service-template)                                            |
 | `src/lib/**/*.ts`                                   | Utility test     | [Utility Template](#utility-template)                                            |
 | `src/pages/**/hooks/use<X>/use<X>.ts`               | Hook test        | `use<X>.test.ts` beside source — [Hook Template](#hook-template)                 |
@@ -94,23 +94,19 @@ describe('ComponentName', () => {
 #### Form Template
 
 ```tsx
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { axe } from 'vitest-axe';
 import { describe, it, expect, vi } from 'vitest';
+
+import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
+
 import { FormName } from './FormName.tsx';
 
-// Wrap in MemoryRouter if the form uses navigation (useNavigate, useLocation)
-import { MemoryRouter } from 'react-router';
-
 describe('FormName', () => {
-  const renderForm = () => {
-    return render(
-      <MemoryRouter>
-        <FormName />
-      </MemoryRouter>,
-    );
-  };
+  // renderWithProviders wires the TanStack Router + Query providers, so forms
+  // that navigate (useNavigate) render without a manual router wrapper.
+  const renderForm = () => renderWithProviders(<FormName />);
 
   it('renders all form fields', () => {
     renderForm();

@@ -5,6 +5,12 @@ switcher when the backend deployment toggles **personal** and **team**
 organizations independently.
 
 > **Status:** Implemented (Phases 0–5). Deployment flags come from core-be `GET /auth/me/context`.
+>
+> **Implemented naming:** the proposed `capabilities` API shipped as
+> `src/shared/tenancy/deployment-mode.ts` (pure `resolveDeploymentMode` /
+> `isPersonalOnlyDeployment` / `shouldShowOrganizationSwitcher` …) plus the
+> `useDeploymentFlags()` / `useDeploymentMode()` hooks in
+> `src/shared/hooks/useDeploymentFlags/`. Read "capabilities" below as those.
 
 ---
 
@@ -199,7 +205,7 @@ backend deployment toggles.
 
 - Confirm wire shape with core-be (Phase 0)
 - Extend `meContextWire` / `MeContext` with deployment flags + `personalOrganizationId` (not per-org capabilities)
-- Add `deployment-capabilities.ts` + `useDeploymentCapabilities()`
+- Add `deployment-mode.ts` + `useDeploymentFlags()` / `useDeploymentMode()` (`src/shared/hooks/useDeploymentFlags/`)
 - Mock fixtures for three modes
 - Unit tests for `resolveDeploymentMode`
 
@@ -230,19 +236,19 @@ backend deployment toggles.
 
 ## Files likely touched
 
-| File                                            | Purpose                           |
-| ----------------------------------------------- | --------------------------------- |
-| `src/shared/tenancy/me-context.ts`              | Wire + domain capabilities        |
-| `src/shared/tenancy/deployment-capabilities.ts` | Mode resolution + hook            |
-| `src/shared/tenancy/organization-resolver.ts`   | Root resolver branches            |
-| `src/shared/components/OrganizationSwitcher/`   | Conditional UI                    |
-| `src/shared/layouts/AppLayout/`                 | Switcher slot                     |
-| `src/pages/onboarding/`                         | Dynamic steps + finish logic      |
-| `src/shared/store/useOnboardingStore/`          | Step list derivation              |
-| `src/pages/login/`                              | Auth method visibility            |
-| `src/core/config/env.ts`                        | Optional auth method env          |
-| `src/app/guards/`                               | Slug guard + capability deny      |
-| `docs/reference/routing-and-tenancy.md`         | Normative update when implemented |
+| File                                          | Purpose                           |
+| --------------------------------------------- | --------------------------------- |
+| `src/shared/tenancy/me-context.ts`            | Wire + domain capabilities        |
+| `src/shared/tenancy/deployment-mode.ts`       | Mode resolution + hook            |
+| `src/shared/tenancy/organization-resolver.ts` | Root resolver branches            |
+| `src/shared/components/OrganizationSwitcher/` | Conditional UI                    |
+| `src/shared/layouts/AppLayout/`               | Switcher slot                     |
+| `src/pages/onboarding/`                       | Dynamic steps + finish logic      |
+| `src/shared/store/useOnboardingStore/`        | Step list derivation              |
+| `src/pages/login/`                            | Auth method visibility            |
+| `src/core/config/env.ts`                      | Optional auth method env          |
+| `src/app/guards/`                             | Slug guard + capability deny      |
+| `docs/reference/routing-and-tenancy.md`       | Normative update when implemented |
 
 ---
 

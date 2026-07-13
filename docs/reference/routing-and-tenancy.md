@@ -195,13 +195,13 @@ reproduces page + modal, refresh survives, back/Esc closes.
 
 ```text
 #settings/account/{profile|account|security|notifications|sessions|billing}
-#settings/organization/{general|members|roles|branches|integrations}
+#settings/organization/{general|members|roles|integrations}
 ```
 
-(Source of truth: `settings-sections.ts`. Billing is an **account** section — legacy
-`#settings/organization/billing` links are redirected to `account/billing` by
-`parseSettingsHash`. Appearance is not a settings section: it is the separate
-`AppearanceDialog` on the root route.)
+(Source of truth: `settings-sections.ts`. Billing is an **account** section; an
+`#settings/organization/billing` hash is not a valid organization section, so
+`parseSettingsHash` resolves it to the default (`account/profile`). Appearance is not a
+settings section: it is the separate `AppearanceDialog` on the root route.)
 
 - Invalid hash → fall back to `#settings/account/profile` (or close).
 - Organization scope requires organization context + permission (`settings-permissions.ts`,

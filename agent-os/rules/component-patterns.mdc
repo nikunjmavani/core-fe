@@ -44,7 +44,7 @@ export { MyComponent, myComponentVariants };
 ```
 
 Key rules:
-- Use **plain functions** (not `React.forwardRef`) — React 19 forwards refs automatically
+- Use **plain functions** (not `React.forwardRef`) — React 19 forwards refs automatically (exceptions: `ui/input.tsx` + `ui/textarea.tsx` keep `forwardRef` for react-hook-form `register()`)
 - Add `data-slot` attribute for styling hooks
 - Import from `radix-ui` monorepo (not individual `@radix-ui/react-*` packages)
 - Always accept and merge `className` via `cn()`
@@ -61,7 +61,7 @@ import { mySchema, type MyInput } from './contracts.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
-import { FormError } from '@/shared/forms/FormError.tsx';
+import { FormError } from '@/shared/forms/FormError/index.ts';
 
 function MyForm() {
   const {

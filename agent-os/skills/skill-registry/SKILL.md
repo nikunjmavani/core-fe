@@ -953,5 +953,5 @@ Read-only reviewer agents are catalogued in `agent-os/docs/agents-catalog.md`.
 | PWA            | `src/core/config/app-manifest.ts`, `public/manifest.webmanifest`, `vite.config.ts` | Install surface; skill **pwa-manifest**   |
 | release-please | `.github/release-please/config.json`, `.github/release-please/manifest.json`       | Human-gated releases                      |
 | Sentry         | `src/app/observability/sentry.ts`                                                  | Error tracking + PII scrubbing            |
-| PostHog        | `src/app/analytics/posthog.ts`                                                     | Product analytics (feature flags planned) |
+| PostHog        | `src/app/analytics/posthog.ts`                                                     | Product analytics                         |
 | Web Vitals     | `src/app/observability/performance.ts`                                             | Performance monitoring → PostHog + Sentry |

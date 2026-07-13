@@ -107,7 +107,7 @@ See grep in `src/` or sections above for: `onboarding-*`, `accept-invite-*`, `or
 | `tests/e2e/responsive.e2e.test.ts`         | Mobile overflow + settings                                                                    |
 | `tests/e2e/org-switching.e2e.test.ts`      | Dual-URL org switcher                                                                         |
 | `tests/e2e/routes-integration.e2e.test.ts` | Full live route matrix — public shells, guards, authenticated journey, logout                 |
-| `tests/e2e/deployment-modes.e2e.test.ts`   | Deployment mode matrix                                                                        |
+| `tests/e2e/deployment-*.e2e.test.ts`       | Deployment mode matrix (personal-and-team / personal-only / team-only)                        |
 | `tests/e2e/accept-invite.e2e.test.ts`      | `accept-invite-*` (expired token → error + login)                                             |
 | `tests/e2e/onboarding.e2e.test.ts`         | `onboarding-page`, `onboarding-step-title`, `onboarding-next`                                 |
 

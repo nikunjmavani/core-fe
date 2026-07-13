@@ -96,7 +96,6 @@ surfaces. Manifest `module` keys must match this catalog:
 | `billing`      | Dashboard reference manifest; settings billing panel; subscription hooks |
 | `members`      | Members resource registry reference; settings members panel              |
 | `integrations` | Settings integrations panel (planned)                                    |
-| `branches`     | Settings branches panel (planned)                                        |
 
 UI should hide nav/settings entries via `isModuleEnabled()` when a module is
 off — routes still 404 via the gateway if linked directly.
