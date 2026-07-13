@@ -1,1 +1,1 @@
-export { SectionErrorBoundary, WidgetErrorBoundary } from './WidgetErrorBoundary.tsx';
+export { SectionErrorBoundary } from './WidgetErrorBoundary.tsx';

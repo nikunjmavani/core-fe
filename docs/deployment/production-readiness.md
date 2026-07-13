@@ -27,8 +27,8 @@ The frontend **shell** is solid:
 
 ### A. Backend & infrastructure (owned by your team — not fixable in this repo)
 
-- [ ] **Deploy core-be** (or API with the same contract) and finish wiring remaining
-      `REPLACE_WITH_API` surfaces (profile, plan flags, some settings panels, passkey login).
+- [ ] **Deploy core-be** (or API with the same contract) and replace any remaining
+      placeholder data (`dashboard.placeholder-data.ts`) with live endpoints.
       `pnpm contracts:drift` checks the committed route catalog — re-verify against the
       running server.
 - [ ] **Confirm the auth contract:** HttpOnly refresh cookie (`SameSite=Lax`+), refresh-session

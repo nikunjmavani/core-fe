@@ -1,6 +1,6 @@
 /**
  * Error thrown by the fetch-based HTTP client for non-2xx responses.
- * Used by reportError and getErrorMessage instead of axios.isAxiosError.
+ * Used by reportError and mapApiError instead of axios.isAxiosError.
  */
 export class HttpError extends Error {
   public readonly status: number;

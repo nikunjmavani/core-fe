@@ -218,6 +218,9 @@ jobs:
       - name: Agent-os platform wiring
         run: pnpm agent-os:generate:check
 
+      - name: Tooling script tests
+        run: pnpm test:github-scripts
+
   unit-tests:
     needs: [changes]
     if: |

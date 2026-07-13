@@ -66,6 +66,3 @@ export function SectionErrorBoundary({
     </ErrorBoundary>
   );
 }
-
-/** @deprecated Use {@link SectionErrorBoundary} — kept for existing imports/tests. */
-export const WidgetErrorBoundary = SectionErrorBoundary;

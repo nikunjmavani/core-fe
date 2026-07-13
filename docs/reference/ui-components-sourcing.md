@@ -18,7 +18,7 @@ Broader gallery: [agent-os/rules/ui-sources.mdc](../../agent-os/rules/ui-sources
 ## Workflow
 
 1. Check primary + research sites for a ready-made block.
-2. If it exists → `npx shadcn add <url>` (editable code in `src/shared/components/ui/`).
+2. If it exists → `pnpm dlx shadcn@latest add <url>` (editable code in `src/shared/components/ui/`).
 3. Tweak to fit contracts, RBAC, and `data-testid` conventions.
 4. **Only if nothing fits** → compose from shadcn primitives yourself.
 
