@@ -44,13 +44,6 @@ describe('parseSettingsHash', () => {
     expect(parseSettingsHash(hash)).toEqual({ scope, section });
   });
 
-  it('remaps legacy organization billing hashes to account billing', () => {
-    expect(parseSettingsHash('settings/organization/billing')).toEqual({
-      scope: 'account',
-      section: 'billing',
-    });
-  });
-
   it('returns null for non-settings hashes (modal closed)', () => {
     expect(parseSettingsHash('')).toBeNull();
     expect(parseSettingsHash('main-content')).toBeNull();

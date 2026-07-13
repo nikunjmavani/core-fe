@@ -40,10 +40,6 @@ export function parseSettingsHash(hash: string): SettingsSectionRef | null {
   if (!isSettingsHash(h)) return null;
 
   const [, scope, section] = h.split('/');
-  // Legacy deep links: billing moved from organization → account scope.
-  if (scope === 'organization' && section === 'billing') {
-    return { scope: 'account', section: 'billing' };
-  }
   if (scope === 'account' || scope === 'organization') {
     if (section && isSectionOf(scope, section)) {
       return { scope, section };

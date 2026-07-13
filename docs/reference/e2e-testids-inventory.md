@@ -30,24 +30,23 @@ Convention: `page.getByTestId('…')` in `tests/e2e/`.
 
 ## App shell
 
-| Test ID                         | Element                   | File                         |
-| ------------------------------- | ------------------------- | ---------------------------- |
-| `app-layout`                    | Authenticated shell       | `AppLayout.tsx`              |
-| `sidebar`                       | Sidebar                   | AppLayout                    |
-| `nav-dashboard`                 | Nav → `/`                 | AppLayout (sidebar + mobile) |
-| `nav-organizations`             | Nav → `/organizations`    | AppLayout                    |
-| `nav-organization`              | Nav → `/organization`     | AppLayout                    |
-| `nav-settings`                  | Nav → `/settings`         | AppLayout                    |
-| `mobile-bottom-bar`             | Mobile nav bar            | AppLayout                    |
-| `mobile-nav-*`                  | Mobile nav items (legacy) | AppLayout                    |
-| `header`                        | Top bar                   | AppLayout                    |
-| `sidebar-toggle`                | Menu button               | AppLayout                    |
-| `search-trigger`                | Command palette           | AppLayout                    |
-| `user-menu-trigger`             | Avatar menu               | AppLayout                    |
-| `logout-button`                 | Log out                   | AppLayout                    |
-| `full-page-spinner`             | Bootstrap loading         | `FullPageSpinner.tsx`        |
-| `organization-switcher-trigger` | Org switcher              | `OrganizationSwitcher.tsx`   |
-| `organization-switcher-create`  | Create org from switcher  | OrganizationSwitcher         |
+| Test ID                         | Element                  | File                         |
+| ------------------------------- | ------------------------ | ---------------------------- |
+| `app-layout`                    | Authenticated shell      | `AppLayout.tsx`              |
+| `sidebar`                       | Sidebar                  | AppLayout                    |
+| `nav-dashboard`                 | Nav → `/`                | AppLayout (sidebar + mobile) |
+| `nav-organizations`             | Nav → `/organizations`   | AppLayout                    |
+| `nav-organization`              | Nav → `/organization`    | AppLayout                    |
+| `nav-settings`                  | Nav → `/settings`        | AppLayout                    |
+| `mobile-bottom-bar`             | Mobile nav bar           | AppLayout                    |
+| `header`                        | Top bar                  | AppLayout                    |
+| `sidebar-toggle`                | Menu button              | AppLayout                    |
+| `search-trigger`                | Command palette          | AppLayout                    |
+| `user-menu-trigger`             | Avatar menu              | AppLayout                    |
+| `logout-button`                 | Log out                  | AppLayout                    |
+| `full-page-spinner`             | Bootstrap loading        | `FullPageSpinner.tsx`        |
+| `organization-switcher-trigger` | Org switcher             | `OrganizationSwitcher.tsx`   |
+| `organization-switcher-create`  | Create org from switcher | OrganizationSwitcher         |
 
 ---
 
