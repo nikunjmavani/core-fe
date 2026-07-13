@@ -31,7 +31,7 @@ Implementation: [`src/shared/forms/AuthForm/`](../../src/shared/forms/AuthForm/)
 | **Passkey**     | `VITE_AUTH_PASSKEY`                                                         | Passkey button                    | WebAuthn routes (501 until wired)                        | Yes                                |
 | **Auto Google** | `VITE_AUTH_OAUTH_AUTO_GOOGLE` (requires `VITE_AUTH_OAUTH_GOOGLE` not false) | Delayed redirect unless cancelled | Same as Google OAuth                                     | Yes                                |
 
-Email/password tabs are **not** on the unified screen; gate legacy password flows with `VITE_AUTH_EMAIL_PASSWORD` if those pages remain elsewhere.
+Email/password tabs are **not** on the unified screen — the app is OTP + OAuth + passkey only.
 
 ---
 

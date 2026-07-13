@@ -26,7 +26,6 @@ vi.mock('@/core/config/auth-methods.ts', () => ({
 
 vi.mock('@/shared/hooks/useAuthMethods/index.ts', () => ({
   useAuthMethods: vi.fn(() => ({
-    emailPassword: true,
     email: true,
     oauth: { google: true, github: true, apple: false },
     passkey: true,

@@ -90,15 +90,14 @@ For deploy via GitHub Actions, set `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY
 
 Auth surface is **never** fetched from core-be at boot — set `VITE_AUTH_*` on core-fe and matching OAuth credentials on core-be. See [environment-variables runbook](../deployment/runbooks/environment-variables.md).
 
-| Variable                      | Values                                   | Purpose                                                                                                                     |
-| ----------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_AUTH_EMAIL_PASSWORD`    | `true` / `false` (default on when unset) | Legacy flag — no separate password login UI; reserved for future MFA/password flows.                                        |
-| `VITE_AUTH_EMAIL`             | `true` / `false`                         | Hide email OTP sign-in when `false`.                                                                                        |
-| `VITE_AUTH_OAUTH_GOOGLE`      | `true` / `false` (default on)            | Show/hide Google OAuth button. Requires `oauth.google` + core-be `OAUTH_GOOGLE_*` for click to succeed.                     |
-| `VITE_AUTH_OAUTH_GITHUB`      | `true` / `false` (default on)            | Show/hide GitHub OAuth button.                                                                                              |
-| `VITE_AUTH_OAUTH_APPLE`       | `true` / `false` (default off)           | Show/hide Apple OAuth button (FE may ship before core-be `OAUTH_APPLE_*`).                                                  |
-| `VITE_AUTH_OAUTH_AUTO_GOOGLE` | `true` / `false` (default off)           | When `true` (and Google OAuth on), `/login` auto-starts Google sign-in after ~800ms; user can choose **Use email instead**. |
-| `VITE_AUTH_PASSKEY`           | `true` / `false`                         | Hide passkey sign-in when `false`.                                                                                          |
+| Variable                      | Values                         | Purpose                                                                                                                     |
+| ----------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_AUTH_EMAIL`             | `true` / `false`               | Hide email OTP sign-in when `false`.                                                                                        |
+| `VITE_AUTH_OAUTH_GOOGLE`      | `true` / `false` (default on)  | Show/hide Google OAuth button. Requires `oauth.google` + core-be `OAUTH_GOOGLE_*` for click to succeed.                     |
+| `VITE_AUTH_OAUTH_GITHUB`      | `true` / `false` (default on)  | Show/hide GitHub OAuth button.                                                                                              |
+| `VITE_AUTH_OAUTH_APPLE`       | `true` / `false` (default off) | Show/hide Apple OAuth button (FE may ship before core-be `OAUTH_APPLE_*`).                                                  |
+| `VITE_AUTH_OAUTH_AUTO_GOOGLE` | `true` / `false` (default off) | When `true` (and Google OAuth on), `/login` auto-starts Google sign-in after ~800ms; user can choose **Use email instead**. |
+| `VITE_AUTH_PASSKEY`           | `true` / `false`               | Hide passkey sign-in when `false`.                                                                                          |
 
 ### Deployment mode overrides (optional)
 

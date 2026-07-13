@@ -15,7 +15,6 @@ import {
 
 /** Which auth methods this deployment exposes on the unified auth screen. */
 export interface AuthMethods {
-  emailPassword: boolean;
   email: boolean;
   oauth: OAuthProviderFlags;
   passkey: boolean;
@@ -112,7 +111,6 @@ export function resolvePlatformConfig(
     disabledModules: resolveDisabledModules(get('DISABLED_MODULES')),
 
     authMethods: {
-      emailPassword: resolveAuthMethodFlag(get('AUTH_EMAIL_PASSWORD'), true),
       email: resolveAuthMethodFlag(get('AUTH_EMAIL'), true),
       oauth,
       passkey: resolveAuthMethodFlag(get('AUTH_PASSKEY'), true),

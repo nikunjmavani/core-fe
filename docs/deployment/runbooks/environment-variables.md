@@ -66,7 +66,6 @@ Two top-level banners mirror GitHub Secret vs Variable classification:
 | OAuth Apple       | `VITE_AUTH_OAUTH_APPLE`       | off     |
 | Passkey           | `VITE_AUTH_PASSKEY`           | on      |
 | Auto-start Google | `VITE_AUTH_OAUTH_AUTO_GOOGLE` | off     |
-| Legacy password   | `VITE_AUTH_EMAIL_PASSWORD`    | on      |
 
 **Not** in `VITE_DISABLED_MODULES`. Monolithic `VITE_AUTH_OAUTH` is removed — use per-provider flags.
 
