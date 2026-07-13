@@ -50,6 +50,7 @@ core-fe/
 │   │   ├── cleanup-cache.yml
 │   │   ├── codeql.yml
 │   │   ├── cross-browser.yml
+│   │   ├── dead-code-audit-reminder.yml
 │   │   ├── dependabot-auto-merge.yml
 │   │   ├── dependabot-ci-triage.yml
 │   │   ├── lighthouse.yml
@@ -1169,7 +1170,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [19 test files]
+│   │   └── [20 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/

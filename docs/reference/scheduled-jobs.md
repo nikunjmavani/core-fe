@@ -28,20 +28,23 @@ a PR gate, even though both compare docs to code.
 
 ## Scheduled workflows (enforced)
 
-| Workflow                       | Cron (UTC)   | Cadence          | Purpose                                                  | Signal on failure                       |
-| ------------------------------ | ------------ | ---------------- | -------------------------------------------------------- | --------------------------------------- |
-| `cleanup-cache.yml`            | `15 4 * * *` | daily 04:15      | GitHub Actions cache cleanup                             | none (housekeeping)                     |
-| `lighthouse.yml`               | `0 3 * * 1`  | weekly Mon 03:00 | performance budgets                                      | report                                  |
-| `cross-browser.yml`            | `0 4 * * 1`  | weekly Mon 04:00 | Chrome/Firefox/Safari smoke                              | report                                  |
-| `codeql.yml`                   | `27 4 * * 1` | weekly Mon 04:27 | security code scanning                                   | security alert                          |
-| `mutation-test.yml`            | `0 5 * * 1`  | weekly Mon 05:00 | Stryker mutation tests                                   | report                                  |
-| `scheduled-release-guards.yml` | `30 6 * * 1` | weekly Mon 06:30 | GitHub env/ruleset drift + `RELEASE_PLEASE_TOKEN` expiry | annotations + hard fail                 |
-| `sync-drift-canary.yml`        | `0 7 * * 1`  | weekly Mon 07:00 | docs↔code drift (`sync:check` + `docs:staleness`)        | self-healing tracked `sync-drift` issue |
+| Workflow                       | Cron (UTC)    | Cadence                         | Purpose                                                  | Signal on failure                       |
+| ------------------------------ | ------------- | ------------------------------- | -------------------------------------------------------- | --------------------------------------- |
+| `cleanup-cache.yml`            | `15 4 * * *`  | daily 04:15                     | GitHub Actions cache cleanup                             | none (housekeeping)                     |
+| `lighthouse.yml`               | `0 3 * * 1`   | weekly Mon 03:00                | performance budgets                                      | report                                  |
+| `cross-browser.yml`            | `0 4 * * 1`   | weekly Mon 04:00                | Chrome/Firefox/Safari smoke                              | report                                  |
+| `codeql.yml`                   | `27 4 * * 1`  | weekly Mon 04:27                | security code scanning                                   | security alert                          |
+| `mutation-test.yml`            | `0 5 * * 1`   | weekly Mon 05:00                | Stryker mutation tests                                   | report                                  |
+| `scheduled-release-guards.yml` | `30 6 * * 1`  | weekly Mon 06:30                | GitHub env/ruleset drift + `RELEASE_PLEASE_TOKEN` expiry | annotations + hard fail                 |
+| `sync-drift-canary.yml`        | `0 7 * * 1`   | weekly Mon 07:00                | docs↔code drift (`sync:check` + `docs:staleness`)        | self-healing tracked `sync-drift` issue |
+| `dead-code-audit-reminder.yml` | `0 7 1 */3 *` | quarterly (1st Jan/Apr/Jul/Oct) | reminder to run the barrel-hidden dead-code audit        | tracked `dead-code-audit` issue         |
 
 Times are UTC (GitHub cron is always UTC). Every **weekly** job runs Monday,
 staggered across the off-peak window (03:00 → 04:00 → 04:27 → 05:00 → 06:30 →
 07:00) so one Monday review covers every weekly signal and no two jobs contend
-for runners at the same minute; `cleanup-cache` is the only daily job.
+for runners at the same minute. Off the weekly cadence: `cleanup-cache` runs
+daily, and `dead-code-audit-reminder` runs quarterly — it opens a reminder issue
+to run the manual barrel-hidden dead-code sweep that per-PR `knip` can't catch.
 
 ## Other periodic mechanisms (not workflow crons)
 
