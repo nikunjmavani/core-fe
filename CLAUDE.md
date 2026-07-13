@@ -42,7 +42,7 @@ core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tes
 budgets, cache cleanup, release-flow guards (environment-drift canary),
 the sync-drift canary (weekly docs↔code drift → tracked issue),
 and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)
-run as scheduled/event workflows.
+run as scheduled/event workflows (enforced registry: docs/reference/scheduled-jobs.md).
 
 **Merge policy — never merge on red (enforced, not just convention):** the `main` ruleset carries
 **no `bypass_actors`**, so a PR with any failing or pending required check (`Quality gate`, `Checks`)
@@ -73,7 +73,7 @@ it locally via `pnpm run validate:lockfile` (see `agent-os/skills/platform-hygie
 - **Git workflow:** docs/process/trunk-based-workflow.md
 - **Routing & tenancy (implemented spec):** docs/reference/routing-and-tenancy.md
 - **SonarQube local quality gate:** docs/reference/quality/sonarqube-local.md
-- **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/frontend-platform.md (platform kernel), docs/reference/pwa-manifest-and-app-icon.md (PWA install surface), docs/reference/local-production-perf.md (build + preview perf), docs/reference/cross-browser-support.md (Chrome/Firefox/Safari), docs/reference/design.md (design language), docs/reference/theming.md, docs/reference/theme-axis-audit-playbook.md (axis audit procedure), docs/reference/dependency-upgrades.md, docs/reference/internationalization.md
+- **Reference:** docs/reference/tools-and-usage.md, docs/reference/routes-and-ui.md, docs/reference/frontend-platform.md (platform kernel), docs/reference/pwa-manifest-and-app-icon.md (PWA install surface), docs/reference/local-production-perf.md (build + preview perf), docs/reference/cross-browser-support.md (Chrome/Firefox/Safari), docs/reference/design.md (design language), docs/reference/theming.md, docs/reference/theme-axis-audit-playbook.md (axis audit procedure), docs/reference/dependency-upgrades.md, docs/reference/internationalization.md, docs/reference/scheduled-jobs.md (scheduled + periodic jobs registry)
 
 ## Architecture Overview
 
