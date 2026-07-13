@@ -3,6 +3,7 @@ import {
   branchEnvironmentMap,
   clientEnvSchema,
   type DeployEnvironment,
+  envFieldDescriptions,
   environmentForBranch,
   envProfiles,
   envSchemaConditionallyRequiredKeys,
@@ -147,6 +148,19 @@ describe('envSchemaKeys', () => {
   it('includes the local Sonar tooling secrets', () => {
     expect(envSchemaKeys).toContain('SONAR_TOKEN');
     expect(envSchemaKeys).toContain('SONAR_ADMIN_PASSWORD');
+  });
+});
+
+describe('envFieldDescriptions', () => {
+  it('has a non-empty description for every schema key (single source for .env.example)', () => {
+    const missing = envSchemaKeys.filter((key) => !envFieldDescriptions[key]?.trim());
+    expect(missing, `keys without a description: ${missing.join(', ')}`).toEqual([]);
+  });
+
+  it('has no descriptions for keys absent from the schema', () => {
+    const known = new Set<string>(envSchemaKeys);
+    const extra = Object.keys(envFieldDescriptions).filter((key) => !known.has(key));
+    expect(extra, `descriptions with no schema key: ${extra.join(', ')}`).toEqual([]);
   });
 });
 
