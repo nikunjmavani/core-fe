@@ -45,7 +45,7 @@ Revisit these when Dependabot or direct dependency upgrades remove the need.
 
 ## Pins and known constraints
 
-- **`@tanstack/react-router`** is pinned to the **1.160.x** line (`~1.160.0` in [`package.json`](../../package.json)). Newer **1.169+** minors caused unhandled navigation rejections and maximum update depth in guard tests; revisit in a dedicated spike before widening the range.
+- **`@tanstack/react-router`** is pinned to the **1.170.x** line (`~1.170.17` in [`package.json`](../../package.json)). The earlier **1.169** minors that caused unhandled navigation rejections and maximum update depth in guard tests are resolved as of **1.170.17** — verified against the full guard + unit suite (96 guard tests, 1291 unit tests, build + `build:check` all green) in the 1.160→1.170 bump. Minor/major bumps on this fast-moving router still go through a **deliberate spike** (Dependabot `ignore` keeps them off auto-merge); patches within `~1.170.x` flow normally.
 - **React 19**, **Vite 8**, **ESLint 10**, **lucide-react 1.x**, and similar **majors** are intentionally **not** part of routine bumps — schedule separately with full `pnpm validate` and E2E. **`netlify-cli`** is kept current on the **v26** line (dev-only CLI).
 
 ## Audit noise
