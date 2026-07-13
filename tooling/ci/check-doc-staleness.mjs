@@ -33,6 +33,7 @@
  *   pnpm docs:staleness           human-readable report; exit 1 on findings
  *   node …/check-doc-staleness.mjs --json    machine-readable findings array
  */
+import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -261,6 +262,47 @@ function* codeSpans(content) {
 const ROOT_ALT = PATH_ROOTS.map((r) => r.replace(/\./g, '\\.')).join('|');
 const PATH_TOKEN = new RegExp(`(?:^|[\\s(])((?:${ROOT_ALT})/[A-Za-z0-9._$*/-]+)`, 'g');
 
+/**
+ * References resolve against GIT-TRACKED paths, not the working directory — the
+ * same determinism the project-tree generator relies on. A doc that references
+ * a gitignored per-developer local file (`agent-os/mcp/mcp.json`,
+ * `.claude/settings.local.json`) must not pass on a contributor's machine and
+ * then fail on a fresh CI checkout; only committed paths count as "the repo".
+ * The set holds every tracked file plus all of its parent directories, so both
+ * file and directory references resolve. Falls back to the filesystem only when
+ * git is unavailable.
+ */
+function loadTrackedPaths() {
+  try {
+    const out = execFileSync('git', ['ls-files', '-z'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      maxBuffer: 64 * 1024 * 1024,
+    });
+    const set = new Set();
+    for (const file of out.split('\0')) {
+      if (!file) continue;
+      set.add(file);
+      let dir = file;
+      let slash = dir.lastIndexOf('/');
+      while (slash !== -1) {
+        dir = dir.slice(0, slash);
+        set.add(dir);
+        slash = dir.lastIndexOf('/');
+      }
+    }
+    return set;
+  } catch {
+    return null; // git unavailable → fall back to fs.existsSync
+  }
+}
+
+const TRACKED = loadTrackedPaths();
+
+function pathPresent(relPath) {
+  return TRACKED ? TRACKED.has(relPath) : existsSync(join(ROOT, relPath));
+}
+
 function normalizePath(token) {
   let p = token.replace(/[.,:;)]+$/, ''); // trailing prose punctuation
   p = p.replace(/:\d+(?:-\d+)?$/, ''); // :line or :line-range suffix
@@ -274,9 +316,9 @@ function pathResolves(token) {
   if (p.includes('*')) {
     // Glob: resolve the literal prefix directory only.
     const prefix = p.slice(0, p.indexOf('*')).replace(/\/[^/]*$/, '');
-    return prefix ? existsSync(join(ROOT, prefix)) : true;
+    return prefix ? pathPresent(prefix) : true;
   }
-  return existsSync(join(ROOT, p));
+  return pathPresent(p);
 }
 
 /**
