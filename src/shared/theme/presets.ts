@@ -399,7 +399,6 @@ const DEFAULT_LOOK: GeneratedTheme = {
 };
 
 /** Fill a partial look with defaults (a look may omit any axis). */
-// eslint-disable-next-line complexity -- flat per-field defaulting; cognitively trivial
 export function normalizeLook(look: Partial<GeneratedTheme> | null): GeneratedTheme {
   const l = look ?? {};
   return {

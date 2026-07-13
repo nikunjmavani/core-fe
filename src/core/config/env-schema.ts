@@ -26,6 +26,7 @@ export const envSchemaBase = z.object({
   BUILD_I18N_LOCALE: z.string().min(1).optional().default('en-US'),
 
   // --- Runtime public (VITE_* — bundled client) ---
+  VITE_APP_VERSION: z.string().optional(),
   VITE_API_BASE_URL: z.string().optional(),
   VITE_DEV_API_URL: z.string().optional(),
   VITE_SENTRY_DSN: z.string().optional(),
@@ -75,6 +76,91 @@ export const envSchemaBase = z.object({
   SONAR_ADMIN_PASSWORD: z.string().min(1).optional(),
   SONAR_TOKEN: z.string().min(1).optional(),
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build-INJECTED env — Vite `define` compile-time constants, NOT read from .env.
+// Set by build plugins; deliberately absent from the schema above (and from
+// .env.example's key list). Putting any of these in a .env file is a NO-OP — the
+// `define` literal shadows the env value at build. Documented here for visibility:
+//   VITE_APP_BUILD_ID         — build hash (plugins/version-json.ts) for new-deploy detection.
+//   VITE_I18N_BUILD_MODE      — derived from BUILD_I18N_MODE  (plugins/i18n-build.ts): 'single' | 'multi'.
+//   VITE_I18N_BUILD_BCP47     — derived from BUILD_I18N_LOCALE (plugins/i18n-build.ts).
+//   VITE_I18N_BUILD_UI_LOCALE — derived from BUILD_I18N_LOCALE (plugins/i18n-build.ts).
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * One-line description per env key — the SINGLE source of truth. `.env.example`
+ * (and therefore each scaffolded `.env.<environment>`) mirrors these verbatim as
+ * the `# comment` directly above each key, and `pnpm tool:sync-env-example` FAILS
+ * if any drift — so the wording a developer reads in this schema is exactly what
+ * they see in their env file. Every `envSchemaBase` key must have an entry
+ * (enforced in env-schema.test.ts).
+ */
+export const envFieldDescriptions: Readonly<Record<string, string>> = {
+  BUILD_I18N_MODE:
+    'i18n build mode: single (inline one locale into JS) or multi (lazy JSON per locale).',
+  BUILD_I18N_LOCALE: 'Primary i18n build locale, BCP-47 (e.g. en-US).',
+  VITE_APP_VERSION:
+    'App version string; read by vite.config.ts (names the Sentry release, fallback 0.0.0) and the client. CI-set; blank locally.',
+  VITE_API_BASE_URL:
+    'Production API base URL (e.g. https://api.example.com); empty = same-origin. Required in production when the API is not same-origin.',
+  VITE_DEV_API_URL: 'Dev server only: Vite proxy target for /api.',
+  VITE_SENTRY_DSN: 'Sentry DSN (public client key); empty disables Sentry.',
+  VITE_SENTRY_TRACES_SAMPLE_RATE:
+    'Sentry traces sample rate 0..1 (prod-safe default 0.1).',
+  VITE_SENTRY_REPLAYS_SESSION_SAMPLE_RATE:
+    'Sentry session-replay sample rate 0..1 (prod-safe default 0.1).',
+  VITE_SENTRY_PROFILES_SAMPLE_RATE: 'Sentry profiles sample rate 0..1 (default 1.0).',
+  VITE_SENTRY_REPLAYS_ON_ERROR_SAMPLE_RATE:
+    'Sentry on-error replay sample rate 0..1 (default 1.0).',
+  VITE_POSTHOG_KEY: 'PostHog project key (optional); analytics is gated behind consent.',
+  VITE_POSTHOG_HOST: 'PostHog host (optional); pairs with VITE_POSTHOG_KEY.',
+  VITE_STRIPE_PUBLISHABLE_KEY:
+    'Stripe publishable key (pk_test_ in dev, pk_live_ in prod); public, safe to expose.',
+  VITE_LAYOUT_WIDTH: 'App layout width: contained (default), full, or reading.',
+  VITE_THEME_LOCK: '"true" hides the runtime theme switcher + shuffle.',
+  VITE_PRIVACY_POLICY_URL:
+    'Privacy-policy URL shown in the consent banner/footer (optional).',
+  VITE_CSP_REPORT_URI: 'CSP violation report collector URI (optional).',
+  VITE_DISABLED_MODULES:
+    'Comma-separated module keys to disable (e.g. billing,members); routes 404 via the module gate.',
+  VITE_PERSONAL_ORGANIZATIONS:
+    'Tri-state override for personal-org deployment mode (true/false/unset).',
+  VITE_TEAM_ORGANIZATIONS:
+    'Tri-state override for team-org deployment mode (true/false/unset).',
+  VITE_AUTH_EMAIL: 'Enable email/OTP auth on /login (default true).',
+  VITE_AUTH_OAUTH_GOOGLE: 'Enable Google OAuth on /login (default true).',
+  VITE_AUTH_OAUTH_GITHUB: 'Enable GitHub OAuth on /login (default true).',
+  VITE_AUTH_OAUTH_APPLE: 'Enable Apple OAuth on /login (default false).',
+  VITE_AUTH_OAUTH_AUTO_GOOGLE:
+    'Auto-start Google OAuth on /login; requires VITE_AUTH_OAUTH_GOOGLE not false (default false).',
+  VITE_AUTH_PASSKEY: 'Enable passkey/WebAuthn auth on /login (default true).',
+  VITE_CAPTCHA_DISABLED:
+    '"true" disables the Turnstile CAPTCHA (local dev; pair with the core-be test secret).',
+  VITE_TURNSTILE_SITE_KEY:
+    'Cloudflare Turnstile site key; required in production unless VITE_CAPTCHA_DISABLED is true.',
+  VITE_DEBUG_LOGGING:
+    '"true" emits [Module] diagnostic console logs (on locally, off in deployed builds).',
+  VITE_DEVTOOLS:
+    '"true" mounts React Query Devtools + the localhost debug panel + theme-shuffle shortcut.',
+  VITE_E2E_HOOKS:
+    '"true" installs Playwright E2E hooks on globalThis (navigateInApp, establishSession).',
+  VITE_VERSION_CHECK:
+    '"true" polls /version.json for new deployments (off locally/tests, on in deployed envs).',
+  SENTRY_AUTH_TOKEN:
+    'Sentry source-map upload token (CI only); see docs/integrations/sentry-sourcemaps.md.',
+  SENTRY_ORG: 'Sentry organization slug (source-map upload).',
+  SENTRY_PROJECT: 'Sentry project slug (source-map upload).',
+  NETLIFY_AUTH_TOKEN: 'Netlify CLI deploy token (CI only).',
+  NETLIFY_SITE_ID: 'Netlify site ID (deploy target).',
+  NODE_VERSION: 'Node version for CI/build; keep in lock step with .nvmrc.',
+  CONTEXT7_API_KEY:
+    'Context7 docs-MCP API key; consumed by .mcp.json for the docs MCP (local tooling).',
+  SONAR_ADMIN_PASSWORD:
+    'Local SonarQube admin password; auto-managed by tooling/sonar/sonar-gate.mjs (never in CI).',
+  SONAR_TOKEN:
+    'Local SonarQube scanner token; auto-managed by the sonar gate (never in CI).',
+};
 
 /** Client `import.meta.env` subset validated at app boot. */
 export const clientEnvSchema = z.object({
