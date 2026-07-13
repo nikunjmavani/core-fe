@@ -3,11 +3,40 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs/reference/project-tree.txt"
+
+# Only git-TRACKED paths are listed, so the tree is identical on every machine
+# and in CI — gitignored/untracked local files (.env.development, scratch logs,
+# etc.) never leak in. Empty set = git unavailable → fall back to the raw walk.
+def _tracked_paths() -> set[str]:
+    try:
+        out = subprocess.run(
+            ["git", "ls-files", "-z"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+    except Exception:
+        return set()
+    paths: set[str] = set()
+    for f in filter(None, out.split("\0")):
+        parts = f.split("/")
+        for i in range(1, len(parts) + 1):
+            paths.add("/".join(parts[:i]))  # file + every ancestor dir
+    return paths
+
+
+TRACKED: set[str] = _tracked_paths()
+
+
+def _is_tracked(p: Path) -> bool:
+    return not TRACKED or p.relative_to(ROOT).as_posix() in TRACKED
 
 IGNORE_DIRS = {
     "node_modules",
@@ -38,7 +67,7 @@ def count_in(path: Path, pred=None) -> int:
         return 0
     n = 0
     for p in path.rglob("*"):
-        if p.is_file() and not any(x in p.parts for x in IGNORE_DIRS):
+        if p.is_file() and _is_tracked(p) and not any(x in p.parts for x in IGNORE_DIRS):
             if pred is None or pred(p.name):
                 n += 1
     return n
@@ -58,7 +87,11 @@ def tree(
         entries = sorted(path.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower()))
     except PermissionError:
         return []
-    entries = [e for e in entries if e.name not in IGNORE_DIRS and e.name not in IGNORE_FILES]
+    entries = [
+        e
+        for e in entries
+        if e.name not in IGNORE_DIRS and e.name not in IGNORE_FILES and _is_tracked(e)
+    ]
     if depth == 0:
         entries = [e for e in entries if e.name not in SKIP_TOP]
 
