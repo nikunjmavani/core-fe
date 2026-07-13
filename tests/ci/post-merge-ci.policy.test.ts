@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const POST_MERGE_WORKFLOW = join(process.cwd(), '.github/workflows/post-merge-ci.yml');
 
-// Locks the single-trunk post-merge wiring (delivery-model migration §12.2):
+// Locks the single-trunk post-merge wiring:
 // one channel, ungated release-please, deploy split, and NO redundant re-testing
 // of what pr-ci.yml already gated.
 // Slice a top-level job block by name without a backtracking regex: from the

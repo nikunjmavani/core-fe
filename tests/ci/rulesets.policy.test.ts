@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 // Locks the single-trunk model: exactly ONE committed branch ruleset, targeting
-// `main` only. A second ruleset file or a non-main branch target (e.g. a
-// resurrected `dev.json`) fails here — this is the committed side of
+// `main` only. A second ruleset file or a non-main branch target fails here —
+// this is the committed side of
 // "one trunk, one ruleset"; the remote side is enforced by
 // `pnpm github:sync --prune`, which deletes any remote branch ruleset not in
 // this directory.
