@@ -13,6 +13,7 @@ pnpm lint         # ESLint
 pnpm biome:check  # Biome lint lane (lint-only; Prettier owns formatting)
 pnpm health       # Full project health check (all phases)
 pnpm health:fix   # Auto-fix + full health check
+pnpm sync:check   # Deterministic docs↔code drift (structure, testids, i18n, tree, agent-os)
 pnpm quality      # health + local SonarQube gate (Docker)
 ```
 
@@ -39,6 +40,7 @@ context; branch protection as code:
 `pnpm github:tool:governance-mode` — see docs/reference/branch-governance.md). Playwright E2E is local-only (needs
 core-be on `:3000` — CI never boots the backend). CodeQL, Stryker mutation tests, Lighthouse
 budgets, cache cleanup, release-flow guards (environment-drift canary),
+the sync-drift canary (weekly docs↔code drift → tracked issue),
 and Dependabot CI triage + approval-gated auto-merge (low-risk `npm-non-major` group only)
 run as scheduled/event workflows.
 

@@ -248,14 +248,14 @@ where the router isn't available (e2e helpers). No hand-built route strings anyw
 
 Executed as phase 0 of the epic:
 
-| Today                                             | Becomes                                                                                |
-| ------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `useTenantStore` (`shared/store/useTenantStore/`) | `useOrganizationStore` (+ eslint runtime-trio config + `file-structure.mdc` trio text) |
-| `OrgPermission` (`core/types/permissions.ts`)     | `OrganizationPermission`                                                               |
-| `shared/api/my-orgs.ts`                           | `shared/tenancy/my-organizations.ts`                                                   |
-| `OrgSwitcher`, `OrgBadges` (`shared/components/`) | `OrganizationSwitcher`, `OrganizationBadges`                                           |
-| `TENANT.*` constants, `getLastTenantFromStorage`  | `ORGANIZATION.*`, `getLastOrganizationFromStorage`                                     |
-| Settings section id `org-general`                 | scope `organization`, section `general`                                                |
+| Today                                                         | Becomes                                                                                |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `useOrganizationStore` (`shared/store/useOrganizationStore/`) | `useOrganizationStore` (+ eslint runtime-trio config + `file-structure.mdc` trio text) |
+| `OrgPermission` (`core/types/permissions.ts`)                 | `OrganizationPermission`                                                               |
+| `shared/api/my-orgs.ts`                                       | `shared/tenancy/my-organizations.ts`                                                   |
+| `OrgSwitcher`, `OrgBadges` (`shared/components/`)             | `OrganizationSwitcher`, `OrganizationBadges`                                           |
+| `TENANT.*` constants, `getLastTenantFromStorage`              | `ORGANIZATION.*`, `getLastOrganizationFromStorage`                                     |
+| Settings section id `org-general`                             | scope `organization`, section `general`                                                |
 
 ## 11. Phased migration
 

@@ -182,7 +182,7 @@ Vitest globs cover both `src/**/*.test.{ts,tsx}` and `src/**/__tests__/**/*.test
 | ------------------------ | ----------------------------------------------------- | -------------------------------------------- |
 | Organization hub         | `src/pages/organization/`                             | Layout — picker + `$organizationSlug/` child |
 | Dashboard child          | `src/pages/organization/$organizationSlug/dashboard/` | Leaf under the org layout                    |
-| Organizations (resource) | `src/pages/organizations/`                            | Resource — list + URL-driven dialogs         |
+| Organizations (resource) | `src/pages/organization/`                             | Resource — list + URL-driven dialogs         |
 
 ---
 

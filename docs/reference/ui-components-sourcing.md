@@ -24,7 +24,7 @@ Broader gallery: [agent-os/rules/ui-sources.mdc](../../agent-os/rules/ui-sources
 
 ## Skill
 
-Use `agent-os/skills/shadcn-component-selection/SKILL.md` when choosing components.
+Use `agent-os/skills/shadcn/SKILL.md` when choosing components.
 
 ## Stack notes
 

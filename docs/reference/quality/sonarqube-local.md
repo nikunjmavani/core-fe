@@ -47,7 +47,7 @@ only tests, scripts, docs, or config skip the scan (Sonar excludes those anyway 
 [Scope](#what-sonarqube-analyzes)).
 
 The gate ([`tooling/sonar/sonar-gate.mjs`](../../../tooling/sonar/sonar-gate.mjs), a plain-Node
-port of core-be's `tooling/sonar/sonar-gate.ts`):
+port of core-be's `tooling/sonar/sonar-gate.mjs`):
 
 1. **Auto-starts** the SonarQube container if it is not already up, and waits for it to be ready.
 2. **Provisions a token** on first run (changes the default `admin/admin` password to a generated

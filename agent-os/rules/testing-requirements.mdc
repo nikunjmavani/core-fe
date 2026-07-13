@@ -49,7 +49,7 @@ All Playwright specs use **`*.e2e.test.ts`** — one suite, one command (`pnpm t
 - **`<name>.e2e.test.ts`** — browser UI flows
 - **`<name>-api.e2e.test.ts`** — HTTP contract checks via `playwright.request` → `:3000`
 
-Server-dependent E2E specs require **core-be** on `:3000`. `tests/e2e/global-setup.ts` probes `GET /readyz` and fails the run if core-be is down — no skip path. PR CI boots core-be via `.github/actions/setup-core-be`.
+Server-dependent E2E specs require **core-be** on `:3000`. `tests/e2e/global-setup.ts` probes `GET /readyz` and fails the run if core-be is down — no skip path. CI does **not** boot core-be — these server-dependent specs run locally only (CLAUDE.md: Playwright E2E is local-only).
 
 Vitest excludes `tests/e2e`. **Never** use `.spec.ts`, or the words "real"/"live", in test file names.
 

@@ -33,7 +33,7 @@ Use this skill when the user asks to **run a full project health check**, **veri
 **Goal:** All internal doc links resolve; docs match code.
 
 1. **Fix broken links**
-   - In `CONTRIBUTING.md`: ensure links to requirement format and sample use `docs/getting-started/requirement-format.md` and `docs/getting-started/requirements/sample-requirement.md` (not `docs/REQUIREMENT_FORMAT.md` or `docs/requirements/...`).
+   - In `CONTRIBUTING.md`: ensure links to requirement format and sample use `docs/getting-started/requirement-format.md` and `docs/getting-started/requirements/sample-requirement.md`.
    - In `README.md`, `CLAUDE.md`, `docs/README.md`: verify every internal link points to an existing file.
 
 2. **Cross-check key docs**

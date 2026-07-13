@@ -64,7 +64,8 @@ core-fe/
 │   │   ├── reusable-unit-gate.yml
 │   │   ├── reusable-vitest-unit-only.yml
 │   │   ├── rollback-deploy.yml
-│   │   └── scheduled-release-guards.yml
+│   │   ├── scheduled-release-guards.yml
+│   │   └── sync-drift-canary.yml
 │   ├── CODEOWNERS
 │   ├── dependabot.yml
 │   ├── labeler.yml
@@ -1172,7 +1173,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [17 test files]
+│   │   └── [18 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/
@@ -1216,10 +1217,12 @@ core-fe/
 │   │   └── lock.ts
 │   ├── ci/
 │   │   ├── check-api-contract-drift.mjs
+│   │   ├── check-doc-staleness.mjs
 │   │   ├── check-patch-coverage.mjs
 │   │   ├── check-preload-graph.mjs
 │   │   ├── contract-drift-allowlist.json
 │   │   ├── coverage-summary.mjs
+│   │   ├── doc-staleness-allowlist.json
 │   │   ├── lint-changed-markdown.sh
 │   │   └── run-size-limit.mjs
 │   ├── dev/
@@ -1274,6 +1277,7 @@ core-fe/
 │   │   ├── no-static-branch-name.ts
 │   │   ├── public-assets.sh
 │   │   ├── route-islands.sh
+│   │   ├── sync-check.sh
 │   │   ├── sync-env-example.ts
 │   │   ├── test-ids-allowlist.txt
 │   │   ├── test-ids.mjs
