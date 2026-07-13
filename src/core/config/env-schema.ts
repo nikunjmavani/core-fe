@@ -26,6 +26,12 @@ export const envSchemaBase = z.object({
   BUILD_I18N_LOCALE: z.string().min(1).optional().default('en-US'),
 
   // --- Runtime public (VITE_* — bundled client) ---
+  // App build metadata: read by vite.config.ts (names the Sentry release, falls
+  // back to '0.0.0') and by the client (build-env.ts). Optional — CI sets it to
+  // the release version. (VITE_APP_BUILD_ID and VITE_I18N_BUILD_* are NOT settable
+  // keys — they are Vite `define` constants injected by build plugins; see the
+  // build-injected note below.)
+  VITE_APP_VERSION: z.string().optional(),
   VITE_API_BASE_URL: z.string().optional(),
   VITE_DEV_API_URL: z.string().optional(),
   VITE_SENTRY_DSN: z.string().optional(),
@@ -75,6 +81,17 @@ export const envSchemaBase = z.object({
   SONAR_ADMIN_PASSWORD: z.string().min(1).optional(),
   SONAR_TOKEN: z.string().min(1).optional(),
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build-INJECTED env — Vite `define` compile-time constants, NOT read from .env.
+// Set by build plugins; deliberately absent from the schema above (and from
+// .env.example's key list). Putting any of these in a .env file is a NO-OP — the
+// `define` literal shadows the env value at build. Documented here for visibility:
+//   VITE_APP_BUILD_ID         — build hash (plugins/version-json.ts) for new-deploy detection.
+//   VITE_I18N_BUILD_MODE      — derived from BUILD_I18N_MODE  (plugins/i18n-build.ts): 'single' | 'multi'.
+//   VITE_I18N_BUILD_BCP47     — derived from BUILD_I18N_LOCALE (plugins/i18n-build.ts).
+//   VITE_I18N_BUILD_UI_LOCALE — derived from BUILD_I18N_LOCALE (plugins/i18n-build.ts).
+// ─────────────────────────────────────────────────────────────────────────────
 
 /** Client `import.meta.env` subset validated at app boot. */
 export const clientEnvSchema = z.object({
