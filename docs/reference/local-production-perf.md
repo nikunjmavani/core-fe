@@ -92,6 +92,16 @@ Skill: `agent-os/skills/project-health-check/SKILL.md`.
 
 ---
 
+## Known deferred optimizations
+
+Reclaims that are **not worth the risk while the budget has headroom** — revisit only if `pnpm size` approaches the Initial-JS limit:
+
+| Optimization                 | Reclaim   | Why deferred                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Lazy-load `sonner` (toaster) | ~12 kB gz | `sonner` is entry-resident via the root-mounted `<Toaster>` (`shared/notify/AppToaster.tsx`) **and** the imperative `toast` API (`shared/notify/notify.ts`). Deferring it means re-architecting `notify` — `notify.loading()` returns an id used later for `dismiss`, so a lazy load needs an id-shim + queue. Not worth re-working a core UX primitive while Initial JS sits well under budget. |
+
+---
+
 ## Related
 
 - [testing.md](./testing.md) — full test matrix
