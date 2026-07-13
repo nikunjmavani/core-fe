@@ -3,7 +3,6 @@ import {
   Bell,
   Building2,
   CreditCard,
-  GitBranch,
   MonitorSmartphone,
   Plug,
   Shield,
@@ -30,7 +29,7 @@ type AccountSettingsSection =
   'profile' | 'account' | 'security' | 'notifications' | 'sessions' | 'billing';
 
 export type OrganizationSettingsSection =
-  'general' | 'members' | 'roles' | 'branches' | 'integrations';
+  'general' | 'members' | 'roles' | 'integrations';
 
 export type SettingsSection = AccountSettingsSection | OrganizationSettingsSection;
 
@@ -42,7 +41,7 @@ export interface SettingsSectionRef {
 
 export const SECTIONS_BY_SCOPE: Record<SettingsScope, readonly SettingsSection[]> = {
   account: ['profile', 'account', 'security', 'notifications', 'sessions', 'billing'],
-  organization: ['general', 'members', 'roles', 'branches', 'integrations'],
+  organization: ['general', 'members', 'roles', 'integrations'],
 };
 
 export const DEFAULT_SETTINGS: SettingsSectionRef = {
@@ -53,8 +52,8 @@ export const DEFAULT_SETTINGS: SettingsSectionRef = {
 /**
  * Organization sections available per org type. **Personal** organizations have
  * no organization settings group — billing lives under Account. **Team**
- * organizations get the full management set. `branches` is omitted until it has
- * a backend. Permission gating (settings-permissions.ts) still applies on top.
+ * organizations get the full management set. Permission gating
+ * (settings-permissions.ts) still applies on top.
  */
 export function sectionsForOrgType(
   type: OrganizationType,
@@ -150,13 +149,6 @@ export const SETTINGS_NAV: readonly SettingsNavGroup[] = [
         labelKey: SETTINGS_SECTION_LABEL_KEYS.roles,
         icon: ShieldCheck,
         keywords: ['roles', 'permissions', 'rbac'],
-      },
-      {
-        scope: 'organization',
-        section: 'branches',
-        labelKey: SETTINGS_SECTION_LABEL_KEYS.branches,
-        icon: GitBranch,
-        keywords: ['branches', 'locations', 'sites'],
       },
       {
         scope: 'organization',

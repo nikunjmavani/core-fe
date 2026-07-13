@@ -21,7 +21,6 @@ export const SETTINGS_KEYS = {
     general: 'nav.general',
     members: 'nav.members',
     roles: 'nav.roles',
-    branches: 'nav.branches',
     billing: 'nav.billing',
     integrations: 'nav.integrations',
   },
@@ -180,7 +179,6 @@ export const SETTINGS_SECTION_LABEL_KEYS = {
   general: SETTINGS_KEYS.nav.general,
   members: SETTINGS_KEYS.nav.members,
   roles: SETTINGS_KEYS.nav.roles,
-  branches: SETTINGS_KEYS.nav.branches,
   billing: SETTINGS_KEYS.nav.billing,
   integrations: SETTINGS_KEYS.nav.integrations,
 } as const;

@@ -18,8 +18,6 @@ export function settingsSectionModuleKey(ref: SettingsSectionRef): string | unde
       return 'members';
     case 'integrations':
       return 'integrations';
-    case 'branches':
-      return 'branches';
     default:
       return undefined;
   }

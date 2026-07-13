@@ -43,7 +43,6 @@ import { AccountPanel } from './account/AccountPanel.tsx';
 import { AccountProfilePanel } from './account/AccountProfilePanel.tsx';
 import { AccountSecurityPanel } from './account/AccountSecurityPanel.tsx';
 import { AccountSessionsPanel } from './account/AccountSessionsPanel.tsx';
-import { OrganizationBranchesPanel } from './organization/OrganizationBranchesPanel.tsx';
 import { OrganizationGeneralPanel } from './organization/OrganizationGeneralPanel.tsx';
 import { OrganizationIntegrationsPanel } from './organization/OrganizationIntegrationsPanel.tsx';
 import { OrganizationMembersPanel } from './organization/OrganizationMembersPanel.tsx';
@@ -311,8 +310,6 @@ function panelForSection(section: SettingsSection) {
       return <OrganizationMembersPanel />;
     case 'roles':
       return <OrganizationRolesPanel />;
-    case 'branches':
-      return <OrganizationBranchesPanel />;
     case 'integrations':
       return <OrganizationIntegrationsPanel />;
   }

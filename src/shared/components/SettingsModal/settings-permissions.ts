@@ -19,7 +19,6 @@ const ORGANIZATION_SECTION_PERMISSION: Record<
   general: 'organization:read',
   members: 'membership:read',
   roles: 'role:read',
-  branches: 'organization:read',
   integrations: 'webhook:read',
 };
 
