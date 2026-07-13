@@ -31,16 +31,17 @@ a PR gate, even though both compare docs to code.
 | Workflow                       | Cron (UTC)   | Cadence          | Purpose                                                  | Signal on failure                       |
 | ------------------------------ | ------------ | ---------------- | -------------------------------------------------------- | --------------------------------------- |
 | `cleanup-cache.yml`            | `15 4 * * *` | daily 04:15      | GitHub Actions cache cleanup                             | none (housekeeping)                     |
-| `lighthouse.yml`               | `0 3 * * 3`  | weekly Wed 03:00 | performance budgets                                      | report                                  |
-| `cross-browser.yml`            | `0 4 * * 3`  | weekly Wed 04:00 | Chrome/Firefox/Safari smoke                              | report                                  |
+| `lighthouse.yml`               | `0 3 * * 1`  | weekly Mon 03:00 | performance budgets                                      | report                                  |
+| `cross-browser.yml`            | `0 4 * * 1`  | weekly Mon 04:00 | Chrome/Firefox/Safari smoke                              | report                                  |
 | `codeql.yml`                   | `27 4 * * 1` | weekly Mon 04:27 | security code scanning                                   | security alert                          |
-| `mutation-test.yml`            | `0 4 * * 0`  | weekly Sun 04:00 | Stryker mutation tests                                   | report                                  |
+| `mutation-test.yml`            | `0 5 * * 1`  | weekly Mon 05:00 | Stryker mutation tests                                   | report                                  |
 | `scheduled-release-guards.yml` | `30 6 * * 1` | weekly Mon 06:30 | GitHub env/ruleset drift + `RELEASE_PLEASE_TOKEN` expiry | annotations + hard fail                 |
 | `sync-drift-canary.yml`        | `0 7 * * 1`  | weekly Mon 07:00 | docs↔code drift (`sync:check` + `docs:staleness`)        | self-healing tracked `sync-drift` issue |
 
-Times are UTC (GitHub cron is always UTC). The Monday morning cluster
-(release-guards 06:30 → sync-drift 07:00) is intentional: the two drift canaries
-run back-to-back so a Monday triage covers both.
+Times are UTC (GitHub cron is always UTC). Every **weekly** job runs Monday,
+staggered across the off-peak window (03:00 → 04:00 → 04:27 → 05:00 → 06:30 →
+07:00) so one Monday review covers every weekly signal and no two jobs contend
+for runners at the same minute; `cleanup-cache` is the only daily job.
 
 ## Other periodic mechanisms (not workflow crons)
 

@@ -7,7 +7,7 @@ name: Mutation Test (Stryker)
 
 on:
   schedule:
-    - cron: '0 4 * * 0' # Every Sunday at 4am UTC
+    - cron: '0 5 * * 1' # Every Monday 05:00 UTC (heaviest job; own slot before the guards)
   workflow_dispatch:
 
 permissions:
