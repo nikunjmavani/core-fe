@@ -14,10 +14,10 @@ When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if 
 
 1. Every component (`*.tsx`) in `src/shared/components/`, `src/shared/forms/`, `src/shared/layouts/` MUST have a colocated `*.test.tsx` file
 2. Every component/hook/form under **`src/pages/**` route islands** MUST ship a colocated `*.test.ts(x)` **beside its source** (folder-per-unit: `components/<X>/<X>.tsx` + `<X>.test.tsx`). The island's top-level `<Page>Page.tsx`/`<Page>Layout.tsx` ships `<Page>Page.test.tsx` next to it.
-3. Every service/utility (`*.ts`) in `src/core/`, `src/lib/`, `src/stores/` MUST have a colocated `*.test.ts` file
+3. Every service/utility (`*.ts`) in `src/core/`, `src/lib/`, `src/shared/store/` MUST have a colocated `*.test.ts` file
 4. Every TanStack Query hook MUST ship a colocated `*.test.ts` beside its source (`hooks/use<X>/use<X>.test.ts`) — in both shared and page islands
 5. Component tests MUST include `vitest-axe` accessibility assertions (`toHaveNoViolations()`)
-6. **Colocated beside source everywhere** — `shared/`, `core/`, `lib/`, `stores/`, AND `pages/` islands. Cross-component *integration* flows for a page may additionally live in `pages/<page>/__tests__/integration/`
+6. **Colocated beside source everywhere** — `shared/`, `core/`, `lib/`, AND `pages/` islands (global stores live under `shared/store/`). Cross-component *integration* flows for a page may additionally live in `pages/<page>/__tests__/integration/`
 7. All interactive UI MUST have `data-testid` on **test contracts** (pages, forms, primary actions, nav, dialogs) — not every DOM node. `pnpm validate:testids` enforces manifest ↔ page root, form root/submit, and shell surfaces.
 8. Coverage thresholds: 80% branches, functions, lines, statements (enforced in `vitest.config.ts`)
 9. Vitest runs colocated `src/**/*.test.{ts,tsx}` (plus `src/**/__tests__/**`); it **excludes** `tests/e2e` (Playwright owns those)
@@ -34,7 +34,7 @@ When a NEW `.ts` or `.tsx` file is created under `src/`, automatically check if 
 
 ## Naming Convention
 
-Colocated beside source **everywhere** (shared/core/lib/stores AND pages islands):
+Colocated beside source **everywhere** (shared/core/lib AND pages islands):
 
 | Source File         | Colocated test (same folder)   |
 | ------------------- | ------------------------------ |
