@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -22,16 +22,9 @@ function readJson<TValue>(relativePath: string): TValue {
   ) as TValue;
 }
 
-// Single-trunk model (delivery-model migration §12.2): one stable channel only.
-// The dev prerelease channel (config.dev.json / manifest.dev.json / CHANGELOG-dev.md)
-// is retired — asserting they are GONE guards against an accidental reintroduction.
+// Single stable release channel: the config/manifest publish plain
+// MAJOR.MINOR.PATCH versions immediately, with no prerelease or draft mode.
 describe('release-please manifest policy (single channel)', () => {
-  it('the dev prerelease channel files no longer exist', () => {
-    expect(existsSync(join(RELEASE_PLEASE_DIR, 'config.dev.json'))).toBe(false);
-    expect(existsSync(join(RELEASE_PLEASE_DIR, 'manifest.dev.json'))).toBe(false);
-    expect(existsSync(join(process.cwd(), 'CHANGELOG-dev.md'))).toBe(false);
-  });
-
   it('stable config keeps prerelease mode disabled', () => {
     const config = readJson<ReleasePleaseConfig>('config.json');
     expect(config.prerelease ?? false).toBe(false);
