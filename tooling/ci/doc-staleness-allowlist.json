@@ -1,5 +1,5 @@
 {
-  "_comment": "Intentional doc references the staleness scanner (pnpm docs:staleness) should NOT flag. `paths` = repo-path tokens that resolve to no file/dir on purpose (illustrative example paths in docs). `symbols` = referenced identifiers that intentionally do not exist as a src/ export yet (planned APIs, prose examples). Each entry needs a reason; the scanner is advisory (weekly sync-drift canary) so this list absorbs deliberate references, not real drift. Keep it shrinking toward zero.",
+  "_comment": "Intentional doc references the staleness scanner (pnpm docs:staleness) should NOT flag. Paths resolve against GIT-TRACKED files (deterministic across machines + CI), so `paths` = tokens with no tracked file/dir on purpose: illustrative example paths, cross-repo (core-be) paths, and gitignored per-developer local files (mcp.json, settings.local.json). `symbols` = identifiers that intentionally do not exist as a src/ export yet (planned APIs, prose examples). Each entry needs a reason; the scanner is advisory (weekly sync-drift canary) so this list absorbs deliberate references, not real drift. Keep it shrinking toward zero.",
   "paths": [
     {
       "value": ".claude/rules",
@@ -24,6 +24,14 @@
     {
       "value": "src/pages/notifications",
       "reason": "Illustrative example page (e.g. /notifications) in requirement-format SKILL.md."
+    },
+    {
+      "value": "agent-os/mcp/mcp.json",
+      "reason": "Gitignored per-developer MCP config, scaffolded by pnpm mcp:setup (.gitignore L79); docs reference it intentionally."
+    },
+    {
+      "value": ".claude/settings.local.json",
+      "reason": "Gitignored per-developer Claude Code local settings (.gitignore L82); docs reference it intentionally."
     }
   ],
   "symbols": [
