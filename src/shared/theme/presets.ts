@@ -179,9 +179,8 @@ export function normalizeLayoutWidthId(id: string | undefined): LayoutWidthId {
   return DEFAULT_LAYOUT_WIDTH;
 }
 
-/** Legacy persisted density ids → current scale keys. */
+/** Validate a persisted density id, falling back to the default. */
 export function normalizeDensityId(id: string | undefined): string {
-  if (id === 'spacious') return 'relaxed';
   if (id && id in DENSITY_SCALES) return id;
   return DEFAULT_DENSITY;
 }
@@ -399,19 +398,15 @@ const DEFAULT_LOOK: GeneratedTheme = {
   focusId: DEFAULT_FOCUS,
 };
 
-/** Fill a partial/legacy look with defaults (older state stored only fontId, and
- *  pre-experience-axes looks omit density/motion/elevation/contrast). */
+/** Fill a partial look with defaults (a look may omit any axis). */
 // eslint-disable-next-line complexity -- flat per-field defaulting; cognitively trivial
-export function normalizeLook(
-  look: (Partial<GeneratedTheme> & { fontId?: string }) | null,
-): GeneratedTheme {
+export function normalizeLook(look: Partial<GeneratedTheme> | null): GeneratedTheme {
   const l = look ?? {};
-  const legacyFont = l.fontId;
   return {
     hue: l.hue ?? DEFAULT_LOOK.hue,
     chartHue: l.chartHue ?? DEFAULT_LOOK.chartHue,
-    bodyFontId: l.bodyFontId ?? legacyFont ?? DEFAULT_LOOK.bodyFontId,
-    headingFontId: l.headingFontId ?? legacyFont ?? DEFAULT_LOOK.headingFontId,
+    bodyFontId: l.bodyFontId ?? DEFAULT_LOOK.bodyFontId,
+    headingFontId: l.headingFontId ?? DEFAULT_LOOK.headingFontId,
     radiusId: l.radiusId ?? DEFAULT_LOOK.radiusId,
     densityId: normalizeDensityId(l.densityId),
     motionId: l.motionId ?? DEFAULT_LOOK.motionId,
