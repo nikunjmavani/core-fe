@@ -34,9 +34,11 @@ updates:
       - dependency-name: '@types/node'
         update-types:
           - 'version-update:semver-major'
-      # Pinned to the 1.160.x line (docs/reference/dependency-upgrades.md):
-      # 1.169+ minors caused unhandled navigation rejections and maximum update
-      # depth in guard tests. Patches within ~1.160.x still flow.
+      # Pinned to the 1.170.x line (docs/reference/dependency-upgrades.md):
+      # the 1.169 minors that regressed guard tests are resolved as of 1.170.17
+      # (verified against the full guard + unit suite), but minor/major bumps on
+      # this fast-moving router still go through a deliberate spike, not
+      # auto-merge. Patches within ~1.170.x still flow.
       - dependency-name: '@tanstack/react-router'
         update-types:
           - 'version-update:semver-minor'

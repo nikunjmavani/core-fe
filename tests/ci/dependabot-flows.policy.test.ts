@@ -74,7 +74,7 @@ describe('dependabot grouping policy', () => {
     expect(nonMajorBlock).not.toContain('- major');
   });
 
-  it('keeps the @tanstack/react-router minor/major ignore that enforces the documented 1.160.x pin', () => {
+  it('keeps the @tanstack/react-router minor/major ignore that enforces the documented 1.170.x pin', () => {
     expect(dependabotConfig).toContain("dependency-name: '@tanstack/react-router'");
     const routerIgnoreBlock =
       dependabotConfig.match(/@tanstack\/react-router'\n([\s\S]*?)\n {4}\S/)?.[1] ?? '';
