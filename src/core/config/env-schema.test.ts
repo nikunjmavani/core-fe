@@ -29,19 +29,20 @@ function forbiddenHits(
 }
 
 describe('environmentForBranch', () => {
-  it('maps deploying branches to their environment', () => {
-    expect(environmentForBranch('dev')).toBe('development');
+  it('maps the single deploying branch (main) to its environment', () => {
     expect(environmentForBranch('main')).toBe('production');
   });
 
-  it('returns undefined for feature branches and missing input', () => {
+  it('returns undefined for non-deploying branches and missing input', () => {
+    // Single-trunk: no `dev` branch — only `main` maps.
+    expect(environmentForBranch('dev')).toBeUndefined();
     expect(environmentForBranch('feature/foo')).toBeUndefined();
     expect(environmentForBranch(undefined)).toBeUndefined();
     expect(environmentForBranch('')).toBeUndefined();
   });
 
   it('stays in lock step with branchEnvironmentMap', () => {
-    expect(branchEnvironmentMap).toEqual({ dev: 'development', main: 'production' });
+    expect(branchEnvironmentMap).toEqual({ main: 'production' });
   });
 });
 

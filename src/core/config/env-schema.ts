@@ -251,15 +251,16 @@ export const envSchemaRequiredKeys: readonly string[] = [];
 export type DeployEnvironment = 'development' | 'production';
 
 /**
- * Branch → deploy environment. Mirrors `.github/environments/README.md`:
- *   `dev`  → `development` (`.env.development`)
- *   `main` → `production`  (`.env.production`)
+ * Branch → deploy environment for the branch-wise `validate:client-env` gate.
  *
- * Branches not listed here (feature branches) map to no environment and are
- * skipped by the branch-wise validator.
+ * Single-trunk model (see `.github/environments/README.md`): `main` is the only
+ * deploying branch, and it drives BOTH environments by purpose — every push
+ * aliases to `development`, a release tag deploys to `production`. The gate
+ * validates `main` against `production`, the strictest contract a `main` commit
+ * can reach. Feature branches are unmapped → the gate skips them; validate the
+ * `development` profile explicitly with `--env development`.
  */
 export const branchEnvironmentMap: Readonly<Record<string, DeployEnvironment>> = {
-  dev: 'development',
   main: 'production',
 };
 
