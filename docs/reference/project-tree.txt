@@ -1170,7 +1170,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [20 test files]
+│   │   └── [21 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/
@@ -1260,6 +1260,9 @@ core-fe/
 │   │   └── setup.config.json
 │   ├── sonar/
 │   │   └── sonar-gate.mjs
+│   ├── test/
+│   │   └── empty-env/
+│   │       └── .gitkeep
 │   ├── tsdoc-coverage/
 │   │   ├── budget.json
 │   │   └── check-coverage.mjs
