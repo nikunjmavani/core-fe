@@ -109,7 +109,7 @@ Full reference: **`.env.example`** at project root. Summary:
 | **Sentry DSN**   | `VITE_SENTRY_DSN` — optional; client error tracking.                                                                   |
 | **PostHog**      | `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST` — optional analytics.                                                          |
 
-Sentry **source map upload** (build-time only, not client): see [Sentry source maps](#sentry-source-maps). Uses `SENTRY_AUTH_TOKEN`, `VITE_SENTRY_ORG` / `VITE_SENTRY_PROJECT` (or `SENTRY_ORG` / `SENTRY_PROJECT` per [sentry-sourcemaps.md](../integrations/sentry-sourcemaps.md)).
+Sentry **source map upload** (build-time only, not client): see [Sentry source maps](#sentry-source-maps). Uses `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` (see [sentry-sourcemaps.md](../integrations/sentry-sourcemaps.md)).
 
 ---
 
@@ -167,8 +167,8 @@ Optional:
 For **Sentry source map upload** (build-time only), add **sensitive** vars in Netlify and do not expose to the client:
 
 - `SENTRY_AUTH_TOKEN`
-- `VITE_SENTRY_ORG` (or `SENTRY_ORG`)
-- `VITE_SENTRY_PROJECT` (or `SENTRY_PROJECT`)
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
 
 See [Sentry source maps](#sentry-source-maps).
 
@@ -269,7 +269,7 @@ In other words:
 To get readable stack traces in Sentry, upload source maps at build time. The app already has **@sentry/vite-plugin** configured; it runs only when **`mode === 'production'`** and **`SENTRY_AUTH_TOKEN`** is set.
 
 - **Full steps:** [sentry-sourcemaps.md](../integrations/sentry-sourcemaps.md)
-- **CI:** Add `SENTRY_AUTH_TOKEN`, `VITE_SENTRY_ORG` (or `SENTRY_ORG`), and `VITE_SENTRY_PROJECT` (or `SENTRY_PROJECT`) as repository or environment secrets, and ensure your production build runs with those set.
+- **CI:** Add `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT` as repository or environment secrets, and ensure your production build runs with those set.
 
 ---
 
