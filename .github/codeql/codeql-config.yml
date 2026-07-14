@@ -32,6 +32,12 @@ paths-ignore:
   # `git` output), never untrusted request data.
   - tooling/**
   - plugins/**
+  # Agent-OS skill/hook Node scripts (e.g. the impeccable live-preview tooling).
+  # Same trusted-input rationale as tooling/**: they run on a developer's own
+  # machine against local files and argv during agent sessions, are never part
+  # of the deployed Vite bundle under src/, and so security-extended taint
+  # queries systematically mis-flag them (fs-race, temp-file, regex-sanitize).
+  - agent-os/**
 
 # No query-filters yet: core-be suppresses three verified architectural false
 # positives (rate limiting, password-hash KDF, logger redaction) that are

@@ -34,6 +34,14 @@ updates:
       - dependency-name: '@types/node'
         update-types:
           - 'version-update:semver-major'
+      # Held on the 6.x line: the type-aware ESLint toolchain does not support
+      # TypeScript 7 yet — typescript-eslint's peer range is `>=4.8.4 <6.1.0`
+      # (latest 8.64.0), so TS 7.x crashes typescript-estree's watch-program
+      # setup and reds the ESLint lane (PR #136). Lift this ignore once
+      # typescript-eslint ships a version whose peer range admits TS 7.
+      - dependency-name: 'typescript'
+        update-types:
+          - 'version-update:semver-major'
       # Pinned to the 1.170.x line (docs/reference/dependency-upgrades.md):
       # the 1.169 minors that regressed guard tests are resolved as of 1.170.17
       # (verified against the full guard + unit suite), but minor/major bumps on
