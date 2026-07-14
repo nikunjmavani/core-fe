@@ -17,6 +17,19 @@ export function resolveBooleanFlag(
   return flag !== 'false';
 }
 
+/**
+ * Parse an `on`/`off` flag (a deliberately distinct vocabulary from the
+ * true/false switches above): omitted/empty → `defaultValue`, `'on'` → true,
+ * anything else → false. Used by `VITE_TEST_MODE`. @internal Exported for unit tests.
+ */
+export function resolveOnOffFlag(
+  flag: string | undefined,
+  defaultValue: boolean,
+): boolean {
+  if (flag === undefined || flag === '') return defaultValue;
+  return flag === 'on';
+}
+
 /** Parse `true`/`false` auth-method flags; omitted → default. @internal Exported for unit tests. */
 export function resolveAuthMethodFlag(
   flag: string | undefined,
