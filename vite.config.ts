@@ -14,9 +14,11 @@ import { i18nBuild } from './plugins/i18n-build.ts';
 import { versionJson } from './plugins/version-json.ts';
 
 export default defineConfig(({ mode }) => {
-  // Env files at project root (gitignored; only .env.example is committed), one per
-  // NODE_ENV: .env.local (local dev — the default mode) · .env.development / .env.production
-  // (the two deploy envs). Vite loads `.env.<mode>` (+ `.env.local` in every mode).
+  // Env files at project root (gitignored; only .env.example is committed): .env.local
+  // (local dev) · .env.development / .env.production (the two deploy envs). Vite's `mode` is a
+  // mechanism detail (dev → `development`, build → `production`); the app's environment identity
+  // is carried by VITE_APP_ENV, not the mode — Vite 8 forbids a mode named `local`. Vite loads
+  // `.env.<mode>` (+ `.env.local` in every mode), so `.env.local` always wins for local dev.
   const envDir = path.resolve(__dirname);
   const env = loadEnv(mode, envDir, '');
 

@@ -9,7 +9,7 @@
     "pnpm": ">=9"
   },
   "scripts": {
-    "dev": "vite --mode local",
+    "dev": "vite",
     "build": "tsc -b && vite build",
     "build:check": "node tooling/ci/check-preload-graph.mjs",
     "preview": "vite preview",

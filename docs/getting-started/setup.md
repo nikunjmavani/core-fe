@@ -58,7 +58,7 @@ pnpm install
 
 ## 2. Environment variables
 
-Env files live at **project root**, one `.env.<NODE_ENV>` per environment (mirrors core-be). `.env.example` is the only committed env file; every other `.env*` is gitignored. `pnpm setup:local` scaffolds the example into **`.env.local`** — your gitignored local dev file (behavior flags + machine secrets), loaded by `pnpm dev` (which runs in `local` mode):
+Env files live at **project root**, one `.env.<NODE_ENV>` per environment (mirrors core-be). `.env.example` is the only committed env file; every other `.env*` is gitignored. `pnpm setup:local` scaffolds the example into **`.env.local`** — your gitignored local dev file (behavior flags + machine secrets), loaded by `pnpm dev` (the `local` environment is set by `VITE_APP_ENV`, not the Vite mode):
 
 ```bash
 pnpm setup:local --only-env

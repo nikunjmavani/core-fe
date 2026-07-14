@@ -6,9 +6,9 @@ import { describe, expect, it } from 'vitest';
 const ROOT = process.cwd();
 
 /**
- * Hermetic-env guard. The default mode is now `local`, whose env file is
+ * Hermetic-env guard. The default environment is `local`, whose env file is
  * `.env.local` — and Vite loads `.env.local` in EVERY mode, including the Vitest
- * `test` mode. If that were allowed, a developer's local `.env.local` would leak
+ * runner. If that were allowed, a developer's local `.env.local` would leak
  * into the suite and it would stop being reproducible across machines and CI.
  * `vitest.config.ts` prevents it by pointing `envDir` at an empty directory, so
  * the test runner loads no `.env` files at all. These two checks keep that wiring

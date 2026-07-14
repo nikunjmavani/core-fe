@@ -198,26 +198,32 @@ describe('envFieldDescriptions', () => {
   });
 });
 
-describe('MODE enum', () => {
+describe('VITE_APP_ENV enum (reported environment identity)', () => {
   it('accepts `local` (developer machine — mirrors core-be NODE_ENV=local)', () => {
-    const parsed = clientEnvSchema.safeParse({ MODE: 'local' });
+    const parsed = clientEnvSchema.safeParse({ VITE_APP_ENV: 'local' });
     expect(parsed.success).toBe(true);
-    expect(parsed.success && parsed.data.MODE).toBe('local');
+    expect(parsed.success && parsed.data.VITE_APP_ENV).toBe('local');
   });
 
-  it('defaults MODE to local when unset (mirrors core-be NODE_ENV=local)', () => {
+  it('defaults to local when unset (mirrors core-be NODE_ENV=local)', () => {
     const parsed = clientEnvSchema.safeParse({});
     expect(parsed.success).toBe(true);
-    expect(parsed.success && parsed.data.MODE).toBe('local');
+    expect(parsed.success && parsed.data.VITE_APP_ENV).toBe('local');
   });
 
-  it('keeps `test` (the Vitest runner Vite mode) and `production`', () => {
-    expect(clientEnvSchema.safeParse({ MODE: 'test' }).success).toBe(true);
-    expect(clientEnvSchema.safeParse({ MODE: 'production' }).success).toBe(true);
+  it('accepts the two deploy environments (`development`, `production`)', () => {
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'development' }).success).toBe(true);
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'production' }).success).toBe(true);
   });
 
-  it('fails loudly on an out-of-enum MODE (e.g. qa) — never a silent default', () => {
+  it('rejects `test` — it is not an environment; a Vitest run is marked by VITE_TEST_MODE', () => {
+    // The environment vocabulary is exactly local/development/production. A test run is
+    // flagged by VITE_TEST_MODE, decoupled from the Vite mode.
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'test' }).success).toBe(false);
+  });
+
+  it('fails loudly on an out-of-enum value (e.g. qa) — never a silent default', () => {
     // env.config.ts eager-parses clientEnvSchema and throws on failure.
-    expect(clientEnvSchema.safeParse({ MODE: 'qa' }).success).toBe(false);
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'qa' }).success).toBe(false);
   });
 });

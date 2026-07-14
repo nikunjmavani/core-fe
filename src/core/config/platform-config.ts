@@ -57,6 +57,8 @@ export interface PlatformConfig {
   e2eHooks: boolean;
   /** Poll `/version.json` for new deployments (on in deployed envs; off locally/tests). */
   versionCheckEnabled: boolean;
+  /** True under the Vitest runner (`VITE_TEST_MODE`); the home for test-only behavior. */
+  testMode: boolean;
   deploymentOverrides: DeploymentEnvOverrides;
   buildI18nMode: I18nBuildMode;
   buildI18nLocale: string;
@@ -69,7 +71,7 @@ export interface PlatformConfig {
 export type ConfigGet = (key: string) => string | undefined;
 
 type ClientEnvSlice = {
-  MODE: string;
+  VITE_APP_ENV: string;
 };
 
 /** Build typed platform config from resolved env getters. */
@@ -125,6 +127,7 @@ export function resolvePlatformConfig(
     devtools: resolveBooleanFlag(get('DEVTOOLS'), false),
     e2eHooks: resolveBooleanFlag(get('E2E_HOOKS'), false),
     versionCheckEnabled: resolveBooleanFlag(get('VERSION_CHECK'), true),
+    testMode: resolveBooleanFlag(get('TEST_MODE'), false),
 
     deploymentOverrides: {
       personalOrganizations: resolveDeploymentOverride(get('PERSONAL_ORGANIZATIONS')),
@@ -136,7 +139,7 @@ export function resolvePlatformConfig(
     appBuildId: buildEnv.appBuildId,
     appVersion: buildEnv.appVersion,
 
-    environment: clientEnv.MODE,
+    environment: clientEnv.VITE_APP_ENV,
   };
 }
 

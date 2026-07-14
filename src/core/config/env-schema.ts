@@ -26,6 +26,12 @@ export const envSchemaBase = z.object({
   BUILD_I18N_LOCALE: z.string().min(1).optional().default('en-US'),
 
   // --- Runtime public (VITE_* — bundled client) ---
+  // Reported environment identity — the app's environment vocabulary, NOT the Vite mode
+  // (Vite 8 forbids a mode named `local`, so the environment name is env-driven instead).
+  VITE_APP_ENV: z
+    .enum(['local', 'development', 'production'])
+    .optional()
+    .default('local'),
   VITE_APP_VERSION: z.string().optional(),
   VITE_API_BASE_URL: z.string().optional(),
   VITE_DEV_API_URL: z.string().optional(),
@@ -100,6 +106,8 @@ export const envFieldDescriptions: Readonly<Record<string, string>> = {
   BUILD_I18N_MODE:
     'i18n build mode: single (inline one locale into JS) or multi (lazy JSON per locale).',
   BUILD_I18N_LOCALE: 'Primary i18n build locale, BCP-47 (e.g. en-US).',
+  VITE_APP_ENV:
+    'Reported environment: local (default) | development | production. The env vocabulary, not the Vite mode; reported-only (Sentry/PostHog tag), never branched on.',
   VITE_APP_VERSION:
     'App version string; read by vite.config.ts (names the Sentry release, fallback 0.0.0) and the client. CI-set; blank locally.',
   VITE_API_BASE_URL:
@@ -193,16 +201,20 @@ export const clientEnvSchema = z.object({
   VITE_DEVTOOLS: z.string().optional(),
   VITE_E2E_HOOKS: z.string().optional(),
   VITE_VERSION_CHECK: z.string().optional(),
-  // Runtime mode: `local | development | production | test` (no 'staging'). `local` is the
-  // DEFAULT — a developer's machine, mirroring core-be's `NODE_ENV=local` so both repos share
-  // one env vocabulary and one `.env.<mode>` file per environment (local → `.env.local`).
-  // `development` / `production` are the two DEPLOY targets (DeployEnvironment); you never
-  // deploy to `local`. `test` is kept solely because it is the Vitest runner's Vite mode (not
-  // a deploy environment; its `.env.local` load is isolated in vitest.config.ts to keep the
-  // suite hermetic). Reported name only, never branched on — the raw `DEV`/`PROD` booleans are
-  // intentionally absent (behavior is driven by named flags). An out-of-enum value fails loudly
-  // at load (env.config.ts throws).
-  MODE: z.enum(['local', 'development', 'production', 'test']).default('local'),
+  // Test-runner flag (test.env-injected by plugins/test-env.ts, never in a .env file
+  // or committed to .env.example). `"true"` marks the Vitest run — the single home for
+  // test-only behavior. Read via `platformConfig.testMode`; never mode-sniffed in app code.
+  VITE_TEST_MODE: z.string().optional(),
+  // Reported environment identity: exactly `local | development | production` (no 'staging',
+  // no 'test'). This is the app's environment vocabulary, mirroring core-be's `NODE_ENV`, and
+  // is DECOUPLED from the Vite build mode — Vite 8 forbids a mode literally named `local`, so
+  // the environment name is carried by this env variable (default `local`), not by the Vite
+  // MODE constant. `development` / `production` are the two DEPLOY targets (DeployEnvironment);
+  // you never deploy to `local`. Vite's own mode stays a mechanism detail (dev → `development`,
+  // build → `production`, Vitest → its default `test` mode). Reported name only, never branched
+  // on — the raw Vite DEV/PROD booleans are intentionally unused (behavior is driven by named
+  // flags). An out-of-enum value fails loudly at load (env.config.ts throws).
+  VITE_APP_ENV: z.enum(['local', 'development', 'production']).default('local'),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -379,9 +391,11 @@ const devLikeContract: Omit<EnvProfile, 'defaults'> = {
 export const envProfiles: Readonly<Record<AppEnvironment, EnvProfile>> = {
   local: {
     ...devLikeContract,
+    allowed: { ...devLikeContract.allowed, VITE_APP_ENV: ['local'] },
     // Local machine: dev-tooling on, Vite proxy to the localhost backend,
     // version-check off (nothing deployed to detect).
     defaults: {
+      VITE_APP_ENV: 'local',
       VITE_DEV_API_URL: 'http://localhost:3000',
       VITE_API_BASE_URL: '',
       VITE_DEBUG_LOGGING: 'true',
@@ -392,9 +406,11 @@ export const envProfiles: Readonly<Record<AppEnvironment, EnvProfile>> = {
   },
   development: {
     ...devLikeContract,
+    allowed: { ...devLikeContract.allowed, VITE_APP_ENV: ['development'] },
     // Development deploy: diagnostics on for debugging, version-check on (a real
     // deploy), E2E hooks off (not a test runner).
     defaults: {
+      VITE_APP_ENV: 'development',
       VITE_DEBUG_LOGGING: 'true',
       VITE_DEVTOOLS: 'true',
       VITE_E2E_HOOKS: 'false',
@@ -425,6 +441,7 @@ export const envProfiles: Readonly<Record<AppEnvironment, EnvProfile>> = {
     ],
     // Production is strict: diagnostics/devtools/e2e off, version polling on.
     allowed: {
+      VITE_APP_ENV: ['production'],
       VITE_DEBUG_LOGGING: ['false'],
       VITE_DEVTOOLS: ['false'],
       VITE_E2E_HOOKS: ['false'],
@@ -432,6 +449,7 @@ export const envProfiles: Readonly<Record<AppEnvironment, EnvProfile>> = {
     },
     // Production-safe defaults (each ∈ allowed above): diagnostics off, polling on.
     defaults: {
+      VITE_APP_ENV: 'production',
       VITE_DEBUG_LOGGING: 'false',
       VITE_DEVTOOLS: 'false',
       VITE_E2E_HOOKS: 'false',
