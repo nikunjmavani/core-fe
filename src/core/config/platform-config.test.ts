@@ -46,7 +46,7 @@ describe('platform-config', () => {
     expect(platform.versionCheckEnabled).toBe(true);
   });
 
-  it('test mode (umbrella) forces devtools + e2e hooks on even when their flags are off', () => {
+  it('test mode (umbrella) forces devtools + e2e hooks + captcha-disabled on even when their flags are off', () => {
     const get = (key: string) => {
       if (key === 'TEST_MODE') return 'on';
       if (key === 'DEVTOOLS' || key === 'E2E_HOOKS') return 'false';
@@ -56,6 +56,7 @@ describe('platform-config', () => {
     expect(platform.testMode).toBe(true);
     expect(platform.devtools).toBe(true);
     expect(platform.e2eHooks).toBe(true);
+    expect(platform.captchaDisabled).toBe(true);
   });
 
   it('test mode defaults off and does not force the affordances', () => {
@@ -63,6 +64,7 @@ describe('platform-config', () => {
     expect(platform.testMode).toBe(false);
     expect(platform.devtools).toBe(false);
     expect(platform.e2eHooks).toBe(false);
+    expect(platform.captchaDisabled).toBe(false);
   });
 
   it('diagnostics flags flip from env values', () => {
