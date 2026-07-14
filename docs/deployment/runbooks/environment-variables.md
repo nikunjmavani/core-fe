@@ -91,12 +91,13 @@ Behavior is env-driven, **never** sniffed from `import.meta.env.DEV/PROD/MODE` i
 code. Each flag is read via `platformConfig`; defaults are production-safe and the local
 `.env.development` flips them on (see `injectLocalDevDefaults` in `tooling/dev/setup-local.ts`):
 
-| Flag                 | Dev | Prod (strict) | Effect                                                       |
-| -------------------- | --- | ------------- | ------------------------------------------------------------ |
-| `VITE_DEBUG_LOGGING` | any | `false` only  | `[Module]` diagnostic console logs                           |
-| `VITE_DEVTOOLS`      | any | `false` only  | React Query Devtools + localhost debug panel + theme shuffle |
-| `VITE_E2E_HOOKS`     | any | `false` only  | Playwright hooks on `globalThis` (`navigateInApp`, …)        |
-| `VITE_VERSION_CHECK` | any | `true` only   | Poll `/version.json` for new deployments (off locally/tests) |
+| Flag                 | Dev        | Prod (strict) | Effect                                                                                       |
+| -------------------- | ---------- | ------------- | -------------------------------------------------------------------------------------------- |
+| `VITE_DEBUG_LOGGING` | any        | `false` only  | `[Module]` diagnostic console logs                                                           |
+| `VITE_DEVTOOLS`      | any        | `false` only  | React Query Devtools + localhost debug panel + theme shuffle                                 |
+| `VITE_E2E_HOOKS`     | any        | `false` only  | Playwright hooks on `globalThis` (`navigateInApp`, …)                                        |
+| `VITE_VERSION_CHECK` | any        | `true` only   | Poll `/version.json` for new deployments (off locally/tests)                                 |
+| `VITE_TEST_MODE`     | `on`/`off` | `off` only    | Umbrella — when `on`, forces `VITE_DEVTOOLS` + `VITE_E2E_HOOKS` on (dev-only nudge when off) |
 
 **Strict allowed values (hard fail).** `envProfiles.<env>.allowed` in `env-schema.ts`
 declares the permitted value set per key per environment. `pnpm validate:client-env`

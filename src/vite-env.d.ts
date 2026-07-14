@@ -41,6 +41,8 @@ interface ImportMetaEnv {
   readonly VITE_E2E_HOOKS: string;
   /** Poll `/version.json` for new deployments — on in deployed envs. */
   readonly VITE_VERSION_CHECK: string;
+  /** Umbrella test mode (`on`/`off`) — on forces devtools + E2E hooks on; off in production. */
+  readonly VITE_TEST_MODE: string;
 }
 
 interface ImportMeta {

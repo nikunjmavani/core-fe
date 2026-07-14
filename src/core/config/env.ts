@@ -37,6 +37,15 @@ export const platformConfig = resolvePlatformConfig(getRuntimeConfigValue, clien
 // production Turnstile requirement is enforced at deploy time by validate:client-env).
 validatePlatformInvariantsAtBoot();
 
+// Dev-only nudge: when test mode is off, remind how to enable it. Gated behind
+// debugLogging (a named flag pinned OFF in production), so it never fires in prod —
+// no build-mode sniffing. Mirrors the auth-surface warning's dev-console pattern.
+if (!platformConfig.testMode && platformConfig.debugLogging) {
+  console.info(
+    '[Config] Test mode is OFF — set VITE_TEST_MODE=on in .env.development to enable test affordances (devtools + E2E hooks).',
+  );
+}
+
 // Reject a non-HTTPS absolute API origin anywhere except localhost. Dev uses ''
 // (Vite proxy) or http://localhost, so this only fires on a genuinely
 // misconfigured http:// origin — no isProduction check needed.

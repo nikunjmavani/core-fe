@@ -9,6 +9,7 @@ import {
   resolveDisabledModules,
   resolveLayoutWidthForced,
   resolveOAuthProviderFlags,
+  resolveOnOffFlag,
   resolveSampleRate,
   resolveThemeLock,
 } from './env-resolvers.ts';
@@ -55,6 +56,12 @@ export interface PlatformConfig {
   devtools: boolean;
   /** Install Playwright E2E hooks (`navigateInApp`, `establishSession`) on `globalThis`. */
   e2eHooks: boolean;
+  /**
+   * Umbrella test-mode switch (`VITE_TEST_MODE=on|off`, default off; production
+   * pins it off). When on, it forces the test affordances — `devtools` and
+   * `e2eHooks` — on regardless of their own flags.
+   */
+  testMode: boolean;
   /** Poll `/version.json` for new deployments (on in deployed envs; off locally/tests). */
   versionCheckEnabled: boolean;
   deploymentOverrides: DeploymentEnvOverrides;
@@ -89,6 +96,10 @@ export function resolvePlatformConfig(
   let apiBaseUrl = get('API_BASE_URL') ?? '';
   while (apiBaseUrl.endsWith('/')) apiBaseUrl = apiBaseUrl.slice(0, -1);
 
+  // Umbrella switch: test mode forces the individual test affordances on. Kept
+  // env-driven (no build-mode sniffing); production pins VITE_TEST_MODE to off.
+  const testMode = resolveOnOffFlag(get('TEST_MODE'), false);
+
   return {
     apiBaseUrl,
 
@@ -122,8 +133,9 @@ export function resolvePlatformConfig(
     stripePublishableKey: get('STRIPE_PUBLISHABLE_KEY'),
 
     debugLogging: resolveBooleanFlag(get('DEBUG_LOGGING'), false),
-    devtools: resolveBooleanFlag(get('DEVTOOLS'), false),
-    e2eHooks: resolveBooleanFlag(get('E2E_HOOKS'), false),
+    devtools: resolveBooleanFlag(get('DEVTOOLS'), false) || testMode,
+    e2eHooks: resolveBooleanFlag(get('E2E_HOOKS'), false) || testMode,
+    testMode,
     versionCheckEnabled: resolveBooleanFlag(get('VERSION_CHECK'), true),
 
     deploymentOverrides: {
