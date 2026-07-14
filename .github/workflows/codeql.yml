@@ -6,9 +6,9 @@ name: CodeQL
 # Results land in the repository Security tab.
 #
 # Single-trunk model: analyze once per change on the PR (the authoritative gate),
-# plus a weekly full scan. The former `push` trigger re-analyzed the merge commit —
-# redundant with the PR run under PR-only merges — so it is dropped (same
-# rationale as core-be).
+# plus a weekly full scan and an on-demand dispatch. The former `push` trigger
+# re-analyzed the merge commit — redundant with the PR run under PR-only merges —
+# so it is dropped (same rationale as core-be).
 
 on:
   pull_request:
@@ -17,6 +17,11 @@ on:
     # Weekly full scan (Monday 04:27 UTC) so advisories that land between merges
     # are still surfaced (direct-push backstop under PR-only merges).
     - cron: '27 4 * * 1'
+  # On-demand full scan of the default branch. Lets a maintainer refresh the
+  # Security-tab baseline immediately after an analysis-scope change (e.g. a
+  # paths-ignore edit) instead of waiting for the weekly cron — the PR trigger
+  # analyzes the PR merge ref, not main, so it never updates main's alert set.
+  workflow_dispatch:
 
 concurrency:
   group: codeql-${{ github.ref }}
