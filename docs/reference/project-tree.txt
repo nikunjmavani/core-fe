@@ -75,6 +75,8 @@ core-fe/
 │   └── README.md
 ├── .husky/
 │   ├── commit-msg
+│   ├── post-checkout
+│   ├── post-merge
 │   ├── pre-commit
 │   └── pre-push
 ├── .vscode/

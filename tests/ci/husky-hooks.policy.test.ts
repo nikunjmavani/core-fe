@@ -36,3 +36,41 @@ describe('husky hooks policy', () => {
     expect(prePush).toContain('!= "$DEFAULT_BRANCH"');
   });
 });
+
+describe('codegraph auto-sync hooks policy', () => {
+  // post-checkout (branch switch) and post-merge (merge/pull) refresh the local
+  // codegraph index so `codegraph_*` queries never answer from a stale index.
+  // Both MUST stay guarded (no-op when codegraph or the index is absent — CI, web
+  // sessions, teammates who don't use codegraph) and backgrounded (never block git).
+  const postCheckout = hook('post-checkout');
+  const postMerge = hook('post-merge');
+
+  for (const [name, body] of [
+    ['post-checkout', () => postCheckout],
+    ['post-merge', () => postMerge],
+  ] as const) {
+    describe(name, () => {
+      it('runs an incremental codegraph sync', () => {
+        expect(body()).toContain('codegraph sync');
+      });
+
+      it('no-ops when the codegraph CLI is absent (CI / non-users)', () => {
+        expect(body()).toContain('command -v codegraph');
+      });
+
+      it('no-ops when the local index is absent', () => {
+        expect(body()).toContain('.codegraph/codegraph.db');
+      });
+
+      it('backgrounds the sync so it never blocks git', () => {
+        // The sync runs in a detached subshell: `( codegraph sync -q … & )`.
+        expect(body()).toMatch(/codegraph sync[^\n]*&/);
+      });
+    });
+  }
+
+  it('post-checkout only refreshes on a branch checkout, not a file checkout', () => {
+    // Git passes $3 = 1 for a branch checkout, 0 for a file checkout.
+    expect(postCheckout).toContain('[ "$3" = "1" ]');
+  });
+});
