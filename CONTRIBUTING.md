@@ -13,7 +13,7 @@ This document is for **humans** working on the project. It explains how the repo
 | **CONTRIBUTING.md** (this file)                             | For humans: where things live, what runs automatically, how to work with the codebase and with AI.                                                 |
 | **docs/getting-started/requirement-format.md**              | Standard format for writing feature requirements (template + field guide). Use so the AI can implement in one pass.                                |
 | **docs/getting-started/requirements/sample-requirement.md** | Filled example of the requirement format (Notifications page).                                                                                     |
-| **.env.example**                                            | Reference for all environment variables (the only committed env file); `pnpm setup:local` scaffolds the gitignored `.env.development` from it.     |
+| **.env.example**                                            | Reference for all environment variables (the only committed env file); `pnpm setup:local` scaffolds the gitignored `.env.local` from it.           |
 | **agent-os/docs/cursor-mcp-setup.md**                       | **Onboarding (Cursor users):** Set up MCP locally (Context7, shadcn, Tailwind, core-be-api). Required for AI assistance with docs and backend API. |
 
 ---

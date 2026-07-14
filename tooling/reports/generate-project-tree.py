@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs/reference/project-tree.txt"
 
 # Only git-TRACKED paths are listed, so the tree is identical on every machine
-# and in CI — gitignored/untracked local files (.env.development, scratch logs,
+# and in CI — gitignored/untracked local files (.env.local, scratch logs,
 # etc.) never leak in. Empty set = git unavailable → fall back to the raw walk.
 def _tracked_paths() -> set[str]:
     try:

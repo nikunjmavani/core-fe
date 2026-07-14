@@ -28,7 +28,7 @@ env files, so the suite is hermetic on a fresh checkout.
 2. `corepack enable` + `pnpm install --frozen-lockfile`.
 3. `pnpm mcp:setup:default` — writes the default MCP pair (codegraph + headroom)
    to `.mcp.json`.
-4. `pnpm setup:local` — scaffolds `.env.development` (schema defaults; no
+4. `pnpm setup:local` — scaffolds `.env.local` (schema defaults; no
    secrets).
 
 It does **not** download Playwright browsers or start any service — a heavy
