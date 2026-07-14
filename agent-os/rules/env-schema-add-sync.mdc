@@ -6,6 +6,11 @@ alwaysApply: false
 
 ## Env Schema Add (core-fe)
 
+**One behavior = one env variable.** `platform-config.ts` reads each key 1:1 — no umbrella,
+alias, or `A || B` logic. Never add a second key that drives a behavior another key already
+owns; to move flags together for a context, set each key at the env layer
+(`plugins/test-env.ts`, `.env.<environment>`), never by combining them in code.
+
 When you change any of the matched files:
 
 1. **Read** `agent-os/skills/env-schema-add/SKILL.md`.

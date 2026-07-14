@@ -378,6 +378,14 @@ behind it — the file convention above is unchanged.
   `VITE_VERSION_CHECK`, `VITE_CAPTCHA_DISABLED` → read via `platformConfig`. `environment`
   is only ever a reported value (Sentry/PostHog tag). The one raw read is the config
   bootstrap (`env.config.ts`, allowlisted).
+- **One behavior = one env variable.** Each behavior is owned by **exactly one** key, and
+  `platformConfig` reads that key **1:1** — no umbrella, alias, or `VITE_DEVTOOLS || <other>`
+  derived-from-another-flag logic. Never add a second variable that also drives a behavior
+  another key already owns: two keys for one thing means ambiguous precedence (one value
+  silently ignored) and two sources of truth. To move several flags together for a context
+  (the test runner, a given deploy), set **each one's own key** at the **env layer** —
+  `plugins/test-env.ts`, `.env.<environment>`, GitHub Environments — never by combining them
+  in code. Conditions live in env; code stays 1:1.
 - **Strict allowed values per environment.** `envProfiles.<env>.allowed` in `env-schema.ts`
   declares the permitted value set per key; `pnpm validate:client-env` **hard-fails** on
   a value out of range (e.g. production requires the diagnostics flags off, version-check on).

@@ -114,11 +114,6 @@ describe('envProfiles allowed values (strict per-environment)', () => {
     expect(allowed?.VITE_VERSION_CHECK).toEqual(['true', 'false']);
   });
 
-  it('pins VITE_TEST_MODE to off in production, on/off in development', () => {
-    expect(envProfiles.production.allowed?.VITE_TEST_MODE).toEqual(['off']);
-    expect(envProfiles.development.allowed?.VITE_TEST_MODE).toEqual(['on', 'off']);
-  });
-
   it('rejects a disallowed production value (mirrors the validator check)', () => {
     const debug = envProfiles.production.allowed?.VITE_DEBUG_LOGGING ?? [];
     expect(debug.includes('true')).toBe(false);

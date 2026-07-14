@@ -9,6 +9,24 @@ Use this skill whenever you **add, rename, or remove** an environment variable i
 
 Adding a key is **two aligned decisions**: its **classification** (GitHub Secret vs Variable) and — wherever a workflow consumes it — its **access context** (`secrets.NAME` vs `vars.NAME`).
 
+## Core principle — one behavior, one variable
+
+Each behavior is owned by **exactly one** env variable, and `platform-config.ts` reads that
+variable **1:1** — no umbrella, alias, or `A || B` derived-from-another-flag logic:
+
+```ts
+// ✅ one key, read directly
+devtools: resolveBooleanFlag(get('DEVTOOLS'), false),
+// ❌ never — a second key silently overrides the first ("own value ignored")
+devtools: resolveBooleanFlag(get('DEVTOOLS'), false) || testMode,
+```
+
+Never introduce a second variable that also drives a behavior another key already owns — two
+keys for one thing means ambiguous precedence and two sources of truth. When several flags
+must move together for a context (the test runner, a given deploy), set **each one's own key**
+at the **env layer** — `plugins/test-env.ts`, `.env.<environment>`, or GitHub Environments —
+not by combining them in code. Conditions live in env; code stays 1:1.
+
 ## The two-half rule
 
 `.env.example` has exactly two top-level halves, marked by `# ###...###` banners:
