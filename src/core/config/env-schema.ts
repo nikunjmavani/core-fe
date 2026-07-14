@@ -61,8 +61,6 @@ export const envSchemaBase = z.object({
   VITE_DEVTOOLS: booleanString('false'),
   VITE_E2E_HOOKS: booleanString('false'),
   VITE_VERSION_CHECK: booleanString('true'),
-  // Umbrella test-mode switch — on/off (not true/false); default off, production off-only.
-  VITE_TEST_MODE: z.enum(['on', 'off']).optional().default('off'),
 
   // --- Runtime private (CI / build scripts only) ---
   SENTRY_AUTH_TOKEN: z.string().min(1).optional(),
@@ -149,8 +147,6 @@ export const envFieldDescriptions: Readonly<Record<string, string>> = {
     '"true" installs Playwright E2E hooks on globalThis (navigateInApp, establishSession).',
   VITE_VERSION_CHECK:
     '"true" polls /version.json for new deployments (off locally/tests, on in deployed envs).',
-  VITE_TEST_MODE:
-    'Umbrella test mode (on/off, default off); on forces devtools + E2E hooks on. Production: off only.',
   SENTRY_AUTH_TOKEN:
     'Sentry source-map upload token (CI only); see docs/integrations/sentry-sourcemaps.md.',
   SENTRY_ORG: 'Sentry organization slug (source-map upload).',
@@ -197,7 +193,6 @@ export const clientEnvSchema = z.object({
   VITE_DEVTOOLS: z.string().optional(),
   VITE_E2E_HOOKS: z.string().optional(),
   VITE_VERSION_CHECK: z.string().optional(),
-  VITE_TEST_MODE: z.string().optional(),
   // Runtime mode: `local | development | production | test` (no 'staging'). `local` is a
   // developer's machine — mirrors core-be's `NODE_ENV=local` so both repos share one env
   // vocabulary; `development` / `production` are the two DEPLOY targets (DeployEnvironment),
@@ -350,7 +345,6 @@ export const envProfiles: Readonly<Record<DeployEnvironment, EnvProfile>> = {
       VITE_DEVTOOLS: BOOL,
       VITE_E2E_HOOKS: BOOL,
       VITE_VERSION_CHECK: BOOL,
-      VITE_TEST_MODE: ['on', 'off'],
     },
   },
   production: {
@@ -381,7 +375,6 @@ export const envProfiles: Readonly<Record<DeployEnvironment, EnvProfile>> = {
       VITE_DEVTOOLS: ['false'],
       VITE_E2E_HOOKS: ['false'],
       VITE_VERSION_CHECK: ['true'],
-      VITE_TEST_MODE: ['off'],
     },
   },
 };

@@ -10,7 +10,6 @@ import { platformConfig } from '@/core/config/env.ts';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import { InvisibleTurnstile } from '@/shared/auth/captcha/InvisibleTurnstile.tsx';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
-import { TestModeHint } from '@/shared/components/TestModeHint/index.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Card, CardContent } from '@/shared/components/ui/card.tsx';
 
@@ -58,8 +57,6 @@ export default function App() {
       >
         {/* Solves Cloudflare Turnstile invisibly and keeps a fresh token for auth POSTs. */}
         <InvisibleTurnstile />
-        {/* Dev-only nudge when VITE_TEST_MODE is off (gated behind debugLogging). */}
-        <TestModeHint />
         <Suspense fallback={<FullPageSpinner />}>
           <RouterProvider router={router} />
         </Suspense>

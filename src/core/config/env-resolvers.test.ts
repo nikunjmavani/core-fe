@@ -8,7 +8,6 @@ import {
   resolveDeploymentOverride,
   resolveDisabledModules,
   resolveOAuthProviderFlags,
-  resolveOnOffFlag,
   resolveSampleRate,
 } from './env-resolvers.ts';
 
@@ -20,14 +19,6 @@ describe('env-resolvers', () => {
     expect(resolveBooleanFlag('false', true)).toBe(false);
     expect(resolveBooleanFlag('true', false)).toBe(true);
     expect(resolveBooleanFlag('1', false)).toBe(true);
-  });
-
-  it('resolveOnOffFlag: omitted/empty → default; only "on" enables', () => {
-    expect(resolveOnOffFlag(undefined, false)).toBe(false);
-    expect(resolveOnOffFlag('', false)).toBe(false);
-    expect(resolveOnOffFlag('on', false)).toBe(true);
-    expect(resolveOnOffFlag('off', true)).toBe(false);
-    expect(resolveOnOffFlag('true', false)).toBe(false);
   });
 
   it('resolveSampleRate: parses 0..1, else falls back to default', () => {
