@@ -24,7 +24,7 @@
 | Unit / component | `src/**/*.test.tsx`       | No — `vi.mock()`                                               |
 | E2E              | `tests/e2e/*.e2e.test.ts` | **core-be** on `:3000` (required — global-setup fails if down) |
 
-**Running E2E locally:** follow `docs/reference/testing.md` → E2E → **"Local run — required env & steps"**. Required env lives in each repo's **`.env.development`** (never a plain `.env`): core-be needs `RATE_LIMIT_RELAXED_CAPS=true` + `DATABASE_TLS_ENFORCED=false` + `DATABASE_RLS_SAFETY_ENFORCED=false`; core-fe needs `VITE_DEV_API_URL=http://localhost:3000`.
+**Running E2E locally:** follow `docs/reference/testing.md` → E2E → **"Local run — required env & steps"**. Required env lives in each repo's **`.env.local`** (never a plain `.env`): core-be needs `RATE_LIMIT_RELAXED_CAPS=true` + `DATABASE_TLS_ENFORCED=false` + `DATABASE_RLS_SAFETY_ENFORCED=false`; core-fe needs `VITE_DEV_API_URL=http://localhost:3000`.
 
 ## Commands
 

@@ -2,10 +2,11 @@
 /**
  * `pnpm setup:local` — one-command local bootstrap for core-fe.
  *
- * Idempotent: preflight → dependencies → env (.env.development) → MCP (full set) → optional dev.
+ * Idempotent: preflight → dependencies → env (.env.local) → MCP (full set) → optional dev.
  *
- * `.env.development` is the single gitignored local env file (there is no `.env.local`);
- * it holds behavior flags + machine secrets. Deploys use GitHub Environments.
+ * `.env.local` is the gitignored local env file (NODE_ENV=local; one `.env.<mode>`
+ * per environment, mirroring core-be); it holds behavior flags + machine secrets.
+ * Deploys use GitHub Environments.
  *
  * Usage:
  *   pnpm setup:local
@@ -14,8 +15,8 @@
  *   pnpm setup:local --skip-deps
  *   pnpm setup:local --skip-mcp
  *   pnpm setup:local --skip-codegraph
- *   pnpm setup:local --only-env          (scaffold .env.development only, then exit)
- *   pnpm setup:local --force-env          (rewrite .env.development from .env.example)
+ *   pnpm setup:local --only-env          (scaffold .env.local only, then exit)
+ *   pnpm setup:local --force-env          (rewrite .env.local from .env.example)
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -23,6 +24,7 @@ import { createServer } from 'node:net';
 import { resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 
+import { type AppEnvironment, envProfiles } from '../../src/core/config/env-schema.ts';
 import { ensureMcpServers } from './mcp-config.js';
 
 const PROJECT_ROOT = process.cwd();
@@ -86,7 +88,7 @@ function logBanner(): void {
   process.stdout.write(
     `║  ${ANSI.bold}core-fe — local bootstrap (pnpm setup:local)${ANSI.reset}            ║\n`,
   );
-  process.stdout.write(`║  deps + .env.development + MCP + dev in one command      ║\n`);
+  process.stdout.write(`║  deps + .env.local + MCP + dev in one command      ║\n`);
   process.stdout.write(`╚${line}╝\n`);
 }
 
@@ -251,28 +253,29 @@ function upsertEnvAssignment(content: string, key: string, value: string): strin
   return content.endsWith('\n') ? `${content}${line}\n` : `${content}\n${line}\n`;
 }
 
-/** Local dev defaults (mirrors core-be localhost injection pattern). */
-function injectLocalDevDefaults(content: string): string {
+/**
+ * Inject an environment's defaults into scaffolded `.env.<env>` content, from
+ * `envProfiles[env].defaults` (src/core/config/env-schema.ts) — the single source
+ * of truth for each environment's defaults, so the scaffolder and schema can never
+ * drift. `setup:local` uses `'local'`; the deploy-env files keep their own
+ * scaffolder, with those profiles' `defaults` as the documented spec.
+ */
+function injectEnvDefaults(content: string, env: AppEnvironment): string {
   let updated = content;
-  updated = upsertEnvAssignment(updated, 'VITE_DEV_API_URL', 'http://localhost:3000');
-  // Relative API base so the Vite dev proxy serves /api (see platform-config).
-  updated = upsertEnvAssignment(updated, 'VITE_API_BASE_URL', '');
-  // Dev-tooling flags on for local development (production-safe defaults are off).
-  updated = upsertEnvAssignment(updated, 'VITE_DEBUG_LOGGING', 'true');
-  updated = upsertEnvAssignment(updated, 'VITE_DEVTOOLS', 'true');
-  updated = upsertEnvAssignment(updated, 'VITE_E2E_HOOKS', 'true');
-  updated = upsertEnvAssignment(updated, 'VITE_VERSION_CHECK', 'false');
+  for (const [key, value] of Object.entries(envProfiles[env].defaults ?? {})) {
+    updated = upsertEnvAssignment(updated, key, value);
+  }
   return updated;
 }
 
 function runEnvScaffolding(reports: StepReport[], options: BootstrapOptions): void {
-  logHeading('3/5 Environment (.env.development)');
+  logHeading('3/5 Environment (.env.local)');
   const startedAt = performance.now();
-  const envLocalPath = resolve(PROJECT_ROOT, '.env.development');
+  const envLocalPath = resolve(PROJECT_ROOT, '.env.local');
   if (existsSync(envLocalPath) && !options.forceEnvLocal) {
     reportStep(
       reports,
-      '.env.development',
+      '.env.local',
       'skipped',
       startedAt,
       'present (use --force-env-local to rewrite)',
@@ -282,7 +285,7 @@ function runEnvScaffolding(reports: StepReport[], options: BootstrapOptions): vo
   if (options.check) {
     reportStep(
       reports,
-      '.env.development',
+      '.env.local',
       'warning',
       startedAt,
       '--check mode (would copy from .env.example)',
@@ -291,15 +294,15 @@ function runEnvScaffolding(reports: StepReport[], options: BootstrapOptions): vo
   }
   const examplePath = resolve(PROJECT_ROOT, '.env.example');
   if (!existsSync(examplePath)) {
-    reportStep(reports, '.env.development', 'failed', startedAt, '.env.example missing');
+    reportStep(reports, '.env.local', 'failed', startedAt, '.env.example missing');
     process.exit(1);
   }
   let content = readFileSync(examplePath, 'utf8');
-  content = injectLocalDevDefaults(content);
+  content = injectEnvDefaults(content, 'local');
   writeFileSync(envLocalPath, content);
   reportStep(
     reports,
-    '.env.development',
+    '.env.local',
     'done',
     startedAt,
     'copied from .env.example + localhost defaults — set CONTEXT7_API_KEY for MCP',
@@ -425,7 +428,7 @@ async function runDevServer(
     `Backend API   ${ANSI.gray}Vite proxies /api → VITE_DEV_API_URL (default http://localhost:3000)${ANSI.reset}`,
   );
   logInfo(
-    `MCP           ${ANSI.gray}full set in .mcp.json — set CONTEXT7_API_KEY in .env.development, reload Cursor${ANSI.reset}`,
+    `MCP           ${ANSI.gray}full set in .mcp.json — set CONTEXT7_API_KEY in .env.local, reload Cursor${ANSI.reset}`,
   );
   process.stdout.write('\n');
 

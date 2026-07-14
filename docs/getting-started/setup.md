@@ -5,7 +5,7 @@ Single reference for local development setup. For deploy and CI/CD, see [netlify
 ```mermaid
 flowchart LR
   A[Clone repo] --> B[pnpm setup:local]
-  B --> C[Edit .env.development + Context7 key optional]
+  B --> C[Edit .env.local + Context7 key optional]
   C --> D[pnpm dev]
   D --> E["App at http://localhost:5173"]
 ```
@@ -22,20 +22,20 @@ cd core-fe
 pnpm setup:local
 ```
 
-`pnpm setup:local` is idempotent: checks Node/pnpm, installs deps when `node_modules/` is missing, scaffolds `.env.development` from `.env.example` (the single gitignored local env file), scaffolds the full MCP set from `.mcp.example.json`, indexes CodeGraph, then starts `pnpm dev`.
+`pnpm setup:local` is idempotent: checks Node/pnpm, installs deps when `node_modules/` is missing, scaffolds `.env.local` from `.env.example` (your gitignored local dev file), scaffolds the full MCP set from `.mcp.example.json`, indexes CodeGraph, then starts `pnpm dev`.
 
 Useful flags:
 
-| Flag                | Effect                                                |
-| ------------------- | ----------------------------------------------------- |
-| `--no-start`        | Bootstrap only — skip starting the dev server         |
-| `--check`           | Preflight / dry-run — no file writes                  |
-| `--skip-deps`       | Skip `pnpm install`                                   |
-| `--skip-mcp`        | Skip CodeGraph + MCP scaffold                         |
-| `--only-env`        | Scaffold `.env.example` → `.env.development` and exit |
-| `--force-env-local` | Rewrite `.env.development` from `.env.example`        |
+| Flag                | Effect                                          |
+| ------------------- | ----------------------------------------------- |
+| `--no-start`        | Bootstrap only — skip starting the dev server   |
+| `--check`           | Preflight / dry-run — no file writes            |
+| `--skip-deps`       | Skip `pnpm install`                             |
+| `--skip-mcp`        | Skip CodeGraph + MCP scaffold                   |
+| `--only-env`        | Scaffold `.env.example` → `.env.local` and exit |
+| `--force-env-local` | Rewrite `.env.local` from `.env.example`        |
 
-`pnpm setup:local` also scaffolds the **full MCP template set** into `.mcp.json` (context7, shadcn, tailwindcss, core-be-api, semgrep, sonarqube, codegraph, headroom). Set `CONTEXT7_API_KEY` in `.env.development` and reload Cursor.
+`pnpm setup:local` also scaffolds the **full MCP template set** into `.mcp.json` (context7, shadcn, tailwindcss, core-be-api, semgrep, sonarqube, codegraph, headroom). Set `CONTEXT7_API_KEY` in `.env.local` and reload Cursor.
 
 ---
 
@@ -58,11 +58,11 @@ pnpm install
 
 ## 2. Environment variables
 
-Env files live at **project root**. `.env.example` is the only committed env file; every other `.env*` is gitignored. `pnpm setup:local` scaffolds the example into **`.env.development`** — the single gitignored local file (behavior flags + machine secrets), loaded by `pnpm dev`:
+Env files live at **project root**, one `.env.<NODE_ENV>` per environment (mirrors core-be). `.env.example` is the only committed env file; every other `.env*` is gitignored. `pnpm setup:local` scaffolds the example into **`.env.local`** — your gitignored local dev file (behavior flags + machine secrets), loaded by `pnpm dev` (the `local` environment is set by `VITE_APP_ENV`, not the Vite mode):
 
 ```bash
 pnpm setup:local --only-env
-# or: cp .env.example .env.development
+# or: cp .env.example .env.local
 ```
 
 Set at least:
@@ -98,8 +98,8 @@ MCP servers are **local only** (not CI). Two tiers — same model as core-be:
 
 The gitignored live config is `.mcp.json` (symlink → `agent-os/mcp/mcp.json`). Merges are non-destructive.
 
-1. Run `pnpm setup:local --no-start` — scaffolds `.env.development` + full MCP set + CodeGraph index.
-2. Set `CONTEXT7_API_KEY` in `.env.development`.
+1. Run `pnpm setup:local --no-start` — scaffolds `.env.local` + full MCP set + CodeGraph index.
+2. Set `CONTEXT7_API_KEY` in `.env.local`.
 3. (Optional) Start the backend with `ENABLE_MCP_SERVER=true` for **core-be-api**.
 4. Reload Cursor.
 

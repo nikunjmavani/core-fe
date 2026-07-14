@@ -14,8 +14,11 @@ import { i18nBuild } from './plugins/i18n-build.ts';
 import { versionJson } from './plugins/version-json.ts';
 
 export default defineConfig(({ mode }) => {
-  // Env files at project root (gitignored; only .env.example is committed):
-  // .env.development (local dev) · .env.production (local prod build). No .env.local.
+  // Env files at project root (gitignored; only .env.example is committed): .env.local
+  // (local dev) · .env.development / .env.production (the two deploy envs). Vite's `mode` is a
+  // mechanism detail (dev → `development`, build → `production`); the app's environment identity
+  // is carried by VITE_APP_ENV, not the mode — Vite 8 forbids a mode named `local`. Vite loads
+  // `.env.<mode>` (+ `.env.local` in every mode), so `.env.local` always wins for local dev.
   const envDir = path.resolve(__dirname);
   const env = loadEnv(mode, envDir, '');
 
@@ -113,7 +116,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: false,
       proxy:
-        mode === 'development'
+        mode !== 'production'
           ? {
               '/api': {
                 target: env.VITE_DEV_API_URL || 'http://localhost:3000',
@@ -129,7 +132,7 @@ export default defineConfig(({ mode }) => {
       // 'hidden' in production: generates source maps for Sentry upload but doesn't
       // reference them in bundles (so they're never served to end users).
       // true in dev/preview for easy debugging.
-      sourcemap: mode === 'development' ? true : 'hidden',
+      sourcemap: mode !== 'production' ? true : 'hidden',
       assetsInlineLimit: 0,
       // Content hashes in filenames for cache busting — new builds get new URLs
       rollupOptions: {

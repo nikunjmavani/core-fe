@@ -32,11 +32,11 @@ All specs live in `tests/e2e/*.e2e.test.ts`. One command: `pnpm test:e2e`.
 ### Local run — required env & steps (authoritative)
 
 Run the suites this way; do not improvise other env. **All values live in each repo's
-`.env.development`** (the gitignored dev file) — **never** a plain `.env`, `.env.local`, or an
+`.env.local`** (the gitignored dev file, `NODE_ENV=local`) — **never** a plain `.env` or an
 ad-hoc shell prefix. `pnpm dev` / `pnpm test:e2e` then work with no extra flags. CI does the
 equivalent with `NODE_ENV=test`.
 
-**1. core-be `.env.development`** (in the core-be repo) — required to boot against local Docker
+**1. core-be `.env.local`** (in the core-be repo) — required to boot against local Docker
 Postgres/Redis and to survive a loopback test flood:
 
 | Key                                                           | Value    | Why                                                                                                                                                                                                                   |
@@ -46,7 +46,7 @@ Postgres/Redis and to survive a loopback test flood:
 | `DATABASE_RLS_SAFETY_ENFORCED`                                | `false`  | The Docker `core` role is a superuser (BYPASSRLS); the RLS guard is fail-closed for hosted only.                                                                                                                      |
 | `PERSONAL_ORGANIZATION_ENABLED` / `TEAM_ORGANIZATION_ENABLED` | per mode | Pick the deployment mode to exercise (see the matrix below). At least one must be `true`.                                                                                                                             |
 
-**2. core-fe `.env.development`** (this repo):
+**2. core-fe `.env.local`** (this repo):
 
 | Key                       | Value                      | Why                                                                                                 |
 | ------------------------- | -------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -56,7 +56,7 @@ Postgres/Redis and to survive a loopback test flood:
 **3. Run:**
 
 ```bash
-# terminal 1 — core-be repo (values above are in its .env.development)
+# terminal 1 — core-be repo (values above are in its .env.local)
 pnpm dev                       # boots on :3000; wait for GET /readyz → 200
 
 # terminal 2 — core-fe repo
@@ -64,13 +64,13 @@ pnpm test:e2e                  # full Playwright suite (Chrome) against live cor
 ```
 
 To swap deployment mode: change the two `*_ORGANIZATION_ENABLED` values in core-be's
-`.env.development`, restart core-be (env loads once at boot), and re-run. The
+`.env.local`, restart core-be (env loads once at boot), and re-run. The
 `deployment-*.e2e.test.ts` specs auto-skip unless `me/context` matches their required pair.
 
-#### Why these live in `.env.development` — not a shell prefix (agent-friendly)
+#### Why these live in `.env.local` — not a shell prefix (agent-friendly)
 
 `RATE_LIMIT_RELAXED_CAPS`, `DATABASE_TLS_ENFORCED`, `DATABASE_RLS_SAFETY_ENFORCED` are
-**non-secret local-dev flags** (no keys/tokens), so they belong in `.env.development`, which
+**non-secret local-dev flags** (no keys/tokens), so they belong in `.env.local`, which
 the repo owner maintains. Putting them there — instead of prefixing the boot command with
 `DATABASE_TLS_ENFORCED=false … pnpm dev` — matters for **agent-run testing**:
 
@@ -78,18 +78,18 @@ the repo owner maintains. Putting them there — instead of prefixing the boot c
   inline** (`*_ENFORCED=false pnpm dev` reads as "disarm TLS/RLS"), and it will **not** self-add
   a permission rule to tunnel around that. So an agent cannot boot core-be by passing those
   flags on the command line, and shouldn't be asked to.
-- With the flags already in `.env.development`, the agent (and CI, and you) boot with a **plain
+- With the flags already in `.env.local`, the agent (and CI, and you) boot with a **plain
   `pnpm dev`** — no bypass flags in the command, nothing for the classifier to flag, no
   permission prompt. The human/repo owner made the local-safety decision once, in the file;
   the agent just runs the suite.
 
-**Rule of thumb:** local-dev/test toggles that relax a guard go in `.env.development` (never a
-plain `.env`, never `.env.local`, never an ad-hoc shell prefix). Then no one — human or agent —
+**Rule of thumb:** local-dev/test toggles that relax a guard go in `.env.local` (never a
+plain `.env`, never an ad-hoc shell prefix). Then no one — human or agent —
 needs to pass or approve them per run. Note `env-schema.ts` still pins
 `RATE_LIMIT_RELAXED_CAPS=false` (and the DB guards enforced) for **production**, so this only
 loosens local Docker.
 
-**CAPTCHA (manual dev + E2E):** core-fe mounts invisible Cloudflare Turnstile when `VITE_TURNSTILE_SITE_KEY` is set (`.env.development` ships the always-pass test key `1x00000000000000000000AA`; do **not** set `VITE_CAPTCHA_DISABLED=true`). Pair with core-be `CAPTCHA_PROVIDER=turnstile` and the matching test secret. Auth buttons wait for a Turnstile token before POST (`useTurnstileReady`). `global-setup` probes core-be and caches working auth headers for E2E (typically `X-Captcha-Bypass: true` in local/test `NODE_ENV`).
+**CAPTCHA (manual dev + E2E):** core-fe mounts invisible Cloudflare Turnstile when `VITE_TURNSTILE_SITE_KEY` is set (`.env.local` ships the always-pass test key `1x00000000000000000000AA`; do **not** set `VITE_CAPTCHA_DISABLED=true`). Pair with core-be `CAPTCHA_PROVIDER=turnstile` and the matching test secret. Auth buttons wait for a Turnstile token before POST (`useTurnstileReady`). `global-setup` probes core-be and caches working auth headers for E2E (typically `X-Captcha-Bypass: true` in local/test `NODE_ENV`).
 
 | Spec                                               | What it covers                                               |
 | -------------------------------------------------- | ------------------------------------------------------------ |

@@ -158,8 +158,8 @@ sequenceDiagram
 
 ### Local development
 
-- **`.env.development`** (gitignored) at project root: `VITE_DEV_API_URL` (e.g. `http://localhost:3000`) if your backend runs locally. No token needed for basic dev.
-- **Sentry (local build):** If you run `pnpm build` locally and want source maps uploaded, put `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in `.env.sentry-build-plugin` (gitignored) or `.env.development`. Optional.
+- **`.env.local`** (gitignored) at project root: `VITE_DEV_API_URL` (e.g. `http://localhost:3000`) if your backend runs locally. No token needed for basic dev.
+- **Sentry (local build):** If you run `pnpm build` locally and want source maps uploaded, put `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` in `.env.sentry-build-plugin` (gitignored) or `.env.local`. Optional.
 
 **Summary:** Build runs only on GitHub Actions (Deploy workflow on push to `main`). Set **GitHub secrets** (`VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`). Disable Netlify's Git build so only the workflow deploys. **Backend CORS** must allow your frontend origin.
 
@@ -208,7 +208,7 @@ Run `pnpm run setup:infra:github-secrets` after `gh auth login`. This reads `con
 
 **Variable names (required):** `VITE_API_BASE_URL`, `NODE_VERSION`. **Optional:** `VITE_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT`, `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`.
 
-**Local dev:** Use `.env.development` (gitignored) for `VITE_*` vars.
+**Local dev:** Use `.env.local` (gitignored) for `VITE_*` vars.
 
 **Env validation: commit**
 

@@ -260,17 +260,18 @@ UI components are **shadcn/ui** style: Radix primitives + Tailwind + `cva` in `s
 
 ## Environment Variables
 
-Env files live at **project root** for clear paths. `.env.example` is the **only committed**
-file; every other `.env*` is gitignored. Deploys inject env from **GitHub Environments** (never
-from files). There is **no `.env.local`** — `.env.development` is the single gitignored local file
-(behavior flags + machine secrets), scaffolded by `pnpm setup:local` and loaded by `pnpm dev`.
+Env files live at **project root** for clear paths — one `.env.<NODE_ENV>` per environment
+(mirrors core-be). `.env.example` is the **only committed** file; every other `.env*` is
+gitignored. Deploys inject env from **GitHub Environments** (never from files). Your local dev
+file is **`.env.local`** (behavior flags + machine secrets), scaffolded by `pnpm setup:local`
+and loaded by `pnpm dev` in `local` mode.
 
-| File               | Purpose                                                   |
-| ------------------ | --------------------------------------------------------- |
-| `.env.example`     | Reference for all variables — the **only committed** file |
-| `.env.development` | Local dev file (gitignored): behavior flags + secrets     |
-| `.env.production`  | Local production-build values (gitignored; rare)          |
-| `.env`             | Shared local non-secrets (gitignored)                     |
+| File               | Purpose                                                      |
+| ------------------ | ------------------------------------------------------------ |
+| `.env.example`     | Reference for all variables — the **only committed** file    |
+| `.env.local`       | Local dev file (gitignored): behavior flags + secrets        |
+| `.env.development` | Development deploy-env values (gitignored; local dev builds) |
+| `.env.production`  | Production deploy-env values (gitignored; local prod builds) |
 
 - **`VITE_`** prefix: exposed to the client (public). No secrets here.
 - **No prefix**: build/CI only (e.g. Sentry auth token).

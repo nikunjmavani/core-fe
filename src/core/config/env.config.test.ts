@@ -27,6 +27,6 @@ describe('env.config', () => {
     resetClientEnvCacheForTests();
     const second = getClientEnv();
     expect(second).not.toBe(first);
-    expect(second.MODE).toBe(first.MODE);
+    expect(second.VITE_APP_ENV).toBe(first.VITE_APP_ENV);
   });
 });

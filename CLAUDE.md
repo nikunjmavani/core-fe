@@ -350,27 +350,35 @@ import { User } from './contracts';
 
 ## Environment Variables
 
-Two **deploy** environments only — **development** and **production** — each configured
-in its own gitignored file. `.env.example` is the **only committed** file. Deploys inject
-env from **GitHub Environments** (never from files). No `.env.local`, no shared `.env`, no
-`.env.staging`. `pnpm setup:local` scaffolds `.env.development`; `pnpm dev` loads it.
+Two **deploy** environments — **development** and **production** — each configured in its
+own gitignored file, plus a **`local`** developer environment (`.env.local`, the default —
+mirroring core-be's `NODE_ENV=local`). **One `.env.<environment>` file per environment.**
+`.env.example` is the **only committed** file. Deploys inject env from **GitHub
+Environments** (never from files). No shared `.env`, no `.env.staging`. `pnpm setup:local`
+scaffolds `.env.local`; `pnpm dev` loads it.
 
-The Vite `MODE` enum is `local | development | production | test` (an out-of-enum value
-fails loudly at load in `env.config.ts`). `local` mirrors core-be's `NODE_ENV=local` so
-both repos share one env vocabulary, and `test` is the Vitest runner's Vite mode — but
-neither is a deploy environment (`DeployEnvironment` stays `development | production`).
-Unlike core-be, core-fe local dev runs as **`development`** mode against `.env.development`
-(Vite's dev-server convention), so `local` is a valid mode _name_ with no `.env.local` file
-behind it — the file convention above is unchanged.
+The **environment identity is an env variable, not the Vite mode**: `VITE_APP_ENV` is exactly
+`local | development | production` — three environments, no `test` (an out-of-enum value fails
+loudly at load in `env.config.ts`), and the **default is `local`** — mirroring core-be's
+`NODE_ENV=local` so both repos share one env vocabulary. It is decoupled from Vite's `mode`
+because **Vite 8 forbids a mode literally named `local`**; Vite's mode is a mechanism detail
+(dev → `development`, build → `production`, Vitest → its default `test` mode). `local` is not a
+deploy target (`DeployEnvironment` stays `development | production`, while `AppEnvironment` adds
+`local` for its load-time contract). A **test run is not its own environment** — it reports
+`local` and is marked by the **`VITE_TEST_MODE`** env variable (injected by `plugins/test-env.ts`,
+read via `platformConfig.testMode`), the single home for any test-only behavior. Vite loads
+`.env.local` in every mode, so the Vitest runner's `envDir` is pointed at an empty dir
+(`tooling/test/empty-env/`) to keep the suite hermetic.
 
 ```text
 .env.example         # Reference for all env vars — the ONLY committed file
-.env.development     # Local dev file (gitignored): behavior flags + secrets, dev-tooling ON
-.env.production      # Local production-build values (gitignored): dev-tooling OFF (prod-safe)
+.env.local           # Local dev file (gitignored, NODE_ENV=local — the default): flags + secrets
+.env.development     # `development` deploy-env file (gitignored): dev-tooling ON
+.env.production      # `production` deploy-env file (gitignored): dev-tooling OFF (prod-safe)
 ```
 
 - `VITE_` prefix = bundled into the client (public). No prefix = build-time only.
-- Secrets go in GitHub Environments (deploy) or the gitignored `.env.development` (local) —
+- Secrets go in GitHub Environments (deploy) or the gitignored `.env.local` (local) —
   never committed. A guardrail blocks agent edits to `.env*` (apply them yourself).
 - **Behavior is env-driven, never mode-sniffed.** No `import.meta.env.DEV/PROD/MODE`
   **and no `platformConfig.environment === '<name>'`** branching in app code — named
@@ -389,10 +397,17 @@ behind it — the file convention above is unchanged.
 - **Strict allowed values per environment.** `envProfiles.<env>.allowed` in `env-schema.ts`
   declares the permitted value set per key; `pnpm validate:client-env` **hard-fails** on
   a value out of range (e.g. production requires the diagnostics flags off, version-check on).
-- **Tests are hermetic by construction:** in `test` mode Vite loads no env files (only dev/prod
-  files exist, each loaded only in its own mode), so the suite runs on schema defaults on every
-  machine and on CI. Genuine test-runner env needs are injected by plugins, not app code or a
-  manual pin: `plugins/i18n-build.ts` (multi-locale) and `plugins/test-env.ts` (captcha off).
+- **Per-environment defaults.** `envProfiles.<env>.defaults` in `env-schema.ts` is the single
+  source of truth for each environment's starting values (local + development: dev-tooling on;
+  production: safe). `pnpm setup:local` writes `envProfiles.local.defaults` into `.env.local`
+  (via `injectEnvDefaults`); every default must be ⊆ that key's `allowed` (test-enforced). NOT
+  applied by the runtime — defaults reach the app through the env layer, never a mode branch.
+- **Tests are hermetic by construction:** the Vitest `envDir` points at an empty dir
+  (`tooling/test/empty-env/`), so the runner (in `local` mode) loads no env files — not even
+  `.env.local`, which Vite otherwise loads in every mode — and the suite runs on schema
+  defaults on every machine and on CI. Genuine test-runner env needs are injected by plugins,
+  not app code or a manual pin: `plugins/i18n-build.ts` (multi-locale) and `plugins/test-env.ts`
+  (`VITE_TEST_MODE` on, captcha off).
 - **Where to get credentials and optional env:** docs/integrations/credentials-and-env.md
 
 ## Auth & Security

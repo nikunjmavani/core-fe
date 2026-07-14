@@ -125,6 +125,39 @@ describe('envProfiles allowed values (strict per-environment)', () => {
   });
 });
 
+describe('envProfiles defaults (per-environment starting values)', () => {
+  it('every default value is within the allowed set for its key', () => {
+    for (const env of ['local', 'development', 'production'] as const) {
+      const { defaults, allowed } = envProfiles[env];
+      for (const [key, value] of Object.entries(defaults ?? {})) {
+        const permitted = allowed?.[key];
+        // Keys without an `allowed` constraint (URLs/secrets) accept any default.
+        if (permitted) {
+          expect(
+            permitted,
+            `${env}.defaults.${key}=${value} must be within allowed`,
+          ).toContain(value);
+        }
+      }
+    }
+  });
+
+  it('production defaults are production-safe (diagnostics off, version-check on)', () => {
+    const defaults = envProfiles.production.defaults;
+    expect(defaults?.VITE_DEBUG_LOGGING).toBe('false');
+    expect(defaults?.VITE_DEVTOOLS).toBe('false');
+    expect(defaults?.VITE_E2E_HOOKS).toBe('false');
+    expect(defaults?.VITE_VERSION_CHECK).toBe('true');
+  });
+
+  it('local defaults turn dev-tooling on and point at the localhost backend', () => {
+    const defaults = envProfiles.local.defaults;
+    expect(defaults?.VITE_DEBUG_LOGGING).toBe('true');
+    expect(defaults?.VITE_DEVTOOLS).toBe('true');
+    expect(defaults?.VITE_DEV_API_URL).toBe('http://localhost:3000');
+  });
+});
+
 describe('assertAuthPlatformInvariants', () => {
   it('does not throw when no auth surface is enabled (runs the warn path)', () => {
     const allAuthOff = (key: string) => (key.startsWith('AUTH_') ? 'false' : undefined);
@@ -165,26 +198,32 @@ describe('envFieldDescriptions', () => {
   });
 });
 
-describe('MODE enum', () => {
+describe('VITE_APP_ENV enum (reported environment identity)', () => {
   it('accepts `local` (developer machine — mirrors core-be NODE_ENV=local)', () => {
-    const parsed = clientEnvSchema.safeParse({ MODE: 'local' });
+    const parsed = clientEnvSchema.safeParse({ VITE_APP_ENV: 'local' });
     expect(parsed.success).toBe(true);
-    expect(parsed.success && parsed.data.MODE).toBe('local');
+    expect(parsed.success && parsed.data.VITE_APP_ENV).toBe('local');
   });
 
-  it('defaults MODE to development when unset (Vite dev-server convention)', () => {
+  it('defaults to local when unset (mirrors core-be NODE_ENV=local)', () => {
     const parsed = clientEnvSchema.safeParse({});
     expect(parsed.success).toBe(true);
-    expect(parsed.success && parsed.data.MODE).toBe('development');
+    expect(parsed.success && parsed.data.VITE_APP_ENV).toBe('local');
   });
 
-  it('keeps `test` (the Vitest runner Vite mode) and `production`', () => {
-    expect(clientEnvSchema.safeParse({ MODE: 'test' }).success).toBe(true);
-    expect(clientEnvSchema.safeParse({ MODE: 'production' }).success).toBe(true);
+  it('accepts the two deploy environments (`development`, `production`)', () => {
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'development' }).success).toBe(true);
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'production' }).success).toBe(true);
   });
 
-  it('fails loudly on an out-of-enum MODE (e.g. qa) — never a silent default', () => {
+  it('rejects `test` — it is not an environment; a Vitest run is marked by VITE_TEST_MODE', () => {
+    // The environment vocabulary is exactly local/development/production. A test run is
+    // flagged by VITE_TEST_MODE, decoupled from the Vite mode.
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'test' }).success).toBe(false);
+  });
+
+  it('fails loudly on an out-of-enum value (e.g. qa) — never a silent default', () => {
     // env.config.ts eager-parses clientEnvSchema and throws on failure.
-    expect(clientEnvSchema.safeParse({ MODE: 'qa' }).success).toBe(false);
+    expect(clientEnvSchema.safeParse({ VITE_APP_ENV: 'qa' }).success).toBe(false);
   });
 });

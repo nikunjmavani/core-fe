@@ -74,7 +74,7 @@ elif [ "${CLAUDE_CODE_REMOTE:-}" != "true" ] && [ -f .mcp.example.json ]; then
     else
       mcp_status="scaffolded full MCP set"
     fi
-    echo "session-start: scaffolded .mcp.json via pnpm mcp:setup; set CONTEXT7_API_KEY in .env.development." >&2
+    echo "session-start: scaffolded .mcp.json via pnpm mcp:setup; set CONTEXT7_API_KEY in .env.local." >&2
   else
     mcp_status="template only (run: pnpm setup:local --no-start)"
   fi
