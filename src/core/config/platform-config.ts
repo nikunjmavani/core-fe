@@ -58,8 +58,10 @@ export interface PlatformConfig {
   e2eHooks: boolean;
   /**
    * Umbrella test-mode switch (`VITE_TEST_MODE=on|off`, default off; production
-   * pins it off). When on, it forces the test affordances — `devtools` and
-   * `e2eHooks` — on regardless of their own flags.
+   * pins it off). When on, it forces the test affordances — `devtools`,
+   * `e2eHooks`, and `captchaDisabled` — on regardless of their own flags. The
+   * Vitest runner sets it (plugins/test-env.ts), so it is the single switch for
+   * all test-runner configuration.
    */
   testMode: boolean;
   /** Poll `/version.json` for new deployments (on in deployed envs; off locally/tests). */
@@ -128,7 +130,7 @@ export function resolvePlatformConfig(
       oauthAutoGoogle: oauthAutoGoogleRaw && oauth.google,
     },
 
-    captchaDisabled: get('CAPTCHA_DISABLED') === 'true',
+    captchaDisabled: get('CAPTCHA_DISABLED') === 'true' || testMode,
     turnstileSiteKey: get('TURNSTILE_SITE_KEY'),
     stripePublishableKey: get('STRIPE_PUBLISHABLE_KEY'),
 
