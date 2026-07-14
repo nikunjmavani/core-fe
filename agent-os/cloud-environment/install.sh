@@ -37,9 +37,9 @@ pnpm install --frozen-lockfile
 log "scaffold MCP default pair (.mcp.json)"
 pnpm mcp:setup:default || log "mcp:setup:default failed — run it manually if MCP tools are missing"
 
-# Scaffold .env.development for later `pnpm dev` (schema defaults; no secrets committed).
-log "scaffold .env.development"
-pnpm setup:local || log "setup:local skipped — .env.development may already exist"
+# Scaffold .env.local for later `pnpm dev` (schema defaults; no secrets committed).
+log "scaffold .env.local"
+pnpm setup:local || log "setup:local skipped — .env.local may already exist"
 
 log "done — lint / type-check / unit tests / pnpm agent-os:check run cold."
 log "     Playwright e2e needs browsers (pnpm exec playwright install --with-deps chromium)"

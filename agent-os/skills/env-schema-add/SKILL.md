@@ -83,8 +83,9 @@ Every key sits under exactly one half. Sub-sections (`# --- Title ---`) group re
    off, version-check on). Development may allow both values (`BOOL`) so typos still fail.
    Cover it in the `envProfiles allowed values (strict per-environment)` block of
    `env-schema.test.ts` (production pins the safe value). Doc/URL/tuning-only keys are exempt
-   (the test is "does the wrong value weaken a security/behaviour guard"). Two environments
-   only: `development`, `production`. This mirrors core-be's Category-B `.refine()` rule.
+   (the test is "does the wrong value weaken a security/behaviour guard"). Two deploy
+   environments only: `development`, `production` (`local`/`test` modes are not deploy targets —
+   no `envProfile` gates them). This mirrors core-be's Category-B `.refine()` rule.
 4. **Template** — add to `.env.example` under correct half + sub-section; use `# OPTIONAL — <condition>` when conditionally required.
 5. **Sync** — run `pnpm tool:sync-env-example --fix` then `pnpm tool:sync-env-example`.
 6. **Types** — extend `src/vite-env.d.ts` for new `VITE_*` keys if needed.

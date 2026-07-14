@@ -11,27 +11,27 @@ Project convention for **all Playwright specs** in `tests/e2e/*.e2e.test.ts` —
 
 Before `pnpm test:e2e`, the environment must be set up per **`docs/reference/testing.md` →
 E2E → "Local run — required env & steps"**. Do not improvise other env or a plain `.env`.
-All values live in each repo's **`.env.development`** (gitignored dev file):
+All values live in each repo's **`.env.local`** (gitignored dev file, `NODE_ENV=local`):
 
-- **core-be `.env.development`**: `RATE_LIMIT_RELAXED_CAPS=true` (else public-auth caps at
+- **core-be `.env.local`**: `RATE_LIMIT_RELAXED_CAPS=true` (else public-auth caps at
   5 req/min per IP → `429 send-code failed` floods the suite), `DATABASE_TLS_ENFORCED=false`,
   `DATABASE_RLS_SAFETY_ENFORCED=false` (local Docker Postgres), and the
   `PERSONAL_ORGANIZATION_ENABLED` / `TEAM_ORGANIZATION_ENABLED` pair for the mode under test.
-- **core-fe `.env.development`**: `VITE_DEV_API_URL=http://localhost:3000`, test Turnstile key
+- **core-fe `.env.local`**: `VITE_DEV_API_URL=http://localhost:3000`, test Turnstile key
   `VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA` (do **not** set `VITE_CAPTCHA_DISABLED`).
 
 Then: boot core-be (`pnpm dev`, wait for `GET /readyz` → 200), and run `pnpm test:e2e` from
 core-fe. `deployment-*.e2e.test.ts` auto-skip unless `me/context` matches their mode pair —
-swap the two `*_ORGANIZATION_ENABLED` values in core-be's `.env.development` and restart to
+swap the two `*_ORGANIZATION_ENABLED` values in core-be's `.env.local` and restart to
 exercise personal-only / team-only. CI does the equivalent with `NODE_ENV=test`.
 
-**Why the env goes in `.env.development` and not a shell prefix:** the DB/rate-limit toggles are
+**Why the env goes in `.env.local` and not a shell prefix:** the DB/rate-limit toggles are
 non-secret local-dev flags. Passing `DATABASE_TLS_ENFORCED=false … pnpm dev` on the command
 line reads as "disarm safety guards" and is **blocked by the agent safety classifier** (which
 also won't let the agent self-add a permission rule to tunnel around it). With the flags in
-`.env.development`, boot is a plain `pnpm dev` — no bypass flags in the command, no permission
-prompt. So: **never ask to run these flags inline; expect them pre-set in `.env.development`**
-and just boot + run. See `docs/reference/testing.md` → "Why these live in `.env.development`".
+`.env.local`, boot is a plain `pnpm dev` — no bypass flags in the command, no permission
+prompt. So: **never ask to run these flags inline; expect them pre-set in `.env.local`**
+and just boot + run. See `docs/reference/testing.md` → "Why these live in `.env.local`".
 
 ## Hybrid strategy (required)
 

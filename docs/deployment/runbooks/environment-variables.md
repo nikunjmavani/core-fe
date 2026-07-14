@@ -89,7 +89,7 @@ Optional tri-state env overrides (when set, override API flags from `me/context`
 
 Behavior is env-driven, **never** sniffed from `import.meta.env.DEV/PROD/MODE` in app
 code. Each flag is read via `platformConfig`; defaults are production-safe and the local
-`.env.development` flips them on (see `injectLocalDevDefaults` in `tooling/dev/setup-local.ts`):
+`.env.local` flips them on (see `injectLocalDevDefaults` in `tooling/dev/setup-local.ts`):
 
 | Flag                 | Dev | Prod (strict) | Effect                                                       |
 | -------------------- | --- | ------------- | ------------------------------------------------------------ |
@@ -106,8 +106,9 @@ either boolean (typos still rejected).
 
 The only remaining raw env read is the config bootstrap (`env.config.ts`, allowlisted by
 `pnpm validate:vite-env`). Tests are **hermetic by construction**: `test` mode loads no env
-files (dev/prod files load only in their own mode, and there is no `.env.local`/`.env`), so
-the suite runs on schema defaults; test-runner env is injected by Vite plugins via `test.env` —
+files (each `.env.<mode>` file — `.env.local`, `.env.development`, `.env.production` — loads only
+in its own mode, and there is no catch-all `.env`), so the suite runs on schema defaults;
+test-runner env is injected by Vite plugins via `test.env` —
 `i18n-build` (multi-locale) and `test-env` (`VITE_CAPTCHA_DISABLED`).
 
 ## 3. Build-time deploy (GitHub Actions → Netlify)
@@ -116,11 +117,11 @@ core-fe **builds in GitHub Actions**, not on Netlify. All `VITE_*` values are
 **baked into the bundle at build time** from GitHub Environment Secrets/Variables
 (via `pnpm github:sync` → `.env.<environment>` → GHA workflow env).
 
-| When to set vars                     | Where                                                                                                |
-| ------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| Normal production deploy             | GitHub Environment Variables/Secrets consumed by the build workflow                                  |
-| Post-deploy override without rebuild | `public/config.js` → `window.__CONFIG__` (Docker entrypoint or Netlify `_headers` + injected script) |
-| Local dev                            | `.env.development` (gitignored — the single local file; there is no `.env.local`)                    |
+| When to set vars                     | Where                                                                                                            |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Normal production deploy             | GitHub Environment Variables/Secrets consumed by the build workflow                                              |
+| Post-deploy override without rebuild | `public/config.js` → `window.__CONFIG__` (Docker entrypoint or Netlify `_headers` + injected script)             |
+| Local dev                            | `.env.local` (gitignored — your local dev file; `.env.development` / `.env.production` are the deploy-env files) |
 
 Do **not** rely on Netlify UI env vars unless you intentionally build on Netlify
 (this repo does not). See [cicd-and-netlify.md](../cicd-and-netlify.md).
@@ -154,7 +155,7 @@ Follow **`agent-os/skills/env-schema-add/SKILL.md`** end-to-end:
 | Production boot error on CAPTCHA | Set `VITE_TURNSTILE_SITE_KEY` or `VITE_CAPTCHA_DISABLED=true`       |
 | `validate:env-example` fails     | Run `pnpm tool:sync-env-example --fix`                              |
 | MCP servers missing in Cursor    | Run `pnpm setup:local --no-start` or `pnpm mcp:setup`               |
-| Context7 MCP fails               | Set `CONTEXT7_API_KEY` in `.env.development` and reload Cursor      |
+| Context7 MCP fails               | Set `CONTEXT7_API_KEY` in `.env.local` and reload Cursor            |
 
 ## 7. Related files
 

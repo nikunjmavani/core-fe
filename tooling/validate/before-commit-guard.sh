@@ -66,7 +66,7 @@ STAGED_ENV=$(git diff --cached --name-only --diff-filter=d | grep -E '^\.env($|\
 if [ -n "$STAGED_ENV" ]; then
   echo "ERROR: Only .env.example may be committed. These are gitignored:"
   echo "$STAGED_ENV"
-  echo "Provide real values via GitHub Environments (deploy) or your local .env.development."
+  echo "Provide real values via GitHub Environments (deploy) or your local .env.local."
   exit 1
 fi
 

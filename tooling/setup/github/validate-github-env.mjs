@@ -88,7 +88,7 @@ function main() {
     console.log('  SKIP_GITHUB_ENV=1             Skip protection drift check');
     console.log('');
     console.log(
-      'For bundled VITE_* deploy checks, use: pnpm validate:client-env --env <development|production>',
+      'For bundled VITE_* deploy checks, use: pnpm validate:client-env --env <local|development|production>',
     );
     process.exit(0);
   }

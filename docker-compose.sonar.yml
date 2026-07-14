@@ -9,7 +9,7 @@
 #
 # Port 9000 is shared with core-be's local SonarQube. If core-be's server is
 # already running, the gate script reuses it (one server, two projects) — copy
-# SONAR_ADMIN_PASSWORD from core-be/.env.local into this repo's .env.development
+# SONAR_ADMIN_PASSWORD from core-be/.env.local into this repo's .env.local
 # so the gate can mint a core-fe token.
 
 services:

@@ -6,7 +6,7 @@
  *   - `required` keys are checked against the resolved runtime env (process.env,
  *     as loaded/injected for the deploy job).
  *   - `forbidden` keys are checked against git-TRACKED `.env` + `.env.<env>` files
- *     only; gitignored local files (e.g. `.env.development` with auto-managed
+ *     only; gitignored local files (e.g. `.env.local` with auto-managed
  *     SONAR_* + machine secrets) are skipped, so local secrets never trip a guard.
  *     Deploy env comes from GitHub Environments and is covered by `required`.
  *   - `allowed` values are enforced strictly (HARD FAIL) against the per-env
@@ -14,7 +14,7 @@
  *     production permits only the safe value for each diagnostics flag.
  *
  * Environment resolution (first match wins):
- *   1. `--env <development|production>`
+ *   1. `--env <local|development|production>`
  *   2. branch → env via `branchEnvironmentMap` (CI `GITHUB_REF_NAME`, else `git`)
  *   3. legacy `--production` CLI flag (NODE_ENV/VITE_MODE are NOT consulted)
  *   4. otherwise: skip (unmapped feature branch)
@@ -33,7 +33,7 @@ import { resolve } from 'node:path';
 import { parse } from 'dotenv';
 
 import {
-  type DeployEnvironment,
+  type AppEnvironment,
   environmentForBranch,
   envProfiles,
 } from '../../src/core/config/env-schema.ts';
@@ -62,15 +62,17 @@ function currentBranch(): string | undefined {
   }
 }
 
-function isDeployEnvironment(value: string | undefined): value is DeployEnvironment {
-  return value === 'development' || value === 'production';
+function isAppEnvironment(value: string | undefined): value is AppEnvironment {
+  return value === 'local' || value === 'development' || value === 'production';
 }
 
-function resolveEnvironment(): DeployEnvironment | undefined {
+function resolveEnvironment(): AppEnvironment | undefined {
   const explicit = argValue('--env');
   if (explicit) {
-    if (!isDeployEnvironment(explicit)) {
-      console.error(`client-env: unknown --env "${explicit}" (development|production)`);
+    if (!isAppEnvironment(explicit)) {
+      console.error(
+        `client-env: unknown --env "${explicit}" (local|development|production)`,
+      );
       process.exit(1);
     }
     return explicit;
@@ -107,11 +109,11 @@ function isGitIgnored(relPath: string): boolean {
 
 /**
  * Git-TRACKED `.env` + `.env.<env>` only — for forbidden-secret checks. Gitignored
- * local files (e.g. `.env.development` holding auto-managed SONAR_* + machine
+ * local files (e.g. `.env.local` holding auto-managed SONAR_* + machine
  * secrets) are skipped: they never deploy, and deploy env comes from GitHub
  * Environments. The guard still catches a secret that is actually committed.
  */
-function committedEnv(environment: DeployEnvironment): Record<string, string> {
+function committedEnv(environment: AppEnvironment): Record<string, string> {
   const merged: Record<string, string> = {};
   for (const file of ['.env', `.env.${environment}`]) {
     const path = resolve(projectRoot, file);
@@ -126,7 +128,7 @@ function committedEnv(environment: DeployEnvironment): Record<string, string> {
 }
 
 /** Required-key issues against the runtime env, split by severity. */
-function requiredIssues(environment: DeployEnvironment): {
+function requiredIssues(environment: AppEnvironment): {
   errors: string[];
   warnings: string[];
 } {
@@ -144,7 +146,7 @@ function requiredIssues(environment: DeployEnvironment): {
 
 /** Forbidden-key errors against the committed `.env` + `.env.<env>` layer. */
 function forbiddenErrors(
-  environment: DeployEnvironment,
+  environment: AppEnvironment,
   committed: Record<string, string>,
 ): string[] {
   const errors: string[] = [];
@@ -158,7 +160,7 @@ function forbiddenErrors(
 }
 
 /** Non-empty values set in the per-environment file `.env.<env>` (behavior config). */
-function envFileValues(environment: DeployEnvironment): Record<string, string> {
+function envFileValues(environment: AppEnvironment): Record<string, string> {
   const path = resolve(projectRoot, `.env.${environment}`);
   if (!existsSync(path)) return {};
   const merged: Record<string, string> = {};
@@ -173,7 +175,7 @@ function envFileValues(environment: DeployEnvironment): Record<string, string> {
  * file (authoritative for that environment's config, locally) and — on CI, where
  * the file isn't checked out — the injected GitHub Environment (`process.env`).
  */
-function allowedErrors(environment: DeployEnvironment): string[] {
+function allowedErrors(environment: AppEnvironment): string[] {
   const allowed = envProfiles[environment].allowed;
   if (!allowed) return [];
   const fileVals = envFileValues(environment);
@@ -192,11 +194,7 @@ function allowedErrors(environment: DeployEnvironment): string[] {
   return errors;
 }
 
-function report(
-  environment: DeployEnvironment,
-  errors: string[],
-  warnings: string[],
-): void {
+function report(environment: AppEnvironment, errors: string[], warnings: string[]): void {
   for (const warning of warnings) {
     console.warn(`  warn: ${warning}`);
   }

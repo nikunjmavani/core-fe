@@ -5,11 +5,11 @@
  * import `src/core/config/env-schema.ts` via tsx.
  *
  * Convention:
- *   - Primary: `.env.${NODE_ENV}` (default NODE_ENV=development for scripts)
- *   - Fallback: `.env.development` when primary missing (never in production)
+ *   - Primary: `.env.${NODE_ENV}` (default NODE_ENV=local for scripts)
+ *   - Fallback: `.env.local` when primary missing (never in production)
  *
- * `.env.development` is the single gitignored local file — there is no `.env.local`.
- * Deploys inject env from GitHub Environments (process.env), not from files.
+ * One `.env.<NODE_ENV>` file per environment (`.env.local` locally, mirroring
+ * core-be). Deploys inject env from GitHub Environments (process.env), not files.
  * Empty values (`KEY=`) are stripped so optional Zod fields see `undefined`.
  */
 import { config } from 'dotenv';
@@ -35,12 +35,12 @@ function applyDotenvFile(envFilePath, override = false) {
 }
 
 export function loadEnvFiles() {
-  const nodeEnv = process.env.NODE_ENV ?? 'development';
+  const nodeEnv = process.env.NODE_ENV ?? 'local';
   const primary = resolve(projectRoot, `.env.${nodeEnv}`);
   if (existsSync(primary)) {
     applyDotenvFile(primary);
   } else if (nodeEnv !== 'production') {
-    const fallback = resolve(projectRoot, '.env.development');
+    const fallback = resolve(projectRoot, '.env.local');
     if (existsSync(fallback)) {
       applyDotenvFile(fallback);
     }

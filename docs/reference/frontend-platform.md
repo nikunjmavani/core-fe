@@ -159,8 +159,8 @@ See **`docs/reference/cross-browser-support.md`** and **`docs/reference/tools-an
 ## Observability (Sentry)
 
 Production error monitoring is wired whenever **`VITE_SENTRY_DSN` is set**
-(`.env.development` for local QA, Netlify/GitHub for deploys). **Not** consent-gated
-(unlike PostHog). Sentry env: **`development`** in `pnpm dev`, **`production`** on deploy.
+(`.env.local` for local QA, Netlify/GitHub for deploys). **Not** consent-gated
+(unlike PostHog). Sentry env: **`local`** in `pnpm dev`, **`production`** on deploy.
 
 | Layer                      | Location                                       | Sentry product                 |
 | -------------------------- | ---------------------------------------------- | ------------------------------ |

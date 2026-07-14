@@ -415,9 +415,9 @@ This single command:
 
 ## Step 7 — Set Up Environment Variables
 
-`pnpm setup:local` scaffolds `.env.development` from the committed `.env.example` with sensible defaults (it is gitignored — the single local env file for behavior flags and secrets). **No changes needed** for basic local development.
+`pnpm setup:local` scaffolds `.env.local` from the committed `.env.example` with sensible defaults (it is gitignored — your local dev file for behavior flags and secrets). **No changes needed** for basic local development.
 
-Default values in `.env.development`:
+Default values in `.env.local`:
 
 | Variable            | Default Value           | Description                      |
 | ------------------- | ----------------------- | -------------------------------- |
@@ -427,7 +427,7 @@ Default values in `.env.development`:
 | `VITE_POSTHOG_KEY`  | (empty)                 | PostHog analytics (optional)     |
 | `VITE_POSTHOG_HOST` | (empty)                 | PostHog host URL (optional)      |
 
-> **Tip:** Put local overrides and secrets directly in `.env.development` (gitignored) — there is no separate `.env.local`.
+> **Tip:** Put local overrides and secrets directly in `.env.local` (gitignored). The `.env.development` / `.env.production` files are the deploy-environment files (one `.env.<NODE_ENV>` per environment), separate from your local dev file.
 
 ---
 

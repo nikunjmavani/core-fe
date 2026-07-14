@@ -56,7 +56,7 @@ export const envSchemaBase = z.object({
   // --- Platform diagnostics / dev tooling (VITE_* — bundled client) ---
   // Behavior is env-driven, never sniffed from the build mode: production
   // defaults are safe (logging/devtools/e2e off, version polling on); the
-  // `.env.development` local file flips them on for dev.
+  // `.env.local` local file flips them on for dev.
   VITE_DEBUG_LOGGING: booleanString('false'),
   VITE_DEVTOOLS: booleanString('false'),
   VITE_E2E_HOOKS: booleanString('false'),
@@ -72,7 +72,7 @@ export const envSchemaBase = z.object({
   CONTEXT7_API_KEY: z.string().min(1).optional(),
 
   // --- Local tooling only (never bundled / never set in CI) ---
-  // SonarQube local quality gate — auto-managed in .env.development by tooling/sonar/sonar-gate.mjs.
+  // SonarQube local quality gate — auto-managed in .env.local by tooling/sonar/sonar-gate.mjs.
   SONAR_ADMIN_PASSWORD: z.string().min(1).optional(),
   SONAR_TOKEN: z.string().min(1).optional(),
 });
@@ -193,16 +193,16 @@ export const clientEnvSchema = z.object({
   VITE_DEVTOOLS: z.string().optional(),
   VITE_E2E_HOOKS: z.string().optional(),
   VITE_VERSION_CHECK: z.string().optional(),
-  // Runtime mode: `local | development | production | test` (no 'staging'). `local` is a
-  // developer's machine — mirrors core-be's `NODE_ENV=local` so both repos share one env
-  // vocabulary; `development` / `production` are the two DEPLOY targets (DeployEnvironment),
-  // and you never deploy to `local`. `test` is kept solely because it is the Vitest runner's
-  // Vite mode (not a deploy environment). The default stays `development` (Vite's dev-server
-  // convention), so a stock `pnpm dev` is unchanged; `local` is opt-in via `vite --mode local`.
-  // Reported name only, never branched on — the raw `DEV`/`PROD` booleans are intentionally
-  // absent (behavior is driven by named flags). An out-of-enum value fails loudly at load
-  // (env.config.ts throws).
-  MODE: z.enum(['local', 'development', 'production', 'test']).default('development'),
+  // Runtime mode: `local | development | production | test` (no 'staging'). `local` is the
+  // DEFAULT — a developer's machine, mirroring core-be's `NODE_ENV=local` so both repos share
+  // one env vocabulary and one `.env.<mode>` file per environment (local → `.env.local`).
+  // `development` / `production` are the two DEPLOY targets (DeployEnvironment); you never
+  // deploy to `local`. `test` is kept solely because it is the Vitest runner's Vite mode (not
+  // a deploy environment; its `.env.local` load is isolated in vitest.config.ts to keep the
+  // suite hermetic). Reported name only, never branched on — the raw `DEV`/`PROD` booleans are
+  // intentionally absent (behavior is driven by named flags). An out-of-enum value fails loudly
+  // at load (env.config.ts throws).
+  MODE: z.enum(['local', 'development', 'production', 'test']).default('local'),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -249,6 +249,15 @@ export const envSchemaRequiredKeys: readonly string[] = [];
 
 /** Deploy environments — one per deploying branch (see .github/environments). */
 export type DeployEnvironment = 'development' | 'production';
+
+/**
+ * All app environments with a load-time env contract. `local` is the default
+ * developer machine (`.env.local`) — validated by `validate:client-env` like the
+ * others, but NOT a deploy target (no GitHub environment, absent from
+ * `branchEnvironmentMap` and the environment-drift check). One `.env.<env>` file
+ * per name (`.env.local` / `.env.development` / `.env.production`), mirroring core-be.
+ */
+export type AppEnvironment = 'local' | DeployEnvironment;
 
 /**
  * Branch → deploy environment for the branch-wise `validate:client-env` gate.
@@ -306,6 +315,16 @@ export interface EnvProfile {
    * (Zod still enforces enums/types at the schema layer).
    */
   readonly allowed?: Readonly<Record<string, readonly string[]>>;
+  /**
+   * Default value each env variable takes IN THIS ENVIRONMENT — the single source
+   * of truth `pnpm setup:local` writes into `.env.<env>`, so each environment's
+   * file comes pre-filled with that env's defaults. Only keys with an env-specific
+   * default appear here (secrets/URLs are omitted — empty until set). Every default
+   * MUST be within `allowed` for the same key (enforced in env-schema.test.ts).
+   * NOT applied by the runtime: the app never branches on the environment — the
+   * value reaches it through the env layer (`.env.<env>` / GitHub Environment).
+   */
+  readonly defaults?: Readonly<Record<string, string>>;
 }
 
 /** Boolean flags whose allowed value differs by environment (dev: either; prod: safe). */
@@ -324,28 +343,62 @@ const SONAR_LOCAL_ONLY: readonly ForbiddenKeyRule[] = [
 ];
 
 /**
- * Branch-wise env contracts. `required` is checked against the resolved runtime
- * env; `forbidden` is checked against git-TRACKED `.env` + `.env.<env>` files only
- * (gitignored local files are skipped), so local secrets in the gitignored
- * `.env.development` never trip a deploy guard.
+ * `local` + `development` share one CONTRACT (identical required/forbidden/allowed):
+ * both are dev-tooling-on environments that may toggle diagnostics either way. They
+ * differ only in their `defaults` (below) — `local` is the default local machine
+ * (`.env.local`, dev-server proxy to localhost), `development` the deploy environment
+ * (`.env.development`). `local` is validated at load but is never a deploy target.
  */
-export const envProfiles: Readonly<Record<DeployEnvironment, EnvProfile>> = {
+const devLikeContract: Omit<EnvProfile, 'defaults'> = {
+  required: [],
+  forbidden: [
+    ...SONAR_LOCAL_ONLY,
+    {
+      key: 'VITE_STRIPE_PUBLISHABLE_KEY',
+      valuePattern: /^pk_live_/,
+      reason:
+        'live Stripe key must not be used in local/development — use a pk_test_… key',
+    },
+  ],
+  // Local + development may toggle diagnostics either way (typos still rejected).
+  allowed: {
+    VITE_DEBUG_LOGGING: BOOL,
+    VITE_DEVTOOLS: BOOL,
+    VITE_E2E_HOOKS: BOOL,
+    VITE_VERSION_CHECK: BOOL,
+  },
+};
+
+/**
+ * Per-environment env contracts (keyed by {@link AppEnvironment}). `required` is
+ * checked against the resolved runtime env; `forbidden` is checked against
+ * git-TRACKED `.env` + `.env.<env>` files only (gitignored local files like
+ * `.env.local` are skipped), so local secrets never trip a deploy guard. `defaults`
+ * are the per-env starting values `pnpm setup:local` writes into `.env.<env>`.
+ */
+export const envProfiles: Readonly<Record<AppEnvironment, EnvProfile>> = {
+  local: {
+    ...devLikeContract,
+    // Local machine: dev-tooling on, Vite proxy to the localhost backend,
+    // version-check off (nothing deployed to detect).
+    defaults: {
+      VITE_DEV_API_URL: 'http://localhost:3000',
+      VITE_API_BASE_URL: '',
+      VITE_DEBUG_LOGGING: 'true',
+      VITE_DEVTOOLS: 'true',
+      VITE_E2E_HOOKS: 'true',
+      VITE_VERSION_CHECK: 'false',
+    },
+  },
   development: {
-    required: [],
-    forbidden: [
-      ...SONAR_LOCAL_ONLY,
-      {
-        key: 'VITE_STRIPE_PUBLISHABLE_KEY',
-        valuePattern: /^pk_live_/,
-        reason: 'live Stripe key must not be used in development — use a pk_test_… key',
-      },
-    ],
-    // Development may toggle diagnostics either way (typos still rejected).
-    allowed: {
-      VITE_DEBUG_LOGGING: BOOL,
-      VITE_DEVTOOLS: BOOL,
-      VITE_E2E_HOOKS: BOOL,
-      VITE_VERSION_CHECK: BOOL,
+    ...devLikeContract,
+    // Development deploy: diagnostics on for debugging, version-check on (a real
+    // deploy), E2E hooks off (not a test runner).
+    defaults: {
+      VITE_DEBUG_LOGGING: 'true',
+      VITE_DEVTOOLS: 'true',
+      VITE_E2E_HOOKS: 'false',
+      VITE_VERSION_CHECK: 'true',
     },
   },
   production: {
@@ -376,6 +429,13 @@ export const envProfiles: Readonly<Record<DeployEnvironment, EnvProfile>> = {
       VITE_DEVTOOLS: ['false'],
       VITE_E2E_HOOKS: ['false'],
       VITE_VERSION_CHECK: ['true'],
+    },
+    // Production-safe defaults (each ∈ allowed above): diagnostics off, polling on.
+    defaults: {
+      VITE_DEBUG_LOGGING: 'false',
+      VITE_DEVTOOLS: 'false',
+      VITE_E2E_HOOKS: 'false',
+      VITE_VERSION_CHECK: 'true',
     },
   },
 };

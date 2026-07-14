@@ -61,7 +61,9 @@ describe('platformConfig', () => {
 
   it('platformConfig.environment is a string', () => {
     expect(typeof platformConfig.environment).toBe('string');
-    expect(['development', 'production', 'test']).toContain(platformConfig.environment);
+    expect(['local', 'development', 'production', 'test']).toContain(
+      platformConfig.environment,
+    );
   });
 
   it('exposes no isDevelopment/isProduction booleans (env-driven only)', () => {

@@ -38,7 +38,7 @@ function buildIntegrations(Sentry: SentryModule, router: AnyRouter) {
   ];
 
   // Replay, profiling, logs, and feedback whenever a DSN is configured —
-  // including local `pnpm dev` with `.env.development` for full-flow QA.
+  // including local `pnpm dev` with `.env.local` for full-flow QA.
   integrations.push(
     Sentry.replayIntegration({
       maskAllText: true,
