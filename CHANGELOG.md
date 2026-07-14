@@ -1,5 +1,56 @@
 # Changelog
 
+## [1.3.0](https://github.com/nikunjmavani/core-fe/compare/v1.2.5...v1.3.0) (2026-07-14)
+
+
+### Added
+
+* **agent-os:** claude plugin, shared review agents, platform-mapping sync ([#122](https://github.com/nikunjmavani/core-fe/issues/122)) ([694286f](https://github.com/nikunjmavani/core-fe/commit/694286fc743e66b4996b82a913e8c6f27cb0a556))
+* **agents:** add a11y-auditor and i18n-auditor read-only agents ([#115](https://github.com/nikunjmavani/core-fe/issues/115)) ([79059e6](https://github.com/nikunjmavani/core-fe/commit/79059e6bd0a3908aa5bad9a4d10ebba93d9aabb4))
+* **agents:** add perf-auditor read-only agent to the prod-readiness pipeline ([#113](https://github.com/nikunjmavani/core-fe/issues/113)) ([c2d33a5](https://github.com/nikunjmavani/core-fe/commit/c2d33a57bd85298367b357d6c174ef8e45b0be66))
+* **config:** allow `local` as a valid Vite MODE value ([#127](https://github.com/nikunjmavani/core-fe/issues/127)) ([ce5fe25](https://github.com/nikunjmavani/core-fe/commit/ce5fe2536f5ad3c79f038fb4fab7014a4916e0d2))
+* **env:** add VITE_TEST_MODE (on/off) umbrella test-mode switch ([#157](https://github.com/nikunjmavani/core-fe/issues/157)) ([fc1af7e](https://github.com/nikunjmavani/core-fe/commit/fc1af7ea54edc6d5bc4a89922e28e05feb3b9e4d))
+* **env:** default to `local` mode with .env.local + per-environment defaults ([#164](https://github.com/nikunjmavani/core-fe/issues/164)) ([7525e0b](https://github.com/nikunjmavani/core-fe/commit/7525e0b0dfdfc00ad16c185798f4469db1d9e24e))
+* **mcp:** add chrome-devtools MCP server via Playwright-Chromium launcher ([#112](https://github.com/nikunjmavani/core-fe/issues/112)) ([155c220](https://github.com/nikunjmavani/core-fe/commit/155c220e4a2da348dbf9bb451bdc58c6bde0c07c))
+* **onboarding:** route every deployment mode through onboarding (backend flag) ([#120](https://github.com/nikunjmavani/core-fe/issues/120)) ([b9b0350](https://github.com/nikunjmavani/core-fe/commit/b9b03507a1d8b7789f65b5f0a69073eb73ba40dd))
+* **skills:** add visual-regression skill for the Playwright screenshot lane ([#114](https://github.com/nikunjmavani/core-fe/issues/114)) ([ba26633](https://github.com/nikunjmavani/core-fe/commit/ba26633e96e0e243293faa8dbf8697008c19f4d6))
+* **skills:** vendor systematic-debugging from obra/superpowers ([#116](https://github.com/nikunjmavani/core-fe/issues/116)) ([68c5787](https://github.com/nikunjmavani/core-fe/commit/68c5787aef6ed929fe1f721a04d7edd9fc9c43f0))
+
+
+### Fixed
+
+* **auth:** eliminate flash of login screen between OTP verify and dashboard ([#119](https://github.com/nikunjmavani/core-fe/issues/119)) ([9d95393](https://github.com/nikunjmavani/core-fe/commit/9d95393dbed06ee8140532a45fb35e69f91200b7))
+* **auth:** surface login errors inline — toasts alone were silently dropped ([#124](https://github.com/nikunjmavani/core-fe/issues/124)) ([3b7e98f](https://github.com/nikunjmavani/core-fe/commit/3b7e98f746eec0760ba0492e4cc28ead531c2c28))
+* **ci:** grant reusable-deploy permissions in callers; refresh stale skills-lock ([#117](https://github.com/nikunjmavani/core-fe/issues/117)) ([67f3030](https://github.com/nikunjmavani/core-fe/commit/67f30308aede678be00afeca15aace2160af10d0))
+* **ci:** resolve doc-staleness paths against git-tracked files ([#148](https://github.com/nikunjmavani/core-fe/issues/148)) ([514515c](https://github.com/nikunjmavani/core-fe/commit/514515c4c93f06dc70053b79927c151c1fdd8469))
+* **env:** correct Sentry org/project keys and stale single-trunk branch map ([#163](https://github.com/nikunjmavani/core-fe/issues/163)) ([4ce80f8](https://github.com/nikunjmavani/core-fe/commit/4ce80f80d92114bdde90915e1cf3ec87cca43305))
+* **platform:** parity sweep — guard enforcement, vendored-skill protection, CI/vscode/docs sync ([#123](https://github.com/nikunjmavani/core-fe/issues/123)) ([baa19ed](https://github.com/nikunjmavani/core-fe/commit/baa19ed29792a9bb7170ebab6f1121a9713b26c5))
+
+
+### Performance
+
+* **main:** drop three ineffective dynamic imports in the bootstrap ([#131](https://github.com/nikunjmavani/core-fe/issues/131)) ([020745b](https://github.com/nikunjmavani/core-fe/commit/020745ba9c124e83c980125d29505dc6f6fe446d))
+* **settings:** split a dependency-free hash-grammar leaf out of the entry chunk ([#134](https://github.com/nikunjmavani/core-fe/issues/134)) ([c0d8597](https://github.com/nikunjmavani/core-fe/commit/c0d8597e4015ec34dfa0238d57965b3ddc14c9c2))
+
+
+### Changed
+
+* **env:** one behavior = one env variable — remove VITE_TEST_MODE umbrella ([#159](https://github.com/nikunjmavani/core-fe/issues/159)) ([6cf44a9](https://github.com/nikunjmavani/core-fe/commit/6cf44a901a1b77029489ea7c4a1e506ef69e54ef))
+
+
+### Documentation
+
+* add typedoc API-reference generation ([#108](https://github.com/nikunjmavani/core-fe/issues/108)) ([51d8546](https://github.com/nikunjmavani/core-fe/commit/51d8546715ae2e534c1a1316783d97298a323521))
+* adopt optional 4-tier in-source doc convention + tenancy exemplar ([#110](https://github.com/nikunjmavani/core-fe/issues/110)) ([21b1df1](https://github.com/nikunjmavani/core-fe/commit/21b1df16feb34fe78bad9b3e39e99eb8ed311757))
+* **agent-os:** add consolidated change-completeness rule ([#102](https://github.com/nikunjmavani/core-fe/issues/102)) ([a6a008e](https://github.com/nikunjmavani/core-fe/commit/a6a008efebf08192aa0310d5aed50d7040aac5c2))
+* **agent-os:** codify inline-error-surface + branch-on-reason rules ([#125](https://github.com/nikunjmavani/core-fe/issues/125)) ([14337e0](https://github.com/nikunjmavani/core-fe/commit/14337e0da3a9dd81c5836f385067733df4299d23))
+* **agent-os:** make production-strict env enforcement mandatory (parity with core-be) ([#126](https://github.com/nikunjmavani/core-fe/issues/126)) ([aff8b3b](https://github.com/nikunjmavani/core-fe/commit/aff8b3be2f9b954855bd195226296c476d488ab5))
+* align docs and comments with implemented behavior (drift sweep) ([#111](https://github.com/nikunjmavani/core-fe/issues/111)) ([4fbd311](https://github.com/nikunjmavani/core-fe/commit/4fbd3117ecc62128308ada2ae35b3d605ff43d09))
+* **ci:** add enforced scheduled-jobs registry ([#149](https://github.com/nikunjmavani/core-fe/issues/149)) ([951b959](https://github.com/nikunjmavani/core-fe/commit/951b95924ac174bc5523f54751102f9207a7cb89))
+* **env:** per-var descriptions single-sourced schema↔.env.example + VITE_APP_VERSION ([#155](https://github.com/nikunjmavani/core-fe/issues/155)) ([fab74a7](https://github.com/nikunjmavani/core-fe/commit/fab74a7df1a26344c038156dd3a742ce17f959fb))
+* **perf:** record lazy-sonner toaster as a deferred optimization (FE-W3) ([#139](https://github.com/nikunjmavani/core-fe/issues/139)) ([d44bfe2](https://github.com/nikunjmavani/core-fe/commit/d44bfe292a0fbfcd349399cd73df9ca785a5ac9c))
+* **sync:** reconcile docs/skills/rules with code + enforce project-tree ([#144](https://github.com/nikunjmavani/core-fe/issues/144)) ([3b4df14](https://github.com/nikunjmavani/core-fe/commit/3b4df143eac220d96e31d096eb831f42310a57e9))
+
 ## [1.2.5](https://github.com/nikunjmavani/core-fe/compare/v1.2.4...v1.2.5) (2026-07-08)
 
 
