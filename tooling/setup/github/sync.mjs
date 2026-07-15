@@ -19,7 +19,6 @@
  *   --yes | -y           skip the secrets-push confirmation (automation)
  *   --prune              also flag/remove rulesets for branches not in config
  *                          (flags by default; removes when combined with --yes)
- *   --from-config-setup  read secrets from config.setup.env instead of .env.*
  *   --help | -h          usage
  *
  * Usage:
@@ -77,9 +76,6 @@ function parseArguments() {
     console.log(
       '  --prune     Flag/remove rulesets for branches not in config (removes with --yes)',
     );
-    console.log(
-      '  --from-config-setup  Read secrets from config.setup.env (legacy path)',
-    );
     process.exit(0);
   }
 
@@ -89,14 +85,7 @@ function parseArguments() {
 
   // Strict parse: every non-flag token must be a valid environment name, and any
   // unknown --flag is a hard error (a typo'd flag must never silently no-op).
-  const allowedFlags = new Set([
-    '--check',
-    '--dry-run',
-    '--yes',
-    '-y',
-    '--prune',
-    '--from-config-setup',
-  ]);
+  const allowedFlags = new Set(['--check', '--dry-run', '--yes', '-y', '--prune']);
   const environments = [];
   for (const argument of argumentsList) {
     if (allowedFlags.has(argument)) continue;
@@ -117,7 +106,6 @@ function parseArguments() {
       ? 'dry-run'
       : 'sync';
 
-  const fromConfigSetup = argumentsList.includes('--from-config-setup');
   const skipConfirmation =
     argumentsList.includes('--yes') || argumentsList.includes('-y');
   const prune = argumentsList.includes('--prune');
@@ -127,7 +115,6 @@ function parseArguments() {
 
   return {
     mode,
-    fromConfigSetup,
     skipConfirmation,
     prune,
     environments: selectedEnvironments,
@@ -157,8 +144,7 @@ async function confirmSecretsPush() {
 }
 
 async function main() {
-  const { mode, fromConfigSetup, skipConfirmation, prune, environments } =
-    parseArguments();
+  const { mode, skipConfirmation, prune, environments } = parseArguments();
 
   if (mode !== 'dry-run') {
     requireGhAuth();
@@ -232,9 +218,7 @@ async function main() {
   if (mode === 'check') {
     let totalDrift = 0;
     for (const environmentName of environments) {
-      const result = syncEnvironmentSecrets(environmentName, 'check', {
-        fromConfigSetup,
-      });
+      const result = syncEnvironmentSecrets(environmentName, 'check');
       totalDrift += result.drift;
     }
     if (totalDrift > 0) {
@@ -246,7 +230,7 @@ async function main() {
 
   if (mode === 'dry-run') {
     for (const environmentName of environments) {
-      syncEnvironmentSecrets(environmentName, 'dry-run', { fromConfigSetup });
+      syncEnvironmentSecrets(environmentName, 'dry-run');
     }
     console.log('Dry run complete. No changes pushed.');
     return;
@@ -262,7 +246,7 @@ async function main() {
 
   let failures = 0;
   for (const environmentName of environments) {
-    const result = syncEnvironmentSecrets(environmentName, 'sync', { fromConfigSetup });
+    const result = syncEnvironmentSecrets(environmentName, 'sync');
     failures += result.failures;
   }
 

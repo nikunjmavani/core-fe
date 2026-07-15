@@ -1184,7 +1184,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [22 test files]
+│   │   └── [23 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/
@@ -1263,15 +1263,6 @@ core-fe/
 │   │   │   ├── sync.mjs
 │   │   │   ├── validate-github-env.mjs
 │   │   │   └── [4 test files]
-│   │   ├── live/
-│   │   │   ├── config.mjs
-│   │   │   ├── github.mjs
-│   │   │   ├── index.mjs
-│   │   │   ├── netlify.mjs
-│   │   │   ├── prompts.mjs
-│   │   │   └── README.md
-│   │   ├── github-secrets.sh
-│   │   ├── netlify.sh
 │   │   └── setup.config.json
 │   ├── sonar/
 │   │   └── sonar-gate.mjs
@@ -1329,7 +1320,6 @@ core-fe/
 ├── CLAUDE.md
 ├── CODE_OF_CONDUCT.md
 ├── components.json
-├── config.setup.env
 ├── context7.json
 ├── CONTRIBUTING.md
 ├── docker-compose.sonar.yml

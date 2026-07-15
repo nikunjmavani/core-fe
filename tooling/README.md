@@ -11,9 +11,7 @@ tooling/
 ├── ci/                # CI checks (patch coverage, contract drift, preload graph, …)
 ├── setup/
 │   ├── setup.config.json
-│   ├── netlify.sh · github-secrets.sh
-│   ├── github/        # GitHub IaC sync (pnpm github:sync)
-│   └── live/          # Netlify deploy orchestrator (pnpm setup)
+│   └── github/        # GitHub IaC sync (pnpm github:sync)
 ├── validate/          # Structure, tokens, env-example, health-check, pre-commit guard
 ├── sonar/             # Local SonarQube gate
 ├── tsdoc-coverage/    # TSDoc budget ratchet
@@ -32,7 +30,6 @@ tooling/
 | `pnpm agent-os:generate` | `tooling/agent-os/generate.mjs`    |
 | `pnpm health`            | `tooling/validate/health-check.sh` |
 | `pnpm github:sync`       | `tooling/setup/github/sync.mjs`    |
-| `pnpm setup`             | `tooling/setup/live/index.mjs`     |
 
 ## MCP templates (root + mirrors)
 

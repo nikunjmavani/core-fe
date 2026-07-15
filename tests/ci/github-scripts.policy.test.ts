@@ -25,7 +25,15 @@ const REMOVED = [
   'gh:rulesets:check',
   'validate:github-env',
   'validate:github-environments',
+  // Legacy shell wrapper around `github:sync` that pushed secrets from the
+  // tracked `config.setup.env` rather than the gitignored `.env.<environment>`.
+  'setup:infra:github-secrets',
 ];
+
+/** `.env.<environment>` is the ONLY source `github:sync` reads values from. */
+const SYNC_TOOLING = ['sync.mjs', 'sync-env-secrets.mjs'].map((file) =>
+  readFileSync(join(process.cwd(), 'tooling/setup/github', file), 'utf8'),
+);
 
 describe('GitHub IaC scripts policy (single github:sync)', () => {
   it('exposes only the sanctioned github: entry points', () => {
@@ -59,5 +67,16 @@ describe('GitHub IaC scripts policy (single github:sync)', () => {
     expect(scripts['validate:deploy-env']).toBe(
       'node tooling/setup/github/validate-github-env.mjs',
     );
+  });
+
+  // `--from-config-setup` let `github:sync` read deploy values from the tracked
+  // `config.setup.env` instead of the gitignored `.env.<environment>`. That file
+  // held placeholders (`VITE_API_BASE_URL_PROD=https://your-api-domain.com`), so
+  // the flag could push junk to a real GitHub Environment. One source only.
+  it('reads deploy values only from .env.<environment>', () => {
+    for (const source of SYNC_TOOLING) {
+      expect(source).not.toContain('--from-config-setup');
+      expect(source).not.toContain('config.setup.env');
+    }
   });
 });
