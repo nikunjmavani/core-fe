@@ -148,13 +148,13 @@ export const envFieldDescriptions: Readonly<Record<string, string>> = {
   VITE_TURNSTILE_SITE_KEY:
     'Cloudflare Turnstile site key; required in production unless VITE_CAPTCHA_DISABLED is true.',
   VITE_DEBUG_LOGGING:
-    '"true" emits [Module] diagnostic console logs (on locally, off in deployed builds).',
+    '"true" emits [Module] diagnostic console logs (on locally and in the development deploy, off in production).',
   VITE_DEVTOOLS:
     '"true" mounts React Query Devtools + the localhost debug panel + theme-shuffle shortcut.',
   VITE_E2E_HOOKS:
     '"true" installs Playwright E2E hooks on globalThis (navigateInApp, establishSession).',
   VITE_VERSION_CHECK:
-    '"true" polls /version.json for new deployments (off locally/tests, on in deployed envs).',
+    '"true" polls /version.json for new deployments (off locally, on in deployed envs; never started by the test runner).',
   SENTRY_AUTH_TOKEN:
     'Sentry source-map upload token (CI only); see docs/integrations/sentry-sourcemaps.md.',
   SENTRY_ORG: 'Sentry organization slug (source-map upload).',
@@ -406,6 +406,10 @@ export const envProfiles: Readonly<Record<AppEnvironment, EnvProfile>> = {
   },
   development: {
     ...devLikeContract,
+    // Unlike `local`, development IS a deploy target: the deploy workflow must
+    // inject VITE_APP_ENV so the shipped bundle self-reports its environment
+    // (Sentry/PostHog tag) instead of falling back to the schema default `local`.
+    required: [{ key: 'VITE_APP_ENV', level: 'error' }],
     allowed: { ...devLikeContract.allowed, VITE_APP_ENV: ['development'] },
     // Development deploy: diagnostics on for debugging, version-check on (a real
     // deploy), E2E hooks off (not a test runner).
@@ -419,6 +423,10 @@ export const envProfiles: Readonly<Record<AppEnvironment, EnvProfile>> = {
   },
   production: {
     required: [
+      // No `condition` on VITE_APP_ENV: it is unconditionally required in deploys
+      // (and deliberately kept out of envSchemaConditionallyRequiredKeys, which
+      // derives from rules that carry a condition string).
+      { key: 'VITE_APP_ENV', level: 'error' },
       {
         key: 'VITE_TURNSTILE_SITE_KEY',
         when: (get) => get('VITE_CAPTCHA_DISABLED') !== 'true',

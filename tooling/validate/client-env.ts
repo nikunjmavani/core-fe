@@ -127,19 +127,29 @@ function committedEnv(environment: AppEnvironment): Record<string, string> {
   return merged;
 }
 
-/** Required-key issues against the runtime env, split by severity. */
+/**
+ * Required-key issues, split by severity. A key is satisfied by the runtime env
+ * (CI-injected) or the `.env.<env>` file (authoritative for that environment's
+ * config locally — same source order as {@link allowedErrors}). Missing keys are
+ * hard errors only on CI: locally the deploy runtime env doesn't exist, so a
+ * miss is reported as a warning instead of failing the smoke run.
+ */
 function requiredIssues(environment: AppEnvironment): {
   errors: string[];
   warnings: string[];
 } {
   const errors: string[] = [];
   const warnings: string[] = [];
+  const fileVals = envFileValues(environment);
+  const onCi = process.env.GITHUB_ACTIONS === 'true';
+  // eslint-disable-next-line security/detect-object-injection -- key from schema, not user input
+  const get = (key: string): string | undefined => runtimeGet(key) ?? fileVals[key];
   for (const rule of envProfiles[environment].required) {
-    const applies = rule.when ? rule.when(runtimeGet) : true;
-    if (!applies || runtimeGet(rule.key)) continue;
+    const applies = rule.when ? rule.when(get) : true;
+    if (!applies || get(rule.key)) continue;
     const detail = rule.condition ? ` (${rule.condition})` : '';
     const message = `${rule.key} is required for ${environment}${detail}`;
-    (rule.level === 'warn' ? warnings : errors).push(message);
+    (rule.level === 'warn' || !onCi ? warnings : errors).push(message);
   }
   return { errors, warnings };
 }
