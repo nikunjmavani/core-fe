@@ -22,9 +22,10 @@ flowchart LR
 
 ## Required (build / runtime)
 
-| Variable            | Where to get it           | Notes                                                                             |
-| ------------------- | ------------------------- | --------------------------------------------------------------------------------- |
-| `VITE_API_BASE_URL` | Your backend API base URL | e.g. `https://your-api-domain.com`. App uses path `/api/v1`. Empty = same-origin. |
+| Variable                  | Where to get it                                     | Notes                                                                                                                                                   |
+| ------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_API_BASE_URL`       | Your backend API base URL                           | e.g. `https://your-api-domain.com`. App uses path `/api/v1`. Empty = same-origin.                                                                       |
+| `VITE_TURNSTILE_SITE_KEY` | Cloudflare dashboard → Turnstile → your site widget | Required in production unless `VITE_CAPTCHA_DISABLED=true`. Local always-pass test key: `1x00000000000000000000AA` (pair with the core-be test secret). |
 
 ---
 
@@ -36,7 +37,19 @@ flowchart LR
 | `SENTRY_AUTH_TOKEN`            | Sentry → Settings → Auth Tokens — for source map upload at build time     |
 | `SENTRY_ORG`, `SENTRY_PROJECT` | Sentry URLs: org slug and project slug                                    |
 
-**Full steps:** [sentry-sourcemaps.md](sentry-sourcemaps.md).
+Set all four as **GitHub Environment secrets** (`gh secret set <NAME> --env <env>`,
+or via `.env.<environment>` + `pnpm github:sync`): the deploy workflow passes them
+into the build, and the source-map upload plugin activates only when
+`SENTRY_AUTH_TOKEN` is present. Unset = Sentry fully disabled (empty DSN), which is
+the current default. **Full steps:** [sentry-sourcemaps.md](sentry-sourcemaps.md).
+
+---
+
+## Optional: Stripe (billing)
+
+| Variable                      | Where to get it                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe dashboard → Developers → API keys. `pk_test_…` locally/development, `pk_live_…` in production (enforced by `envProfiles.<env>.forbidden`). |
 
 ---
 

@@ -2,7 +2,7 @@
  * Fail on environment/mode SNIFFING in app code. Behavior must be env-driven
  * (named `platformConfig` flags), never sniffed from the build mode. Flags:
  *   1. `import.meta.env.VITE_*`            — route reads through the config kernel.
- *   2. `import.meta.env.DEV/PROD/MODE/SSR` — the config bootstrap is the only reader.
+ *   2. `import.meta.env.DEV/PROD/MODE/SSR/BASE_URL` — allowlisted readers only.
  *   3. `platformConfig.environment === …` / `.MODE === …` / `=== 'production'` etc.
  *      — `environment` is a reported value only; never branch on it.
  *
@@ -14,8 +14,16 @@ import { join, relative, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '../..');
 
-/** Paths (relative to root) allowed to read raw `import.meta.env`. */
-const ALLOWLIST = new Set(['src/lib/i18n/build-env.ts', 'src/core/config/env.config.ts']);
+/**
+ * Paths (relative to root) allowed to read raw `import.meta.env`. build-env.ts
+ * and env.config.ts PRODUCE the typed config; version/check.ts reads only the
+ * Vite builtin BASE_URL (a build constant outside the schema, not a mode sniff).
+ */
+const ALLOWLIST = new Set([
+  'src/lib/i18n/build-env.ts',
+  'src/core/config/env.config.ts',
+  'src/core/version/check.ts',
+]);
 
 /** @param {string} dir @param {string[]} files */
 function walkTs(dir, files = []) {
@@ -33,7 +41,9 @@ function walkTs(dir, files = []) {
 }
 
 const VITE_READ = /import\.meta\.env\.VITE_[A-Z0-9_]+/;
-const RAW_ENV_SNIFF = /import\.meta\.env\.(?:DEV|PROD|MODE|SSR)\b/;
+// BASE_URL is a Vite builtin (not a mode flag), but raw reads of it still
+// belong in allowlisted files only — everything else goes via platformConfig.
+const RAW_ENV_SNIFF = /import\.meta\.env\.(?:DEV|PROD|MODE|SSR|BASE_URL)\b/;
 // Comparing the derived environment (or Vite MODE) to a named environment.
 // Scoped to `.environment ===` / `.MODE ===` so unrelated string comparisons
 // (a domain field that happens to equal 'production', etc.) are not flagged.
