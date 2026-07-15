@@ -13,16 +13,18 @@ Already have **Git** installed? Just run these commands to get up and running in
 ### macOS
 
 ```bash
-# Install Homebrew (skip if already installed)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Install Node.js 24 LTS + enable pnpm + install Gitleaks
-brew install node@24 gitleaks
-corepack enable
-
-# Clone, install, and run
+# Clone
 git clone <repo-url>
 cd core-fe
+
+# Install every external tool in one shot — bootstraps Homebrew + Node 24, then
+# gitleaks, gh, jq, uv, ripgrep, shellcheck, librsvg, and a headless Docker runtime.
+# (Non-interactive + idempotent; add --check to preview without changing anything.)
+bash tooling/dev/setup-mac-tools.sh
+
+# Install deps + run. Once Node/pnpm exist, `pnpm setup:local` does all of the above
+# (it re-runs mac-tools in preflight) plus .env.local + MCP + dev in one command.
+corepack enable
 pnpm install
 pnpm dev
 # → App running at http://localhost:5173
@@ -62,6 +64,8 @@ pnpm dev
 | 5   | **Gitleaks**   | any recent                          | Recommended | Pre-commit secret scanning          |
 | 6   | **Semgrep**    | any recent                          | Optional    | Static analysis security scanning   |
 | 7   | **Playwright** | (installed via pnpm)                | Optional    | E2E browser testing                 |
+
+> **macOS shortcut:** `pnpm setup:mac-tools` installs/upgrades items 2–6 above — plus `gh`, `jq`, `uv`, `ripgrep`, `shellcheck`, `librsvg` (`rsvg-convert`), and a headless Docker runtime — non-interactively via Homebrew. `pnpm setup:local` runs it for you on macOS (opt out with `--skip-mac-tools`). The list is data-driven from [`tooling/dev/setup-prerequisites-mac-tools.manifest`](../../tooling/dev/setup-prerequisites-mac-tools.manifest).
 
 ---
 

@@ -202,6 +202,12 @@ All files in **`public/`** are served from the root of the built site. See **[pu
 
 ---
 
+## External CLI tools (macOS)
+
+Tools the repo needs beyond `pnpm install` — gitleaks, gh, jq, uv, ripgrep, shellcheck, `librsvg` (`rsvg-convert`), a headless Docker runtime, and Node itself — are installed/upgraded by **`pnpm setup:mac-tools`**: non-interactively via Homebrew, idempotent, macOS-only (a no-op elsewhere). `pnpm setup:local` runs it automatically on macOS (opt out with `--skip-mac-tools`; preview with `--check`). The list is the **single source of truth** in [`tooling/dev/setup-prerequisites-mac-tools.manifest`](../../tooling/dev/setup-prerequisites-mac-tools.manifest) — add or remove a `<method>|<spec>|<note>` line to change what's installed. See [setup.md → Prerequisites](../getting-started/setup.md#prerequisites).
+
+---
+
 ## New-deployment detection
 
 The app detects when a new build has been deployed and reloads the page so users don’t run stale cached code — at a moment that won’t interrupt their work (idle / hidden tab / refocus, never mid-edit).
