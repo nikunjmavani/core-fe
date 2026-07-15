@@ -6,8 +6,9 @@ import { describe, expect, it } from 'vitest';
 // Locks the setup surface after the local-provisioning tooling was removed:
 // core-fe is provisioned externally and consumes the resulting
 // `.env.<environment>` values, mirroring core-be. `pnpm setup:local` (local dev
-// bootstrap) stays; the Netlify/GitHub provisioning orchestrator under
-// `tooling/setup/live/` and its tracked `config.setup.env` input are gone.
+// bootstrap) and `pnpm setup:mac-tools` (macOS external-tool installer) stay; the
+// Netlify/GitHub provisioning orchestrator under `tooling/setup/live/` and its
+// tracked `config.setup.env` input are gone.
 //
 // Guards two regressions:
 //  1. a `setup:*` provisioning entry point creeping back into package.json;
@@ -49,13 +50,14 @@ describe('setup surface policy (no local provisioner)', () => {
     );
   });
 
-  it('keeps setup:local as the only setup entry point', () => {
+  it('keeps setup:local + setup:mac-tools as the only setup entry points', () => {
     expect(
       Object.keys(scripts)
         .filter((name) => name.startsWith('setup'))
         .sort(),
-    ).toEqual(['setup:local']);
+    ).toEqual(['setup:local', 'setup:mac-tools']);
     expect(scripts['setup:local']).toBe('tsx tooling/dev/setup-local.ts');
+    expect(scripts['setup:mac-tools']).toBe('bash tooling/dev/setup-mac-tools.sh');
   });
 
   it('keeps the provisioner and its config input deleted', () => {
