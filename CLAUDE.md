@@ -119,7 +119,7 @@ Every directory under `src/pages/` that corresponds to a frontend URL path **mus
 
 **The rule in five lines (read this first):**
 
-1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/acme/dashboard` → `pages/organization/$organizationSlug/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders. Exceptions: `/` is a pure resolver route (redirect only, no island); app-shell routes with no feature island — `/unauthorized`, the `$` 404 splat (`UnauthorizedPage`/`NotFoundPage`), and the personal-mode `/dashboard` shell (deployment-mode split, reuses the org dashboard island) — live in `src/app/routes/`, not `src/pages/`.
+1. **`src/pages/` mirrors the URL tree 1:1.** `/login` → `pages/login/`; `/organization/acme/dashboard` → `pages/organization/$organizationSlug/dashboard/`. Children nest **directly** (no `sub-pages/` bucket); dynamic segments are `$param` folders — except a **param-only leaf**, which owns the param in its route path instead of a `$param/` folder (`accept-invite/` owns `/accept-invite/$invitationId` flat because the parent segment has no page of its own). Exceptions: `/` is a pure resolver route (redirect only, no island); app-shell routes with no feature island — `/unauthorized`, the `$` 404 splat (`UnauthorizedPage`/`NotFoundPage`), and the personal-mode `/dashboard` shell (deployment-mode split, reuses the org dashboard island) — live in `src/app/routes/`, not `src/pages/`.
 2. **Every page folder maintains the same 4 files** — `<page>.route.tsx`, `<page>.manifest.ts`, `<Page>Page.tsx` (or `Layout`), `<PAGE>.OVERVIEW.md` — plus 2 registrations: `routeTree.tsx` and `docs/reference/routes-and-ui.md`. In `$param` folders the prefix derives mechanically: strip `$`, kebab-case (`$organizationSlug/` → `organization-slug.route.tsx`, `ORGANIZATION_SLUG.OVERVIEW.md`).
 3. **Page shells live in `shared/layouts/`** — AuthLayout via the pathless `auth-shell` route; AppLayout via the `pages/organization/$organizationSlug/` layout island (the org guard boundary). No grouping directories under `pages/`.
 4. **Code used by 2+ page islands lives in `shared/`** (e.g. `shared/api/auth-api.ts`, `shared/tenancy/`).
@@ -318,7 +318,7 @@ import { User } from './contracts';
 
 - **shadcn skill (single source of truth):** for all shadcn/ui work — adding, fixing, styling, composing, CLI, **and choosing which component to use** — follow **`agent-os/skills/shadcn/SKILL.md`** (installed via `pnpm dlx skills add shadcn/ui`). It contains the CLI workflow, Critical Rules, and the project's allowed-sources/selection policy (the former `shadcn-component-selection` skill is merged into it). Add components with `pnpm dlx shadcn@latest add …`; the always-applied rule is `agent-os/rules/ui-sources.mdc`.
 - Functional components only (no class components).
-- shadcn/ui components use **plain functions** (not `React.forwardRef`), with `data-slot` attributes. Two deliberate exceptions keep `React.forwardRef`: `input.tsx` and `textarea.tsx` (react-hook-form `register()` needs the ref on React 18).
+- shadcn/ui components use **plain functions** (not `React.forwardRef`) — React 19 forwards refs automatically — with `data-slot` attributes. Two deliberate exceptions keep `React.forwardRef`: `input.tsx` and `textarea.tsx` (for react-hook-form `register()`).
 - shadcn/ui imports from `radix-ui` monorepo (not individual `@radix-ui/react-*` packages).
 - Compose styles with `cn()` from `@/lib/utils.ts` (clsx + tailwind-merge).
 - Use `cva` (class-variance-authority) for variant-based component APIs.
@@ -384,8 +384,10 @@ read via `platformConfig.testMode`), the single home for any test-only behavior.
   **and no `platformConfig.environment === '<name>'`** branching in app code — named
   schema flags drive it: `VITE_DEBUG_LOGGING`, `VITE_DEVTOOLS`, `VITE_E2E_HOOKS`,
   `VITE_VERSION_CHECK`, `VITE_CAPTCHA_DISABLED` → read via `platformConfig`. `environment`
-  is only ever a reported value (Sentry/PostHog tag). The one raw read is the config
-  bootstrap (`env.config.ts`, allowlisted).
+  is only ever a reported value (Sentry/PostHog tag). The three allowlisted raw readers
+  (`tooling/validate/vite-env-reads.mjs`) are the config bootstrap (`env.config.ts`),
+  `src/lib/i18n/build-env.ts`, and `src/core/version/check.ts` (only the Vite builtin
+  `BASE_URL` — a build constant, not a mode sniff).
 - **One behavior = one env variable.** Each behavior is owned by **exactly one** key, and
   `platformConfig` reads that key **1:1** — no umbrella, alias, or `VITE_DEVTOOLS || <other>`
   derived-from-another-flag logic. Never add a second variable that also drives a behavior

@@ -16,8 +16,12 @@ permissions on change. Spec: `docs/reference/routing-and-tenancy.md`.
 
 ## Guard chain (routeTree `beforeLoad`)
 
-`requireAuth` → `requireOrganizationContext($organizationSlug)` (malformed/unknown/non-member → 404) → children run `requireActiveOrganization` (suspended → `suspended/`) and
-`requirePermission` from their manifests. See `app/guards/GUARDS.OVERVIEW.md`.
+Shell: preload bail-out → `requireAuth` → `requireTeamDeployment` →
+`requireProvisionedWorkspace` → `resolveActiveOrg` (URL → store context sync;
+malformed/unknown/non-member → 404). Leaves then run `gatewayFromManifest(manifest)`
+(session → module → permission) followed by `requireOrgStatus` (suspended → `suspended/`);
+the `suspended` leaf runs the gateway but intentionally skips `requireOrgStatus`, so the
+blocked state renders without a redirect loop. See `app/guards/GUARDS.OVERVIEW.md`.
 
 ## Children (direct nesting — no sub-pages bucket)
 

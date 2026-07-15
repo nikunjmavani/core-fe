@@ -46,6 +46,16 @@ Both workspace guards delegate to `resolveRootTarget` in `shared/tenancy/organiz
 (the param is canonical — routing-and-tenancy.md §4) and refetches per-organization
 permissions when the organization changes (`shared/tenancy/organization-membership.ts`).
 
+## Sanctioned exceptions
+
+- **Bespoke-guard routes (no `gatewayFromManifest`):** `/onboarding` (`requireAuth` +
+  `requireOnboardingWorkspace`) and the `/organization` picker (`requireAuth` +
+  `requireProvisionedWorkspace`). Both manifests declare `permission: null` — their access
+  rule is session + workspace state, not a permission, so the gateway would be a no-op.
+- **Suspended leaf:** `…/suspended` runs `gatewayFromManifest(manifest)` but intentionally
+  **skips `requireOrgStatus`** — the blocked state must render for a suspended organization
+  without redirect-looping into itself.
+
 ## Files
 
 | File                      | Purpose                                                                                                             |

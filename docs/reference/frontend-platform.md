@@ -77,7 +77,7 @@ gateway(requireSession, requirePermissionGate(...), requireModuleGate(...))
 Protected routes in `routeTree.tsx` call `gatewayFromManifest` where the island
 declares RBAC/module policy (e.g. dashboard). Org-scoped tenancy gates
 (`resolveActiveOrg`, `requireOrgStatus`, …) run **before** or **after** per route
-needs — see [`GUARDS.OVERVIEW.md`](../src/app/guards/GUARDS.OVERVIEW.md).
+needs — see [`GUARDS.OVERVIEW.md`](../../src/app/guards/GUARDS.OVERVIEW.md).
 
 `requireFeature(moduleKey)` in `core/security/gates/require-module.ts` is a
 synchronous helper for ad-hoc loaders. Routes with a manifest should use

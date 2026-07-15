@@ -121,4 +121,4 @@ pnpm build                    # PWA precache includes icons
 - [theming.md](./theming.md) — appearance axes (manifest colors = default preset only)
 - [preset-product-design-rules.md](./preset-product-design-rules.md) — global default colors
 - [frontend-platform.md](./frontend-platform.md) — `startVersionCheck`, offline stance
-- [../public/README.md](../public/README.md) — static asset inventory
+- [../../public/README.md](../../public/README.md) — static asset inventory

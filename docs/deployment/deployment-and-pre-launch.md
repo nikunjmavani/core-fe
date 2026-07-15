@@ -277,7 +277,7 @@ To get readable stack traces in Sentry, upload source maps at build time. The ap
 
 - [ ] **API:** `VITE_API_BASE_URL` set to the production backend. CORS allows your frontend origin.
 - [ ] **Auth:** Backend is deployed; refresh token is HttpOnly cookie; login and refresh flows work.
-- [ ] **Multi-tenancy:** Organization context is URL-path driven (`/organization/$organizationSlug`); the backend scopes context from the path (`/api/v1/tenancy/organizations/:id/…`). If a subdomain fallback is used, DNS and SSL are set.
+- [ ] **Multi-tenancy:** The app URL drives the active organization (`/organization/$organizationSlug`) — guards sync it via `/auth/switch-to-organization`, which re-mints the access token with a signed `org` claim; API requests carry no org id path segment or header, and the backend scopes from the token claim. If a subdomain fallback is used, DNS and SSL are set.
 - [ ] **CSP:** `index.html` CSP allows your API and analytics origins; no need to relax for production if already correct.
 - [ ] **Sentry / PostHog:** Optional; if used, DSN and keys set (build or runtime as above).
 - [ ] **HTTPS:** Frontend and API served over HTTPS in production.

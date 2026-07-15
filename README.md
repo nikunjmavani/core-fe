@@ -79,25 +79,24 @@ The app runs at **http://localhost:5173**.
 
 ## Code Structure
 
-The app uses a **page-first** architecture with a strict dependency rule: **shared ← pages ← core** (no backwards or cross-page imports).
+The app uses a **page-first** architecture with a strict one-way dependency rule (importer → importee): **app → pages → shared → core → lib** (no backwards or cross-page imports).
 
 ### Top-level layout
 
 ```text
 core-fe/
-├── .env                     # Env defaults (see Environment Variables)
+├── .env.example             # Env reference — the only committed env file (see Environment Variables)
 ├── public/                  # Static assets
 ├── src/
 │   ├── app/                 # Application shell
 │   ├── core/                # Framework-agnostic services
 │   ├── pages/               # Page-first feature directories (routes)
-│   ├── shared/              # Reusable components, layouts, forms, hooks
+│   ├── shared/              # Reusable components, layouts, forms, hooks, store/ (Zustand)
 │   ├── lib/                 # Pure utilities
-│   ├── stores/              # Zustand client stores
-│   ├── tests/               # E2E, security, unit helpers (unit tests colocated in src/)
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── index.css
+├── tests/                   # E2E, security, ci-policy, shared test utils (unit tests colocated in src/)
 ├── package.json
 ├── vite.config.ts
 ├── tsconfig.app.json
@@ -122,16 +121,18 @@ Every URL-backed feature lives under `src/pages/<name>/` with this shape:
 
 ```text
 pages/<name>/
-├── route.tsx          # REQUIRED — exports Component, optional loader / ErrorBoundary
-├── <Name>Page.tsx    # Main page component
-├── contracts.ts      # Zod schemas + inferred types (source of truth)
-├── api.ts            # API functions using apiClient
-├── hooks/            # TanStack Query hooks (e.g. use<Name>.ts)
-├── components/       # Page-specific components
-└── forms/            # Page-specific form components
+├── <name>.route.tsx      # REQUIRED — exports Component only (no loader; RBAC lives in routeTree beforeLoad)
+├── <name>.manifest.ts    # REQUIRED — path, title, testId, permission, kind, children
+├── <Name>Page.tsx        # REQUIRED — top-level UI (<Name>Layout.tsx for layout routes)
+├── <NAME>.OVERVIEW.md    # REQUIRED — entry doc: purpose, files, test ids
+├── <name>.contracts.ts   # Zod schemas + inferred types (source of truth)
+├── <name>.api.ts         # API functions using apiClient
+├── hooks/                # TanStack Query hooks (folder-per-unit, e.g. use<Name>/)
+├── components/           # Page-specific components
+└── forms/                # Page-specific form components
 ```
 
-**Route marker:** A directory is a frontend route only if it contains `route.tsx`. Nested routes get their own subdirectory with its own `route.tsx` (e.g. `pages/organizations/[id]/route.tsx`).
+**Route marker:** A directory is a frontend route only if it contains `<page>.route.tsx`. Nested routes get their own child directory with its own route file; dynamic segments are `$param` folders (e.g. `pages/organization/$organizationSlug/`), never bracket-style `[id]`. Every page also registers in `src/app/routes/routeTree.tsx` and adds a row in `docs/reference/routes-and-ui.md`. Route access is enforced by `gatewayFromManifest(manifest)` in the routeTree `beforeLoad` — `route.tsx` never exports a `loader`.
 
 ---
 
@@ -172,27 +173,13 @@ flowchart TB
 
 ```mermaid
 flowchart LR
-  subgraph Allowed
-    core[core/]
-    pages[pages/]
-    shared[shared/]
-    app[app/]
-    lib[lib/]
-    stores[stores/]
-  end
-  app --> core
-  app --> shared
-  app --> pages
-  pages --> core
-  pages --> shared
-  shared --> lib
-  pages --> lib
-  app --> lib
-  app --> stores
-  pages --> stores
+  app[app/] --> pages[pages/]
+  pages --> shared[shared/]
+  shared --> core[core/]
+  core --> lib[lib/]
 ```
 
-**Rules:** `shared/` and `lib/` never import from `pages/`. `core/` never imports from `pages/` or `shared/`. Pages never import from other pages.
+**Rules:** one-way, importer → importee — `app → pages → shared → core → lib` (a layer may also skip rungs downward, e.g. `app → shared`); never backwards. Pages never import from other pages. Zustand stores are part of the shared layer (`src/shared/store/`), not a separate one.
 
 ### Bootstrap sequence
 
@@ -216,7 +203,7 @@ Sentry first → seed org context (the URL path is the source of truth once rout
   TanStack Query (queryClient) — cache, dedup, retry (skip 401)
        │
        ▼
-  apiClient (fetch client) — Bearer; org in URL path; 401 → single-flight refresh + replay
+  apiClient (fetch client) — Bearer (org in token claim); 401 → single-flight refresh + replay
        │
        ▼
   in-client retry — 429 / 5xx exponential backoff + Retry-After
@@ -232,7 +219,7 @@ Sentry first → seed org context (the URL path is the source of truth once rout
 | Category                     | Package                                                                            | Purpose                                                                                                                                                                                                                           |
 | ---------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Runtime**                  | React 19, React DOM                                                                | UI framework                                                                                                                                                                                                                      |
-| **Build**                    | Vite 7                                                                             | Dev server, HMR, production build                                                                                                                                                                                                 |
+| **Build**                    | Vite 8                                                                             | Dev server, HMR, production build                                                                                                                                                                                                 |
 | **Language**                 | TypeScript                                                                         | Typing, strict mode                                                                                                                                                                                                               |
 | **Routing**                  | @tanstack/react-router                                                             | Lazy routes, `beforeLoad` guards, search params                                                                                                                                                                                   |
 | **Server state**             | @tanstack/react-query                                                              | Queries, mutations, cache                                                                                                                                                                                                         |
@@ -246,7 +233,6 @@ Sentry first → seed org context (the URL path is the source of truth once rout
 | **Animations**               | animejs + CSS / Tailwind + tw-animate-css                                          | Anime.js drives JS motion (dashboard count-ups via `useAnimeCountUp`, onboarding step transitions); `tw-animate-css` drives shadcn overlay enter/exit; page fade-in-up + card hover via CSS. All honour `prefers-reduced-motion`. |
 | **Charts**                   | recharts (via shadcn `chart`)                                                      | Charts on dashboard (lazy-loaded `charts` chunk)                                                                                                                                                                                  |
 | **Command bar**              | cmdk                                                                               | Global command palette (Cmd+K)                                                                                                                                                                                                    |
-| **RBAC**                     | ts-pattern                                                                         | Exhaustive permission matching                                                                                                                                                                                                    |
 | **Observability**            | @sentry/react, posthog-js, web-vitals                                              | Errors, replay, analytics, Core Web Vitals                                                                                                                                                                                        |
 | **PWA**                      | vite-plugin-pwa, workbox-\*                                                        | Service worker, offline                                                                                                                                                                                                           |
 | **New-deployment detection** | `plugins/version-json.ts`, `src/core/version/check.ts`                             | Polls `/version.json`; reloads when a new build is deployed so users don’t run stale cache                                                                                                                                        |
@@ -340,8 +326,8 @@ Paste your filled requirement into the chat; the AI will parse it and implement 
 
 ### 1. Be specific about the goal
 
-- **Good:** “Add a new settings page at `/settings` with a profile form (name, email) and a theme toggle, reusing `AuthLayout` for the wrapper.”
-- **Weaker:** “Add settings.”
+- **Good:** “Add a reports page at `/organization/$organizationSlug/reports` with a summary table, following the route-island convention (the org shell provides `AppLayout`).” (Settings is not a route space — it is the global `#settings/<scope>/<section>` hash modal.)
+- **Weaker:** “Add reports.”
 
 ### 2. Mention the layer or file when relevant
 
@@ -392,17 +378,17 @@ For **larger or feature-sized requests**, use the full requirement format: **[do
 
 - **Access token:** In-memory only (module closure in `shared/auth/token.ts`); never localStorage.
 - **Refresh token:** HttpOnly cookie set by backend.
-- **Flow:** Bootstrap runs silent refresh; the fetch client attaches Bearer (org context travels in the URL path), and on 401 runs a single-flight refresh and replays queued requests.
+- **Flow:** Bootstrap runs silent refresh; the fetch client attaches Bearer (org context travels in the token's signed `org` claim, not the request URL), and on 401 runs a single-flight refresh and replays queued requests.
 
 ### Multi-tenancy
 
 - **The URL path is the single source of truth** for organization context (`/organization/$organizationSlug`), synced into the store by the route guard chain.
 - At bootstrap, `resolveOrganizationFromSubdomain()` seeds a fallback org into the store (and localStorage/subdomain feed the `/` resolver) before the URL guards take over.
-- The backend scopes organization context from the URL path (`/api/v1/tenancy/organizations/:id/…`).
+- API requests carry **no** organization id path segment or header (`X-Organization-ID` does not exist): guards sync the URL's org via `/auth/switch-to-organization`, which re-mints the access token with a signed `org` claim, and the backend scopes every request from that token claim.
 
 ### RBAC
 
-- **Route:** `requirePermission('domain.action')` in route loaders.
+- **Route:** `gatewayFromManifest(manifest)` in `routeTree.tsx` `beforeLoad` (session → module → permission) — loaders are never used for RBAC.
 - **Hook:** `usePermission('domain.action')` for conditional UI.
 - **Component:** `<PermissionGuard permission="...">` for declarative guards.
 
@@ -422,12 +408,11 @@ For **larger or feature-sized requests**, use the full requirement format: **[do
 
 ## Adding a New Page
 
-1. Create `src/pages/<name>/contracts.ts` with Zod schemas (and inferred types).
-2. Create `src/pages/<name>/route.tsx` exporting `Component` and optionally `loader` (e.g. `requirePermission('...')`).
-3. Create `src/pages/<name>/<Name>Page.tsx` and any page-specific components/forms.
-4. Add `api.ts` and `hooks/use<Name>.ts` when calling the backend (use `apiClient`).
-5. Register the route in `src/app/routes/routeTree.tsx` (lazy import from `@/pages/<name>/route.tsx`).
-6. Add permissions in `src/core/rbac/policies.ts` if needed.
+1. Create `src/pages/<name>/` with the 4 mandatory island files — `<name>.route.tsx` (exports `Component` only — no `loader`), `<name>.manifest.ts`, `<Name>Page.tsx`, `<NAME>.OVERVIEW.md`. Dynamic segments are `$param` folders (never bracket-style `[id]`).
+2. Add `<name>.contracts.ts` (Zod schemas + inferred types), `<name>.api.ts`, and `hooks/use<Name>/` when calling the backend (use `apiClient`), plus any page-specific `components/` and `forms/`.
+3. Register the route in `src/app/routes/routeTree.tsx` (lazy import) — protected routes enforce RBAC there via `gatewayFromManifest(manifest)` in `beforeLoad`, never a `loader`.
+4. Add a row in `docs/reference/routes-and-ui.md`.
+5. Add permissions in `src/core/rbac/policies.ts` if needed.
 
 For a full scaffold (including tests and route registration), ask for the **page-scaffolding** skill.
 
