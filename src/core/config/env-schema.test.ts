@@ -95,6 +95,19 @@ describe('envProfiles required keys', () => {
       expect(entry.condition.length).toBeGreaterThan(0);
     }
   });
+
+  it('requires VITE_APP_ENV unconditionally in both deploy environments', () => {
+    // Deploys must self-report their environment (Sentry/PostHog tag); without
+    // this rule an un-injected VITE_APP_ENV silently falls back to `local`.
+    for (const env of ['development', 'production'] as const) {
+      const rule = envProfiles[env].required.find((r) => r.key === 'VITE_APP_ENV');
+      expect(rule, `${env} must require VITE_APP_ENV`).toBeDefined();
+      expect(rule?.level).toBe('error');
+      expect(rule?.when).toBeUndefined();
+      expect(rule?.condition).toBeUndefined();
+    }
+    expect(envProfiles.local.required.some((r) => r.key === 'VITE_APP_ENV')).toBe(false);
+  });
 });
 
 describe('envProfiles allowed values (strict per-environment)', () => {

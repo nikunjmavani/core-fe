@@ -13,7 +13,7 @@ not by branch:
 
 | Trigger                        | GitHub Environment | Deploy                | Local secrets file |
 | ------------------------------ | ------------------ | --------------------- | ------------------ |
-| every push to `main`           | `development`      | `--alias development` | `.env.development` |
+| src-path push to `main`        | `development`      | `--alias development` | `.env.development` |
 | a release (`vX.Y.Z`) on `main` | `production`       | `--prod`              | `.env.production`  |
 
 Canonical manifest: [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json).
@@ -26,7 +26,32 @@ These must be present or post-merge Netlify deploy **fails** (no silent skip):
 - `NETLIFY_AUTH_TOKEN`
 - `NETLIFY_SITE_ID`
 
-Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POLICY_URL`.
+Optional (warn only): `VITE_POSTHOG_KEY`, `VITE_POSTHOG_HOST`, `VITE_PRIVACY_POLICY_URL`,
+`VITE_TURNSTILE_SITE_KEY` (required by the production **client-env profile** unless
+`VITE_CAPTCHA_DISABLED=true`), `VITE_CSP_REPORT_URI`, and the Sentry keys —
+`VITE_SENTRY_DSN` (client reporting) plus build-time `SENTRY_AUTH_TOKEN` /
+`SENTRY_ORG` / `SENTRY_PROJECT` (source-map upload; the deploy build activates the
+upload plugin only when the token is set).
+
+## GitHub Variables (per environment)
+
+Non-secret deploy knobs are GitHub **Variables** on the same environments, read by
+the deploy/preview workflows via `${{ vars.* }}` and validated against
+`envProfiles.<env>.allowed` (`src/core/config/env-schema.ts`). They are
+**hand-managed** in Settings → Environments (or `gh variable set <NAME> --env <env>`) —
+`github:sync` does not manage variables today:
+
+| Variable                               | development          | production           |
+| -------------------------------------- | -------------------- | -------------------- |
+| `VITE_CAPTCHA_DISABLED`                | `false`              | per captcha rollout  |
+| `VITE_DEBUG_LOGGING` / `VITE_DEVTOOLS` | `true` (diagnostics) | `false` (enforced)   |
+| `VITE_E2E_HOOKS`                       | `false`              | `false` (enforced)   |
+| `VITE_VERSION_CHECK`                   | `true`               | `true` (enforced)    |
+| `VITE_SENTRY_*_SAMPLE_RATE` (4 keys)   | optional             | optional             |
+| `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`   | repo-level, optional | repo-level, optional |
+
+An unset variable falls back to the schema default at build time; `VITE_APP_ENV` is
+**not** a variable — the workflows derive it from the resolved environment name.
 
 ## Secret placement (repository vs environment)
 

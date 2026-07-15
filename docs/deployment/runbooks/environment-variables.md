@@ -56,6 +56,18 @@ Two top-level banners mirror GitHub Secret vs Variable classification:
 
 ## 2. Platform switches
 
+### Environment identity (`VITE_APP_ENV`)
+
+`VITE_APP_ENV` is the **environment vocabulary** — exactly `local` (default) |
+`development` | `production`, decoupled from Vite's `mode` (Vite 8 forbids a mode
+named `local`). It is **reported-only** (the Sentry environment tag and PostHog
+super-property) and never branched on; an out-of-enum value fails loudly at load
+(`env.config.ts`). The deploy workflows derive it from the resolved GitHub
+Environment name and both deploy profiles **require** it
+(`envProfiles.<env>.required`), so a deployed bundle can never silently fall back
+to `local`. Locally, `pnpm setup:local` writes `VITE_APP_ENV=local` into
+`.env.local`.
+
 ### Auth — per-method booleans (`VITE_AUTH_*`)
 
 | Surface           | Env switch                    | Default |
@@ -120,15 +132,16 @@ core-fe **builds in GitHub Actions**, not on Netlify. All `VITE_*` values are
 | When to set vars                     | Where                                                                                                            |
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
 | Normal production deploy             | GitHub Environment Variables/Secrets consumed by the build workflow                                              |
-| Post-deploy override without rebuild | `public/config.js` → `window.__CONFIG__` (Docker entrypoint or Netlify `_headers` + injected script)             |
+| Post-deploy override without rebuild | `public/config.js` → `window.__CONFIG__` (edit the deployed `config.js` / Netlify snippet injection)             |
 | Local dev                            | `.env.local` (gitignored — your local dev file; `.env.development` / `.env.production` are the deploy-env files) |
 
 Do **not** rely on Netlify UI env vars unless you intentionally build on Netlify
 (this repo does not). See [cicd-and-netlify.md](../cicd-and-netlify.md).
 
-## 4. Docker / runtime override (`config.js`)
+## 4. Runtime override (`config.js`)
 
-Production deploy may inject `public/config.js` with `window.__CONFIG__`:
+A deploy may inject `public/config.js` with `window.__CONFIG__` (no Docker in this
+repo — the Netlify deploy serves the static file as-built unless you edit it):
 
 - Strip `VITE_` prefix for keys (e.g. `AUTH_OAUTH_GOOGLE`, not `VITE_AUTH_OAUTH_GOOGLE`)
 - Same keys as bundled client env
