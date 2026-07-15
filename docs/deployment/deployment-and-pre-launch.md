@@ -35,7 +35,7 @@ flowchart LR
 
 **Current production API:** `https://your-api-domain.com` (app uses path `/api/v1`). Set `VITE_API_BASE_URL=https://your-api-domain.com` for production builds (Netlify or other static host).
 
-**Netlify (current host):** Build and deploy via GitHub integration (push to production branch) or CLI (`pnpm run deploy:netlify` / `pnpm run deploy:netlify:prod`). Required env: `VITE_API_BASE_URL`. See [Netlify + GitHub integration](#netlify--github-integration) and [cicd-and-netlify.md](cicd-and-netlify.md).
+**Netlify (current host):** Build and deploy via GitHub integration (push to the production branch, e.g. `main`) or CLI (`pnpm run deploy:netlify` / `pnpm run deploy:netlify:prod`). Required env: `VITE_API_BASE_URL`. See [Netlify + GitHub integration](#netlify--github-integration) and [cicd-and-netlify.md](cicd-and-netlify.md).
 
 **Build:** Production build runs **on GitHub** (CI and Release workflows). Netlify also builds when you push (or you can deploy the GitHub-built artifact). See [Release workflow (CI)](#release-workflow-ci).
 
