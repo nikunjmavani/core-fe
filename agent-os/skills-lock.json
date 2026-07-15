@@ -41,7 +41,7 @@
       "source": "shadcn/ui",
       "sourceType": "github",
       "skillPath": "agent-os/skills/shadcn/SKILL.md",
-      "computedHash": "75e9d038e282bb900e46fa63f10ff4fe8ed3945ef092a8dddf22de9c2546760c"
+      "computedHash": "b420a0c6c420c97b43d3e2c9d24057719bc93c715ccbe2b4fd19acede13e2d9a"
     },
     "systematic-debugging": {
       "source": "obra/superpowers",
@@ -53,7 +53,7 @@
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
       "skillPath": "agent-os/skills/ui-ux-pro-max/SKILL.md",
-      "computedHash": "88d7f8208a0f9586c214607d03d3c303b99b7ead14373e94615dba37fa2b73c1"
+      "computedHash": "791fb32145df6387c61372e23bff0a3c5d56d0ed265048b5c0f17670fe44cd72"
     }
   }
 }
