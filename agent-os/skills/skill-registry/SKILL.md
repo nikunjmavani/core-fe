@@ -139,7 +139,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 ---
 
-### 0b. lint-guard (Background — Auto-Invoked)
+### 0d. lint-guard (Background — Auto-Invoked)
 
 **Path:** `agent-os/skills/lint-guard/SKILL.md`
 **Purpose:** Automatically fix all ESLint errors, TypeScript errors, and common code-quality issues after every implementation. Runs in the background — the user never asks for it.
@@ -162,7 +162,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 ---
 
-### 0c. code-smells-best-practices (Live Code Only)
+### 0e. code-smells-best-practices (Live Code Only)
 
 **Path:** `agent-os/skills/code-smells-best-practices/SKILL.md`
 **Purpose:** When any code is added or changed, check only the **modified/live code** for code smells and best-practice violations and fix them in the same change set. Ensures architecture (app not importing from pages), import conventions, no inline styles, no `any`, apiClient from fetch-client, and form-error testid consistency.
@@ -179,7 +179,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 ---
 
-### 0d. code-structure
+### 0f. code-structure
 
 **Path:** `agent-os/skills/code-structure/SKILL.md`
 **Purpose:** Canonical code structure and placement rules for implementing any requirement. Ensures code goes in the right layer (core / pages / shared / lib) and that tests are added automatically without user input.
@@ -197,7 +197,7 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 ---
 
-### 0b. requirement-format
+### 0g. requirement-format
 
 **Path:** `agent-os/skills/requirement-format/SKILL.md`
 **Purpose:** When the user's request is vague or feature-sized, ask for requirements using the standard format (docs/getting-started/requirement-format.md). When they provide a requirement doc in that format, parse it and implement fully without asking (tests, route, RBAC included).
@@ -251,10 +251,10 @@ For each common task, the skills below are required/auto-invoked. `auto-implemen
 
 **Key files it touches:**
 
-- Source: `src/pages/<page>/components/<Component>.tsx`
-- Target: `src/shared/components/<Component>.tsx`
-- All consumer files (import path updates)
-- Corresponding test files (move tests too)
+- Source: `src/pages/<page>/components/<Component>/` (folder-per-unit)
+- Target: `src/shared/components/<Component>/` (`<Component>.tsx` + `<Component>.test.tsx` + `index.ts`)
+- All consumer files (import path updates to the barrel)
+- Corresponding test files (move with the unit folder)
 
 **Rule:** Only promote when used by 2+ different page groups AND contains no page-specific business logic.
 
@@ -459,7 +459,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 6b. before-commit-guard
+### 6a. before-commit-guard
 
 **Path:** `agent-os/skills/before-commit-guard/SKILL.md`
 **Purpose:** Pre-commit gate that runs on every `git commit`. Ensures env docs, public assets, format, lint, and types pass before code is committed. Invoked automatically by `.husky/pre-commit` when user runs `git commit`.
@@ -478,7 +478,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 6a. route-island
+### 6b. route-island
 
 **Path:** `agent-os/skills/route-island/SKILL.md`
 **Purpose:** Identical directory structure for every route and sub-route (`<page>.manifest.ts`, direct child folders, colocated tests); feature code stays inside the island; `<PAGE>.OVERVIEW.md` as AI entry; import boundaries.
@@ -494,7 +494,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 6b. e2e-testids
+### 6c. e2e-testids
 
 **Path:** `agent-os/skills/e2e-testids/SKILL.md`
 **Purpose:** Add and maintain `data-testid` attributes for Playwright E2E and stable RTL queries. Naming conventions, per-route checklist, and inventory updates.
@@ -511,7 +511,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 6c. playwright-e2e
+### 6d. playwright-e2e
 
 **Path:** `agent-os/skills/playwright-e2e/SKILL.md`
 **Purpose:** Hybrid Playwright E2E — `data-testid` for actions, `getByRole`/`getByLabel` for a11y guards. Helpers in `tests/utils/e2e-hybrid.ts`.
@@ -528,7 +528,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 6d. visual-regression
+### 6e. visual-regression
 
 **Path:** `agent-os/skills/visual-regression/SKILL.md`
 **Purpose:** Playwright screenshot-baseline lane (`pnpm test:visual`) — snapshot matrix (route × color scheme × theme-axis extreme), safe baseline updates, diff-first triage. Assertable counterpart of the `theme-axis-audit` playbook.
@@ -545,7 +545,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 6e. systematic-debugging (installed skill)
+### 6f. systematic-debugging (installed skill)
 
 **Path:** `agent-os/skills/systematic-debugging/SKILL.md`
 **Purpose:** Root-cause-first debugging discipline (vendored from obra/superpowers) — four phases (investigation → pattern analysis → hypothesis testing → implementation), no fixes before root cause, escalation rule after 3 failed attempts. Companions in the skill directory: `root-cause-tracing.md`, `defense-in-depth.md`, `condition-based-waiting.md`.
@@ -571,7 +571,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - `vitest-axe` accessibility assertions in all component tests
 - `data-testid` selectors for stable element queries
 - `userEvent` for realistic interaction testing
-- Coverage thresholds: 80% (branches, functions, lines, statements)
+- Coverage thresholds: raise-only ratchet in `vitest.config.ts` — pinned just under measured coverage, raised as coverage rises, never lowered (no fixed percentage)
 
 **Test stack:**
 
@@ -587,7 +587,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 9. shadcn (single canonical skill)
+### 8. shadcn (single canonical skill)
 
 **Path:** `agent-os/skills/shadcn/SKILL.md` (installed via `pnpm dlx skills add shadcn/ui`)
 **Purpose:** The one skill for **all** shadcn/ui work — _how_ to add/fix/debug/style/compose components (CLI + Critical Rules) **and** _where_ a block comes from (its "Project rules — core-fe" section folds in the 20 allowed sources + selection workflow). The former `shadcn-component-selection` skill is merged into `agent-os/skills/shadcn/SKILL.md`.
@@ -607,10 +607,10 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 10. extension-settings-recommendations
+### 9. extension-settings-recommendations
 
 **Path:** `agent-os/skills/extension-settings-recommendations/SKILL.md`
-**Purpose:** Recommends and updates workspace extensions (`.vscode/extensions.json`) and workspace settings (`.vscode/settings.json`) for productivity based on project stack. Does not modify user-level settings (defer to update-cursor-settings skill).
+**Purpose:** Recommends and updates workspace extensions (`.vscode/extensions.json`) and workspace settings (`.vscode/settings.json`) for productivity based on project stack. Does not modify user-level settings (theme, font, keybindings — those stay manual; no skill covers them).
 
 **Trigger keywords:** "recommend extensions", "better productivity", "setup IDE", "which extensions", "cursor settings", "IDE setup", "new tooling"
 
@@ -621,11 +621,11 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 - Suggest workspace settings that match project conventions; apply only when user or context implies "apply"
 - When adding/changing tooling (new test framework, linter, language), consider invoking to suggest or update extensions/settings
 
-**Related skills:** update-cursor-settings (user-level settings: theme, font, keybindings)
+**Related skills:** none (user-level settings — theme, font, keybindings — are out of scope for every skill)
 
 ---
 
-### 11. documentation-maintenance
+### 10. documentation-maintenance
 
 **Path:** `agent-os/skills/documentation-maintenance/SKILL.md`
 **Purpose:** When to update which doc and where docs live. Use when adding/changing docs, adding routes or features that affect README/CLAUDE, or when the user asks where to document something or how docs are organized.
@@ -643,7 +643,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11a. env-schema-add
+### 10a. env-schema-add
 
 **Path:** `agent-os/skills/env-schema-add/SKILL.md`  
 **Rule:** `agent-os/rules/env-schema-add-sync.mdc`  
@@ -664,7 +664,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11b. routing-tenancy
+### 10b. routing-tenancy
 
 **Path:** `agent-os/skills/routing-tenancy/SKILL.md`  
 **Rule:** `agent-os/rules/routing-tenancy-sync.mdc`  
@@ -685,7 +685,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11c. resource-crud
+### 10c. resource-crud
 
 **Path:** `agent-os/skills/resource-crud/SKILL.md`  
 **Reference:** `src/core/resources/members.resource.ts`
@@ -705,7 +705,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11d. http-forms-errors
+### 10d. http-forms-errors
 
 **Path:** `agent-os/skills/http-forms-errors/SKILL.md`  
 **Platform doc:** `docs/reference/frontend-platform.md` (HTTP errors, QueryBoundary)
@@ -724,7 +724,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11e. platform-hygiene
+### 10e. platform-hygiene
 
 **Path:** `agent-os/skills/platform-hygiene/SKILL.md`  
 **Rule:** `agent-os/rules/platform-hygiene-sync.mdc`  
@@ -744,7 +744,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11h. dependency-management
+### 10f. dependency-management
 
 **Path:** `agent-os/skills/dependency-management/SKILL.md`
 
@@ -762,7 +762,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11i. bundle-performance
+### 10g. bundle-performance
 
 **Path:** `agent-os/skills/bundle-performance/SKILL.md`
 
@@ -780,7 +780,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11f. pwa-manifest
+### 10h. pwa-manifest
 
 **Path:** `agent-os/skills/pwa-manifest/SKILL.md`  
 **Rule:** `agent-os/rules/pwa-manifest-sync.mdc`  
@@ -800,7 +800,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 11g. i18n-constants
+### 10i. i18n-constants
 
 **Path:** `agent-os/skills/i18n-constants/SKILL.md`  
 **Purpose:** Extract static values into scoped constants files with react-i18next — one route island or module at a time. User-facing strings go in locale JSON; constants files hold keys, test IDs, analytics events, and non-copy defaults.
@@ -817,7 +817,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 12. project-health-check
+### 11. project-health-check
 
 **Path:** `agent-os/skills/project-health-check/SKILL.md`
 **Purpose:** Full project health audit after major code changes. Verifies docs (links, routes, tools), creates missing colocated tests, fixes lint/type/format errors, ensures build and bundle size pass, runs validation scripts, and reports a summary table.
@@ -835,7 +835,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 13. full-code-review
+### 12. full-code-review
 
 **Path:** `agent-os/skills/full-code-review/SKILL.md`
 **Purpose:** Generate a full code review report covering security, performance, quality, readability, maintainability, and scalability. Writes to `reports/code-review/full-code-review-report.md`.
@@ -852,7 +852,7 @@ python3 agent-os/skills/ui-ux-pro-max/scripts/search.py "<query>" --stack shadcn
 
 ---
 
-### 8. skill-registry (this skill)
+### 13. skill-registry (this skill)
 
 **Path:** `agent-os/skills/skill-registry/SKILL.md`
 **Purpose:** Master catalog of all skills. Helps find the right skill for any task.

@@ -96,7 +96,7 @@ CI: static-sync lane runs vite-env + client-env; Netlify reusable workflow runs 
 change.** After editing `package.json` deps or overrides, run `pnpm install` and stage
 `package.json` **and** `pnpm-lock.yaml` together.
 
-A desynced lockfile produces `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` on `pnpm install --frozen-lockfile` (what CI runs), which **reds every CI job** on the PR — and any open **release-please** PR inherits the mismatch and goes all-red until it is regenerated. So it **must never reach dev**.
+A desynced lockfile produces `ERR_PNPM_LOCKFILE_CONFIG_MISMATCH` on `pnpm install --frozen-lockfile` (what CI runs), which **reds every CI job** on the PR — and any open **release-please** PR inherits the mismatch and goes all-red until it is regenerated. So it **must never reach main**.
 
 - Enforced locally: `pnpm run validate:lockfile` (frozen install), run by the before-commit
   guard whenever a commit stages `package.json` or `pnpm-lock.yaml`.

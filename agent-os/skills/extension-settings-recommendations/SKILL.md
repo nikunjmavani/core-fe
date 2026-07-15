@@ -5,7 +5,7 @@ description: Recommends and updates workspace extensions and .vscode settings fo
 
 # Extension and Settings Recommendations
 
-Recommend and optionally update **workspace** Cursor/VS Code extensions (`.vscode/extensions.json`) and **workspace** settings (`.vscode/settings.json`) based on project stack and code context. For **user-level** settings (theme, font size, keybindings), defer to the **update-cursor-settings** skill; this skill does not modify user `settings.json`.
+Recommend and optionally update **workspace** Cursor/VS Code extensions (`.vscode/extensions.json`) and **workspace** settings (`.vscode/settings.json`) based on project stack and code context. **User-level** settings (theme, font size, keybindings) are out of scope — leave them to the user; this skill does not modify user `settings.json`.
 
 ## When to Invoke
 
@@ -28,7 +28,7 @@ Recommend and optionally update **workspace** Cursor/VS Code extensions (`.vscod
    - Apply or propose diffs to `.vscode/settings.json` only when clearly beneficial and non-intrusive (e.g. new Tailwind classRegex, new file nesting, new language formatter).
 
 4. **User-level settings**
-   - Do not modify user `settings.json`. If the user wants theme, font size, or keybindings, invoke or reference the **update-cursor-settings** skill.
+   - Do not modify user `settings.json`. If the user wants theme, font size, or keybindings, tell them those are user-level settings to change themselves (no skill covers them).
 
 ## Output
 

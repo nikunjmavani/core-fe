@@ -19,6 +19,54 @@ A framework for building ui, components and design systems. Components are added
 
 The JSON above contains the project config and installed components. Use `npx shadcn@latest docs <component>` to get documentation and example URLs for any component.
 
+## Project rules — core-fe
+
+Project-specific policy that **overrides** anything else in this skill (referenced by
+`CLAUDE.md` and `agent-os/rules/ui-sources.mdc`; the former `shadcn-component-selection`
+skill is merged here). Re-installing this skill (`pnpm dlx skills add shadcn/ui`)
+clobbers this section — restore it and re-run `pnpm agent-os:lock`.
+
+- **Package runner:** always `pnpm dlx shadcn@latest …` (never `npx`/`bunx` in this repo).
+- **Icons:** import from **`@/shared/icons/index.ts`** — never `lucide-react` directly
+  (eslint-enforced; vendored `src/shared/components/ui/` is exempt). One-file icon-library swap.
+- **Tokens:** semantic tokens only (`bg-background`, `text-success`, `bg-overlay/50`) —
+  `pnpm validate:tokens` fails raw palette classes. Project context: style `new-york`,
+  base `radix`, Tailwind v4 CSS-first (`src/index.css`), UI alias `@/shared/components/ui`.
+- **Structure:** vendored primitives stay FLAT in `src/shared/components/ui/`; everything
+  composed on top follows folder-per-unit (`agent-os/rules/file-structure.mdc`).
+
+### Selection workflow
+
+Prefer copying or adapting from the allowed sources below over writing net-new
+components. On first build pick the **single best** source and implement; when the user
+wants options, present the best 3 with direct links and ask. If you need a detail
+(e.g. "sidebar with icons only"), ask the user.
+
+### Allowed sources (canonical 20 — no others)
+
+| #   | URL                                    | Use for                        |
+| --- | -------------------------------------- | ------------------------------ |
+| 1   | https://ui.shadcn.com                  | Official primitives, docs, CLI |
+| 2   | https://shadcn.io                      | Official (alternate)           |
+| 3   | https://shadcnstudio.com               | Components, blocks             |
+| 4   | https://ds.shadcn.com                  | Design system / components     |
+| 5   | https://www.shadcnblocks.com/blocks    | Blocks                         |
+| 6   | https://shadcnblocks-admin.vercel.app  | Admin blocks                   |
+| 7   | https://allshadcn.com                  | Component gallery              |
+| 8   | https://shadcnuikit.com                | UI kit                         |
+| 9   | https://shadcn-ui-blocks.com           | Blocks                         |
+| 10  | https://shadcnui-expansions.typeart.cc | Expansions                     |
+| 11  | https://shadcraft.com                  | Components                     |
+| 12  | https://registry.shadcraft.com         | Registry                       |
+| 13  | https://shadcntemplates.com            | Templates                      |
+| 14  | https://blocks.so                      | Blocks                         |
+| 15  | https://21st.dev/community/shadcn      | Community shadcn               |
+| 16  | https://diceui.com                     | Dice UI (shadcn-style)         |
+| 17  | https://reui.io                        | Reui (shadcn-style)            |
+| 18  | https://animate-ui.com                 | Animated components            |
+| 19  | https://reactbits.dev                  | React bits (shadcn-compatible) |
+| 20  | https://ui.elevenlabs.io               | ElevenLabs UI (shadcn-style)   |
+
 ## Principles
 
 1. **Use existing components first.** Use `npx shadcn@latest search` to check registries before writing custom UI. Check community registries too.

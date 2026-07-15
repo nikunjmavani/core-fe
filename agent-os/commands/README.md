@@ -32,11 +32,11 @@ Granular procedures live in **skills** (invoked by name); these commands are **w
 
 **Core gates**
 
-| Command        | Purpose                                                                                                       |
-| -------------- | ------------------------------------------------------------------------------------------------------------- |
-| `/validate`    | Run `pnpm lint`, `pnpm type-check`, `pnpm validate:structure`, `pnpm validate:tokens`; fix introduced issues. |
-| `/ci-local`    | Run `pnpm health` (local PR gate) and map failures to `.github/workflows/pr-ci.yml` lanes.                    |
-| `/routes-sync` | Re-sync `routeTree.tsx`, RBAC, and `docs/reference/routes-and-ui.md` after route changes.                     |
+| Command        | Purpose                                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/validate`    | Run `pnpm lint`, `pnpm type-check`, `pnpm validate:structure`, `pnpm validate:tokens`, `pnpm validate:testids`, `pnpm validate:theme-axis`; fix introduced issues. |
+| `/ci-local`    | Run `pnpm health` (local PR gate) and map failures to `.github/workflows/pr-ci.yml` lanes.                                                                         |
+| `/routes-sync` | Re-sync `routeTree.tsx`, RBAC, and `docs/reference/routes-and-ui.md` after route changes.                                                                          |
 
 **Autonomous build**
 
@@ -46,16 +46,17 @@ Granular procedures live in **skills** (invoked by name); these commands are **w
 
 **Review**
 
-| Command             | Purpose                                                                                                  |
-| ------------------- | -------------------------------------------------------------------------------------------------------- |
-| `/pre-merge-review` | Read-only pipeline (code-smells → web-design-guidelines → lint-guard → verifier); one aggregated report. |
+| Command             | Purpose                                                                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `/pre-merge-review` | Read-only pipeline (steps from `agent-os/agents/pipelines.json`: verifier → docs-auditor); one aggregated report.                |
+| `/prod-readiness`   | Read-only production-readiness sweep (dependency-auditor → bundle-size-reviewer → perf-auditor → production-hardening-reviewer). |
 
 **PR lifecycle**
 
 | Command            | Purpose                                                                                                                                                                               |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/open-pr [title]` | Push the branch + open a PR to **`main`** (explicit PR opt-in).                                                                                                                       |
-| `/watch-pr <n>`    | Triage CI + review comments until **`quality-gate`** is green.                                                                                                                        |
+| `/watch-pr <n>`    | Triage CI + review comments until both required contexts — **`Quality gate`** + **`Checks`** — are green.                                                                             |
 | `/merge-pr <n>`    | Squash-merge once CI is green.                                                                                                                                                        |
 | `/ship [title]`    | Full flow: open-pr → watch-pr → merge-pr.                                                                                                                                             |
 | _Release_          | Trunk-based (single `main`): merge the standing release-please **Release PR** to ship → tag + prod deploy. See [trunk-based-workflow.md](../../docs/process/trunk-based-workflow.md). |

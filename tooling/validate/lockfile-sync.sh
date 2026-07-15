@@ -23,7 +23,7 @@ fi
 echo "[validate-lockfile] ERROR: pnpm-lock.yaml is out of sync with package.json."
 echo "  A dependency or pnpm.overrides changed without regenerating the lockfile."
 echo "  Fix: run 'pnpm install', then commit package.json AND pnpm-lock.yaml together."
-echo "  A desynced lockfile breaks every frozen-install CI job and must never reach dev."
+echo "  A desynced lockfile breaks every frozen-install CI job and must never reach main."
 echo ""
 echo "  pnpm error:"
 pnpm install --frozen-lockfile --prefer-offline --ignore-scripts 2>&1 | sed 's/^/    /'

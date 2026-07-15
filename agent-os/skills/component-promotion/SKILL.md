@@ -42,14 +42,15 @@ Do NOT promote when:
 - Determine current location: `src/pages/<source-page>/components/<Component>.tsx`
 - Determine target location in shared:
   - UI primitive → `src/shared/components/ui/<component>.tsx`
-  - Business component → `src/shared/components/<Component>.tsx`
+  - Business component → `src/shared/components/<Component>/` (folder-per-unit: `<Component>.tsx` + `<Component>.test.tsx` + `index.ts`)
   - Form component → `src/shared/forms/<Component>.tsx`
   - Hook → `src/shared/hooks/<hook>.ts`
 
 ### 2. Move the File
 
 ```bash
-mv src/pages/<source>/components/<Component>.tsx src/shared/components/<Component>.tsx
+mkdir -p src/shared/components/<Component>
+mv src/pages/<source>/components/<Component>/<Component>.tsx src/shared/components/<Component>/<Component>.tsx
 ```
 
 ### 3. Move the Test File
@@ -57,7 +58,8 @@ mv src/pages/<source>/components/<Component>.tsx src/shared/components/<Componen
 Always move the colocated test file alongside the component:
 
 ```bash
-mv src/pages/<source>/components/<Component>.test.tsx src/shared/components/<Component>.test.tsx
+mv src/pages/<source>/components/<Component>/<Component>.test.tsx src/shared/components/<Component>/<Component>.test.tsx
+mv src/pages/<source>/components/<Component>/index.ts src/shared/components/<Component>/index.ts
 ```
 
 If no test file exists, generate one using the test-generation skill. Do not ask the user — create the test as part of the promotion.
@@ -93,7 +95,7 @@ Update each import to the new shared path:
 import { StatusBadge } from '@/pages/users/components/StatusBadge.tsx';
 
 // After
-import { StatusBadge } from '@/shared/components/StatusBadge.tsx';
+import { StatusBadge } from '@/shared/components/StatusBadge/index.ts';
 ```
 
 ### 6. Update Test Imports
@@ -115,13 +117,13 @@ import { mockData } from '@/pages/<source>/__fixtures__/mockData.ts';
 Import the component in the second page that triggered the promotion:
 
 ```tsx
-import { StatusBadge } from '@/shared/components/StatusBadge.tsx';
+import { StatusBadge } from '@/shared/components/StatusBadge/index.ts';
 ```
 
 ### 8. Verify
 
 - Run `tsc --noEmit -p tsconfig.app.json` — must pass clean
-- Run `pnpm vitest run src/shared/components/<Component>.test.tsx` — test must pass
+- Run `pnpm vitest run src/shared/components/<Component>/<Component>.test.tsx` — test must pass
 - Check that no imports point to the old location
 - Ensure the dev server works correctly
 
