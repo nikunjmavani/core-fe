@@ -105,6 +105,14 @@ export function syncEnvironmentSecrets(environmentName, mode) {
     }
   }
 
+  // Name what was skipped. An empty key is left alone rather than pushed (so a
+  // blank optional integration never blanks a live GitHub value), but silently
+  // dropping it left the operator with a bare `N non-empty / M configured`
+  // count and no way to tell WHICH keys it covered without a second --check run.
+  for (const name of allowed.filter((key) => !secrets.has(key))) {
+    console.log(`  skipped ${name} (empty locally)`);
+  }
+
   return { drift: 0, failures, pushed };
 }
 
