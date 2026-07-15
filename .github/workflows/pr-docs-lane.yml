@@ -45,6 +45,11 @@ jobs:
             echo "has-files=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # Single-quote each path: the lychee action's entrypoint shell-evaluates
+          # its args, so an unquoted $param route folder (e.g.
+          # src/pages/organization/$organizationSlug/…) dies with
+          # "organizationSlug: unbound variable".
+          files="$(printf '%s\n' "${files}" | sed "s/.*/'&'/")"
           {
             echo "has-files=true"
             echo "files<<EOF"
