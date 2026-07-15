@@ -168,7 +168,7 @@ Dialogs are **URL-driven** — the parent list page reads `useRouterState` to kn
 | Browser E2E (full app + API on `:3000`)    | `tests/e2e/<name>.e2e.test.ts` (Playwright) — document flows in island `<PAGE>.OVERVIEW.md`        |
 | E2E (UI + API contracts)                   | `tests/e2e/<name>.e2e.test.ts` or `<name>-api.e2e.test.ts` (Playwright) — skips when :3000 is down |
 
-**Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
+**Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
 
 **No test required for (the only exemptions):** `<page>.route.tsx`, `<page>.manifest.ts`, `<page>.contracts.ts`, `<page>.search.ts`, `<page>.fixtures.ts`, `<page>.constants.ts`, `<PAGE>.OVERVIEW.md`, `index.ts` (barrel).
 

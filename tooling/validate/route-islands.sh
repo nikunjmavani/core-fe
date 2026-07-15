@@ -90,8 +90,8 @@ done
 
 # ── 3. Shared folder-per-unit: no flat unit files ──
 # Every component/form/hook in shared/ lives in its own folder (source + test
-# + index.ts). Documented flat exceptions: shared/components/ui (shadcn),
-# data-table and the SettingsModal panel groups (cohesive flat groups).
+# + index.ts). Documented flat exceptions: shared/components/ui (shadcn) and
+# the SettingsModal panel groups (cohesive flat groups).
 for f in $(find src/shared/components src/shared/hooks src/shared/forms -maxdepth 1 -type f \( -name '*.ts' -o -name '*.tsx' \) 2>/dev/null | sort); do
   fail "$f: flat unit file — folder-per-unit required (file-structure.mdc)"
 done
@@ -100,7 +100,7 @@ done
 for d in src/shared/components/*/ src/shared/hooks/*/ src/shared/forms/*/ src/shared/store/*/ src/shared/layouts/*/; do
   [ -d "$d" ] || continue
   case "$(basename "$d")" in
-    ui|data-table) continue ;;
+    ui) continue ;;
   esac
   [ -f "${d}index.ts" ] ||
     fail "$d: missing index.ts barrel (folder-per-unit)"
@@ -115,15 +115,15 @@ for unit in $(find src/pages src/shared -type d 2>/dev/null | sort); do
     *) continue ;;
   esac
   case "$(basename "$unit")" in
-    ui|data-table) continue ;;  # flat groups — covered per-file below
+    ui) continue ;;  # flat group — covered per-file below
   esac
   ls "$unit"/*.test.* >/dev/null 2>&1 ||
     fail "$unit: unit folder missing colocated *.test.* (strict test rule)"
 done
 
-# Flat component groups (data-table, SettingsModal tree): every component
-# file ships a sibling test.
-for f in $(find src/shared/components/data-table src/shared/components/SettingsModal -name '*.tsx' ! -name '*.test.tsx' 2>/dev/null | sort); do
+# Flat component group (SettingsModal tree): every component file ships a
+# sibling test.
+for f in $(find src/shared/components/SettingsModal -name '*.tsx' ! -name '*.test.tsx' 2>/dev/null | sort); do
   [ -f "${f%.tsx}.test.tsx" ] ||
     fail "$f: missing sibling $(basename "${f%.tsx}").test.tsx (strict test rule)"
 done

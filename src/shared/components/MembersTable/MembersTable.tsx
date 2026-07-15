@@ -14,10 +14,10 @@ import { useTranslation } from 'react-i18next';
 
 import { downloadCsv, toCsv } from '@/lib/csv.ts';
 import type { Member, OrgRole } from '@/shared/api/organization-contracts.ts';
-import { DataTable } from '@/shared/components/data-table/DataTable.tsx';
-import { DataTableColumnHeader } from '@/shared/components/data-table/DataTableColumnHeader.tsx';
-import { DataTablePagination } from '@/shared/components/data-table/DataTablePagination.tsx';
-import { DataTableToolbar } from '@/shared/components/data-table/DataTableToolbar.tsx';
+import { DataTable } from '@/shared/components/DataTable/index.ts';
+import { DataTableColumnHeader } from '@/shared/components/DataTableColumnHeader/index.ts';
+import { DataTablePagination } from '@/shared/components/DataTablePagination/index.ts';
+import { DataTableToolbar } from '@/shared/components/DataTableToolbar/index.ts';
 import { FormattedDate } from '@/shared/components/FormattedDate/index.ts';
 import { InviteMemberDialog } from '@/shared/components/InviteMemberDialog/index.ts';
 import {

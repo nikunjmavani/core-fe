@@ -214,8 +214,8 @@ settings section: it is the separate `AppearanceDialog` on the root route.)
   free of runtime imports so entry-resident shell callers don't drag the section registry
   onto first paint) + `settings-hash.ts` (registry-dependent `parseSettingsHash`) +
   `settings-sections.ts` + `settings-permissions.ts`, and panels as **flat files** under
-  `account/` + `organization/` (same precedent as `shared/components/data-table/` —
-  cohesive panel groups are exempt from folder-per-unit; see file-structure.mdc).
+  `account/` + `organization/` (the one sanctioned cohesive flat group —
+  exempt from folder-per-unit; see file-structure.mdc).
 - **Migration:** delete the 8 inline `/settings/*` routes in `routeTree.tsx`; update the
   "Chrome routes" section in `file-structure.mdc` to describe hash-modal chrome.
 - **Escape hatch:** members / roles / billing / integrations may later be promoted to real pages

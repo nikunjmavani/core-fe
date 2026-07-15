@@ -36,7 +36,7 @@ Verdict summary for major libraries used in this repo. Full stack list: [tools-a
 
 | Library               | Alternatives          | Verdict                                                                        |
 | --------------------- | --------------------- | ------------------------------------------------------------------------------ |
-| @tanstack/react-table | AG Grid, MUI DataGrid | **KEEP** — headless; tablecn-style toolbar in `shared/components/data-table/`. |
+| @tanstack/react-table | AG Grid, MUI DataGrid | **KEEP** — headless; tablecn-style toolbar in `shared/components/DataTable*/`. |
 | react-hook-form + zod | Formik, Final Form    | **KEEP** — split `rhf` + `zod` chunks.                                         |
 | zustand               | Redux, Jotai          | **KEEP** — client/session/onboarding only.                                     |
 | TanStack Query        | RTK Query, SWR        | **KEEP** — server state.                                                       |

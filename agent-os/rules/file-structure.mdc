@@ -19,7 +19,7 @@ Canonical layout for everything under `src/`. Read before adding any file. The r
 ## Top-Level Layout
 
 ```
-tests/                                  At project root: e2e/, factories/, utils/
+tests/                                  At project root: ci/, cross-browser/, e2e/, factories/, fixtures/, performance/, security/, utils/
 src/
 ├── app/                                Application shell: route tree, guards, providers, error boundaries
 ├── core/                               Framework-agnostic services
@@ -93,7 +93,7 @@ Apply to:
 
 **Exception — shadcn primitives stay flat.** `src/shared/components/ui/` keeps the shadcn convention (`button.tsx`, `card.tsx`, etc.) — no folder-per-unit.
 
-**Exception — cohesive flat groups.** A multi-file component group that only makes sense as a set keeps flat files inside its parent folder: `shared/components/data-table/` and the `SettingsModal` panel groups (`account/`, `organization/`). Tests colocate beside the group's logic files. Everything else follows folder-per-unit.
+**Exception — cohesive flat groups.** A multi-file component group that only makes sense as a set keeps flat files inside its parent folder: the `SettingsModal` panel groups (`account/`, `organization/`). Tests colocate beside the group's logic files. Everything else follows folder-per-unit (the former `data-table/` flat group is now four folder-per-unit components: `DataTable/`, `DataTableColumnHeader/`, `DataTablePagination/`, `DataTableToolbar/`).
 
 ## Page Naming (directory)
 
@@ -107,6 +107,14 @@ Apply to:
 Page directory names are **lowercase kebab-case**. Child route folders follow the same rules and nest directly (`organization/$organizationSlug/api-keys/`); dynamic segments are `$param` folders with full-word param names (`$organizationSlug/`, `$patientId/` — never `$orgId`).
 
 **Sanctioned exception:** `pages/organization/` is singular yet serves the picker (a collection view) at `/organization` — it doubles as the `$organizationSlug/` parent, so the URL spec (`routing-and-tenancy.md` §2) wins over the plural-for-collections naming row.
+
+**Sanctioned exception — param-only leaf:** when a route's final segment is a
+`$param` and the parent segment has **no page of its own** (nothing renders at the
+parent URL), the island stays flat and its manifest carries the param in `path` —
+`pages/accept-invite/` owns `/accept-invite/$invitationId` directly; an empty
+`$invitationId/` folder under a page-less parent would add a directory with no
+route, manifest, or UI of its own. The `$param` folder rule applies when the parent
+segment is itself a page (`organization/$organizationSlug/`).
 
 ## Two page shapes — custom and resource
 
@@ -293,6 +301,12 @@ src/shared/
 │   ├── useList/, useOne/                   standard CRUD hooks (Refine-style)
 │   ├── useCreate/, useUpdate/, useDelete/
 ├── layouts/<Name>/{...}                    AppLayout, AuthLayout, PublicLayout, LayoutVariantFallback
+│   └── layout.constants.ts                 sanctioned cross-layout plain module (i18n keys, testids)
+├── api/                                    cross-page API helpers (auth, organization, billing, …) — plain modules
+├── auth/                                   auth runtime (token, refresh-timer, idle-timeout, service, captcha)
+├── tenancy/                                URL-driven org context, membership, resolver, deployment-mode
+├── icons/                                  icon registry (import from @/shared/icons, never lucide-react)
+├── analytics/  billing/  notifications/  notify/  theme/  errors/    cross-page feature areas
 └── store/                                  GLOBAL Zustand stores
     ├── useAuthStore/{...}
     ├── useOrganizationStore/{...}
@@ -302,6 +316,11 @@ src/shared/
     ├── useConsentStore/{...}
     └── useLocaleStore/{...}
 ```
+
+A folder-per-unit directory may carry a **plain constants module** at its root when the
+constants span every unit inside it (e.g. `layouts/layout.constants.ts` — shared i18n
+keys + testids for all layout variants). Same idea as a family island's plain
+`<name>-contracts.ts` modules: cohesion beats forcing a fake unit folder.
 
 ## Core Layer
 
@@ -354,7 +373,7 @@ Auth infrastructure (token storage, refresh timer, idle timeout, login/logout se
 
 **`tests/e2e/`** — all Playwright specs use **`*.e2e.test.ts`**. UI flows: `<name>.e2e.test.ts`; HTTP contracts: `<name>-api.e2e.test.ts`. Requires **core-be** on `:3000` (global-setup fails if down). Vitest excludes `tests/e2e`. Colocated unit tests keep plain `<Name>.test.{ts,tsx}`. Never use `.spec.ts`, or the words "real"/"live", in test file names.
 
-**Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in `data-table/` and the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
+**Strict test colocation (validator-enforced):** every component — including each island's `<Page>Page.tsx`/`<Page>Layout.tsx` and the flat-group files in the `SettingsModal` tree — and every hook ships a colocated `*.test.ts(x)`. `pnpm validate:structure` FAILS any unit folder, island top-level UI, or flat-group component without one. The only exemptions are the declarative role files below, barrels, and entry docs.
 
 **No test file required for (the only exemptions):**
 - `<page>.route.tsx` (thin wrapper)

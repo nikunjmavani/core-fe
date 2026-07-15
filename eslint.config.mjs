@@ -65,16 +65,15 @@ export default defineConfig([
   },
 
   // Icons flow through the @/shared/icons barrel so the icon library is
-  // swappable in one file. Direct lucide imports are allowed only in the
-  // exempt paths below: the barrel itself, vendored shadcn primitives, the
-  // notify layer, and the generated routeTree.
+  // swappable in one file. Exempt paths: the barrel itself and vendored shadcn
+  // primitives (icon sources), plus the notify layer — it WRAPS sonner, the
+  // other restricted import in this block.
   {
     files: ['src/**/*.{ts,tsx}'],
     ignores: [
       'src/shared/icons/**',
       'src/shared/components/ui/**',
       'src/shared/notify/**',
-      'src/app/routes/routeTree.tsx',
     ],
     rules: {
       'no-restricted-imports': [
@@ -107,13 +106,16 @@ export default defineConfig([
     },
   },
 
-  // React Router lazy route modules export Component + loader/action/ErrorBoundary
+  // Lazy route modules export Component (+ ErrorBoundary when wired in
+  // routeTree — rare). No loader/action: RBAC and data belong in routeTree
+  // beforeLoad + gatewayFromManifest, never in an island loader (CLAUDE.md
+  // route.tsx contract).
   {
     files: ['**/pages/**/*.route.tsx'],
     rules: {
       'react-refresh/only-export-components': [
         'warn',
-        { allowExportNames: ['loader', 'action', 'ErrorBoundary'] },
+        { allowExportNames: ['ErrorBoundary'] },
       ],
     },
   },
@@ -213,13 +215,39 @@ export default defineConfig([
               message: 'src/core must never import pages or app.',
             },
             {
-              // Runtime-trio exception (file-structure.mdc → Import Rules): the
-              // kernel may read auth runtime, error reporting, and the
-              // auth/tenant stores. Everything else in shared is off-limits.
+              // Baseline: core never imports shared. The runtime-trio exception
+              // is scoped to the kernel (core/http + core/rbac) in the next
+              // block — a later flat-config block overrides this rule for its
+              // narrower file set (file-structure.mdc → Import Rules).
+              group: ['@/shared/**'],
+              message:
+                'src/core must not import from shared — only the kernel (core/http, core/rbac) may reach the runtime trio (see file-structure.mdc → Import Rules).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    // Kernel exception (file-structure.mdc → Import Rules): core/http and
+    // core/rbac may read the auth runtime, error reporting, and the
+    // auth/tenant stores. Everything else in shared stays off-limits.
+    files: ['src/core/http/**/*.{ts,tsx}', 'src/core/rbac/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.*'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/pages/**', '@/app/**'],
+              message: 'src/core must never import pages or app.',
+            },
+            {
               regex:
                 '^@/shared/(?!auth/|errors/|store/useAuthStore/|store/useOrganizationStore/)',
               message:
-                'src/core may import from shared ONLY the runtime trio: @/shared/auth, @/shared/errors, useAuthStore, useOrganizationStore (see file-structure.mdc → Import Rules).',
+                'The core kernel may import from shared ONLY the runtime trio: @/shared/auth, @/shared/errors, useAuthStore, useOrganizationStore (see file-structure.mdc → Import Rules).',
             },
           ],
         },
