@@ -67,6 +67,7 @@
     "deploy:netlify": "pnpm build && netlify deploy",
     "deploy:netlify:prod": "pnpm build && netlify deploy --prod",
     "setup:local": "tsx tooling/dev/setup-local.ts",
+    "setup:mac-tools": "bash tooling/dev/setup-mac-tools.sh",
     "mcp:setup": "tsx tooling/dev/setup-mcp.ts",
     "mcp:setup:default": "tsx tooling/dev/setup-mcp.ts --default",
     "mcp:setup:check": "tsx tooling/dev/setup-mcp.ts --check",
