@@ -81,5 +81,9 @@ function DataTableInner<TData>({
   );
 }
 
-// memo wrapper preserving generic type parameter
+// memo wrapper preserving the generic type parameter.
+// NOTE: Biome's linter is disabled for this file via an override in biome.json — Biome 2.5.4
+// panics ("index out of bounds") while building the semantic model for `memo(<generic
+// component>)`, an upstream bug (https://github.com/biomejs/biome/issues), not a code defect.
+// ESLint still fully lints this file; remove the biome.json override once the upstream fix lands.
 export const DataTable = memo(DataTableInner) as typeof DataTableInner;

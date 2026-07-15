@@ -122,7 +122,7 @@ brew install gitleaks
 
 ## Layer 3: CI (GitHub Actions)
 
-Runs on every PR to `main`/`develop`. Multiple parallel jobs across several workflows.
+Runs on every PR to `main`. Multiple parallel jobs across several workflows.
 
 ### Config Files
 

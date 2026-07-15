@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.4/schema.json",
   "files": {
     "includes": ["src/**", "tests/**", "plugins/**", "tooling/**/*.mjs", "!**/*.css"]
   },
@@ -67,6 +67,10 @@
     }
   },
   "overrides": [
+    {
+      "includes": ["src/shared/components/DataTable/DataTable.tsx"],
+      "linter": { "enabled": false }
+    },
     {
       "includes": [
         "src/**/*.test.ts",
