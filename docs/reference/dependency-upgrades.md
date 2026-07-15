@@ -7,7 +7,7 @@ Use this as the **operational checklist** when triaging versions and security re
 | Command           | Purpose                                                                                                                 |
 | ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `pnpm deps:check` | Lists outdated direct dependencies (`pnpm outdated`). Exit code `1` when anything is outdated — expected during triage. |
-| `pnpm deps:audit` | Reports known vulnerabilities (`pnpm audit --audit-level=high`).                                                        |
+| `pnpm deps:audit` | Reports known vulnerabilities (`tooling/ci/bulk-audit.mjs` against npm's bulk advisory endpoint; high+ fails).          |
 | `pnpm validate`   | Run after bumping packages: lint, type-check, unit tests.                                                               |
 
 ## Dependabot
@@ -50,7 +50,12 @@ Revisit these when Dependabot or direct dependency upgrades remove the need.
 
 ## Audit noise
 
-`pnpm audit --audit-level=high` should report **no high/critical** after overrides; **moderate** issues may remain in dev-only trees. Treat **production `dependencies`** first; document accepted risk for dev-only transitives if no patched upgrade exists yet.
+`pnpm deps:audit` (npm bulk advisory endpoint — the legacy `pnpm audit` endpoints
+were retired by the registry in July 2026; pnpm ships bulk support only from v11)
+should report **no high/critical** after overrides; **moderate** issues may remain
+in dev-only trees. Treat **production `dependencies`** first (`pnpm deps:audit:prod`
+audits the prod-reachable graph only); document accepted risk for dev-only
+transitives if no patched upgrade exists yet.
 
 ## Upgrade decisions log
 
