@@ -1242,7 +1242,9 @@ core-fe/
 │   │   ├── mcp-config.ts
 │   │   ├── screenshot-auth-pages.mjs
 │   │   ├── setup-local.ts
+│   │   ├── setup-mac-tools.sh
 │   │   ├── setup-mcp.ts
+│   │   ├── setup-prerequisites-mac-tools.manifest
 │   │   └── [1 test file]
 │   ├── reports/
 │   │   ├── code-review-report.mjs
