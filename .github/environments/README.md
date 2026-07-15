@@ -3,8 +3,7 @@
 Committed JSON under this directory describes **GitHub Environment protection**
 (reviewers, deployment branch policy). Deploy **secrets** live in GitHub
 Environments and are synced from gitignored `.env.development` /
-`.env.production` at the repo root (or from `config.setup.env` via the legacy
-path).
+`.env.production` at the repo root.
 
 ## Mapping
 
@@ -79,15 +78,14 @@ ones (Slack webhook, Codecov/Stryker/npm token, …) the same manual way.
 
 ## Commands
 
-| Command                           | Purpose                                                                     |
-| --------------------------------- | --------------------------------------------------------------------------- |
-| `pnpm github:sync`                | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets           |
-| `pnpm github:sync --check`        | Read-only drift (rulesets, shells, protection, secret names) — fails on any |
-| `pnpm github:sync --dry-run`      | Preview changes, no writes                                                  |
-| `pnpm github:sync --yes`          | Skip the secrets-push confirmation (automation)                             |
-| `pnpm github:sync --prune`        | Flag rulesets for branches not in config (`--prune --yes` to delete)        |
-| `pnpm validate:deploy-env`        | Fail if required deploy secrets missing (local, uses GitHub API)            |
-| `pnpm setup:infra:github-secrets` | Legacy: push from `config.setup.env`                                        |
+| Command                      | Purpose                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------- |
+| `pnpm github:sync`           | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets           |
+| `pnpm github:sync --check`   | Read-only drift (rulesets, shells, protection, secret names) — fails on any |
+| `pnpm github:sync --dry-run` | Preview changes, no writes                                                  |
+| `pnpm github:sync --yes`     | Skip the secrets-push confirmation (automation)                             |
+| `pnpm github:sync --prune`   | Flag rulesets for branches not in config (`--prune --yes` to delete)        |
+| `pnpm validate:deploy-env`   | Fail if required deploy secrets missing (local, uses GitHub API)            |
 
 Every `github:sync` (all modes) runs a **consistency pre-flight** first: the
 environments in `setup.config.json`, `.github/environments/*.json`, and the

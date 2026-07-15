@@ -24,7 +24,7 @@ export function scaffoldGithubEnvFiles(options = {}) {
     const lines = [
       `# GitHub Environment: ${environment.name}`,
       '# Fill values locally — gitignored. Push with `pnpm github:sync`.',
-      '# See config.setup.env for canonical provisioning values.',
+      '# See .env.example for the full key reference.',
       '',
       ...secretNames.map((name) => `${name}=`),
       '',

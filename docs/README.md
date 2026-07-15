@@ -68,7 +68,7 @@ flowchart TB
 | [runbooks/README.md](deployment/runbooks/README.md)                                             | Production runbooks index (CSP / Trusted Types / config.js)           |
 | [runbooks/environment-variables.md](deployment/runbooks/environment-variables.md)               | **Env schema** — `.env.example`, auth switches, GitHub/Netlify deploy |
 | [runbooks/csp-trusted-types-production.md](deployment/runbooks/csp-trusted-types-production.md) | CSP report URI, Trusted Types, `config.js` SRI contract               |
-| [tooling/setup/live/README.md](../tooling/setup/live/README.md)                                 | One-command deployment: `pnpm run setup`                              |
+| [.github/environments/README.md](../.github/environments/README.md)                             | GitHub Environments IaC: `pnpm github:sync`                           |
 
 ---
 

@@ -151,9 +151,7 @@ function main() {
       console.error(`  ${name}`);
     }
     console.error('');
-    console.error(
-      'Fix: run `pnpm github:sync` (or `pnpm setup:infra:github-secrets`) after filling .env.<environment>.',
-    );
+    console.error('Fix: run `pnpm github:sync` after filling .env.<environment>.');
     console.error('See .github/environments/README.md');
     console.error('');
   }

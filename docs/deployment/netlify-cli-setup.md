@@ -2,13 +2,13 @@
 
 Everything can be done from the terminal. **One optional token** lets you skip the browser; after that, connect the repo once in Netlify (or use the script) and the system handles the rest.
 
-**Run locally first (recommended):** You can run `pnpm run setup:infra:netlify` locally once to deploy from your machine _before_ pushing to GitHub. That validates build, env, and Netlify in one go. Once the repo is linked in Netlify (step 4), future deploys happen automatically on push to `main` — no need to run the script again unless you want a manual deploy.
+**Run locally first (recommended):** You can run `pnpm deploy:netlify:prod` locally once to deploy from your machine _before_ pushing to GitHub. That validates build, env, and Netlify in one go. Once the repo is linked in Netlify (step 4), future deploys happen automatically on push to `main` — no need to deploy by hand again.
 
 ```mermaid
 flowchart TB
   S1[pnpm install] --> S2[netlify login or NETLIFY_AUTH_TOKEN]
   S2 --> S3[netlify link --id ...]
-  S3 --> S4[pnpm run setup:infra:netlify or env:set + deploy:netlify:prod]
+  S3 --> S4[netlify env:set + pnpm deploy:netlify:prod]
   S4 --> S5[Netlify UI: Link repository]
   S5 --> S6["Push to main = auto deploy"]
 ```
@@ -51,28 +51,13 @@ After this, the repo is linked to the Netlify site. You can run the setup script
 
 ## 3. Set production env and deploy (CLI)
 
-**Option A — Use the script (recommended)**
-
-```bash
-pnpm run setup:infra:netlify
-```
-
-Or from repo root: `./tooling/setup/netlify.sh`
-
-The script will:
-
-- Link the site if not already linked (needs `NETLIFY_SITE_ID` or existing `.netlify` from step 2).
-- Set production env vars: `VITE_API_BASE_URL`.
-- Run `pnpm run deploy:netlify:prod`.
-
-Use `NETLIFY_AUTH_TOKEN` if you don't want browser login. Use `NETLIFY_SITE_ID=e158779a-5efb-4f3b-9b0f-8399d3335066` if you run the script on a fresh clone without running step 2 first.
-
-**Option B — Run commands yourself**
-
 ```bash
 pnpm exec netlify env:set VITE_API_BASE_URL "https://your-api-domain.com" --context production
 pnpm run deploy:netlify:prod
 ```
+
+Use `NETLIFY_AUTH_TOKEN` if you don't want browser login. On a fresh clone that skipped step 2,
+link first with `NETLIFY_SITE_ID=e158779a-5efb-4f3b-9b0f-8399d3335066`.
 
 ---
 
@@ -95,13 +80,13 @@ After this, **you don't need to run anything**: push to `main` → Netlify build
 
 | Step | What                                  | Where                                                                                                               |
 | ---- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| 0    | **Optional: deploy from local first** | Run `pnpm run setup:infra:netlify` locally once to validate before pushing to GitHub.                               |
+| 0    | **Optional: deploy from local first** | Run `pnpm run deploy:netlify:prod` locally once to validate before pushing to GitHub.                               |
 | 1    | Install deps                          | `pnpm install` (CLI)                                                                                                |
 | 2    | Auth + link site                      | `netlify login` then `netlify link --id <site-id>` (CLI), or token + link (CLI)                                     |
-| 3    | Env + deploy                          | `pnpm run setup:infra:netlify` or the three commands in §3 (CLI)                                                    |
+| 3    | Env + deploy                          | The two commands in §3 (CLI)                                                                                        |
 | 4    | Push = deploy                         | Link repo once in Netlify UI (Build & deploy → Link repository). After that, pushes to `main` deploy automatically. |
 
-**GitHub secrets:** For CI/CD deploy, add `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID` in GitHub → Settings → Secrets and variables → Actions. Run **`pnpm run setup:infra:github-secrets`** to push `VITE_API_BASE_URL` and `NODE_VERSION` from `config.setup.env` via `gh secret set`. See [cicd-and-netlify.md](cicd-and-netlify.md).
+**GitHub secrets:** For CI/CD deploy, add `VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID` in GitHub → Settings → Secrets and variables → Actions. Run **`pnpm github:sync`** to push them from the gitignored `.env.<environment>`. See [cicd-and-netlify.md](cicd-and-netlify.md).
 
 **New env var:** Follow **`agent-os/skills/env-schema-add/SKILL.md`**. Add the key to `src/core/config/env-schema.ts` and **`.env.example`**, then run `pnpm tool:sync-env-example`. Set values in GitHub Secrets/Variables via `pnpm github:sync`.
 
@@ -120,6 +105,6 @@ On a new machine or in CI:
 
 1. Clone repo, `pnpm install`.
 2. Set env: `NETLIFY_AUTH_TOKEN`, and optionally `NETLIFY_SITE_ID=e158779a-5efb-4f3b-9b0f-8399d3335066`.
-3. Run `./tooling/setup/netlify.sh` or `pnpm run setup:infra:netlify` (it will link using `NETLIFY_SITE_ID` if `.netlify` is missing, then set env and deploy).
+3. Link the site: `pnpm exec netlify link --id "$NETLIFY_SITE_ID"` (skip if `.netlify` already exists), then set env and deploy per §3.
 
 To only deploy (env already set): `pnpm run deploy:netlify:prod`.

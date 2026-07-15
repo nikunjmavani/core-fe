@@ -188,18 +188,18 @@ Backend must allow CORS from the frontend origin (Netlify site URL / custom doma
 
 Build runs on GitHub; env comes from **GitHub Secrets**. Set in GitHub → Settings → Secrets and variables → Actions:
 
-| Variable            | Value                         | Notes                                                                                                                                     |
-| ------------------- | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_API_BASE_URL` | `https://your-api-domain.com` | Production API base; app appends `/api/v1`.                                                                                               |
-| `NODE_VERSION`      | `24`                          | Required in **`config.setup.env`** and GitHub Actions; must match `package.json` `engines.node` and `netlify.toml` `[build.environment]`. |
+| Variable            | Value                         | Notes                                                                                                                                       |
+| ------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_API_BASE_URL` | `https://your-api-domain.com` | Production API base; app appends `/api/v1`.                                                                                                 |
+| `NODE_VERSION`      | `24`                          | Required in **`.env.<environment>`** and GitHub Actions; must match `package.json` `engines.node` and `netlify.toml` `[build.environment]`. |
 
 Optional (Sentry, PostHog): add to GitHub secrets; they are baked into the client at build time.
 
 ### Setting GitHub secrets
 
-**Option A — From config (CLI)**
+**Option A — From `.env.<environment>` (CLI)**
 
-Run `pnpm run setup:infra:github-secrets` after `gh auth login`. This reads `config.setup.env` and sets `VITE_API_BASE_URL` and `NODE_VERSION` in GitHub secrets via `gh secret set`. Add `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` manually (or use `pnpm run setup:infra:netlify`).
+Each environment's deploy values live in a gitignored `.env.<environment>` at the repo root, derived from the committed `.env.example` — that file is the source of truth. Fill it in, then run `pnpm github:sync` after `gh auth login` to push every non-empty deploy key (`VITE_API_BASE_URL`, `NODE_VERSION`, `NETLIFY_AUTH_TOKEN`, `NETLIFY_SITE_ID`, …) to the matching GitHub Environment. Preview with `pnpm github:sync --dry-run`; check drift with `pnpm github:sync --check`.
 
 **Option B — Manual in GitHub UI**
 
@@ -223,11 +223,11 @@ When you add a new env var, follow **`agent-os/skills/env-schema-add/SKILL.md`**
 3. Run **`pnpm tool:sync-env-example`**.
 4. Set its value in **GitHub Secrets** (Settings → Secrets and variables → Actions).
 
-### One-time setup (CLI or script)
+### One-time setup (CLI)
 
 1. **Login:** `pnpm exec netlify login` (browser), or set `NETLIFY_AUTH_TOKEN` (see [netlify-cli-setup.md](netlify-cli-setup.md)).
-2. **Link site:** `pnpm exec netlify link --id e158779a-5efb-4f3b-9b0f-8399d3335066` (or run `pnpm run setup:infra:netlify` which links + sets env + deploys).
-3. **Env vars:** Set GitHub secrets (see above) or run `pnpm run setup:infra:github-secrets` from config.
+2. **Link site:** `pnpm exec netlify link --id e158779a-5efb-4f3b-9b0f-8399d3335066`.
+3. **Env vars:** Fill `.env.<environment>` and run `pnpm github:sync` (see above), or set the secrets manually in the GitHub UI.
 
 ### Deploy commands
 
