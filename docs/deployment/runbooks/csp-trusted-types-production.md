@@ -2,7 +2,7 @@
 
 Operational checklist for promoting security headers beyond the defaults built
 into core-fe. Source of truth for policy strings:
-[`src/lib/csp-api-origin.ts`](../../src/lib/csp-api-origin.ts). Narrative:
+[`src/lib/csp-api-origin.ts`](../../../src/lib/csp-api-origin.ts). Narrative:
 [`docs/reference/security-model.md`](../../reference/security-model.md).
 
 ---

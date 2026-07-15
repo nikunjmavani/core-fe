@@ -15,8 +15,7 @@ agent-os/
 ├── rules/         # Always-applied rules (Cursor glob auto-attach)
 ├── hooks/         # Hook scripts + hooks.json manifest (single source)
 ├── mcp/
-│   ├── mcp.example.json   # Template — tracked
-│   ├── mcp.example.json   # Mirror of root .mcp.example.json
+│   ├── mcp.example.json   # Template — tracked (mirror of root .mcp.example.json)
 │   ├── mcp.default.json   # Mirror of root .mcp.default.json (default pair + Codex TOML source)
 │   └── mcp.json           # Machine-local live config — gitignored
 ├── platforms/     # Per-agent derived wiring (generated from hooks.json)

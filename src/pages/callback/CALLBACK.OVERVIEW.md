@@ -13,8 +13,9 @@ split-screen auth chrome.
 | `callback.manifest.ts` | Page manifest — `kind: 'leaf'`, path `/callback`, no permission required.                                                                                                     |
 | `CallbackPage.tsx`     | Runs `silentRefresh()` after OAuth redirect, then navigates via the post-auth resolver. On failure routes back to `/login` with an error. Owns `data-testid="callback-page"`. |
 
-## Wiring to the backend
+## Backend contract
 
-Replace the placeholder branch with the real token exchange against the auth service, then set the
-in-memory access token and redirect to the originally requested route. Register
-`https://<app-origin>/callback` as the redirect URI when configuring the live backend.
+The page runs the real flow: the backend brokers the provider exchange and sets the refresh
+cookie, `silentRefresh()` mints the in-memory access token, and the post-auth resolver
+navigates onward. Register `https://<app-origin>/callback` as the redirect URI when
+configuring each provider on the backend.

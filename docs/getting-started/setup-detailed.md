@@ -2,7 +2,7 @@
 
 Step-by-step guide to set up and run `core-fe` on your local machine (macOS and Windows).
 
-**Quick reference:** For the canonical setup (Node **24** LTS, pnpm, env vars), see **[docs/getting-started/setup.md](docs/getting-started/setup.md)**. This file adds detailed, platform-specific steps (Homebrew, Windows, etc.).
+**Quick reference:** For the canonical setup (Node **24** LTS, pnpm, env vars), see **[docs/getting-started/setup.md](setup.md)**. This file adds detailed, platform-specific steps (Homebrew, Windows, etc.).
 
 ---
 

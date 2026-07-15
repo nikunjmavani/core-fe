@@ -3,8 +3,10 @@
 Route: `/onboarding`. Where **every** freshly authenticated user lands once, in any
 deployment mode — gated by the backend `user.onboarding_completed` flag, not by
 whether the user has a workspace (personal deployments auto-provision an org yet
-still onboard). Redirect enforced by `resolveRootTarget` in `app/routes/routeTree.tsx`;
-only the wizard steps differ per mode.
+still onboard). The `/onboarding` `beforeLoad` in `app/routes/routeTree.tsx` wires
+`requireAuth` + `requireOnboardingWorkspace` (`app/guards/route-guards.ts`); the `/`
+resolver redirects here via `resolveRootRedirect`
+(`shared/tenancy/organization-resolver.ts`). Only the wizard steps differ per mode.
 
 ## Files
 

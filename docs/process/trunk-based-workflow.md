@@ -17,8 +17,9 @@ a long-lived branch**.
 | -------- | ----------------------- | ------------------------------------------------------ |
 | **main** | `production` (releases) | The trunk. Every PR merges here; releases cut from it. |
 
-`main` also drives the `development` environment — **every push to `main` deploys the
-development alias** (`development--core-fe.netlify.app`), so the alias always serves trunk HEAD. Production
+`main` also drives the `development` environment — **every src-path push to `main` deploys the
+development alias** (`development--core-fe.netlify.app`; post-merge CI's deploy job is
+path-filtered, so docs-only pushes skip it), keeping the alias on trunk HEAD. Production
 (`core-fe.netlify.app`) serves the latest **release tag** only.
 
 ---
@@ -95,8 +96,11 @@ git add .
 git commit -m "feat: add AI streaming response"
 ```
 
-Unfinished? Put it behind a `VITE_FF_*` flag and merge anyway — do **not** hold it on a
-long-lived branch.
+Unfinished? Hide it behind a **named schema flag** and merge anyway — do **not** hold it on a
+long-lived branch. The env schema is a closed set (an undeclared `VITE_` key fails
+`pnpm validate:env-example`), so declare the flag properly via
+`agent-os/skills/env-schema-add/SKILL.md` — or keep the work on the (short-lived) PR until
+it is ready.
 
 ### 3. Push and open a PR to `main`
 
@@ -159,6 +163,6 @@ work on a branch instead of a flag.
 ## Summary
 
 - **One trunk:** `main`. Feature branches squash-merge to it and auto-delete.
-- **Deploys:** every `main` push → development alias; releases only → production (one approval).
+- **Deploys:** every src-path `main` push → development alias; releases only → production (one approval).
 - **Ship:** merge the standing `chore: release X.Y.Z` Release PR.
 - **Rollback:** **Rollback deploy** (instant restore, no rebuild) or **Release deploy** `{tag}` (rebuild).

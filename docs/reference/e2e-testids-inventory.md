@@ -30,23 +30,27 @@ Convention: `page.getByTestId('…')` in `tests/e2e/`.
 
 ## App shell
 
-| Test ID                         | Element                  | File                         |
-| ------------------------------- | ------------------------ | ---------------------------- |
-| `app-layout`                    | Authenticated shell      | `AppLayout.tsx`              |
-| `sidebar`                       | Sidebar                  | AppLayout                    |
-| `nav-dashboard`                 | Nav → `/`                | AppLayout (sidebar + mobile) |
-| `nav-organizations`             | Nav → `/organizations`   | AppLayout                    |
-| `nav-organization`              | Nav → `/organization`    | AppLayout                    |
-| `nav-settings`                  | Nav → `/settings`        | AppLayout                    |
-| `mobile-bottom-bar`             | Mobile nav bar           | AppLayout                    |
-| `header`                        | Top bar                  | AppLayout                    |
-| `sidebar-toggle`                | Menu button              | AppLayout                    |
-| `search-trigger`                | Command palette          | AppLayout                    |
-| `user-menu-trigger`             | Avatar menu              | AppLayout                    |
-| `logout-button`                 | Log out                  | AppLayout                    |
-| `full-page-spinner`             | Bootstrap loading        | `FullPageSpinner.tsx`        |
-| `organization-switcher-trigger` | Org switcher             | `OrganizationSwitcher.tsx`   |
-| `organization-switcher-create`  | Create org from switcher | OrganizationSwitcher         |
+| Test ID                         | Element                                                    | File                                      |
+| ------------------------------- | ---------------------------------------------------------- | ----------------------------------------- |
+| `app-layout`                    | Authenticated shell                                        | `AppLayout.tsx`                           |
+| `focus-shell`                   | Focus layout-variant shell                                 | `AppLayout/variants/AppLayoutFocus.tsx`   |
+| `sidebar`                       | Sidebar                                                    | AppLayout                                 |
+| `nav-dashboard`                 | Dashboard nav link (`nav-<id>` from `NAV_ITEMS`, dual-URL) | `AppLayout.shared.tsx` (sidebar + mobile) |
+| `sidebar-quick-links`           | Persistent sidebar shortcuts group                         | `AppLayout/components/SidebarQuickLinks/` |
+| `sidebar-search`                | Command palette from sidebar                               | SidebarQuickLinks                         |
+| `sidebar-settings`              | Settings hash modal from sidebar                           | SidebarQuickLinks                         |
+| `app-context-strip`             | Quick-access pill strip (settings sections + search)       | `AppLayout/components/AppContextStrip/`   |
+| `main-content`                  | Main content region (skip-link target)                     | `AppLayout.shared.tsx`                    |
+| `mobile-bottom-bar`             | Mobile nav bar                                             | AppLayout                                 |
+| `header`                        | Top bar                                                    | AppLayout                                 |
+| `sidebar-toggle`                | Menu button                                                | AppLayout                                 |
+| `search-trigger`                | Command palette                                            | AppLayout                                 |
+| `user-menu-trigger`             | Avatar menu                                                | AppLayout                                 |
+| `user-menu-settings`            | Settings item in avatar menu                               | `AppLayout.shared.tsx`                    |
+| `logout-button`                 | Log out                                                    | AppLayout                                 |
+| `full-page-spinner`             | Bootstrap loading                                          | `FullPageSpinner.tsx`                     |
+| `organization-switcher-trigger` | Org switcher                                               | `OrganizationSwitcher.tsx`                |
+| `organization-switcher-create`  | Create org from switcher                                   | OrganizationSwitcher                      |
 
 ---
 
