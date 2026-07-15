@@ -1215,6 +1215,7 @@ core-fe/
 │   │   ├── generate.ts
 │   │   └── lock.ts
 │   ├── ci/
+│   │   ├── bulk-audit.mjs
 │   │   ├── check-api-contract-drift.mjs
 │   │   ├── check-doc-staleness.mjs
 │   │   ├── check-patch-coverage.mjs
