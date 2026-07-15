@@ -185,7 +185,7 @@ Runs on every PR to `main`/`develop`. Multiple parallel jobs across several work
 | `pnpm size`               | `size-limit`                    | Check bundle sizes against budgets |
 | `pnpm build:analyze`      | `ANALYZE=true vite build`       | Bundle analysis visualization      |
 | `pnpm deps:check`         | `pnpm outdated`                 | Check for outdated dependencies    |
-| `pnpm deps:audit`         | `pnpm audit --audit-level=high` | Security audit of dependencies     |
+| `pnpm deps:audit`         | `tooling/ci/bulk-audit.mjs`     | Security audit of dependencies     |
 | `pnpm test:visual`        | Playwright visual specs         | Visual regression tests            |
 | `pnpm test:visual:update` | Update visual snapshots         | Refresh baseline screenshots       |
 

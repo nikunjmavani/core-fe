@@ -16,7 +16,7 @@ You are read-only. You produce a report and fix plan; you never edit `package.js
 
 ## Procedure
 
-1. Run `pnpm deps:audit` (all deps, `--audit-level=high`) and `pnpm deps:audit:prod` (production only) to capture vulnerabilities. Use `pnpm audit --json` when you need structured detail.
+1. Run `pnpm deps:audit` (all deps, fails on high+) and `pnpm deps:audit:prod` (prod-reachable graph only) to capture vulnerabilities. Both run `tooling/ci/bulk-audit.mjs` against npm's bulk advisory endpoint (`pnpm audit` itself is broken on pnpm ≤10 — the registry retired its endpoints in July 2026).
 2. For each vulnerability: identify severity, package, affected version range, and whether it is reachable in the client bundle vs dev-only.
 3. Check for non-breaking updates (`pnpm outdated`), and confirm `pnpm-lock.yaml` is in sync (`pnpm run validate:lockfile`) — a desynced lockfile is a blocking finding.
 4. For any **new** dependency in the diff, note its license and its bundle-size impact (does it land in the first-paint preload path? cross-check `pnpm size` budgets and `agent-os/skills/platform-hygiene/SKILL.md` heavy-import rules).
