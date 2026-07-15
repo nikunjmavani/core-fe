@@ -32,6 +32,7 @@ import { parseInvitationIdParam } from '@/lib/routes/params.ts';
 import { manifest as acceptInviteManifest } from '@/pages/accept-invite/accept-invite.manifest.ts';
 import { manifest as callbackManifest } from '@/pages/callback/callback.manifest.ts';
 import { manifest as loginManifest } from '@/pages/login/login.manifest.ts';
+import { validateLoginSearch } from '@/pages/login/login.search.ts';
 import { manifest as mfaManifest } from '@/pages/mfa/mfa.manifest.ts';
 import { manifest as onboardingManifest } from '@/pages/onboarding/onboarding.manifest.ts';
 import { manifest as dashboardManifest } from '@/pages/organization/$organizationSlug/dashboard/dashboard.manifest.ts';
@@ -179,11 +180,7 @@ const loginRoute = createRoute({
   getParentRoute: () => authShellRoute,
   path: '/login',
   head: manifestHead(loginManifest),
-  // `redirect` = post-login return path, set by requireAuth (validated in
-  // LoginForm). Optional return type keeps `search` optional for plain links.
-  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
-    redirect: typeof search.redirect === 'string' ? search.redirect : undefined,
-  }),
+  validateSearch: validateLoginSearch,
   component: LoginPage,
   errorComponent: RouteErrorBoundary,
 });
@@ -274,8 +271,8 @@ const organizationPickerRoute = createRoute({
   path: '/organization',
   head: manifestHead(organizationPickerManifest),
   beforeLoad: async ({ location, preload }) => {
-    await requireAuth(location.href);
     if (preload) return;
+    await requireAuth(location.href);
     await requireProvisionedWorkspace({ params: {} });
   },
   component: OrganizationPickerPage,
@@ -291,8 +288,8 @@ const organizationShellRoute = createRoute({
   path: '/organization/$organizationSlug',
   head: manifestHead(organizationShellManifest),
   beforeLoad: async ({ location, params, preload }) => {
-    await requireAuth(location.href);
     if (preload) return;
+    await requireAuth(location.href);
     requireTeamDeployment({ params });
     await requireProvisionedWorkspace({ params });
     await resolveActiveOrg({ params });
@@ -322,12 +319,17 @@ const organizationDashboardRoute = createRoute({
   errorComponent: RouteErrorBoundary,
 });
 
-// Outside the status gate on purpose: a suspended organization must still be
-// able to render its blocked state without redirect-looping.
+// Runs the standard leaf gateway (session → module → permission) but stays
+// OUTSIDE `requireOrgStatus` on purpose: a suspended organization must still
+// be able to render its blocked state without redirect-looping.
 const organizationSuspendedRoute = createRoute({
   getParentRoute: () => organizationShellRoute,
   path: 'suspended',
   head: manifestHead(suspendedManifest),
+  beforeLoad: async ({ params, preload, location }) => {
+    if (preload) return;
+    await gatewayFromManifest(suspendedManifest)(toGateContext(location, params));
+  },
   component: SuspendedPage,
   errorComponent: RouteErrorBoundary,
 });

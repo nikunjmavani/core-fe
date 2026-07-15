@@ -3,7 +3,7 @@
 ## Primary sources
 
 1. **[ui.shadcn.com](https://ui.shadcn.com)** — primitives, CLI, official blocks
-2. **[tablecn.com](https://tablecn.com)** — TanStack Table patterns (see `src/shared/components/data-table/`)
+2. **[tablecn.com](https://tablecn.com)** — TanStack Table patterns (see `src/shared/components/DataTable/` + its `DataTableColumnHeader/`/`DataTablePagination/`/`DataTableToolbar/` siblings)
 
 ## Research ready-made blocks (in order)
 

@@ -679,12 +679,18 @@ core-fe/
 │   │   │   │   ├── Dashboard.tsx
 │   │   │   │   ├── index.ts
 │   │   │   │   └── [3 test files]
-│   │   │   ├── data-table/
+│   │   │   ├── DataTable/
 │   │   │   │   ├── DataTable.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── DataTableColumnHeader/
 │   │   │   │   ├── DataTableColumnHeader.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── DataTablePagination/
 │   │   │   │   ├── DataTablePagination.tsx
+│   │   │   │   └── [1 test file]
+│   │   │   ├── DataTableToolbar/
 │   │   │   │   ├── DataTableToolbar.tsx
-│   │   │   │   └── [4 test files]
+│   │   │   │   └── [1 test file]
 │   │   │   ├── EmailVerificationBanner/
 │   │   │   │   ├── EmailVerificationBanner.tsx
 │   │   │   │   ├── index.ts

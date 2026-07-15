@@ -2,7 +2,7 @@ import { type ColumnDef, getCoreRowModel, useReactTable } from '@tanstack/react-
 import { useMemo } from 'react';
 
 import type { BillingInvoice } from '@/shared/api/billing-contracts.ts';
-import { DataTable } from '@/shared/components/data-table/DataTable.tsx';
+import { DataTable } from '@/shared/components/DataTable/index.ts';
 import { QueryBoundary } from '@/shared/components/QueryBoundary/index.ts';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
