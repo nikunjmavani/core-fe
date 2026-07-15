@@ -21,7 +21,7 @@ src/shared/    UI, auth, api, errors, forms, hooks, layouts, store (Zustand)
 src/lib/       Pure utilities, animations, route-island helpers
 tests/         E2E, utils (project root)
 
-Stats: ~532 src files · ~291 tests in src/ · 35 E2E specs · 24 shadcn UI primitives
+Stats: ~532 src files · ~292 tests in src/ · 35 E2E specs · 24 shadcn UI primitives
 
 ================================================================================
 §2  FULL DIRECTORY TREE
@@ -473,7 +473,7 @@ core-fe/
 │   │   │   ├── login.route.tsx
 │   │   │   ├── login.search.ts
 │   │   │   ├── LoginPage.tsx
-│   │   │   └── [1 test file]
+│   │   │   └── [2 test files]
 │   │   ├── mfa/
 │   │   │   ├── forms/
 │   │   │   │   └── MfaForm/
