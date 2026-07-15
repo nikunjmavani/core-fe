@@ -22,7 +22,7 @@ cd core-fe
 pnpm setup:local
 ```
 
-`pnpm setup:local` is idempotent: checks Node/pnpm, installs deps when `node_modules/` is missing, scaffolds `.env.local` from `.env.example` (your gitignored local dev file), scaffolds the full MCP set from `.mcp.example.json`, indexes CodeGraph, then starts `pnpm dev`.
+`pnpm setup:local` is idempotent: checks Node/pnpm, on macOS installs/upgrades the external CLI tools via Homebrew (`setup:mac-tools` — gitleaks, gh, jq, uv, a headless Docker runtime, …), installs deps when `node_modules/` is missing, scaffolds `.env.local` from `.env.example` (your gitignored local dev file), scaffolds the full MCP set from `.mcp.example.json`, indexes CodeGraph, then starts `pnpm dev`.
 
 Useful flags:
 
@@ -31,6 +31,7 @@ Useful flags:
 | `--no-start`        | Bootstrap only — skip starting the dev server   |
 | `--check`           | Preflight / dry-run — no file writes            |
 | `--skip-deps`       | Skip `pnpm install`                             |
+| `--skip-mac-tools`  | Skip the macOS external-tool install/upgrade    |
 | `--skip-mcp`        | Skip CodeGraph + MCP scaffold                   |
 | `--only-env`        | Scaffold `.env.example` → `.env.local` and exit |
 | `--force-env-local` | Rewrite `.env.local` from `.env.example`        |
@@ -42,6 +43,7 @@ Useful flags:
 ## Prerequisites
 
 - **Node.js 24+** (Active LTS line; see `.nvmrc`) and **pnpm** (e.g. `corepack enable && corepack prepare pnpm@latest --activate`)
+- **External CLI tools** — on **macOS**, `pnpm setup:mac-tools` installs/upgrades everything the repo needs beyond Node/pnpm, non-interactively via Homebrew: gitleaks, gh, jq, uv, ripgrep, shellcheck, librsvg (`rsvg-convert`), and a headless Docker runtime (colima) when none is present. `pnpm setup:local` runs it automatically on macOS (opt out with `--skip-mac-tools`). The list is data-driven from [`tooling/dev/setup-prerequisites-mac-tools.manifest`](../../tooling/dev/setup-prerequisites-mac-tools.manifest) — add/remove a line to change it. Non-macOS: install the equivalents with your package manager.
 - **[core-be](https://github.com/nikunjmavani/core-be)** on `:3000` for auth, org, and E2E — the FE proxies `/api` there in dev. Pure UI shell work (no login/API) can run without it; anything past `/login` needs core-be up (`GET /readyz`).
 
 ---

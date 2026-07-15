@@ -39,7 +39,7 @@ pnpm dev
 ```
 
 The app runs at **http://localhost:5173**.  
-**Prerequisites:** Node.js **24.x** (Active LTS) or newer LTS, and **pnpm** ≥ 9 (`corepack enable && corepack prepare pnpm@latest --activate`). Use `.nvmrc` / `.node-version` for the pinned major.  
+**Prerequisites:** Node.js **24.x** (Active LTS) or newer LTS, and **pnpm** ≥ 9 (`corepack enable && corepack prepare pnpm@latest --activate`). Use `.nvmrc` / `.node-version` for the pinned major. On **macOS**, `pnpm setup:mac-tools` installs the external CLI tools (gitleaks, gh, jq, uv, a headless Docker runtime, …) — and `pnpm setup:local` runs it automatically.  
 **Full local setup:** [docs/getting-started/setup.md](docs/getting-started/setup.md).
 
 ---

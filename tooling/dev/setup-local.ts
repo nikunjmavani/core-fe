@@ -2,7 +2,7 @@
 /**
  * `pnpm setup:local` — one-command local bootstrap for core-fe.
  *
- * Idempotent: preflight → dependencies → env (.env.local) → MCP (full set) → optional dev.
+ * Idempotent: preflight (+ macOS external tools) → dependencies → env (.env.local) → MCP (full set) → optional dev.
  *
  * `.env.local` is the gitignored local env file (NODE_ENV=local; one `.env.<mode>`
  * per environment, mirroring core-be); it holds behavior flags + machine secrets.
@@ -15,6 +15,7 @@
  *   pnpm setup:local --skip-deps
  *   pnpm setup:local --skip-mcp
  *   pnpm setup:local --skip-codegraph
+ *   pnpm setup:local --skip-mac-tools    (skip the macOS external-tool install/upgrade)
  *   pnpm setup:local --only-env          (scaffold .env.local only, then exit)
  *   pnpm setup:local --force-env          (rewrite .env.local from .env.example)
  */
@@ -46,6 +47,7 @@ interface BootstrapOptions {
   skipDeps: boolean;
   skipMcp: boolean;
   skipCodegraph: boolean;
+  skipMacTools: boolean;
   onlyEnv: boolean;
   forceEnvLocal: boolean;
 }
@@ -117,6 +119,7 @@ function parseArgs(): BootstrapOptions {
     skipDeps: has('--skip-deps'),
     skipMcp: has('--skip-mcp'),
     skipCodegraph: has('--skip-codegraph'),
+    skipMacTools: has('--skip-mac-tools'),
     onlyEnv: has('--only-env'),
     forceEnvLocal: has('--force-env-local') || has('--force-env'),
   };
@@ -161,7 +164,7 @@ function isPortInUse(port: number): Promise<boolean> {
   });
 }
 
-function runPreflight(reports: StepReport[]): void {
+function runPreflight(reports: StepReport[], options: BootstrapOptions): void {
   logHeading('1/5 Preflight');
 
   const nodeStartedAt = performance.now();
@@ -191,6 +194,26 @@ function runPreflight(reports: StepReport[]): void {
     process.exit(1);
   }
   reportStep(reports, 'pnpm CLI', 'done', pnpmStartedAt, `v${pnpmVersion.stdout.trim()}`);
+
+  // External tools (macOS only for now): install-or-upgrade Homebrew, Node, gitleaks,
+  // gh, jq, uv, ripgrep, shellcheck, librsvg, and a headless docker runtime — all from
+  // authenticated sources, non-interactively. Runs before the gh check so a fresh machine
+  // has gh installed by the time that check runs. Idempotent + skippable (--skip-mac-tools).
+  // The full tool list is data-driven from tooling/dev/setup-prerequisites-mac-tools.manifest.
+  if (process.platform === 'darwin' && !options.skipMacTools) {
+    const toolsStartedAt = performance.now();
+    const toolsCode = runCommand('bash', [
+      'tooling/dev/setup-mac-tools.sh',
+      ...(options.check ? ['--check'] : []),
+    ]);
+    reportStep(
+      reports,
+      'External tools (macOS)',
+      toolsCode === 0 ? 'done' : 'warning',
+      toolsStartedAt,
+      toolsCode === 0 ? undefined : 'some tools did not install/upgrade — see output',
+    );
+  }
 
   const ghStartedAt = performance.now();
   const gh = captureCommand('gh', ['--version']);
@@ -475,7 +498,7 @@ async function main(): Promise<void> {
     return;
   }
 
-  runPreflight(reports);
+  runPreflight(reports, options);
   runInstallDependencies(reports, options);
   runEnvScaffolding(reports, options);
   runMcpSetup(reports, options);
