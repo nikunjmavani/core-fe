@@ -56,6 +56,7 @@ export const emailVerificationCodeSendResponseSchema = z.object({
   debug_verification_code: z.string().optional(),
 });
 
+/** Inferred type of {@link emailVerificationCodeSendResponseSchema} — the parsed `send-code` body. */
 export type EmailVerificationCodeSendResponse = z.infer<
   typeof emailVerificationCodeSendResponseSchema
 >;
