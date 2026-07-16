@@ -7,7 +7,6 @@ export const DASHBOARD_KEYS = {
   greetingFallback: 'greetingFallback',
   heroSubtitle: 'heroSubtitle',
   heroSubtitleSolo: 'heroSubtitleSolo',
-  title: 'title',
   errorLoad: 'errorLoad',
   workspaceFallback: 'workspaceFallback',
   workspaceNameFallback: 'workspaceNameFallback',

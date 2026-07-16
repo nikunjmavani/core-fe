@@ -92,5 +92,64 @@
     "description": "您有未保存的更改。离开将丢弃它们。",
     "stay": "继续编辑",
     "leave": "放弃更改"
+  },
+  "panels": {
+    "members": {
+      "title": "成员",
+      "description": "此组织中的成员。",
+      "loadFailed": "无法加载成员。请重试。",
+      "emptyTitle": "暂无成员",
+      "emptyDescription": "邀请队友加入此组织协作。",
+      "searchPlaceholder": "搜索成员…",
+      "noResults": "没有匹配的成员。",
+      "loadMore": "加载更多",
+      "removeAria": "移除 {{name}}",
+      "removeTitle": "移除 {{name}}？",
+      "removeDescription": "该成员将失去对此组织的访问权限。确认后几秒内可撤销。",
+      "removeConfirm": "移除",
+      "removePending": "正在移除 {{name}}…"
+    },
+    "roles": {
+      "title": "角色",
+      "description": "可分配给成员的权限集。",
+      "loadFailed": "无法加载角色。请重试。",
+      "emptyTitle": "暂无角色",
+      "emptyDescription": "创建自定义角色以授予量身定制的权限集。",
+      "searchPlaceholder": "搜索角色…",
+      "noResults": "没有匹配的角色。",
+      "loadMore": "加载更多",
+      "systemBadge": "系统",
+      "memberCount": "{{count}} 名成员",
+      "memberCount_other": "{{count}} 名成员",
+      "deleteAria": "删除 {{name}}",
+      "deleteTitle": "删除 {{name}}？",
+      "deleteDescription": "使用此角色的成员需要重新分配角色。确认后几秒内可撤销。",
+      "deleteConfirm": "删除",
+      "deletePending": "正在删除 {{name}}…"
+    },
+    "listSort": {
+      "label": "排序方式",
+      "nameAsc": "名称（A–Z）",
+      "nameDesc": "名称（Z–A）",
+      "newest": "最新优先",
+      "oldest": "最早优先"
+    },
+    "profile": {
+      "title": "个人资料",
+      "description": "您在应用中的显示方式。对组织内成员可见。",
+      "completeness": "个人资料已完成 {{percent}}%",
+      "confirmTitle": "保存个人资料更改？",
+      "confirmDescription": "确定要更新您的个人资料信息吗？",
+      "confirmSave": "保存更改",
+      "confirmCancel": "取消",
+      "saving": "保存中…",
+      "save": "保存更改"
+    },
+    "account": {
+      "deleteTitle": "删除您的账户？",
+      "deleteDescription": "此操作不可逆，无法撤销。您的所有数据都将被删除。",
+      "deleteConfirm": "删除账户",
+      "deleteCancel": "取消"
+    }
   }
 }

@@ -206,6 +206,9 @@ jobs:
       - name: i18n key contracts
         run: pnpm validate:i18n
 
+      - name: i18n locale parity
+        run: pnpm validate:i18n-parity
+
       - name: Theme catalog docs
         run: pnpm validate:theme-catalog
 

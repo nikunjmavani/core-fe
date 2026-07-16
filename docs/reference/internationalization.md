@@ -80,8 +80,16 @@ build locale) because constants files reference key paths, not inline copy.
 
 **CI:** `pnpm validate:i18n` scans `*.constants.ts` files and fails when a
 `*_KEYS` literal path is missing from the matching English namespace JSON.
-Wired in PR CI (`static-sync` job). Fix by adding the key to locale JSON before
-merging.
+Fix by adding the key to locale JSON before merging.
+
+`pnpm validate:i18n-parity` complements it on the cross-locale axis: English is
+the source of truth, **full** locales (`I18N_LOCALES` − `PARTIAL_UI_LOCALES` −
+`en`) must carry every English key in every namespace, **partial** locales
+(`PARTIAL_UI_LOCALES`) must carry every English `common` key (other namespaces
+fall back to English by design), and no locale may hold a key English has
+dropped. The locale sets are read from `src/lib/i18n/locales.ts`, so the gate
+can't drift from the app config. Both run in PR CI (`static-sync` job) and in
+the weekly `sync-drift-canary` via `pnpm sync:check`.
 
 ---
 
