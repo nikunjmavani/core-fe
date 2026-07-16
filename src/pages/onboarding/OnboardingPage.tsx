@@ -186,6 +186,13 @@ function isOnboardingDirty(input: {
  * writes `activeOrganization` into the me/context cache, so the returned context
  * is what the destination resolver should read.
  *
+ * When the wizard created nothing, an EXISTING sole team membership outranks
+ * the personal fallback: an invited (or pre-provisioned) user finishing the
+ * wizard was brought here to join that team — landing them on Personal hides
+ * the very workspace they came for. With several teams no single one is the
+ * obvious destination, so fall back to personal; the dashboard switcher lists
+ * them all.
+ *
  * Gate the personal switch on the concrete `personalOrganizationId`, not the
  * deployment flag: personal orgs can be *enabled* yet unprovisioned for a user
  * (core-be self-heals this, but the FE stays defensive), in which case
@@ -195,9 +202,17 @@ function isOnboardingDirty(input: {
 async function activateWorkspaceAfterOnboardingFinish(input: {
   organizationId: string | null;
   personalOrganizationId: string | null;
+  organizations: MeContext['organizations'];
 }): Promise<MeContext | undefined> {
   if (input.organizationId) {
     return switchToOrganization(input.organizationId);
+  }
+  const activeTeams = input.organizations.filter(
+    (o) => o.type === 'TEAM' && o.status === 'ACTIVE',
+  );
+  const soleTeam = activeTeams.length === 1 ? activeTeams[0] : undefined;
+  if (soleTeam) {
+    return switchToOrganization(soleTeam.id);
   }
   if (input.personalOrganizationId) {
     return switchToPersonal();
@@ -365,6 +380,7 @@ export function OnboardingPage() {
       const activatedContext = await activateWorkspaceAfterOnboardingFinish({
         organizationId,
         personalOrganizationId: refreshedContext.personalOrganizationId,
+        organizations: refreshedContext.organizations,
       });
 
       complete();

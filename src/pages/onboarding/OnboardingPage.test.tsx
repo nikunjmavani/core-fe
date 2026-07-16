@@ -255,6 +255,56 @@ describe('OnboardingPage', () => {
     );
   });
 
+  it('activates the sole existing team org instead of personal (invited/pre-provisioned user)', async () => {
+    const user = userEvent.setup();
+    // Hybrid deployment; the wizard creates nothing. The user ALREADY belongs
+    // to one team (invited or seeded) and has a personal org provisioned.
+    deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: true };
+    hydratedContextRef.value = {
+      ...hydratedContextRef.value,
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+      organizations: [teamOrg('acme')],
+      personalOrganizationId: 'org_personal_1',
+    };
+    const store = useOnboardingStore.getState();
+    store.reset();
+    store.setStepIndex(4); // hybrid+team steps: welcome/profile/questions/invite/done
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    // Their team is the destination — NOT the personal fallback that used to
+    // hide the workspace they were brought here to join.
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(createOrganization).not.toHaveBeenCalled();
+    expect(switchToOrganization).toHaveBeenCalledWith('org_acme');
+    expect(switchToPersonal).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { organizationSlug: 'acme' }, replace: true }),
+    );
+  });
+
+  it('falls back to personal when several teams exist (no unambiguous destination)', async () => {
+    const user = userEvent.setup();
+    deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: true };
+    hydratedContextRef.value = {
+      ...hydratedContextRef.value,
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+      organizations: [teamOrg('acme'), teamOrg('beta')],
+      personalOrganizationId: 'org_personal_1',
+    };
+    const store = useOnboardingStore.getState();
+    store.reset();
+    store.setStepIndex(4);
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(switchToOrganization).not.toHaveBeenCalled();
+    expect(switchToPersonal).toHaveBeenCalledTimes(1);
+  });
+
   it('creates the org when persisted createdOrganizationId is stale (404 guard)', async () => {
     const user = userEvent.setup();
     seedDoneStep();
