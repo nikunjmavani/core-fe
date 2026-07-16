@@ -23,6 +23,10 @@ New passwordless users → `/onboarding` → app.
 
 1. **Email (default):** email → Continue → 6-digit code → verify → onboarding (new) or app (returning)
    - On the **verify** step, OAuth/passkey and the full welcome copy are hidden — focused “Check your email” + code entry only.
+   - **Local-dev autofill:** when core-be runs with `TEST_MODE` on, `send-code` echoes
+     `debug_verification_code` and the verify step **prefills** it (fills, never
+     auto-submits). Field presence is the gate — no client flag; the echo never
+     exists in production (core-be `.refine()`-forbids `TEST_MODE` there).
 2. **OAuth / passkey:** `/callback` → `silentRefresh()` → post-auth resolver (onboarding or dashboard)
 
 ## Login + signup rules (product)

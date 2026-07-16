@@ -40,7 +40,7 @@ export function FullPageSpinner() {
           <Boxes className={cn('size-6', iconOnPrimarySurface)} />
         </span>
         <span className="text-foreground text-base font-semibold tracking-tight">
-          Core Admin
+          Core
         </span>
       </div>
       <span

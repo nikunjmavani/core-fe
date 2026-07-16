@@ -1,6 +1,6 @@
 # Cursor agent environments (multi-repo)
 
-When you work on **Core Admin** together with **core-be** (or other repos), configure Cursor so agents can see every repository and optional MCP servers in one place.
+When you work on **Core** together with **core-be** (or other repos), configure Cursor so agents can see every repository and optional MCP servers in one place.
 
 ## Multi-root workspace (VS Code / Cursor)
 

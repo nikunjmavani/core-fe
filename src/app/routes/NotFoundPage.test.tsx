@@ -12,7 +12,7 @@ import { Component as NotFoundPage } from './NotFoundPage.tsx';
 
 describe('NotFoundPage', () => {
   beforeEach(() => {
-    document.title = 'Dashboard · Core Admin'; // simulate a stale previous title
+    document.title = 'Dashboard · Core'; // simulate a stale previous title
   });
 
   it('renders the 404 content with a way home', () => {
@@ -25,6 +25,6 @@ describe('NotFoundPage', () => {
   it('replaces a stale document title (guard-thrown notFound path)', () => {
     render(<NotFoundPage />);
 
-    expect(document.title).toBe('Page not found · Core Admin');
+    expect(document.title).toBe('Page not found · Core');
   });
 });

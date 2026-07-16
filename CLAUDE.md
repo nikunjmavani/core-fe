@@ -435,13 +435,13 @@ read via `platformConfig.testMode`), the single home for any test-only behavior.
 - Protected routes use TanStack Router `beforeLoad` guards in `routeTree.tsx` — the `$organizationSlug` shell runs `requireAuth → requireTeamDeployment → requireProvisionedWorkspace → resolveActiveOrg` (context sync from the URL); leaf routes then run `gatewayFromManifest` (session → module → permission) followed by `requireOrgStatus`; see `src/app/guards/GUARDS.OVERVIEW.md`.
 - RBAC enforcement in `routeTree.tsx` `beforeLoad` via `gatewayFromManifest(manifest)` (+ tenancy guards).
 - Every manifest-backed route sets `head: manifestHead(manifest)` (`lib/routes/page-head.ts`) — app-shell routes without a manifest (`/unauthorized`, the `$` 404 splat) use inline `composePageTitle`; the document
-  title comes from `manifest.title` as `"<title> · Core Admin"`; the root-mounted
+  title comes from `manifest.title` as `"<title> · Core"`; the root-mounted
   `RouteAnnouncer` announces it to screen readers on SPA navigations.
 
 ## New-deployment detection
 
 - **Plugin** `plugins/version-json.ts`: at build time sets `VITE_APP_BUILD_ID` and writes/serves `version.json` (dev: middleware; prod: `dist/version.json`). `builtAt` is UTC (ISO 8601).
-- **Runtime** `src/core/version/check.ts`: polls `/version.json` (+ on tab refocus); if `buildId` differs from the app’s build, shows a persistent **“Update available”** toast with **Refresh now** (`app/version/show-update-available-toast.ts`) and **defers** `location.reload()` until it won’t lose work — never while a field is focused, immediately when the tab is hidden, otherwise once the user is idle (~60s) — at most **once per advertised buildId** (sessionStorage marker).
+- **Runtime** `src/core/version/check.ts`: polls `/version.json` (every 5 min while visible + on tab refocus); if `buildId` differs from the app’s build, shows a persistent **“Update available”** toast with **Refresh now** (`app/version/show-update-available-toast.ts`) and **defers** `location.reload()` until it won’t lose work — never while a field is focused, immediately when the tab is hidden, otherwise once the user is idle (~60s) — at most **once per advertised buildId** (sessionStorage marker). The reload is **handed through the service worker** (pre-warmed `update()` at detection; `SKIP_WAITING` → `controllerchange` → reload, 10s deadline fallback) so it lands on the NEW precached shell — `src/sw.ts` activation is deliberately message-driven, never an unconditional `skipWaiting()`.
 
 ## PWA manifest and icons
 

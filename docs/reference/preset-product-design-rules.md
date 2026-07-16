@@ -35,7 +35,7 @@ Appearance, dashboard density, or axis audits.
 
 ## Global product defaults
 
-These are the **recommended shipped defaults** for Core Admin (already coded in
+These are the **recommended shipped defaults** for Core (already coded in
 `DEFAULT_LOOK` / `DEFAULT_*` constants):
 
 | Axis         | Product default                 | Rationale                                                             |
@@ -249,12 +249,12 @@ builds.
 
 ## Layout & grid (shell vs page vs prose)
 
-Core Admin is a **B2B control surface** (dashboards, tables, settings) — not a
+Core is a **B2B control surface** (dashboards, tables, settings) — not a
 chat/reading product. Layout strategy is **layered**, not one global choice.
 
 ### Comparison — what to use when
 
-| Pattern                   | Typical max width               | Best for                                         | Use in Core Admin?                                                     |
+| Pattern                   | Typical max width               | Best for                                         | Use in Core?                                                           |
 | ------------------------- | ------------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- |
 | **Claude / chat column**  | ~768px (`max-w-3xl`)            | Long-form AI replies, single reading stream      | **No** as app shell — wastes horizontal space on dashboards and tables |
 | **Prose / measure**       | ~65ch (`max-w-prose` ≈ 680px)   | Paragraphs, descriptions, empty states           | **Yes** — section descriptions, error copy, onboarding hints only      |

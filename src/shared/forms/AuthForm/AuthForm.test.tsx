@@ -36,7 +36,7 @@ vi.mock('@/shared/hooks/useAuthMethods/index.ts', () => ({
 vi.mock('@/shared/api/auth-api.ts', () => ({
   authApi: {
     oauthStart: vi.fn().mockResolvedValue('https://oauth.example/redirect'),
-    emailVerificationCodeSend: vi.fn().mockResolvedValue(undefined),
+    emailVerificationCodeSend: vi.fn().mockResolvedValue({}),
     emailLogin: vi.fn().mockResolvedValue({ accessToken: 'mock-token' }),
   },
   MfaRequiredError: class MfaRequiredError extends Error {
@@ -125,8 +125,8 @@ describe('AuthForm', () => {
     const { authApi } = await import('@/shared/api/auth-api.ts');
     vi.mocked(authApi.emailVerificationCodeSend).mockImplementation(
       () =>
-        new Promise<void>((resolve) => {
-          resolveSend = resolve;
+        new Promise((resolve) => {
+          resolveSend = () => resolve({});
         }),
     );
 

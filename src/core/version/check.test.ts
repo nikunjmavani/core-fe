@@ -205,5 +205,174 @@ describe('startVersionCheck', () => {
       expect(onUpdateAvailable).toHaveBeenCalledOnce();
       cleanup?.();
     });
+
+    describe('service-worker handoff', () => {
+      type MockWaitingWorker = { postMessage: ReturnType<typeof vi.fn> };
+
+      /** Stateful `installing` worker whose statechange events actually fire. */
+      function createInstallingWorker(initialState = 'installing') {
+        const stateListeners: Array<() => void> = [];
+        const worker = {
+          state: initialState,
+          postMessage: vi.fn(),
+          addEventListener: vi.fn((_type: string, cb: () => void) => {
+            stateListeners.push(cb);
+          }),
+          removeEventListener: vi.fn(),
+          setState(next: string) {
+            worker.state = next;
+            for (const cb of [...stateListeners]) cb();
+          },
+        };
+        return worker;
+      }
+
+      function installMockServiceWorker(options: {
+        waiting?: MockWaitingWorker | null;
+        installing?: ReturnType<typeof createInstallingWorker> | null;
+        /** getRegistration behavior: resolves it, resolves undefined, or rejects. */
+        lookup?: 'ok' | 'none' | 'reject';
+      }) {
+        const listeners = new Map<string, Array<() => void>>();
+        const registration = {
+          waiting: options.waiting ?? null,
+          installing: options.installing ?? null,
+          update: vi.fn(() => Promise.resolve()),
+        };
+        const lookup = options.lookup ?? 'ok';
+        const container = {
+          getRegistration: vi.fn(() => {
+            if (lookup === 'reject') return Promise.reject(new Error('sw down'));
+            return Promise.resolve(lookup === 'none' ? undefined : registration);
+          }),
+          addEventListener: vi.fn((type: string, cb: () => void) => {
+            const arr = listeners.get(type) ?? [];
+            arr.push(cb);
+            listeners.set(type, arr);
+          }),
+          removeEventListener: vi.fn(),
+          dispatchControllerChange() {
+            for (const cb of listeners.get('controllerchange') ?? []) cb();
+          },
+        };
+        Object.defineProperty(navigator, 'serviceWorker', {
+          configurable: true,
+          value: container,
+        });
+        return { container, registration };
+      }
+
+      afterEach(() => {
+        Reflect.deleteProperty(navigator, 'serviceWorker');
+      });
+
+      /** Detect at 2s, then force the immediate (hidden-tab) reload path. */
+      async function detectAndTriggerReload() {
+        const { startVersionCheck } = await import('./check.ts');
+        const cleanup = startVersionCheck();
+        await vi.advanceTimersByTimeAsync(2_000); // detect → pending
+        setVisibility('hidden');
+        document.dispatchEvent(new Event('visibilitychange'));
+        await vi.advanceTimersByTimeAsync(0); // flush the async handoff chain
+        return cleanup;
+      }
+
+      it('messages SKIP_WAITING to the waiting worker and reloads on controllerchange', async () => {
+        const waiting = { postMessage: vi.fn() };
+        const { container, registration } = installMockServiceWorker({ waiting });
+        mockVersionResponse('build-NEW');
+
+        const cleanup = await detectAndTriggerReload();
+
+        expect(registration.update).toHaveBeenCalled(); // pre-warm at detection
+        expect(waiting.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+        expect(reload).not.toHaveBeenCalled(); // waits for the new worker to take control
+
+        container.dispatchControllerChange();
+        expect(reload).toHaveBeenCalledTimes(1);
+
+        // A duplicate controllerchange must not double-reload (finish() guard).
+        container.dispatchControllerChange();
+        expect(reload).toHaveBeenCalledTimes(1);
+        cleanup?.();
+      });
+
+      it('falls back to a plain reload when no newer worker exists', async () => {
+        installMockServiceWorker({ waiting: null });
+        mockVersionResponse('build-NEW');
+
+        const cleanup = await detectAndTriggerReload();
+
+        expect(reload).toHaveBeenCalledTimes(1);
+        cleanup?.();
+      });
+
+      it('reloads anyway after the deadline if the worker never reaches waiting', async () => {
+        const installing = createInstallingWorker();
+        installMockServiceWorker({ waiting: null, installing });
+        mockVersionResponse('build-NEW');
+
+        const cleanup = await detectAndTriggerReload();
+        expect(reload).not.toHaveBeenCalled(); // still waiting on the install
+
+        await vi.advanceTimersByTimeAsync(10_000); // SW_ACTIVATE_DEADLINE_MS
+        expect(reload).toHaveBeenCalledTimes(1);
+        cleanup?.();
+      });
+
+      it('follows an in-flight install to installed and completes the handoff', async () => {
+        const installing = createInstallingWorker();
+        const { container } = installMockServiceWorker({ installing });
+        mockVersionResponse('build-NEW');
+
+        const cleanup = await detectAndTriggerReload();
+        expect(installing.postMessage).not.toHaveBeenCalled(); // still installing
+
+        installing.setState('installed');
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(installing.postMessage).toHaveBeenCalledWith({ type: 'SKIP_WAITING' });
+        expect(reload).not.toHaveBeenCalled();
+
+        container.dispatchControllerChange();
+        expect(reload).toHaveBeenCalledTimes(1);
+        cleanup?.();
+      });
+
+      it('falls back to a plain reload when the install goes redundant', async () => {
+        const installing = createInstallingWorker();
+        installMockServiceWorker({ installing });
+        mockVersionResponse('build-NEW');
+
+        const cleanup = await detectAndTriggerReload();
+        expect(reload).not.toHaveBeenCalled();
+
+        installing.setState('redundant');
+        await vi.advanceTimersByTimeAsync(0);
+
+        expect(reload).toHaveBeenCalledTimes(1);
+        cleanup?.();
+      });
+
+      it('falls back to a plain reload when no registration exists', async () => {
+        installMockServiceWorker({ lookup: 'none' });
+        mockVersionResponse('build-NEW');
+
+        const cleanup = await detectAndTriggerReload();
+
+        expect(reload).toHaveBeenCalledTimes(1);
+        cleanup?.();
+      });
+
+      it('falls back to a plain reload when the registration lookup throws', async () => {
+        installMockServiceWorker({ lookup: 'reject' });
+        mockVersionResponse('build-NEW');
+
+        const cleanup = await detectAndTriggerReload();
+
+        expect(reload).toHaveBeenCalledTimes(1);
+        cleanup?.();
+      });
+    });
   });
 });

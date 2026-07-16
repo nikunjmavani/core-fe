@@ -50,7 +50,15 @@ export default defineConfig(({ mode }) => {
         strategies: 'injectManifest',
         srcDir: 'src',
         filename: 'sw.ts',
-        registerType: 'autoUpdate',
+        // 'prompt': the new worker activates only on the page's SKIP_WAITING
+        // message (src/sw.ts ↔ core/version/check.ts) — never an unconditional
+        // skipWaiting that could swap builds mid-task. The emitted registerSW.js
+        // is the same bare registration either way; this names the real flow.
+        registerType: 'prompt',
+        // Defer registerSW.js — as a plain <script> it is render-blocking on the
+        // critical path (~183 ms LCP on Slow 4G); SW registration has no need to
+        // block first paint.
+        injectRegister: 'script-defer',
         includeAssets: ['app-icon.svg', 'pwa-192x192.png', 'pwa-512x512.png'],
         manifest: false, // Use public/manifest.webmanifest directly
         disable: mode !== 'production',

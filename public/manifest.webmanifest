@@ -1,5 +1,5 @@
 {
-  "name": "Core Admin",
+  "name": "Core",
   "short_name": "Core",
   "description": "Enterprise multi-tenant admin dashboard",
   "start_url": "/",

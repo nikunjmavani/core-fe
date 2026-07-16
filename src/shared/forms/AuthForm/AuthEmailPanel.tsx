@@ -182,10 +182,13 @@ export function AuthEmailPanel({
     setFormError(null);
     onPendingChange?.({ method: 'email-send' });
     try {
-      await authApi.emailVerificationCodeSend(value);
+      const { debug_verification_code } = await authApi.emailVerificationCodeSend(value);
       captureAnalyticsEvent(ANALYTICS_EVENTS.authEmailCodeSent, { step: 'verify' });
       setSubmittedEmail(value);
-      setVerificationCode('');
+      // Local/TEST_MODE convenience: core-be echoes the freshly issued code only when
+      // its TEST_MODE is on (never in production), so its presence is the gate — prefill
+      // the verify step when it's there, otherwise start empty for normal manual entry.
+      setVerificationCode(debug_verification_code ?? '');
       setStep('verify');
       // eslint-disable-next-line react-hooks/purity -- runs in an event handler, not during render
       const cooldownUntil = Date.now() + AUTH_EMAIL_VERIFICATION_CODE_RESEND_COOLDOWN_MS;

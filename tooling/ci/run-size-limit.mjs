@@ -31,11 +31,15 @@ if (jsPaths.length === 0) {
   process.exit(1);
 }
 
+// Budgets are a RATCHET (same philosophy as coverage thresholds): pinned just
+// above the measured first-paint size (JS ~216 kB gz, CSS ~22 kB gz) so any
+// regression trips CI immediately — lower as the bundle shrinks, never raise
+// to absorb growth.
 const config = [
   {
     name: 'Initial JS (entry + vendor)',
     path: jsPaths,
-    limit: '260 kB',
+    limit: '225 kB',
     gzip: true,
     running: false,
   },
@@ -44,7 +48,7 @@ const config = [
         {
           name: 'Initial CSS',
           path: cssPaths,
-          limit: '30 kB',
+          limit: '25 kB',
           gzip: true,
         },
       ]

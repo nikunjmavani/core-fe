@@ -21,6 +21,25 @@ cleanupOutdatedCaches();
 const manifest = self.__WB_MANIFEST.filter(shouldPrecache);
 precacheAndRoute(manifest);
 
+// Version-update handshake (core/version/check.ts): index.html is precached, so
+// while an OLD worker controls the page a plain reload re-serves the OLD shell
+// and a newly installed worker would wait until every tab closes. The page
+// messages the WAITING worker at a safe moment (idle / user-approved "Refresh
+// now") instead of an unconditional skipWaiting() that could swap builds
+// mid-task; claim on activate so the follow-up reload is served from the NEW
+// precache immediately.
+self.addEventListener('message', (event) => {
+  // Only same-origin pages can hold a reference to this worker, but verify the
+  // sender's origin anyway (defense-in-depth; CodeQL js/missing-origin-check).
+  if (event.origin !== self.location.origin) return;
+  if ((event.data as { type?: string } | null)?.type === 'SKIP_WAITING') {
+    event.waitUntil(self.skipWaiting());
+  }
+});
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
 // Lazy JS/CSS chunks — cache on first navigation, reuse on repeat visits
 registerRoute(
   ({ request, url }) =>

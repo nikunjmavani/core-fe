@@ -24,9 +24,18 @@ import {
 } from './version-check.constants.ts';
 import { isVersionUpdateSnoozed, snoozeVersionUpdate } from './version-update-snooze.ts';
 
-const POLL_INTERVAL_MS = 60_000; // 1 minute
+// 5 minutes: the visibilitychange re-check catches returning users instantly,
+// hidden tabs pause polling entirely, and the browser's own sw.js update check
+// on navigations is a third detection path — a faster poll adds requests, not
+// meaningful freshness.
+const POLL_INTERVAL_MS = 5 * 60_000;
 const IDLE_AFTER_MS = 60_000; // consider the user idle after 60s with no input
 const SAFE_RECHECK_MS = 10_000; // while a reload is pending, re-test safety this often
+// Deadline for the service-worker reload handoff: if the new worker hasn't
+// reached `waiting` by then (slow connection mid-install, SW error), fall back
+// to a plain reload — the reload-loop guard below keeps a stale-served shell
+// from looping.
+const SW_ACTIVATE_DEADLINE_MS = 10_000;
 
 /** Input gestures that count as "the user is active" (reset the idle clock). */
 const ACTIVITY_EVENTS = ['pointerdown', 'keydown', 'wheel', 'touchstart'] as const;
@@ -63,8 +72,10 @@ function getCurrentBuildId(): string | undefined {
 
 async function fetchVersion(): Promise<VersionPayload | null> {
   try {
-    const url = `${getVersionUrl()}?t=${Date.now()}`;
-    const res = await fetch(url, { cache: 'no-store' });
+    // `cache: 'no-store'` already bypasses every HTTP cache end-to-end (and the
+    // server pins Cache-Control: no-store) — a ?t= query buster would only
+    // fragment logs and defeat validators for no extra freshness.
+    const res = await fetch(getVersionUrl(), { cache: 'no-store' });
     if (!res.ok) return null;
     const data = (await res.json()) as VersionPayload;
     return typeof data?.buildId === 'string' ? data : null;
@@ -93,9 +104,10 @@ function isEditableElementFocused(): boolean {
 
 /**
  * Reload-loop guard: remember (per tab) which buildId we already reloaded
- * for. If the mismatch survives a reload — index.html served stale by an
- * intermediary cache, or a half-propagated deploy — reloading again would
- * loop forever, so we stand down until version.json advertises a NEWER
+ * for. If the mismatch survives a reload — the SW handoff hit its deadline
+ * and the plain-reload fallback was served by a still-old worker, a CDN edge
+ * serving index.html stale, or a half-propagated deploy — reloading again
+ * would loop forever, so we stand down until version.json advertises a NEWER
  * buildId. sessionStorage access can throw (privacy modes); failing open
  * means at worst one extra reload, never a loop.
  */
@@ -114,6 +126,110 @@ function markReloadedFor(buildId: string): void {
     sessionStorage.setItem(RELOADED_FOR_KEY, buildId);
   } catch {
     // Best effort — without the marker we may reload twice, never loop-free worse.
+  }
+}
+
+/**
+ * Fire-and-forget: ask the browser to fetch + install the latest sw.js NOW, so
+ * the new build's worker is already `waiting` by the time the deferred reload
+ * fires and the SKIP_WAITING handoff is instant (called at detection time).
+ */
+function requestServiceWorkerUpdate(): void {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker
+    .getRegistration()
+    .then((registration) => registration?.update())
+    .catch(() => {
+      // Best effort — offline or a transient fetch failure; the reload path
+      // retries update() itself.
+    });
+}
+
+/** Resolve the `waiting` worker, following an in-flight install to `installed`. */
+function waitForWaitingWorker(
+  registration: ServiceWorkerRegistration,
+): Promise<ServiceWorker | null> {
+  if (registration.waiting) return Promise.resolve(registration.waiting);
+  const installing = registration.installing;
+  if (!installing) return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const onStateChange = () => {
+      if (installing.state === 'installed') {
+        installing.removeEventListener('statechange', onStateChange);
+        resolve(registration.waiting ?? installing);
+      } else if (installing.state === 'redundant') {
+        installing.removeEventListener('statechange', onStateChange);
+        resolve(null);
+      }
+    };
+    installing.addEventListener('statechange', onStateChange);
+  });
+}
+
+/**
+ * Reload the page so it lands on the NEWEST deployed build. When a service
+ * worker controls the page, a bare `location.reload()` re-serves the OLD
+ * precached shell — this helper first installs/activates any newer worker
+ * (SKIP_WAITING handshake, bounded by {@link SW_ACTIVATE_DEADLINE_MS}), then
+ * reloads; without SW support it reloads directly. Use this instead of
+ * `window.location.reload()` for every "reload the app" affordance (error
+ * boundaries, the update toast) — a raw reload can revive the exact stale
+ * chunks that caused the failure.
+ */
+export function reloadOntoLatestBuild(): void {
+  if ('serviceWorker' in navigator) {
+    void reloadThroughServiceWorker();
+  } else {
+    window.location.reload();
+  }
+}
+
+/**
+ * The SW leg of {@link reloadOntoLatestBuild}: update() → wait for the new
+ * worker to reach `waiting` → SKIP_WAITING → reload on `controllerchange`.
+ * Every failure branch falls back to a plain reload, and
+ * {@link SW_ACTIVATE_DEADLINE_MS} guarantees we never hang.
+ */
+async function reloadThroughServiceWorker(): Promise<void> {
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    window.location.reload();
+  };
+  const deadline = window.setTimeout(finish, SW_ACTIVATE_DEADLINE_MS);
+  try {
+    const container = navigator.serviceWorker;
+    const registration = await container.getRegistration();
+    if (!registration) {
+      clearTimeout(deadline);
+      finish();
+      return;
+    }
+    try {
+      await registration.update();
+    } catch {
+      // Offline / transient — proceed with whatever worker is already installed.
+    }
+    const waiting = await waitForWaitingWorker(registration);
+    if (!waiting) {
+      // No newer worker (SW already current, or none) — a plain reload is safe.
+      clearTimeout(deadline);
+      finish();
+      return;
+    }
+    container.addEventListener(
+      'controllerchange',
+      () => {
+        clearTimeout(deadline);
+        finish();
+      },
+      { once: true },
+    );
+    waiting.postMessage({ type: 'SKIP_WAITING' });
+  } catch {
+    clearTimeout(deadline);
+    finish();
   }
 }
 
@@ -160,7 +276,7 @@ export function startVersionCheck(
     if (platformConfig.debugLogging) {
       console.info('[VersionCheck] Applying deferred reload for', buildId);
     }
-    window.location.reload();
+    reloadOntoLatestBuild();
   }
 
   function tryPendingReload(): void {
@@ -196,6 +312,10 @@ export function startVersionCheck(
 
     // New deployment detected — defer the reload until it's safe (idle / hidden).
     pendingBuildId = latest.buildId;
+
+    // Pre-warm: fetch + install the new build's SW in the background now, so
+    // the eventual reload handoff (SKIP_WAITING → controllerchange) is instant.
+    requestServiceWorkerUpdate();
 
     if (isVersionUpdateSnoozed(latest.buildId)) {
       toastShownForBuildId = null;

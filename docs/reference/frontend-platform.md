@@ -141,14 +141,22 @@ Do not silently drop failed writes — show error + retry affordance.
 
 Production only (`startVersionCheck()` in `main.tsx`):
 
-- Polls `/version.json` every 60s + on tab refocus (`src/core/version/check.ts`).
+- Polls `/version.json` every **5 min** while visible + on tab refocus
+  (`src/core/version/check.ts`); hidden tabs pause polling.
 - First poll ~**2s** after bootstrap (`VERSION_CHECK_INITIAL_DELAY_MS`).
 - When `buildId` differs from `VITE_APP_BUILD_ID`, shows a **persistent info toast**
-  (“Update available” + **Refresh now**) via `app/version/show-update-available-toast.ts`.
+  (“Update available” + **Refresh now**) via `app/version/show-update-available-toast.ts`,
+  and **pre-warms** the new build’s service worker (`registration.update()`) so it is
+  already `waiting` by reload time.
 - **Dismiss (×)** snoozes re-notification for **15 minutes** per buildId
   (`version-update-snooze.ts`); idle / hidden-tab reload still applies as backstop.
 - Reload is **deferred** until safe: not mid-edit; **immediately when the tab is
   hidden**; otherwise after ~60s idle.
+- The reload is **handed through the service worker** (`reloadOntoLatestBuild()`:
+  `SKIP_WAITING` → `controllerchange` → reload, 10s deadline fallback) so it lands on
+  the NEW precached shell — a bare `location.reload()` under the old controlling
+  worker would re-serve the old one. `src/sw.ts` activation is message-driven, never
+  an unconditional `skipWaiting()`. Both error boundaries reuse the same helper.
 - User can tap **Refresh now** anytime — same reload path as the automatic one.
 - At most one reload per advertised `buildId` (sessionStorage loop guard).
 
