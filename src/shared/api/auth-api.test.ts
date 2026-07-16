@@ -257,3 +257,34 @@ describe('authApi.completeOnboarding', () => {
     await expect(authApi.completeOnboarding('tok_123')).rejects.toThrow();
   });
 });
+
+describe('authApi.deleteAccount', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('DELETEs /users/me with the bearer token', async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await authApi.deleteAccount('tok_123');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain('/users/me');
+    expect(init.method).toBe('DELETE');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer tok_123');
+  });
+
+  it('throws when the backend rejects the deletion', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: { detail: 'boom' } }), { status: 500 }),
+      ),
+    );
+
+    await expect(authApi.deleteAccount('tok_123')).rejects.toThrow('boom');
+  });
+});
