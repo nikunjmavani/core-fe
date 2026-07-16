@@ -7,6 +7,7 @@ import { reportReactError } from '@/app/observability/sentry.ts';
 import { AppProviders } from '@/app/providers/AppProviders.tsx';
 import { router } from '@/app/routes/routeTree.tsx';
 import { platformConfig } from '@/core/config/env.ts';
+import { reloadOntoLatestBuild } from '@/core/version/check.ts';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import { InvisibleTurnstile } from '@/shared/auth/captcha/InvisibleTurnstile.tsx';
 import { FullPageSpinner } from '@/shared/components/FullPageSpinner/index.ts';
@@ -53,7 +54,10 @@ export default function App() {
       <ErrorBoundary
         FallbackComponent={GlobalErrorFallback}
         onError={reportReactError}
-        onReset={() => window.location.reload()}
+        // SW-aware reload: lands on the newest deployed build — a raw
+        // location.reload() under an old controlling worker would re-serve the
+        // exact stale shell/chunks that just crashed.
+        onReset={reloadOntoLatestBuild}
       >
         {/* Solves Cloudflare Turnstile invisibly and keeps a fresh token for auth POSTs. */}
         <InvisibleTurnstile />

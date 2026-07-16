@@ -2,6 +2,7 @@ import { Link } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { reloadOntoLatestBuild } from '@/core/version/check.ts';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { reportError } from '@/shared/errors/errorHandler.ts';
@@ -58,7 +59,9 @@ export function ErrorBoundary({ error }: { error?: unknown }) {
         {t(ERRORS_KEYS.global.title)}
       </h1>
       <p className="text-muted-foreground text-lg">{t(ERRORS_KEYS.global.message)}</p>
-      <Button type="button" className="mt-4" onClick={() => window.location.reload()}>
+      {/* SW-aware reload — a raw location.reload() under an old controlling
+          worker re-serves the exact stale shell/chunks that just crashed. */}
+      <Button type="button" className="mt-4" onClick={reloadOntoLatestBuild}>
         {t(ERRORS_KEYS.route.refresh)}
       </Button>
     </div>
