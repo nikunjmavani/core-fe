@@ -3,7 +3,6 @@
   "greetingFallback": "there",
   "heroSubtitle": "Here's what's happening in your workspace today.",
   "heroSubtitleSolo": "Here's what's happening today.",
-  "title": "Dashboard",
   "errorLoad": "We couldn't load your workspace. Please refresh to try again.",
   "workspaceFallback": "Your workspace",
   "workspaceNameFallback": "your workspace",

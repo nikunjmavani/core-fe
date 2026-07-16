@@ -1281,6 +1281,7 @@ core-fe/
 │   │   ├── env-example.sh
 │   │   ├── health-check.sh
 │   │   ├── i18n-keys.mjs
+│   │   ├── i18n-locale-parity.mjs
 │   │   ├── lockfile-sync.sh
 │   │   ├── no-static-branch-name.ts
 │   │   ├── public-assets.sh

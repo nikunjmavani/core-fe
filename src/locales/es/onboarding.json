@@ -107,5 +107,11 @@
     "finishError": "Algo salió mal al finalizar la configuración. Inténtalo de nuevo.",
     "invitePartialFailure_one": "Espacio listo — no se pudo enviar {{count}} invitación. Puedes reenviarla desde Miembros.",
     "invitePartialFailure_other": "Espacio listo — no se pudieron enviar {{count}} invitaciones. Puedes reenviarlas desde Miembros."
+  },
+  "guard": {
+    "title": "¿Salir de la incorporación?",
+    "description": "Tu progreso se guarda localmente, pero salir ahora puede interrumpir la configuración.",
+    "discard": "Salir",
+    "stay": "Quedarme"
   }
 }

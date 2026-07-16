@@ -3,7 +3,6 @@
   "greetingFallback": "您好",
   "heroSubtitle": "以下是您工作区今日的动态。",
   "heroSubtitleSolo": "以下是今日的动态。",
-  "title": "仪表盘",
   "errorLoad": "无法加载您的工作区。请刷新页面后重试。",
   "workspaceFallback": "您的工作区",
   "workspaceNameFallback": "您的工作区",
@@ -89,5 +88,43 @@
         "action": "查看安全设置"
       }
     }
+  },
+  "insights": {
+    "ariaLabel": "工作区洞察",
+    "heading": "工作区洞察"
+  },
+  "analytics": {
+    "heading": "工作区活动",
+    "description": "一段时间内的会话与 API 调用",
+    "rangeLabel": "选择时间范围",
+    "seriesSessions": "会话",
+    "seriesApiCalls": "API 调用",
+    "range": {
+      "7d": "最近 7 天",
+      "30d": "最近 30 天",
+      "90d": "最近 90 天"
+    }
+  },
+  "members": {
+    "ariaLabel": "团队成员",
+    "heading": "团队成员",
+    "description": "此工作区有 {{count}} 人",
+    "columnMember": "成员",
+    "columnRole": "角色",
+    "columnStatus": "状态",
+    "columnJoined": "加入时间",
+    "status": {
+      "active": "活跃",
+      "invited": "已邀请",
+      "suspended": "已暂停"
+    }
+  },
+  "schedule": {
+    "ariaLabel": "日程",
+    "heading": "日程",
+    "description": "续订、评审与团队活动",
+    "upcoming": "即将到来",
+    "legendEvent": "活动日",
+    "empty": "暂无安排"
   }
 }

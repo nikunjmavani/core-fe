@@ -92,5 +92,64 @@
     "description": "Tienes cambios sin guardar. Si sales, se perderán.",
     "stay": "Seguir editando",
     "leave": "Descartar cambios"
+  },
+  "panels": {
+    "members": {
+      "title": "Miembros",
+      "description": "Personas de esta organización.",
+      "loadFailed": "No se pudieron cargar los miembros. Inténtalo de nuevo.",
+      "emptyTitle": "Aún no hay miembros",
+      "emptyDescription": "Invita a compañeros a colaborar en esta organización.",
+      "searchPlaceholder": "Buscar miembros…",
+      "noResults": "Ningún miembro coincide con tu búsqueda.",
+      "loadMore": "Cargar más",
+      "removeAria": "Eliminar a {{name}}",
+      "removeTitle": "¿Eliminar a {{name}}?",
+      "removeDescription": "Perderá el acceso a esta organización. Puedes deshacerlo durante unos segundos tras confirmar.",
+      "removeConfirm": "Eliminar",
+      "removePending": "Eliminando a {{name}}…"
+    },
+    "roles": {
+      "title": "Roles",
+      "description": "Conjuntos de permisos que puedes asignar a los miembros.",
+      "loadFailed": "No se pudieron cargar los roles. Inténtalo de nuevo.",
+      "emptyTitle": "Aún no hay roles",
+      "emptyDescription": "Crea un rol personalizado para conceder un conjunto de permisos a medida.",
+      "searchPlaceholder": "Buscar roles…",
+      "noResults": "Ningún rol coincide con tu búsqueda.",
+      "loadMore": "Cargar más",
+      "systemBadge": "Sistema",
+      "memberCount": "{{count}} miembro",
+      "memberCount_other": "{{count}} miembros",
+      "deleteAria": "Eliminar {{name}}",
+      "deleteTitle": "¿Eliminar {{name}}?",
+      "deleteDescription": "Los miembros con este rol necesitarán que se les asigne uno nuevo. Puedes deshacerlo durante unos segundos tras confirmar.",
+      "deleteConfirm": "Eliminar",
+      "deletePending": "Eliminando {{name}}…"
+    },
+    "listSort": {
+      "label": "Ordenar por",
+      "nameAsc": "Nombre (A–Z)",
+      "nameDesc": "Nombre (Z–A)",
+      "newest": "Más recientes primero",
+      "oldest": "Más antiguos primero"
+    },
+    "profile": {
+      "title": "Perfil",
+      "description": "Cómo apareces en la aplicación. Visible para las personas de tu organización.",
+      "completeness": "Perfil {{percent}}% completo",
+      "confirmTitle": "¿Guardar los cambios del perfil?",
+      "confirmDescription": "¿Seguro que quieres actualizar la información de tu perfil?",
+      "confirmSave": "Guardar cambios",
+      "confirmCancel": "Cancelar",
+      "saving": "Guardando…",
+      "save": "Guardar cambios"
+    },
+    "account": {
+      "deleteTitle": "¿Eliminar tu cuenta?",
+      "deleteDescription": "Esta acción es permanente y no se puede deshacer. Se eliminarán todos tus datos.",
+      "deleteConfirm": "Eliminar cuenta",
+      "deleteCancel": "Cancelar"
+    }
   }
 }

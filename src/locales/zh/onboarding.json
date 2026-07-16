@@ -107,5 +107,11 @@
     "finishError": "完成设置时出错，请重试。",
     "invitePartialFailure_one": "工作空间已就绪 — {{count}} 个邀请未能发送，可在成员页重发。",
     "invitePartialFailure_other": "工作空间已就绪 — {{count}} 个邀请未能发送，可在成员页重发。"
+  },
+  "guard": {
+    "title": "退出入门引导？",
+    "description": "您的进度已保存在本地，但现在退出可能会中断设置。",
+    "discard": "退出",
+    "stay": "留下"
   }
 }

@@ -89,6 +89,7 @@
     "validate:theme-catalog": "node --import tsx tooling/validate/theme-catalog.mjs",
     "validate:testids": "node tooling/validate/test-ids.mjs",
     "validate:i18n": "node tooling/validate/i18n-keys.mjs",
+    "validate:i18n-parity": "node tooling/validate/i18n-locale-parity.mjs",
     "validate:vite-env": "node tooling/validate/vite-env-reads.mjs",
     "validate:no-static-branch-name": "node --import tsx tooling/validate/no-static-branch-name.ts",
     "validate:client-env": "node --import tsx tooling/validate/client-env.ts",

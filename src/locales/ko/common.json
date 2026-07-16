@@ -1,5 +1,4 @@
 {
-  "appTitle": "Core Admin",
   "language": {
     "openAria": "Language & regional settings",
     "title": "Language & region",
@@ -64,6 +63,27 @@
   },
   "localePreview": {
     "heading": "Live preview",
-    "currency": "Currency: {{value}}"
+    "currency": "Currency: {{value}}",
+    "direction": "텍스트 방향: {{value}}",
+    "firstDay": "주 시작: {{value}}",
+    "measurement": "단위: {{value}}"
+  },
+  "direction": {
+    "ltr": "왼쪽에서 오른쪽",
+    "rtl": "오른쪽에서 왼쪽"
+  },
+  "firstDay": {
+    "saturday": "토요일",
+    "sunday": "일요일",
+    "monday": "월요일"
+  },
+  "measurement": {
+    "metric": "미터법",
+    "imperial": "야드파운드법"
+  },
+  "versionUpdate": {
+    "title": "업데이트 사용 가능",
+    "description": "앱의 새 버전이 준비되었습니다.",
+    "refresh": "지금 새로 고침"
   }
 }

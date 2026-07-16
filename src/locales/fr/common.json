@@ -1,10 +1,9 @@
 {
-  "appTitle": "Core Admin",
   "language": {
-    "openAria": "Language & regional settings",
-    "title": "Language & region",
-    "heading": "Language",
-    "description": "UI copy, dates, numbers, and currency follow these preferences.",
+    "openAria": "Langue et paramètres régionaux",
+    "title": "Langue et région",
+    "heading": "Langue",
+    "description": "Les textes, dates, nombres et devises suivent ces préférences.",
     "en": "English",
     "es": "Español",
     "zh": "中文",
@@ -18,52 +17,73 @@
     "it": "Italiano"
   },
   "formatLocale": {
-    "heading": "Regional format locale",
-    "description": "Intl date, number, and currency output — independent of UI language."
+    "heading": "Région de formatage",
+    "description": "Format Intl des dates, nombres et devises — indépendant de la langue."
   },
   "dateFormat": {
-    "heading": "Date & time format",
-    "auto": "Locale default (numeric)",
-    "short": "Short",
-    "medium": "Medium",
+    "heading": "Format de date et d’heure",
+    "auto": "Par défaut de la langue (numérique)",
+    "short": "Court",
+    "medium": "Moyen",
     "long": "Long",
-    "full": "Full",
-    "iso": "ISO-style (YYYY-MM-DD)",
-    "date": "Date only",
-    "time": "Time only",
-    "datetime": "Date + time",
-    "previewDate": "Date & time: {{value}}",
-    "previewNumber": "Number: {{value}}",
-    "previewRelative": "Relative: {{value}}",
-    "previewTime": "Time only: {{value}}"
+    "full": "Complet",
+    "iso": "Style ISO (AAAA-MM-JJ)",
+    "date": "Date uniquement",
+    "time": "Heure uniquement",
+    "datetime": "Date + heure",
+    "previewDate": "Date et heure : {{value}}",
+    "previewNumber": "Nombre : {{value}}",
+    "previewRelative": "Relatif : {{value}}",
+    "previewTime": "Heure uniquement : {{value}}"
   },
   "hourCycle": {
-    "heading": "Clock format",
-    "auto": "Locale default",
-    "h12": "12-hour (AM/PM)",
-    "h23": "24-hour"
+    "heading": "Format d’horloge",
+    "auto": "Par défaut de la langue",
+    "h12": "12 heures (AM/PM)",
+    "h23": "24 heures"
   },
   "numberStyle": {
-    "heading": "Number format",
-    "auto": "Locale default",
-    "standard": "Grouped",
-    "compact": "Compact (1.2M)",
-    "engineering": "Engineering",
-    "scientific": "Scientific"
+    "heading": "Format des nombres",
+    "auto": "Par défaut de la langue",
+    "standard": "Groupé",
+    "compact": "Compact (1,2 M)",
+    "engineering": "Ingénierie",
+    "scientific": "Scientifique"
   },
   "currencyDisplay": {
-    "heading": "Currency display",
-    "auto": "Locale default",
-    "symbol": "Symbol",
-    "narrowSymbol": "Narrow symbol",
-    "code": "ISO code",
-    "name": "Currency name"
+    "heading": "Affichage de la devise",
+    "auto": "Par défaut de la langue",
+    "symbol": "Symbole",
+    "narrowSymbol": "Symbole étroit",
+    "code": "Code ISO",
+    "name": "Nom de la devise"
   },
   "currencyCode": {
-    "heading": "Preview currency"
+    "heading": "Devise d’aperçu"
   },
   "localePreview": {
-    "heading": "Live preview",
-    "currency": "Currency: {{value}}"
+    "heading": "Aperçu en direct",
+    "currency": "Devise : {{value}}",
+    "direction": "Sens du texte : {{value}}",
+    "firstDay": "La semaine commence : {{value}}",
+    "measurement": "Unités : {{value}}"
+  },
+  "direction": {
+    "ltr": "De gauche à droite",
+    "rtl": "De droite à gauche"
+  },
+  "firstDay": {
+    "saturday": "Samedi",
+    "sunday": "Dimanche",
+    "monday": "Lundi"
+  },
+  "measurement": {
+    "metric": "Métrique",
+    "imperial": "Impérial"
+  },
+  "versionUpdate": {
+    "title": "Mise à jour disponible",
+    "description": "Une nouvelle version de l’application est prête.",
+    "refresh": "Actualiser maintenant"
   }
 }

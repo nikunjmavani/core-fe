@@ -1,5 +1,4 @@
 {
-  "appTitle": "Core Admin",
   "language": {
     "openAria": "Language & regional settings",
     "title": "Language & region",
@@ -64,6 +63,27 @@
   },
   "localePreview": {
     "heading": "Live preview",
-    "currency": "Currency: {{value}}"
+    "currency": "Currency: {{value}}",
+    "direction": "Textrichtung: {{value}}",
+    "firstDay": "Woche beginnt: {{value}}",
+    "measurement": "Einheiten: {{value}}"
+  },
+  "direction": {
+    "ltr": "Von links nach rechts",
+    "rtl": "Von rechts nach links"
+  },
+  "firstDay": {
+    "saturday": "Samstag",
+    "sunday": "Sonntag",
+    "monday": "Montag"
+  },
+  "measurement": {
+    "metric": "Metrisch",
+    "imperial": "Imperial"
+  },
+  "versionUpdate": {
+    "title": "Update verfügbar",
+    "description": "Eine neue Version der App ist bereit.",
+    "refresh": "Jetzt aktualisieren"
   }
 }

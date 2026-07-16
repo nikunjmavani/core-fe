@@ -1,10 +1,9 @@
 {
-  "appTitle": "Core Admin",
   "language": {
-    "openAria": "Language & regional settings",
-    "title": "Language & region",
-    "heading": "Language",
-    "description": "UI copy, dates, numbers, and currency follow these preferences.",
+    "openAria": "भाषा और क्षेत्रीय सेटिंग",
+    "title": "भाषा और क्षेत्र",
+    "heading": "भाषा",
+    "description": "UI टेक्स्ट, तिथियाँ, संख्याएँ और मुद्रा इन प्राथमिकताओं का पालन करती हैं।",
     "en": "English",
     "es": "Español",
     "zh": "中文",
@@ -18,52 +17,73 @@
     "it": "Italiano"
   },
   "formatLocale": {
-    "heading": "Regional format locale",
-    "description": "Intl date, number, and currency output — independent of UI language."
+    "heading": "क्षेत्रीय प्रारूप लोकेल",
+    "description": "Intl तिथि, संख्या और मुद्रा आउटपुट — UI भाषा से स्वतंत्र।"
   },
   "dateFormat": {
-    "heading": "Date & time format",
-    "auto": "Locale default (numeric)",
-    "short": "Short",
-    "medium": "Medium",
-    "long": "Long",
-    "full": "Full",
-    "iso": "ISO-style (YYYY-MM-DD)",
-    "date": "Date only",
-    "time": "Time only",
-    "datetime": "Date + time",
-    "previewDate": "Date & time: {{value}}",
-    "previewNumber": "Number: {{value}}",
-    "previewRelative": "Relative: {{value}}",
-    "previewTime": "Time only: {{value}}"
+    "heading": "तिथि और समय प्रारूप",
+    "auto": "लोकेल डिफ़ॉल्ट (संख्यात्मक)",
+    "short": "छोटा",
+    "medium": "मध्यम",
+    "long": "लंबा",
+    "full": "पूर्ण",
+    "iso": "ISO शैली (YYYY-MM-DD)",
+    "date": "केवल तिथि",
+    "time": "केवल समय",
+    "datetime": "तिथि + समय",
+    "previewDate": "तिथि और समय: {{value}}",
+    "previewNumber": "संख्या: {{value}}",
+    "previewRelative": "सापेक्ष: {{value}}",
+    "previewTime": "केवल समय: {{value}}"
   },
   "hourCycle": {
-    "heading": "Clock format",
-    "auto": "Locale default",
-    "h12": "12-hour (AM/PM)",
-    "h23": "24-hour"
+    "heading": "घड़ी प्रारूप",
+    "auto": "लोकेल डिफ़ॉल्ट",
+    "h12": "12-घंटे (AM/PM)",
+    "h23": "24-घंटे"
   },
   "numberStyle": {
-    "heading": "Number format",
-    "auto": "Locale default",
-    "standard": "Grouped",
-    "compact": "Compact (1.2M)",
-    "engineering": "Engineering",
-    "scientific": "Scientific"
+    "heading": "संख्या प्रारूप",
+    "auto": "लोकेल डिफ़ॉल्ट",
+    "standard": "समूहित",
+    "compact": "संक्षिप्त (1.2M)",
+    "engineering": "इंजीनियरिंग",
+    "scientific": "वैज्ञानिक"
   },
   "currencyDisplay": {
-    "heading": "Currency display",
-    "auto": "Locale default",
-    "symbol": "Symbol",
-    "narrowSymbol": "Narrow symbol",
-    "code": "ISO code",
-    "name": "Currency name"
+    "heading": "मुद्रा प्रदर्शन",
+    "auto": "लोकेल डिफ़ॉल्ट",
+    "symbol": "प्रतीक",
+    "narrowSymbol": "संकीर्ण प्रतीक",
+    "code": "ISO कोड",
+    "name": "मुद्रा नाम"
   },
   "currencyCode": {
-    "heading": "Preview currency"
+    "heading": "पूर्वावलोकन मुद्रा"
   },
   "localePreview": {
-    "heading": "Live preview",
-    "currency": "Currency: {{value}}"
+    "heading": "लाइव पूर्वावलोकन",
+    "currency": "मुद्रा: {{value}}",
+    "direction": "पाठ दिशा: {{value}}",
+    "firstDay": "सप्ताह की शुरुआत: {{value}}",
+    "measurement": "इकाइयाँ: {{value}}"
+  },
+  "direction": {
+    "ltr": "बाएँ से दाएँ",
+    "rtl": "दाएँ से बाएँ"
+  },
+  "firstDay": {
+    "saturday": "शनिवार",
+    "sunday": "रविवार",
+    "monday": "सोमवार"
+  },
+  "measurement": {
+    "metric": "मीट्रिक",
+    "imperial": "इंपीरियल"
+  },
+  "versionUpdate": {
+    "title": "अपडेट उपलब्ध है",
+    "description": "ऐप का नया संस्करण तैयार है।",
+    "refresh": "अभी रीफ़्रेश करें"
   }
 }

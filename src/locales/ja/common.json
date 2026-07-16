@@ -1,10 +1,9 @@
 {
-  "appTitle": "Core Admin",
   "language": {
-    "openAria": "Language & regional settings",
-    "title": "Language & region",
-    "heading": "Language",
-    "description": "UI copy, dates, numbers, and currency follow these preferences.",
+    "openAria": "言語と地域の設定",
+    "title": "言語と地域",
+    "heading": "言語",
+    "description": "UI のテキスト、日付、数値、通貨はこの設定に従います。",
     "en": "English",
     "es": "Español",
     "zh": "中文",
@@ -18,52 +17,73 @@
     "it": "Italiano"
   },
   "formatLocale": {
-    "heading": "Regional format locale",
-    "description": "Intl date, number, and currency output — independent of UI language."
+    "heading": "地域フォーマット",
+    "description": "Intl の日付・数値・通貨の出力（UI 言語とは独立）。"
   },
   "dateFormat": {
-    "heading": "Date & time format",
-    "auto": "Locale default (numeric)",
-    "short": "Short",
-    "medium": "Medium",
-    "long": "Long",
-    "full": "Full",
-    "iso": "ISO-style (YYYY-MM-DD)",
-    "date": "Date only",
-    "time": "Time only",
-    "datetime": "Date + time",
-    "previewDate": "Date & time: {{value}}",
-    "previewNumber": "Number: {{value}}",
-    "previewRelative": "Relative: {{value}}",
-    "previewTime": "Time only: {{value}}"
+    "heading": "日付と時刻の形式",
+    "auto": "言語の既定（数値）",
+    "short": "短い",
+    "medium": "標準",
+    "long": "長い",
+    "full": "完全",
+    "iso": "ISO 形式（YYYY-MM-DD）",
+    "date": "日付のみ",
+    "time": "時刻のみ",
+    "datetime": "日付＋時刻",
+    "previewDate": "日付と時刻：{{value}}",
+    "previewNumber": "数値：{{value}}",
+    "previewRelative": "相対：{{value}}",
+    "previewTime": "時刻のみ：{{value}}"
   },
   "hourCycle": {
-    "heading": "Clock format",
-    "auto": "Locale default",
-    "h12": "12-hour (AM/PM)",
-    "h23": "24-hour"
+    "heading": "時計の形式",
+    "auto": "言語の既定",
+    "h12": "12 時間制（午前/午後）",
+    "h23": "24 時間制"
   },
   "numberStyle": {
-    "heading": "Number format",
-    "auto": "Locale default",
-    "standard": "Grouped",
-    "compact": "Compact (1.2M)",
-    "engineering": "Engineering",
-    "scientific": "Scientific"
+    "heading": "数値の形式",
+    "auto": "言語の既定",
+    "standard": "桁区切り",
+    "compact": "コンパクト（1.2M）",
+    "engineering": "工学表記",
+    "scientific": "科学表記"
   },
   "currencyDisplay": {
-    "heading": "Currency display",
-    "auto": "Locale default",
-    "symbol": "Symbol",
-    "narrowSymbol": "Narrow symbol",
-    "code": "ISO code",
-    "name": "Currency name"
+    "heading": "通貨の表示",
+    "auto": "言語の既定",
+    "symbol": "記号",
+    "narrowSymbol": "省略記号",
+    "code": "ISO コード",
+    "name": "通貨名"
   },
   "currencyCode": {
-    "heading": "Preview currency"
+    "heading": "プレビュー通貨"
   },
   "localePreview": {
-    "heading": "Live preview",
-    "currency": "Currency: {{value}}"
+    "heading": "リアルタイムプレビュー",
+    "currency": "通貨：{{value}}",
+    "direction": "文字方向：{{value}}",
+    "firstDay": "週の開始：{{value}}",
+    "measurement": "単位：{{value}}"
+  },
+  "direction": {
+    "ltr": "左から右",
+    "rtl": "右から左"
+  },
+  "firstDay": {
+    "saturday": "土曜日",
+    "sunday": "日曜日",
+    "monday": "月曜日"
+  },
+  "measurement": {
+    "metric": "メートル法",
+    "imperial": "ヤード・ポンド法"
+  },
+  "versionUpdate": {
+    "title": "アップデートがあります",
+    "description": "アプリの新しいバージョンが利用可能です。",
+    "refresh": "今すぐ更新"
   }
 }

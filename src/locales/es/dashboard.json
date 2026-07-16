@@ -3,7 +3,6 @@
   "greetingFallback": "ahí",
   "heroSubtitle": "Esto es lo que ocurre hoy en tu espacio de trabajo.",
   "heroSubtitleSolo": "Esto es lo que ocurre hoy.",
-  "title": "Panel",
   "errorLoad": "No pudimos cargar tu espacio de trabajo. Actualiza la página e inténtalo de nuevo.",
   "workspaceFallback": "Tu espacio de trabajo",
   "workspaceNameFallback": "tu espacio de trabajo",
@@ -89,5 +88,43 @@
         "action": "Revisar configuración de seguridad"
       }
     }
+  },
+  "insights": {
+    "ariaLabel": "Estadísticas del espacio",
+    "heading": "Estadísticas del espacio"
+  },
+  "analytics": {
+    "heading": "Actividad del espacio",
+    "description": "Sesiones y llamadas a la API a lo largo del tiempo",
+    "rangeLabel": "Seleccionar intervalo de tiempo",
+    "seriesSessions": "Sesiones",
+    "seriesApiCalls": "Llamadas a la API",
+    "range": {
+      "7d": "Últimos 7 días",
+      "30d": "Últimos 30 días",
+      "90d": "Últimos 90 días"
+    }
+  },
+  "members": {
+    "ariaLabel": "Miembros del equipo",
+    "heading": "Miembros del equipo",
+    "description": "{{count}} personas en este espacio",
+    "columnMember": "Miembro",
+    "columnRole": "Rol",
+    "columnStatus": "Estado",
+    "columnJoined": "Se unió",
+    "status": {
+      "active": "Activo",
+      "invited": "Invitado",
+      "suspended": "Suspendido"
+    }
+  },
+  "schedule": {
+    "ariaLabel": "Agenda",
+    "heading": "Agenda",
+    "description": "Renovaciones, revisiones y eventos del equipo",
+    "upcoming": "Próximos",
+    "legendEvent": "Día con evento",
+    "empty": "Nada programado"
   }
 }
