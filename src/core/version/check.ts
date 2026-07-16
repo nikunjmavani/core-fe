@@ -167,17 +167,6 @@ function waitForWaitingWorker(
 }
 
 /**
- * Reload through the service-worker lifecycle so the reload lands on the NEW
- * build. The SW precaches index.html, so while the OLD worker still controls
- * the page a plain `location.reload()` re-serves the OLD shell — and the new
- * worker sits `waiting` forever (activation is deliberately message-driven,
- * not an unconditional skipWaiting, so builds never swap mid-task).
- *
- * Flow: update() → wait for the new worker to reach `waiting` → SKIP_WAITING →
- * reload on `controllerchange`. Every failure branch falls back to a plain
- * reload, and {@link SW_ACTIVATE_DEADLINE_MS} guarantees we never hang.
- */
-/**
  * Reload the page so it lands on the NEWEST deployed build. When a service
  * worker controls the page, a bare `location.reload()` re-serves the OLD
  * precached shell — this helper first installs/activates any newer worker
@@ -195,6 +184,12 @@ export function reloadOntoLatestBuild(): void {
   }
 }
 
+/**
+ * The SW leg of {@link reloadOntoLatestBuild}: update() → wait for the new
+ * worker to reach `waiting` → SKIP_WAITING → reload on `controllerchange`.
+ * Every failure branch falls back to a plain reload, and
+ * {@link SW_ACTIVATE_DEADLINE_MS} guarantees we never hang.
+ */
 async function reloadThroughServiceWorker(): Promise<void> {
   let done = false;
   const finish = () => {
