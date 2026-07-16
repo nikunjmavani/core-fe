@@ -91,6 +91,9 @@ sequenceDiagram
 **FE API today**
 
 - Email: `authApi.emailVerificationCodeSend(email)` / `authApi.emailLogin({ email, code })`
+  - `emailVerificationCodeSend` returns the parsed response body; under core-be’s
+    local `TEST_MODE` it carries `debug_verification_code`, which the verify step
+    auto-fills (dev convenience — the field never exists in a production response).
 
 Constants: [`src/core/config/constants.ts`](../../src/core/config/constants.ts) → `EMAIL_CODE_SEND`, `EMAIL_CODE_LOGIN`. Both public routes accept optional `X-Captcha-Token` when Turnstile is enabled.
 

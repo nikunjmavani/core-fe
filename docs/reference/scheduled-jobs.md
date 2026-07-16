@@ -52,7 +52,7 @@ Listed for completeness — these are real periodic behavior but not
 `.github/workflows` crons, so the policy test does not enforce them:
 
 - **Dependabot** (`.github/dependabot.yml`) — weekly Monday, `npm` + `github-actions` ecosystems; updates arrive as PRs, then the event-driven `dependabot-ci-triage` + approval-gated `dependabot-auto-merge` workflows take over.
-- **Runtime version check** (`src/core/version/check.ts`) — the client polls `/version.json` every 60s and on tab refocus to detect a new deployment; not CI, a different axis (app behavior).
+- **Runtime version check** (`src/core/version/check.ts`) — the client polls `/version.json` every 5 min while visible and on tab refocus to detect a new deployment (reload lands via the service-worker handoff); not CI, a different axis (app behavior).
 
 ## Adding a scheduled job
 
