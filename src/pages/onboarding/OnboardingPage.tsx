@@ -350,7 +350,12 @@ export function OnboardingPage() {
         setCreatedOrganizationSlug,
       });
 
-      void persistOnboardingResult({
+      // Awaited so the profile PATCH lands BEFORE the me/context refetch below —
+      // unawaited, the refreshed context could still carry firstName: null and
+      // the dashboard would greet the user by their email prefix instead of the
+      // name they just typed. Still best-effort: every failure inside is
+      // swallowed, so awaiting can never strand the wizard.
+      await persistOnboardingResult({
         firstName: data.firstName,
         lastName: data.lastName,
         teamSize: data.teamSize,

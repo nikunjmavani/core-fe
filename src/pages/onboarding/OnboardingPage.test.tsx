@@ -305,6 +305,44 @@ describe('OnboardingPage', () => {
     expect(switchToPersonal).toHaveBeenCalledTimes(1);
   });
 
+  it('persists the typed profile name BEFORE refetching me/context (greeting consistency)', async () => {
+    const user = userEvent.setup();
+    const order: string[] = [];
+    const { authApi } = await import('@/shared/api/auth-api.ts');
+    const { hydrateSessionContext } = await import('@/shared/tenancy/session-context.ts');
+    const { setAccessToken, clearAccessToken } = await import('@/shared/auth/token.ts');
+    // Structurally valid base64url JWT — setAccessToken validates the shape.
+    const b64u = (value: object) =>
+      btoa(JSON.stringify(value))
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    const fakeJwt = `${b64u({ alg: 'none' })}.${b64u({ sub: 'usr_1', exp: 9999999999 })}.sig`;
+    setAccessToken(fakeJwt);
+    vi.mocked(authApi.updateProfile).mockImplementationOnce(async () => {
+      await new Promise((r) => setTimeout(r, 20)); // let hydrate overtake if unordered
+      order.push('updateProfile');
+    });
+    vi.mocked(hydrateSessionContext).mockImplementationOnce(async () => {
+      order.push('hydrate');
+      return hydratedContextRef.value;
+    });
+    try {
+      seedDoneStep();
+      useOnboardingStore.getState().patch({ firstName: 'Ada', lastName: 'Lovelace' });
+      renderWithProviders(<OnboardingPage />);
+
+      await user.click(await screen.findByTestId('onboarding-finish'));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalled());
+      // The PATCH must land before the refetch, or the refreshed context still
+      // carries firstName: null and the dashboard greets by email prefix.
+      expect(order).toEqual(['updateProfile', 'hydrate']);
+    } finally {
+      clearAccessToken();
+    }
+  });
+
   it('creates the org when persisted createdOrganizationId is stale (404 guard)', async () => {
     const user = userEvent.setup();
     seedDoneStep();
