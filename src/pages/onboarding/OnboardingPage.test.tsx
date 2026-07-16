@@ -35,9 +35,11 @@ vi.mock('@/shared/tenancy/session-context.ts', () => ({
 }));
 
 const navigate = vi.fn();
+const searchRef = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   useNavigate: () => navigate,
+  useSearch: () => searchRef.value,
 }));
 
 const switchToOrganization = vi.fn();
@@ -303,6 +305,43 @@ describe('OnboardingPage', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalled());
     expect(switchToOrganization).not.toHaveBeenCalled();
     expect(switchToPersonal).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns the user to the guarded deep link after finishing (?redirect=)', async () => {
+    const user = userEvent.setup();
+    searchRef.value = { redirect: '/organization/acme/settings' };
+    try {
+      seedDoneStep();
+      renderWithProviders(<OnboardingPage />);
+
+      await user.click(await screen.findByTestId('onboarding-finish'));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+      expect(navigate).toHaveBeenCalledWith({
+        to: '/organization/acme/settings',
+        replace: true,
+      });
+    } finally {
+      searchRef.value = {};
+    }
+  });
+
+  it('ignores an unsafe redirect and falls back to the resolved workspace', async () => {
+    const user = userEvent.setup();
+    searchRef.value = { redirect: 'https://evil.example/phish' };
+    try {
+      seedDoneStep();
+      renderWithProviders(<OnboardingPage />);
+
+      await user.click(await screen.findByTestId('onboarding-finish'));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+      expect(navigate).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { organizationSlug: 'acme' }, replace: true }),
+      );
+    } finally {
+      searchRef.value = {};
+    }
   });
 
   it('persists the typed profile name BEFORE refetching me/context (greeting consistency)', async () => {

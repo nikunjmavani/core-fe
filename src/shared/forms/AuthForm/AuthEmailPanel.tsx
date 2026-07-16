@@ -102,7 +102,14 @@ function navigateAfterEmailLogin(
   const ctx = queryClient.getQueryData<MeContext>(meContextQueryKey);
   const rootTarget = ctx ? resolveRootTarget(ctx) : ({ to: '/' } as const);
   if (rootTarget.to === '/onboarding') {
-    void navigate({ to: '/onboarding', replace: true });
+    // Forward the saved deep link through the wizard instead of dropping it —
+    // finishing onboarding returns the user to the page they signed in for.
+    const savedRedirect = getRedirectPath(location);
+    void navigate({
+      to: '/onboarding',
+      search: savedRedirect ? { redirect: savedRedirect } : undefined,
+      replace: true,
+    });
     return;
   }
   const redirectPath = getRedirectPath(location);

@@ -84,7 +84,7 @@ function createTestRouter() {
  * destination renders a marker island (no `/login` chrome) so a bounce back
  * through the login screen would be observable.
  */
-function createDestinationRouter() {
+function createDestinationRouter(initialEntry = '/login') {
   const rootRoute = createRootRoute({ component: () => <Outlet /> });
   const loginRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -120,7 +120,7 @@ function createDestinationRouter() {
   ]);
   return createRouter({
     routeTree: tree,
-    history: createMemoryHistory({ initialEntries: ['/login'] }),
+    history: createMemoryHistory({ initialEntries: [initialEntry] }),
   });
 }
 
@@ -248,6 +248,41 @@ describe('AuthEmailPanel', () => {
     await verifyWith(router);
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/onboarding'));
+  });
+
+  // A deep link saved by requireAuth (?redirect=) must survive the onboarding
+  // hop — the wizard forwards it and returns the user there after finishing.
+  it('forwards the saved deep link onto /onboarding for a fresh signup', async () => {
+    vi.mocked(queryClient.getQueryData).mockReturnValueOnce({
+      user: {
+        id: 'usr_1',
+        email: 'user@example.com',
+        isEmailVerified: true,
+        isMfaEnabled: false,
+        firstName: null,
+        lastName: null,
+        avatarUrl: null,
+        status: 'ACTIVE',
+        createdAt: TS,
+        updatedAt: TS,
+      },
+      activeOrganization: null,
+      myPermissions: [],
+      globalRole: null,
+      organizations: [],
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+      personalOrganizationId: null,
+    });
+    const router = createDestinationRouter(
+      '/login?redirect=%2Forganization%2Facme%2Fsettings',
+    );
+
+    await verifyWith(router);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/onboarding'));
+    expect(router.state.location.search).toEqual({
+      redirect: '/organization/acme/settings',
+    });
   });
 
   it('shows inline resend and change-email helpers on the verify step', async () => {

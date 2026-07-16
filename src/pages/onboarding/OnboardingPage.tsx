@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,6 +7,7 @@ import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
 import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { createInvitation } from '@/shared/api/organization-api.ts';
+import { isSafeRedirectPath } from '@/shared/auth/redirect-safety.ts';
 import { getAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -46,6 +47,7 @@ import {
   ONBOARDING_NS,
   ONBOARDING_TEST_IDS,
 } from './onboarding.constants.ts';
+import type { OnboardingSearch } from './onboarding.search.ts';
 import {
   deriveOnboardingSteps,
   type OnboardingStep,
@@ -223,15 +225,21 @@ async function activateWorkspaceAfterOnboardingFinish(input: {
 /**
  * Land the user directly on their resolved workspace after onboarding — no hop
  * through the `/` resolver (which would re-fetch me/context and add a second
- * redirect). `resolveRootTarget` is the same decision `/` makes, run on the
- * post-switch context we already hold. Only when no workspace resolves (should
- * not happen once a switch succeeded) do we defer to `/` rather than self-loop
- * back into onboarding.
+ * redirect). A safe `?redirect=` deep link (attached by the workspace guards
+ * when they bounced the user here) wins over the resolved workspace: it is the
+ * page the user originally asked for, and its own guards re-validate
+ * membership/status on arrival. Otherwise `resolveRootTarget` is the same
+ * decision `/` makes, run on the post-switch context we already hold.
  */
 function navigateAfterOnboarding(
   navigate: ReturnType<typeof useNavigate>,
   ctx: MeContext,
+  redirectPath?: string,
 ): void {
+  if (redirectPath && isSafeRedirectPath(redirectPath)) {
+    void navigate({ to: redirectPath, replace: true });
+    return;
+  }
   const target = resolveRootTarget(ctx);
   if (target.to === '/organization/$organizationSlug/dashboard') {
     void navigate({ to: target.to, params: target.params, replace: true });
@@ -271,6 +279,12 @@ function renderStep(step: ReturnType<typeof stepAtIndex>) {
 export function OnboardingPage() {
   const { t } = useTranslation(ONBOARDING_NS);
   const navigate = useNavigate();
+  // Deep link the workspace guards carried here (?redirect=…) — consumed at
+  // finish so the user lands on the page they originally asked for. The
+  // non-strict search is untyped here; validateOnboardingSearch (routeTree)
+  // guarantees `redirect` is a string when present.
+  const search: OnboardingSearch = useSearch({ strict: false });
+  const redirectSearch = search.redirect;
   const {
     stepIndex,
     data,
@@ -401,7 +415,11 @@ export function OnboardingPage() {
           i18n.t(ONBOARDING_KEYS.toast.finishSuccess, { ns: ONBOARDING_NS }),
         );
       }
-      navigateAfterOnboarding(navigate, activatedContext ?? refreshedContext);
+      navigateAfterOnboarding(
+        navigate,
+        activatedContext ?? refreshedContext,
+        redirectSearch,
+      );
     } catch {
       notify.error(i18n.t(ONBOARDING_KEYS.toast.finishError, { ns: ONBOARDING_NS }));
     } finally {

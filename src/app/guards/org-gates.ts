@@ -9,8 +9,12 @@ import {
   requireTeamOrganizationsDeployment,
 } from './route-guards.ts';
 
-/** These gates only read the route params (the org slug). */
-type OrgRouteCtx = { params: Record<string, string> };
+/**
+ * These gates read the route params (the org slug) plus, for the workspace
+ * gates, the guarded location (`redirectFrom`) so an onboarding redirect can
+ * carry the original deep link.
+ */
+type OrgRouteCtx = { params: Record<string, string>; redirectFrom?: string };
 
 /**
  * App-layer security gates for the org-scoped route space — thin `Gate`
@@ -49,13 +53,16 @@ export const requirePersonalDeployment: Gate<unknown> = () => {
 };
 
 /** `/dashboard` — session must have a personal active org (else onboarding / team URL). */
-export const requirePersonalDashboardWorkspace: Gate<unknown> = async () => {
-  await requireProvisionedPersonalDashboard();
+export const requirePersonalDashboardWorkspace: Gate<{ redirectFrom?: string }> = async (
+  ctx,
+) => {
+  await requireProvisionedPersonalDashboard({ redirectFrom: ctx?.redirectFrom });
 };
 
 /** Team slug space — no active org → onboarding or picker; personal active org → `/dashboard`. */
 export const requireProvisionedWorkspace: Gate<OrgRouteCtx> = async (ctx) => {
   await requireProvisionedTeamWorkspace({
     organizationPicker: !ctx.params.organizationSlug,
+    redirectFrom: ctx.redirectFrom,
   });
 };
