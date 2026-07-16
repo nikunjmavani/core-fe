@@ -1,6 +1,6 @@
 # Design Language
 
-The **principles** behind Core Admin — the point of view, the feel, and the rules
+The **principles** behind Core — the point of view, the feel, and the rules
 that keep every screen coherent. This is the _why_; for the _how_ (token names,
 adopting a shadcn-create theme, the Shuffle engine internals) see
 [theming.md](theming.md), and for accessibility/UX review criteria use the
@@ -10,7 +10,7 @@ fonts/brand. Craft is elevated inside those rails, never around them.
 
 ## 1. Point of view
 
-Core Admin is a **quiet, neutral control surface that turns expressive on
+Core is a **quiet, neutral control surface that turns expressive on
 demand.** The default look is monochrome and content-first — the chrome recedes
 so data and actions lead. Personality (accent hue, fonts, density, icon set) is
 **opt-in** through the Appearance studio and Shuffle, never forced onto a fresh
@@ -128,7 +128,7 @@ on its surface, in both modes.
      locally, not on admin shells.
 
 - **Not Claude-width by default.** Chat products cap ~720–768px for long answers.
-  Core Admin is a control surface — width is for tables and panels; constrain
+  Core is a control surface — width is for tables and panels; constrain
   copy, not chrome. Full rules: [preset-product-design-rules.md § Layout](preset-product-design-rules.md#layout--grid-shell-vs-page-vs-prose).
 
 ## 5. Motion

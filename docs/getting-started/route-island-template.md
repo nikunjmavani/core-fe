@@ -48,7 +48,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: '<page-name>',
   path: '/<path>',
-  title: '<Page title>', // document title: "<Page title> · Core Admin"
+  title: '<Page title>', // document title: "<Page title> · Core"
   testId: '<page-name>-page',
   permission: 'resource:read', // or null
   kind: 'leaf', // or 'layout' + children: ['<sub-a>']

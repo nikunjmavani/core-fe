@@ -63,8 +63,8 @@ test.describe('Live routes integration', () => {
     test('the document title is composed from the route manifest', async ({ page }) => {
       await gotoApp(page, '/login');
       await expectAuthScreenReady(page);
-      // manifestHead → "<title> · Core Admin" (RouteAnnouncer reads the same title).
-      await expect(page).toHaveTitle(/· Core Admin$/);
+      // manifestHead → "<title> · Core" (RouteAnnouncer reads the same title).
+      await expect(page).toHaveTitle(/· Core$/);
     });
 
     test('OAuth callback with an error query returns to login', async ({ page }) => {

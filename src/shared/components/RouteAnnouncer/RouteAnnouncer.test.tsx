@@ -40,18 +40,18 @@ describe('RouteAnnouncer', () => {
   it('announces the committed document title after a path change', async () => {
     render(<RouteAnnouncer />);
 
-    document.title = 'Dashboard · Core Admin';
+    document.title = 'Dashboard · Core';
     resolvedHandler?.({ pathChanged: true });
 
     await waitFor(() =>
-      expect(screen.getByRole('status')).toHaveTextContent('Dashboard · Core Admin'),
+      expect(screen.getByRole('status')).toHaveTextContent('Dashboard · Core'),
     );
   });
 
   it('stays silent on hash-only navigations (settings modal)', async () => {
     render(<RouteAnnouncer />);
 
-    document.title = 'Sign in · Core Admin';
+    document.title = 'Sign in · Core';
     resolvedHandler?.({ pathChanged: false });
 
     // Give a frame a chance to run — nothing should be announced.

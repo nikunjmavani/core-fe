@@ -1,12 +1,12 @@
 import type { PageManifest } from './page-manifest.ts';
 
 /** Product name — the title suffix on every page (and the `/` fallback). */
-export const APP_TITLE = 'Core Admin';
+export const APP_TITLE = 'Core';
 
 /** Default meta description for the app shell. */
 export const APP_DESCRIPTION = 'Enterprise multi-tenant admin dashboard';
 
-/** "Sign in · Core Admin" — the one composition rule for document titles. */
+/** "Sign in · Core" — the one composition rule for document titles. */
 export function composePageTitle(pageTitle: string): string {
   return `${pageTitle} · ${APP_TITLE}`;
 }

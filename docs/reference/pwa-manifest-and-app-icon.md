@@ -78,7 +78,7 @@ Use `rsvg-convert` (macOS `sips` does not reliably rasterize this SVG).
 
 | Field         | Source                                                        |
 | ------------- | ------------------------------------------------------------- |
-| `name`        | `APP_TITLE` from `page-head.ts` (`"Core Admin"`)              |
+| `name`        | `APP_TITLE` from `page-head.ts` (`"Core"`)                    |
 | `short_name`  | `APP_MANIFEST_SHORT_NAME` (`"Core"`)                          |
 | `description` | `APP_MANIFEST_DESCRIPTION` — same string in `index.html` meta |
 

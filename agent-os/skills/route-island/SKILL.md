@@ -71,7 +71,7 @@ import type { PageManifest } from '@/lib/routes/page-manifest.ts';
 export const manifest = {
   segment: 'organizations',
   path: '/organizations',
-  title: 'Organizations', // document title: "Organizations · Core Admin" (routeTree wires manifestHead)
+  title: 'Organizations', // document title: "Organizations · Core" (routeTree wires manifestHead)
   testId: 'organizations-page',
   permission: null, // or 'organization:read' etc.
   kind: 'leaf', // 'leaf' | 'layout'
