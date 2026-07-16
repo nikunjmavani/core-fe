@@ -12,7 +12,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { axe } from 'vitest-axe';
 
 const { emailVerificationCodeSend, emailLogin, establishSession } = vi.hoisted(() => ({
-  emailVerificationCodeSend: vi.fn().mockResolvedValue(undefined),
+  emailVerificationCodeSend: vi.fn().mockResolvedValue({}),
   emailLogin: vi.fn().mockResolvedValue({ accessToken: 'mock-token' }),
   establishSession: vi.fn().mockResolvedValue(undefined),
 }));
@@ -153,6 +153,34 @@ describe('AuthEmailPanel', () => {
     );
     expect(await screen.findByTestId('auth-email-verify-panel')).toBeInTheDocument();
     expect(screen.getByTestId('auth-email-code')).toBeInTheDocument();
+  });
+
+  it('prefills the verify code when the response echoes debug_verification_code', async () => {
+    emailVerificationCodeSend.mockResolvedValueOnce({
+      debug_verification_code: '135790',
+    });
+    const user = userEvent.setup();
+    const router = createTestRouter();
+    render(<RouterProvider router={router} />);
+
+    await user.type(await screen.findByTestId('auth-email'), 'user@example.com');
+    await user.click(screen.getByTestId('auth-email-submit'));
+
+    await screen.findByTestId('auth-email-verify-panel');
+    expect(await screen.findByTestId('auth-email-code')).toHaveValue('135790');
+  });
+
+  it('leaves the verify code empty when no debug code is echoed', async () => {
+    emailVerificationCodeSend.mockResolvedValueOnce({});
+    const user = userEvent.setup();
+    const router = createTestRouter();
+    render(<RouterProvider router={router} />);
+
+    await user.type(await screen.findByTestId('auth-email'), 'user@example.com');
+    await user.click(screen.getByTestId('auth-email-submit'));
+
+    await screen.findByTestId('auth-email-verify-panel');
+    expect(await screen.findByTestId('auth-email-code')).toHaveValue('');
   });
 
   it('verifies the code and establishes a session', async () => {

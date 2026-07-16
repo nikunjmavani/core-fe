@@ -110,6 +110,63 @@ describe('authApi.emailLogin MFA handoff', () => {
   });
 });
 
+describe('authApi.emailVerificationCodeSend', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('surfaces debug_verification_code when core-be echoes it (TEST_MODE)', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              data: {
+                message: 'sent',
+                expires_in_minutes: 15,
+                debug_verification_code: '135790',
+              },
+            }),
+            { status: 201 },
+          ),
+      ),
+    );
+    const result = await authApi.emailVerificationCodeSend('a@b.test');
+    expect(result.debug_verification_code).toBe('135790');
+  });
+
+  it('resolves without a code on a normal (mail-delivered) response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ data: { message: 'sent', expires_in_minutes: 15 } }),
+            { status: 201 },
+          ),
+      ),
+    );
+    const result = await authApi.emailVerificationCodeSend('a@b.test');
+    expect(result.debug_verification_code).toBeUndefined();
+  });
+
+  it('throws on a non-2xx response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ error: { detail: 'rate limited' } }), {
+            status: 429,
+          }),
+      ),
+    );
+    await expect(authApi.emailVerificationCodeSend('a@b.test')).rejects.toThrow(
+      'rate limited',
+    );
+  });
+});
+
 describe('authApi.oauthStart redirect URL', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

@@ -6,10 +6,12 @@ import { authUserSchema } from '@/shared/auth/types.ts';
 import { AppError } from '@/shared/errors/AppError.ts';
 import { FRONTEND_ERROR_CODES } from '@/shared/errors/frontend-error-codes.ts';
 
-import type {
-  EmailVerificationCodeInput,
-  LoginInput,
-  MfaVerifyInput,
+import {
+  type EmailVerificationCodeInput,
+  type EmailVerificationCodeSendResponse,
+  emailVerificationCodeSendResponseSchema,
+  type LoginInput,
+  type MfaVerifyInput,
 } from './auth-contracts.ts';
 
 const authBase = () => `${platformConfig.apiBaseUrl}${API_BASE_PATH}`;
@@ -258,7 +260,7 @@ export const authApi = {
   emailVerificationCodeSend: async (
     email: string,
     captchaToken?: string,
-  ): Promise<void> => {
+  ): Promise<EmailVerificationCodeSendResponse> => {
     const response = await authFetch(
       `${authBase()}${API_ENDPOINTS.AUTH.EMAIL_CODE_SEND}`,
       {
@@ -267,14 +269,20 @@ export const authApi = {
         captchaToken,
       },
     );
+    const json = (await response.json().catch(() => null)) as unknown;
     if (!response.ok) {
-      const json = (await response.json().catch(() => null)) as unknown;
       throwOnNotOk(
         response,
         json,
         `Could not send the verification code (${response.status})`,
       );
     }
+    // Carries `debug_verification_code` only under core-be's local/TEST_MODE echo;
+    // parse-tolerantly so a normal (code-less) response still resolves to `{}`.
+    const parsed = emailVerificationCodeSendResponseSchema.safeParse(
+      unwrapEnvelope(json),
+    );
+    return parsed.success ? parsed.data : {};
   },
 
   emailLogin: async (
