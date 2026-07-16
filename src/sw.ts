@@ -29,6 +29,9 @@ precacheAndRoute(manifest);
 // mid-task; claim on activate so the follow-up reload is served from the NEW
 // precache immediately.
 self.addEventListener('message', (event) => {
+  // Only same-origin pages can hold a reference to this worker, but verify the
+  // sender's origin anyway (defense-in-depth; CodeQL js/missing-origin-check).
+  if (event.origin !== self.location.origin) return;
   if ((event.data as { type?: string } | null)?.type === 'SKIP_WAITING') {
     event.waitUntil(self.skipWaiting());
   }
