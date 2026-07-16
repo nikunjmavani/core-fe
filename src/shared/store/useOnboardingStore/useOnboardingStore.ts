@@ -33,6 +33,15 @@ interface OnboardingStore {
   data: OnboardingData;
   completed: boolean;
   /**
+   * Public id of the user this persisted progress belongs to. localStorage
+   * outlives the session, so without an owner a NEW user on the same browser
+   * would inherit the previous user's wizard step and data — and submit the
+   * previous user's name onto their own account. `null` until first claimed
+   * (also the shape of pre-existing stores from before this field existed —
+   * those self-heal on the first {@link OnboardingStore.claimForUser}).
+   */
+  forUserId: string | null;
+  /**
    * Id of the organization created by the finish step, if any. Set the moment
    * creation succeeds so a partial failure (e.g. an invite rejects) never
    * re-creates a DUPLICATE org when the user retries — the retry reuses this.
@@ -54,6 +63,14 @@ interface OnboardingStore {
   setCreatedOrganizationSlug: (slug: string | null) => void;
   complete: () => void;
   reset: () => void;
+  /**
+   * Bind the persisted progress to `userId`, WIPING it first when it belongs
+   * to a different (or unknown) user. Call before trusting any persisted
+   * wizard state — OnboardingPage does this as soon as the session user is
+   * known, so one browser profile can never leak one user's onboarding data
+   * into another user's account.
+   */
+  claimForUser: (userId: string) => void;
 }
 
 const INITIAL_DATA: OnboardingData = {
@@ -80,6 +97,7 @@ export const useOnboardingStore = create<OnboardingStore>()(
       completed: false,
       createdOrganizationId: null,
       createdOrganizationSlug: null,
+      forUserId: null,
 
       setStepIndex: (stepIndex) => set({ stepIndex }),
       next: () =>
@@ -99,7 +117,21 @@ export const useOnboardingStore = create<OnboardingStore>()(
           completed: false,
           createdOrganizationId: null,
           createdOrganizationSlug: null,
+          forUserId: null,
         }),
+      claimForUser: (userId) =>
+        set((s) =>
+          s.forUserId === userId
+            ? s
+            : {
+                stepIndex: 0,
+                data: INITIAL_DATA,
+                completed: false,
+                createdOrganizationId: null,
+                createdOrganizationSlug: null,
+                forUserId: userId,
+              },
+        ),
     }),
     { name: 'core-onboarding' },
   ),

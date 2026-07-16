@@ -1,6 +1,7 @@
 import { type Mock, vi } from 'vitest';
 
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import type { MeContext } from '@/shared/tenancy/me-context.ts';
 
@@ -151,6 +152,25 @@ describe('auth/service', () => {
       // so a non-reloading logout path can't leave one user's grants behind.
       expect(useOrganizationStore.getState().organizationId).toBeNull();
       expect(useOrganizationStore.getState().permissions).toEqual([]);
+    });
+
+    it('wipes persisted onboarding progress (no wizard/PII leak to the next user)', () => {
+      setAccessToken(VALID_TOKEN);
+      // Simulate a user mid-wizard: owner bound, name typed, step advanced.
+      const onboarding = useOnboardingStore.getState();
+      onboarding.claimForUser('usr_prev');
+      onboarding.patch({ firstName: 'Prev', lastName: 'User' });
+      onboarding.setStepIndex(3);
+
+      forceLogout();
+
+      // The NEXT user on this browser must start the wizard from scratch —
+      // otherwise their finish step submits the PREVIOUS user's name.
+      const state = useOnboardingStore.getState();
+      expect(state.stepIndex).toBe(0);
+      expect(state.data.firstName).toBe('');
+      expect(state.data.lastName).toBe('');
+      expect(state.forUserId).toBeNull();
     });
   });
 

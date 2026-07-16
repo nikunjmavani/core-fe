@@ -266,6 +266,7 @@ export function OnboardingPage() {
     createdOrganizationSlug,
     setCreatedOrganizationSlug,
     setStepIndex,
+    claimForUser,
   } = useOnboardingStore();
   const { data: meContext } = useMeContext();
   const deploymentFlags = useDeploymentFlags();
@@ -282,6 +283,15 @@ export function OnboardingPage() {
     confirmLabel: t(ONBOARDING_KEYS.guard.discard),
     cancelLabel: t(ONBOARDING_KEYS.guard.stay),
   });
+
+  // Bind persisted wizard progress to the signed-in user as soon as their id
+  // is known: a store left behind by a DIFFERENT user on this browser is wiped
+  // before any of its data can be reviewed or submitted (the wizard would
+  // otherwise PATCH the previous user's name onto this account).
+  const sessionUserId = meContext?.user.id ?? null;
+  useEffect(() => {
+    if (sessionUserId) claimForUser(sessionUserId);
+  }, [sessionUserId, claimForUser]);
 
   // Persisted wizard state can carry a created-org id from a prior session while
   // fresh signup with an empty membership list skips duplicate org creation

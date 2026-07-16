@@ -73,6 +73,7 @@ vi.mock('@/shared/api/auth-api.ts', () => ({
   },
 }));
 
+import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 
 import { OnboardingPage } from './OnboardingPage.tsx';
@@ -161,6 +162,57 @@ describe('OnboardingPage', () => {
   it('renders the page container', async () => {
     renderWithProviders(<OnboardingPage />);
     expect(await screen.findByTestId('onboarding-page')).toBeInTheDocument();
+  });
+
+  it("wipes a previous user's persisted wizard state when a different user signs in", async () => {
+    // User A abandoned the wizard mid-flow on this browser: owner bound,
+    // name typed, a later step reached — all persisted to localStorage.
+    const store = useOnboardingStore.getState();
+    store.claimForUser('usr_previous');
+    store.patch({ firstName: 'Prev', lastName: 'User', teamSize: '2–10' });
+    store.setStepIndex(2);
+
+    // User B signs in on the same browser — me/context resolves with THEIR id.
+    vi.mocked(useMeContext).mockReturnValue({
+      data: {
+        user: {
+          id: 'usr_next',
+          email: 'next@example.test',
+          firstName: null,
+          lastName: null,
+          onboardingCompleted: false,
+        },
+        activeOrganization: null,
+        myPermissions: [],
+        globalRole: null,
+        organizations: [],
+        deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+        personalOrganizationId: null,
+      },
+      isPending: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useMeContext>);
+
+    try {
+      renderWithProviders(<OnboardingPage />);
+
+      // The claim wipes user A's progress and binds the store to user B — the
+      // wizard restarts from scratch instead of submitting A's name for B.
+      await waitFor(() => {
+        expect(useOnboardingStore.getState().forUserId).toBe('usr_next');
+      });
+      const state = useOnboardingStore.getState();
+      expect(state.stepIndex).toBe(0);
+      expect(state.data.firstName).toBe('');
+      expect(state.data.teamSize).toBe('');
+    } finally {
+      // Restore the suite default (clearAllMocks does not undo mockReturnValue).
+      vi.mocked(useMeContext).mockReturnValue({
+        data: null,
+        isPending: false,
+        isError: false,
+      } as unknown as ReturnType<typeof useMeContext>);
+    }
   });
 
   it('creates the org once and navigates to its dashboard', async () => {
