@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { Member } from '@/shared/api/organization-contracts.ts';
+import type { Member, OrgRole } from '@/shared/api/organization-contracts.ts';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/index.ts';
 import { EmptyState } from '@/shared/components/EmptyState/index.ts';
 import { InviteMemberDialog } from '@/shared/components/InviteMemberDialog/index.ts';
@@ -18,11 +18,27 @@ import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar.tsx';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Card } from '@/shared/components/ui/card.tsx';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/components/ui/dropdown-menu.tsx';
 import { Skeleton } from '@/shared/components/ui/skeleton.tsx';
 import { useCan } from '@/shared/hooks/useCan/index.ts';
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue/index.ts';
-import { useMembers, useRemoveMember } from '@/shared/hooks/useMembers/index.ts';
-import { Trash2, Users } from '@/shared/icons/index.ts';
+import {
+  useMembers,
+  useRemoveMember,
+  useUpdateMemberRole,
+  useUpdateMemberStatus,
+} from '@/shared/hooks/useMembers/index.ts';
+import { useRoles } from '@/shared/hooks/useRoles/index.ts';
+import { MoreHorizontal, Users } from '@/shared/icons/index.ts';
 import { notifyDeferredCommit } from '@/shared/notify/notify-deferred.ts';
 
 import {
@@ -58,6 +74,107 @@ function MembersLoading() {
         <Skeleton key={key} className="h-14 w-full" />
       ))}
     </div>
+  );
+}
+
+/** Best-effort map of a role's display name to the coarse OrgRole (optimistic label only). */
+function toOrgRoleName(name: string): OrgRole {
+  const n = name.toLowerCase();
+  return n === 'owner' || n === 'admin' || n === 'viewer' ? n : 'member';
+}
+
+/**
+ * Per-member management menu (gated by the caller on `membership:manage`):
+ * change role — to any of the org's real non-owner roles — suspend/reactivate,
+ * and remove. The owner's own row shows no actions (an org can't manage its
+ * owner from here).
+ */
+function MemberRowActions({
+  member,
+  onRemove,
+}: {
+  member: Member;
+  onRemove: (member: Member) => void;
+}) {
+  const { t } = useTranslation(SETTINGS_NS);
+  const panels = SETTINGS_KEYS.panels.members;
+  const roles = useRoles();
+  const updateRole = useUpdateMemberRole();
+  const updateStatus = useUpdateMemberStatus();
+
+  const assignableRoles = (roles.rows ?? []).filter(
+    (role) => role.name.toLowerCase() !== 'owner',
+  );
+  const isSuspended = member.status === 'suspended';
+  // Suspend/reactivate only applies once a member has actually joined — core-be
+  // rejects flipping a never-joined (invited) membership to active. Invited
+  // members get role-change + remove (which revokes the invite).
+  const hasJoined = member.joinedAt !== '';
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={t(panels.actionsAria, { name: member.name })}
+          data-testid={`member-actions-${member.id}`}
+        >
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {assignableRoles.length > 0 ? (
+          <>
+            <DropdownMenuLabel>{t(panels.changeRole)}</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={member.roleId}
+              onValueChange={(roleId) => {
+                const role = assignableRoles.find((r) => r.id === roleId);
+                if (role) {
+                  updateRole.mutate({
+                    membershipId: member.id,
+                    role: toOrgRoleName(role.name),
+                    roleId: role.id,
+                  });
+                }
+              }}
+            >
+              {assignableRoles.map((role) => (
+                <DropdownMenuRadioItem
+                  key={role.id}
+                  value={role.id}
+                  data-testid={`member-set-role-${role.id}`}
+                >
+                  {role.name}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+          </>
+        ) : null}
+        {hasJoined ? (
+          <DropdownMenuItem
+            onSelect={() =>
+              updateStatus.mutate({
+                membershipId: member.id,
+                status: isSuspended ? 'active' : 'suspended',
+              })
+            }
+            data-testid={`member-toggle-status-${member.id}`}
+          >
+            {isSuspended ? t(panels.reactivate) : t(panels.suspend)}
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuItem
+          variant="destructive"
+          onSelect={() => onRemove(member)}
+          data-testid={`member-remove-${member.id}`}
+        >
+          {t(panels.removeAction)}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -151,21 +268,13 @@ export function OrganizationMembersPanel() {
                     </p>
                   </div>
                   <Badge variant="secondary" className="hidden capitalize sm:inline-flex">
-                    {member.role}
+                    {member.roleName}
                   </Badge>
                   <Badge variant={statusVariant(member.status)} className="capitalize">
                     {member.status}
                   </Badge>
-                  {canManage ? (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={t(panels.removeAria, { name: member.name })}
-                      onClick={() => setToRemove(member)}
-                      data-testid={`member-remove-${member.id}`}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                  {canManage && member.role !== 'owner' ? (
+                    <MemberRowActions member={member} onRemove={setToRemove} />
                   ) : null}
                 </li>
               ))}

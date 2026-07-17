@@ -19,7 +19,12 @@ export const memberSchema = z.object({
   userId: z.string(),
   name: z.string(),
   email: z.email(),
+  /** Coarse built-in bucket (owner/admin/member/viewer) — lossy for custom roles. */
   role: orgRoleSchema,
+  /** The member's actual assigned role — id + display name (custom roles keep
+   * their real name here, where `role` would flatten them to `member`). */
+  roleId: z.string(),
+  roleName: z.string(),
   status: membershipStatusSchema,
   avatarUrl: z.url().optional(),
   joinedAt: z.string(),

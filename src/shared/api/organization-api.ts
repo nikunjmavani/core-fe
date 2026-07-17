@@ -105,6 +105,8 @@ function toMember(w: MembershipWire): Member {
     name: fullName.length > 0 ? fullName : w.user.email,
     email: w.user.email,
     role: toOrgRole(w.role.name),
+    roleId: w.role.id,
+    roleName: w.role.name,
     status: toMembershipStatus(w.status),
     avatarUrl: w.user.avatar_url ?? undefined,
     joinedAt: w.joined_at ?? '',
