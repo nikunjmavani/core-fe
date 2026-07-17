@@ -37,12 +37,17 @@ export async function markAllNotificationsRead(): Promise<void> {
   await apiClient.post<unknown>(`${NOTIF_API}/mark-all-read`, {});
 }
 
+function nonNull(value: NotificationPreference | null): value is NotificationPreference {
+  return value !== null;
+}
+
 export async function getNotificationPreferences(): Promise<NotificationPreference[]> {
   const res = await apiClient.get<unknown>(PREFS_API);
   return z
     .array(notificationPreferenceWireSchema)
     .parse(res.data)
-    .map(toNotificationPreference);
+    .map(toNotificationPreference)
+    .filter(nonNull);
 }
 
 export async function updateNotificationPreferences(
@@ -54,5 +59,6 @@ export async function updateNotificationPreferences(
   return z
     .array(notificationPreferenceWireSchema)
     .parse(res.data)
-    .map(toNotificationPreference);
+    .map(toNotificationPreference)
+    .filter(nonNull);
 }
