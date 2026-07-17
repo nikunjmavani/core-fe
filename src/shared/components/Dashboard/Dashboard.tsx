@@ -264,9 +264,10 @@ function DashboardContent({ ctx }: { ctx: MeContext }) {
             description={t(DASHBOARD_KEYS.analytics.description)}
           />
           <DeferredAnalyticsChart />
-          {personalOnly ? (
-            <DeferredScheduleCalendar />
-          ) : (
+          {/* The roster is a TEAM surface gated on the active org's type — not
+              the deployment mode: in a hybrid install a personal workspace is
+              still `personalOnly === false` but has no roster to show. */}
+          {isTeam && ctx.myPermissions.includes('membership:read') ? (
             <div className={splitMainAsideGrid}>
               <div className={gridCellMinWidth}>
                 <DeferredMembersTable />
@@ -275,6 +276,8 @@ function DashboardContent({ ctx }: { ctx: MeContext }) {
                 <DeferredScheduleCalendar />
               </div>
             </div>
+          ) : (
+            <DeferredScheduleCalendar />
           )}
         </section>
       </SectionErrorBoundary>

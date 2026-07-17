@@ -51,6 +51,7 @@ function ctx(overrides: Partial<MeContext> = {}): MeContext {
     },
     myPermissions: [
       'organization:read',
+      'membership:read',
       'membership:manage',
       'invitation:manage',
       'role:manage',
@@ -90,6 +91,18 @@ describe('Dashboard', () => {
     expect(screen.getByTestId('dashboard-action-invite')).toBeInTheDocument();
     expect(screen.getByTestId('dashboard-action-roles')).toBeInTheDocument();
     expect(screen.getByTestId('dashboard-action-billing')).toBeInTheDocument();
+    expect(screen.getByTestId('members-table')).toBeInTheDocument();
+  });
+
+  it('hides the member roster from viewers without membership:read', async () => {
+    useMeContextMock.mockReturnValue(
+      queryResult(ctx({ myPermissions: ['organization:read'] })),
+    );
+    renderWithProviders(<Dashboard />);
+
+    expect(await screen.findByTestId('dashboard-page')).toBeInTheDocument();
+    expect(screen.queryByTestId('members-table')).not.toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-schedule-calendar')).toBeInTheDocument();
   });
 
   it('hides team-only actions for a personal organization', async () => {
@@ -117,6 +130,11 @@ describe('Dashboard', () => {
     expect(screen.queryByTestId('dashboard-action-org-settings')).not.toBeInTheDocument();
     expect(screen.getByTestId('dashboard-action-billing')).toBeInTheDocument();
     expect(screen.getByTestId('dashboard-action-account')).toBeInTheDocument();
+    // Regression: the roster is gated on the ACTIVE ORG type, not the
+    // deployment mode — in a hybrid install a personal workspace used to show
+    // the team members widget (with fixture people) despite having no team.
+    expect(screen.queryByTestId('members-table')).not.toBeInTheDocument();
+    expect(screen.getByTestId('dashboard-schedule-calendar')).toBeInTheDocument();
   });
 
   it('omits workspace framing in personal-only deployment mode', async () => {
