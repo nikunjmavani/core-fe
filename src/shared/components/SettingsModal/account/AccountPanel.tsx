@@ -31,7 +31,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
-import { Separator } from '@/shared/components/ui/separator.tsx';
 import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
 import { Copy, ShieldCheck, Trash2, TriangleAlert } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
@@ -48,12 +47,12 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
 
 /**
  * Account section — read-only account metadata plus a destructive "danger
- * zone", each gated behind a confirm dialog.
+ * zone" gated behind a confirm dialog.
  *
  * **Delete** is wired to core-be `DELETE /users/me`, then tears down the local
- * session. **Deactivate** is still a placeholder: core-be has no `deactivate`
- * endpoint, so it needs either a real route or a product decision to map
- * "deactivate" onto delete before it can stop being a no-op toast.
+ * session. (A "Deactivate" button was removed: core-be has no deactivate
+ * endpoint, so it only ever fired a no-op success toast — delete is the real,
+ * working destructive action.)
  */
 export function AccountPanel() {
   const { t } = useTranslation(SETTINGS_NS);
@@ -143,28 +142,6 @@ export function AccountPanel() {
           <CardDescription>Irreversible actions for your account.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-medium">Deactivate account</p>
-              <p className="text-muted-foreground text-sm">
-                Temporarily disable your account. You can reactivate by signing in again.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() =>
-                notify.success(
-                  i18n.t(ERRORS_KEYS.frontend.account.accountDeactivatedPending, {
-                    ns: ERRORS_NS,
-                  }),
-                )
-              }
-              data-testid="account-deactivate"
-            >
-              Deactivate
-            </Button>
-          </div>
-          <Separator />
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-medium">Delete account</p>

@@ -75,8 +75,7 @@
       "themeLinkCopiedDescription": "Comparte esta URL para reproducir el aspecto.",
       "notificationStylePreview": "Estilo de notificación",
       "notificationStylePreviewDescription": "{{variant}} — con tu acento y colores semánticos.",
-      "accountDeactivatedPending": "Cuenta desactivada (pendiente de API)",
-      "accountDeletionPending": "Eliminación de cuenta solicitada (pendiente de API)"
+      "accountDeletionPending": "Cuenta eliminada. Cerrando sesión…"
     },
     "hooks": {
       "passkeys": {

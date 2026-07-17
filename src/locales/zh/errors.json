@@ -75,8 +75,7 @@
       "themeLinkCopiedDescription": "分享此 URL 以复现外观。",
       "notificationStylePreview": "通知样式",
       "notificationStylePreviewDescription": "{{variant}} — 使用您的强调色和语义颜色。",
-      "accountDeactivatedPending": "账户停用（待接入 API）",
-      "accountDeletionPending": "账户删除请求（待接入 API）"
+      "accountDeletionPending": "账户已删除，正在登出…"
     },
     "hooks": {
       "passkeys": {

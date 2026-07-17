@@ -80,7 +80,6 @@ export const ERRORS_KEYS = {
       notificationStylePreview: 'frontend.account.notificationStylePreview',
       notificationStylePreviewDescription:
         'frontend.account.notificationStylePreviewDescription',
-      accountDeactivatedPending: 'frontend.account.accountDeactivatedPending',
       accountDeletionPending: 'frontend.account.accountDeletionPending',
     },
     profileUpdated: 'frontend.profileUpdated',
