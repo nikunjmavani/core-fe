@@ -157,14 +157,16 @@ describe('workspace surface guards (URL vs me/context)', () => {
     });
   });
 
-  it('sends team entry to organization picker when there is no active org but memberships exist', () => {
+  it('allows slug-targeted team entry when there is no active org but memberships exist', () => {
+    // The slug chain (requireOrganizationContext) validates membership and
+    // performs the switch — bouncing to the picker here would break deep links.
     expect(
       workspaceRedirectForTeamEntry({
         ...meCtx(null),
         organizations: [{ ...activeOrg('TEAM', 'acme'), isActive: false }],
         deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
       }),
-    ).toEqual({ to: '/organization' });
+    ).toBeNull();
   });
 
   it('allows organization picker when resolver target is organization picker', () => {
@@ -186,9 +188,24 @@ describe('workspace surface guards (URL vs me/context)', () => {
     });
   });
 
-  it('sends team entry to /dashboard when the active org is personal', () => {
-    expect(workspaceRedirectForTeamEntry(meCtx(activeOrg('PERSONAL', null)))).toEqual({
-      to: '/dashboard',
+  it('allows slug-targeted team entry when the active org is personal (switch-on-navigation)', () => {
+    // Regression: this used to redirect to /dashboard, which made every team
+    // entry point (org switcher, command palette, direct URL) a dead end once
+    // the personal org was active — the user could never switch back to a team.
+    expect(workspaceRedirectForTeamEntry(meCtx(activeOrg('PERSONAL', null)))).toBeNull();
+  });
+
+  it('still routes personal-active sessions off the bare /organization picker', () => {
+    expect(
+      workspaceRedirectForTeamEntry(meCtx(activeOrg('PERSONAL', null)), {
+        organizationPicker: true,
+      }),
+    ).toEqual({ to: '/dashboard' });
+  });
+
+  it('still sends slug-targeted team entry to onboarding when the user has not onboarded', () => {
+    expect(workspaceRedirectForTeamEntry(meCtx(null, false))).toEqual({
+      to: '/onboarding',
     });
   });
 
