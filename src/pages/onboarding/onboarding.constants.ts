@@ -21,7 +21,7 @@ export const ONBOARDING_KEYS = {
     invite: { title: 'steps.invite.title', description: 'steps.invite.description' },
     done: { title: 'steps.done.title', description: 'steps.done.description' },
   },
-  welcome: { body: 'welcome.body' },
+  welcome: { body: 'welcome.body', bodyPersonal: 'welcome.bodyPersonal' },
   profile: {
     firstNameLabel: 'profile.firstNameLabel',
     firstNamePlaceholder: 'profile.firstNamePlaceholder',

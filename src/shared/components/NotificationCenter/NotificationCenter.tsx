@@ -40,6 +40,34 @@ function categoryIcon(category: Notification['category']): LucideIcon {
   return Bell;
 }
 
+/** Mark-all-read header action — hidden entirely when the inbox is empty. */
+function MarkAllReadButton({
+  count,
+  unread,
+  pending,
+  onMarkAll,
+}: {
+  count: number;
+  unread: number;
+  pending: boolean;
+  onMarkAll: () => void;
+}) {
+  const { t } = useTranslation(LAYOUT_NS);
+  if (count === 0) return null;
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-7 px-2 text-xs"
+      disabled={unread === 0 || pending}
+      onClick={onMarkAll}
+      data-testid="notification-mark-all"
+    >
+      {t(LAYOUT_KEYS.app.notifications.markAllRead)}
+    </Button>
+  );
+}
+
 /**
  * Notification center — header bell with an unread badge that opens a **popover**
  * inbox. Each row carries a category glyph (tinted while unread), title, body, and
@@ -118,16 +146,12 @@ export function NotificationCenter({
               </span>
             ) : null}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-xs"
-            disabled={!items || unread === 0 || markAll.isPending}
-            onClick={() => markAll.mutate()}
-            data-testid="notification-mark-all"
-          >
-            {t(LAYOUT_KEYS.app.notifications.markAllRead)}
-          </Button>
+          <MarkAllReadButton
+            count={items?.length ?? 0}
+            unread={unread}
+            pending={markAll.isPending}
+            onMarkAll={() => markAll.mutate()}
+          />
         </div>
 
         <div className="max-h-[24rem] overflow-y-auto overscroll-contain">

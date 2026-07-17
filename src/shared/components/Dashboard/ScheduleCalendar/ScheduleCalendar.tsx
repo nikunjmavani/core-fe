@@ -9,6 +9,7 @@ import {
   DASHBOARD_TEST_IDS,
 } from '@/shared/components/Dashboard/dashboard.constants.ts';
 import { resolveDashboardEvents } from '@/shared/components/Dashboard/dashboard.placeholder-data.ts';
+import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Calendar } from '@/shared/components/ui/calendar.tsx';
 import {
   Card,
@@ -47,9 +48,16 @@ export function ScheduleCalendar() {
             <CalendarDays className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-base">
-              {t(DASHBOARD_KEYS.schedule.heading)}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base">
+                {t(DASHBOARD_KEYS.schedule.heading)}
+              </CardTitle>
+              {/* Seeded events — no calendar/events endpoint exists yet. Mark
+                  them on screen so they don't read as the org's real agenda. */}
+              <Badge variant="outline" data-testid="dashboard-schedule-sample">
+                {t(DASHBOARD_KEYS.sampleBadge)}
+              </Badge>
+            </div>
             <CardDescription>{t(DASHBOARD_KEYS.schedule.description)}</CardDescription>
           </div>
         </div>

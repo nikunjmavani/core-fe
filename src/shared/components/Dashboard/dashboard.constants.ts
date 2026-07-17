@@ -108,6 +108,7 @@ export const DASHBOARD_KEYS = {
     ariaLabel: 'members.ariaLabel',
     heading: 'members.heading',
     description: 'members.description',
+    error: 'members.error',
     columnMember: 'members.columnMember',
     columnRole: 'members.columnRole',
     columnStatus: 'members.columnStatus',
@@ -118,6 +119,7 @@ export const DASHBOARD_KEYS = {
       suspended: 'members.status.suspended',
     },
   },
+  sampleBadge: 'sampleBadge',
   schedule: {
     ariaLabel: 'schedule.ariaLabel',
     heading: 'schedule.heading',
@@ -167,5 +169,3 @@ export const MEMBER_STATUS_META = {
   invited: { key: DASHBOARD_KEYS.members.status.invited, variant: 'outline' },
   suspended: { key: DASHBOARD_KEYS.members.status.suspended, variant: 'destructive' },
 } as const;
-
-export type MemberStatus = keyof typeof MEMBER_STATUS_META;

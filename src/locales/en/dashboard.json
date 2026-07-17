@@ -108,7 +108,8 @@
   "members": {
     "ariaLabel": "Team members",
     "heading": "Team members",
-    "description": "{{count}} people in this workspace",
+    "description_one": "{{count}} person in this workspace",
+    "description_other": "{{count}} people in this workspace",
     "columnMember": "Member",
     "columnRole": "Role",
     "columnStatus": "Status",
@@ -117,7 +118,8 @@
       "active": "Active",
       "invited": "Invited",
       "suspended": "Suspended"
-    }
+    },
+    "error": "Couldn't load members."
   },
   "schedule": {
     "ariaLabel": "Schedule",
@@ -126,5 +128,6 @@
     "upcoming": "Upcoming",
     "legendEvent": "Event day",
     "empty": "Nothing scheduled"
-  }
+  },
+  "sampleBadge": "Sample data"
 }

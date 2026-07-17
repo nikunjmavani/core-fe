@@ -108,7 +108,8 @@
   "members": {
     "ariaLabel": "Miembros del equipo",
     "heading": "Miembros del equipo",
-    "description": "{{count}} personas en este espacio",
+    "description_one": "{{count}} persona en este espacio",
+    "description_other": "{{count}} personas en este espacio",
     "columnMember": "Miembro",
     "columnRole": "Rol",
     "columnStatus": "Estado",
@@ -117,7 +118,8 @@
       "active": "Activo",
       "invited": "Invitado",
       "suspended": "Suspendido"
-    }
+    },
+    "error": "No se pudieron cargar los miembros."
   },
   "schedule": {
     "ariaLabel": "Agenda",
@@ -126,5 +128,6 @@
     "upcoming": "Próximos",
     "legendEvent": "Día con evento",
     "empty": "Nada programado"
-  }
+  },
+  "sampleBadge": "Datos de ejemplo"
 }

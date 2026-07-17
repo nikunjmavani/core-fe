@@ -214,11 +214,20 @@ export async function establishSession(accessToken: string): Promise<void> {
 
 export async function logout(): Promise<void> {
   try {
-    await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.LOGOUT}`, {
+    // core-be identifies the session to revoke BY the bearer token
+    // (revokeSessionByAccessToken) and 401s without one — expired is fine,
+    // absent is not. Without it the refresh cookie survives and the /login
+    // bootstrap silently signs the user straight back in.
+    const token = getAccessToken();
+    const res = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.LOGOUT}`, {
       method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     });
+    if (!res.ok && platformConfig.debugLogging) {
+      console.error('[Auth] Server-side session revoke failed', res.status);
+    }
   } catch {
-    /* best-effort */
+    /* best-effort — local state is cleared regardless */
   } finally {
     forceLogout({ reason: 'logout' });
   }

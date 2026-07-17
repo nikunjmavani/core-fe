@@ -83,19 +83,23 @@ export function workspaceRedirectForPersonalDashboard(ctx: MeContext): RootTarge
 }
 
 /**
- * Team slug routes require a provisioned workspace. No active org → onboarding;
- * personal active org → root `/dashboard`. When a team org is active, the URL
- * slug chain ({@link requireOrganizationContext}) owns org switching.
+ * Team slug routes require a provisioned workspace. Only onboarding redirects
+ * unconditionally. When the URL targets a **specific** `$organizationSlug`, the
+ * slug chain ({@link requireOrganizationContext}) owns membership validation
+ * (404 for non-members) and switch-on-navigation — redirecting on the CURRENT
+ * active org here would trap personal-active (or no-active) sessions out of
+ * every team workspace they belong to, which is the exact org switch the
+ * navigation is asking for. The bare `/organization` picker entry keeps the
+ * active-org routing (personal-active sessions belong on `/dashboard`).
  */
 export function workspaceRedirectForTeamEntry(
   ctx: MeContext,
   options?: { organizationPicker?: boolean },
 ): RootTarget | null {
   const target = resolveRootTarget(ctx);
-  if (options?.organizationPicker && target.to === '/organization') return null;
   if (target.to === '/onboarding') return target;
+  if (!options?.organizationPicker) return null;
   if (target.to === '/dashboard') return target;
-  if (target.to === '/organization') return target;
   return null;
 }
 

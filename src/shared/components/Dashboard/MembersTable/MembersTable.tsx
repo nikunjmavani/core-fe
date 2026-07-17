@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
 
+import { SkeletonShimmer } from '@/lib/animations/Skeleton.tsx';
 import { iconChipClassName } from '@/lib/icon-surface.ts';
 import { cn } from '@/lib/utils.ts';
 import {
@@ -8,7 +9,6 @@ import {
   DASHBOARD_TEST_IDS,
   MEMBER_STATUS_META,
 } from '@/shared/components/Dashboard/dashboard.constants.ts';
-import { DASHBOARD_MEMBERS } from '@/shared/components/Dashboard/dashboard.placeholder-data.ts';
 import { Avatar, AvatarFallback } from '@/shared/components/ui/avatar.tsx';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import {
@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '@/shared/components/ui/table.tsx';
 import { useLocaleFormat } from '@/shared/hooks/useLocaleFormat/index.ts';
+import { useMembers } from '@/shared/hooks/useMembers/index.ts';
 import { Users } from '@/shared/icons/index.ts';
 
 function initials(name: string): string {
@@ -38,15 +39,28 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
+function MembersSkeleton() {
+  return (
+    <div className="space-y-3" data-testid="dashboard-members-loading">
+      <SkeletonShimmer className="h-10 w-full rounded-md" />
+      <SkeletonShimmer className="h-10 w-full rounded-md" />
+      <SkeletonShimmer className="h-10 w-full rounded-md" />
+    </div>
+  );
+}
+
 /**
- * Team-member roster — a real admin surface (who's in the workspace, their role,
- * status, and join date) built on the shadcn `Table`. Doubles as a theme-axis
+ * Team-member roster — who's in the active workspace, their role, status, and
+ * join date, from the real memberships list (`useMembers` → cursor-paginated
+ * `GET /organizations/memberships`). The dashboard renders it only for team
+ * organizations whose viewer holds `membership:read`. Doubles as a theme-axis
  * testbed: borders/density on rows, radius on the card + avatars + badges, and
  * the join date rendered through the user's locale format.
  */
 export function MembersTable() {
   const { t } = useTranslation(DASHBOARD_NS);
   const { formatDate } = useLocaleFormat();
+  const { rows, isPending, isError } = useMembers();
 
   return (
     <Card data-testid={DASHBOARD_TEST_IDS.membersTable}>
@@ -63,54 +77,66 @@ export function MembersTable() {
             <CardTitle className="text-base">
               {t(DASHBOARD_KEYS.members.heading)}
             </CardTitle>
-            <CardDescription>
-              {t(DASHBOARD_KEYS.members.description, { count: DASHBOARD_MEMBERS.length })}
-            </CardDescription>
+            {!(isPending || isError) ? (
+              <CardDescription>
+                {t(DASHBOARD_KEYS.members.description, { count: rows.length })}
+              </CardDescription>
+            ) : null}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t(DASHBOARD_KEYS.members.columnMember)}</TableHead>
-              <TableHead>{t(DASHBOARD_KEYS.members.columnRole)}</TableHead>
-              <TableHead>{t(DASHBOARD_KEYS.members.columnStatus)}</TableHead>
-              <TableHead className="text-right">
-                {t(DASHBOARD_KEYS.members.columnJoined)}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {DASHBOARD_MEMBERS.map((member) => {
-              const status = MEMBER_STATUS_META[member.status];
-              return (
-                <TableRow key={member.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar size="sm">
-                        <AvatarFallback>{initials(member.name)}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{member.name}</p>
-                        <p className="text-muted-foreground truncate text-xs">
-                          {member.email}
-                        </p>
+        {isPending ? <MembersSkeleton /> : null}
+        {isError ? (
+          <p className="text-muted-foreground text-sm" role="alert">
+            {t(DASHBOARD_KEYS.members.error)}
+          </p>
+        ) : null}
+        {!(isPending || isError) ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t(DASHBOARD_KEYS.members.columnMember)}</TableHead>
+                <TableHead>{t(DASHBOARD_KEYS.members.columnRole)}</TableHead>
+                <TableHead>{t(DASHBOARD_KEYS.members.columnStatus)}</TableHead>
+                <TableHead className="text-right">
+                  {t(DASHBOARD_KEYS.members.columnJoined)}
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rows.map((member) => {
+                const status = MEMBER_STATUS_META[member.status];
+                return (
+                  <TableRow key={member.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar size="sm">
+                          <AvatarFallback>{initials(member.name)}</AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{member.name}</p>
+                          <p className="text-muted-foreground truncate text-xs">
+                            {member.email}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">{member.role}</TableCell>
-                  <TableCell>
-                    <Badge variant={status.variant}>{t(status.key)}</Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-right tabular-nums">
-                    {formatDate(member.joinedIso)}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground capitalize">
+                      {member.role}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={status.variant}>{t(status.key)}</Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-right tabular-nums">
+                      {member.joinedAt ? formatDate(member.joinedAt) : '—'}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        ) : null}
       </CardContent>
     </Card>
   );

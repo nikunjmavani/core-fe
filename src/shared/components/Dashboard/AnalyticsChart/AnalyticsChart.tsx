@@ -11,6 +11,7 @@ import {
   DASHBOARD_TEST_IDS,
 } from '@/shared/components/Dashboard/dashboard.constants.ts';
 import { buildAnalyticsSeries } from '@/shared/components/Dashboard/dashboard.placeholder-data.ts';
+import { Badge } from '@/shared/components/ui/badge.tsx';
 import {
   Card,
   CardContent,
@@ -71,9 +72,16 @@ export function AnalyticsChart() {
             <Zap className="size-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <CardTitle className="text-base">
-              {t(DASHBOARD_KEYS.analytics.heading)}
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base">
+                {t(DASHBOARD_KEYS.analytics.heading)}
+              </CardTitle>
+              {/* No usage endpoints exist yet — the series is generated. Say so
+                  on screen: an unmarked fake curve reads as real telemetry. */}
+              <Badge variant="outline" data-testid="dashboard-analytics-sample">
+                {t(DASHBOARD_KEYS.sampleBadge)}
+              </Badge>
+            </div>
             <CardDescription>{t(DASHBOARD_KEYS.analytics.description)}</CardDescription>
           </div>
           <Select

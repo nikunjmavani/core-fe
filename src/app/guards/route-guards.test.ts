@@ -257,6 +257,21 @@ describe('workspace provision guards', () => {
     });
   });
 
+  it('requireProvisionedTeamWorkspace lets a personal-active session into a team slug', async () => {
+    // Regression: this used to throw redirect({ to: '/dashboard' }) BEFORE the
+    // slug chain could run switch-on-navigation, so the org switcher, command
+    // palette, and direct team URLs were all dead ends once the personal org
+    // was active — the user could never re-enter any team workspace.
+    vi.mocked(ensureSessionContext).mockResolvedValue({
+      user: { onboardingCompleted: true } as MeContext['user'],
+      activeOrganization: { id: 'org_p', type: 'PERSONAL', slug: null, status: 'ACTIVE' },
+      organizations: [],
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+    } as MeContext);
+
+    await expect(requireProvisionedTeamWorkspace()).resolves.toBeUndefined();
+  });
+
   it('onboarding redirects carry the guarded deep link as ?redirect=', async () => {
     vi.mocked(ensureSessionContext).mockResolvedValue({
       user: { onboardingCompleted: false } as MeContext['user'],

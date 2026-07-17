@@ -2,7 +2,6 @@ import {
   ANALYTICS_RANGE_DAYS,
   type AnalyticsRange,
   DASHBOARD_KEYS,
-  type MemberStatus,
 } from './dashboard.constants.ts';
 
 export type DashboardHighlightSlide = {
@@ -43,62 +42,11 @@ export const DASHBOARD_HIGHLIGHT_SLIDES: readonly DashboardHighlightSlide[] = [
 ] as const;
 
 /**
- * Placeholder widget data for the dashboard module until core-be endpoints land.
- * Replace each export with a TanStack Query hook + fetcher.
+ * Placeholder widget data for the dashboard module until core-be endpoints land
+ * (events + usage analytics). Anything rendered from here MUST carry the
+ * `sampleBadge` marker on screen — unmarked fabricated data reads as real.
+ * The members roster is real (`useMembers`); do not add fixture people here.
  */
-
-export type DashboardMember = {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  status: MemberStatus;
-  /** ISO date — rendered through the user's locale date format. */
-  joinedIso: string;
-};
-
-export const DASHBOARD_MEMBERS: readonly DashboardMember[] = [
-  {
-    id: 'usr_1',
-    name: 'Ava Chen',
-    email: 'ava.chen@acme.test',
-    role: 'Owner',
-    status: 'active',
-    joinedIso: '2024-01-12',
-  },
-  {
-    id: 'usr_2',
-    name: 'Marcus Boateng',
-    email: 'marcus@acme.test',
-    role: 'Admin',
-    status: 'active',
-    joinedIso: '2024-03-04',
-  },
-  {
-    id: 'usr_3',
-    name: 'Priya Nair',
-    email: 'priya.nair@acme.test',
-    role: 'Member',
-    status: 'invited',
-    joinedIso: '2025-02-20',
-  },
-  {
-    id: 'usr_4',
-    name: 'Diego Fuentes',
-    email: 'diego@acme.test',
-    role: 'Billing',
-    status: 'active',
-    joinedIso: '2025-06-09',
-  },
-  {
-    id: 'usr_5',
-    name: 'Lena Vogt',
-    email: 'lena.vogt@acme.test',
-    role: 'Member',
-    status: 'suspended',
-    joinedIso: '2023-11-28',
-  },
-] as const;
 
 export type DashboardEvent = {
   id: string;

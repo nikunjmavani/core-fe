@@ -108,7 +108,7 @@
   "members": {
     "ariaLabel": "团队成员",
     "heading": "团队成员",
-    "description": "此工作区有 {{count}} 人",
+    "description_other": "此工作区有 {{count}} 人",
     "columnMember": "成员",
     "columnRole": "角色",
     "columnStatus": "状态",
@@ -117,7 +117,8 @@
       "active": "活跃",
       "invited": "已邀请",
       "suspended": "已暂停"
-    }
+    },
+    "error": "无法加载成员。"
   },
   "schedule": {
     "ariaLabel": "日程",
@@ -126,5 +127,6 @@
     "upcoming": "即将到来",
     "legendEvent": "活动日",
     "empty": "暂无安排"
-  }
+  },
+  "sampleBadge": "示例数据"
 }

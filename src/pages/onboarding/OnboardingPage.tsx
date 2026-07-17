@@ -252,7 +252,7 @@ function navigateAfterOnboarding(
   void navigate({ to: '/', replace: true });
 }
 
-function renderStep(step: ReturnType<typeof stepAtIndex>) {
+function renderStep(step: ReturnType<typeof stepAtIndex>, teamSetupIncluded: boolean) {
   switch (step) {
     case 'profile':
       return <ProfileStep />;
@@ -265,7 +265,7 @@ function renderStep(step: ReturnType<typeof stepAtIndex>) {
     case 'done':
       return <DoneStep />;
     default:
-      return <WelcomeStep />;
+      return <WelcomeStep teamSetupIncluded={teamSetupIncluded} />;
   }
 }
 
@@ -451,7 +451,7 @@ export function OnboardingPage() {
                 className="transform-gpu"
                 data-testid={ONBOARDING_TEST_IDS.stepMotion}
               >
-                {renderStep(step)}
+                {renderStep(step, effectiveSteps.includes('workspace'))}
               </div>
 
               <div className="flex items-center justify-between">

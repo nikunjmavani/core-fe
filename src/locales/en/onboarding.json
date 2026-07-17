@@ -29,7 +29,8 @@
     }
   },
   "welcome": {
-    "body": "We'll help you set up your profile, create your first organization, and invite your team. It only takes a minute."
+    "body": "We'll help you set up your profile, create your first organization, and invite your team. It only takes a minute.",
+    "bodyPersonal": "We'll help you set up your profile and personalize your workspace. It only takes a minute."
   },
   "profile": {
     "firstNameLabel": "First name",
