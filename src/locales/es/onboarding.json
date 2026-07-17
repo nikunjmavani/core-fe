@@ -29,7 +29,8 @@
     }
   },
   "welcome": {
-    "body": "Te ayudaremos a configurar tu perfil, crear tu primera organización e invitar a tu equipo. Solo lleva un minuto."
+    "body": "Te ayudaremos a configurar tu perfil, crear tu primera organización e invitar a tu equipo. Solo lleva un minuto.",
+    "bodyPersonal": "Te ayudaremos a configurar tu perfil y personalizar tu espacio de trabajo. Solo lleva un minuto."
   },
   "profile": {
     "firstNameLabel": "Nombre",
