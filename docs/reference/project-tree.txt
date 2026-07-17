@@ -21,7 +21,7 @@ src/shared/    UI, auth, api, errors, forms, hooks, layouts, store (Zustand)
 src/lib/       Pure utilities, animations, route-island helpers
 tests/         E2E, utils (project root)
 
-Stats: ~533 src files · ~292 tests in src/ · 35 E2E specs · 24 shadcn UI primitives
+Stats: ~535 src files · ~293 tests in src/ · 35 E2E specs · 24 shadcn UI primitives
 
 ================================================================================
 §2  FULL DIRECTORY TREE
@@ -639,6 +639,10 @@ core-fe/
 │   │   │   │   └── [1 test file]
 │   │   │   ├── CreateOrganizationDialog/
 │   │   │   │   ├── CreateOrganizationDialog.tsx
+│   │   │   │   ├── index.ts
+│   │   │   │   └── [1 test file]
+│   │   │   ├── CreateRoleDialog/
+│   │   │   │   ├── CreateRoleDialog.tsx
 │   │   │   │   ├── index.ts
 │   │   │   │   └── [1 test file]
 │   │   │   ├── Dashboard/
