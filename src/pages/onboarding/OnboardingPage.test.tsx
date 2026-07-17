@@ -63,10 +63,26 @@ vi.mock('@/shared/tenancy/my-organizations.ts', () => ({
   listMyOrganizations: (...args: unknown[]) => listMyOrganizations(...args),
 }));
 
-const createInvitation = vi.fn();
+const inviteMember = vi.fn();
+const listRoles = vi.fn();
+const createRole = vi.fn();
 vi.mock('@/shared/api/organization-api.ts', () => ({
-  createInvitation: (...args: unknown[]) => createInvitation(...args),
+  inviteMember: (...args: unknown[]) => inviteMember(...args),
+  listRoles: (...args: unknown[]) => listRoles(...args),
+  createRole: (...args: unknown[]) => createRole(...args),
 }));
+
+/** A non-system role row shaped like organization-api's RoleSummary. */
+function memberRole(id = 'rol_member') {
+  return {
+    id,
+    name: 'Member',
+    description: '',
+    permissions: [],
+    memberCount: 0,
+    isSystem: false,
+  };
+}
 
 vi.mock('@/shared/api/auth-api.ts', () => ({
   authApi: {
@@ -157,7 +173,10 @@ describe('OnboardingPage', () => {
       listMyOrganizations.mockResolvedValue([org]);
       return org;
     });
-    createInvitation.mockResolvedValue({ id: 'inv_1' });
+    // A just-activated org already has an assignable role, so invites reuse it.
+    listRoles.mockResolvedValue({ rows: [memberRole()] });
+    createRole.mockResolvedValue(memberRole('rol_created'));
+    inviteMember.mockResolvedValue({ id: 'mem_1', email: 'a@acme.com' });
     useOnboardingStore.getState().reset();
   });
 
@@ -400,7 +419,7 @@ describe('OnboardingPage', () => {
 
   it('still finishes when an invite fails (best-effort, no trap)', async () => {
     const user = userEvent.setup();
-    createInvitation.mockRejectedValueOnce(new Error('bad invite'));
+    inviteMember.mockRejectedValueOnce(new Error('bad invite'));
     seedDoneStep(['good@acme.com', 'bad@acme.com']);
     renderWithProviders(<OnboardingPage />);
 
@@ -409,6 +428,53 @@ describe('OnboardingPage', () => {
     // Org created exactly once, user is sent through despite the invite failure.
     await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
     expect(createOrganization).toHaveBeenCalledTimes(1);
+  });
+
+  it('invites teammates as members via POST /memberships with a real role id', async () => {
+    // Regression: the finish step hit the non-existent POST /invitations (404).
+    // It now creates INVITED memberships (inviteMember) with a real role_id,
+    // AFTER the token has switched to the new org.
+    const user = userEvent.setup();
+    seedDoneStep(['a@acme.com', 'b@acme.com']);
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    // Token switched to the new org before inviting.
+    expect(switchToOrganization).toHaveBeenCalledWith('org_new');
+    expect(inviteMember).toHaveBeenCalledTimes(2);
+    expect(inviteMember).toHaveBeenCalledWith({
+      email: 'a@acme.com',
+      roleId: 'rol_member',
+    });
+    expect(inviteMember).toHaveBeenCalledWith({
+      email: 'b@acme.com',
+      roleId: 'rol_member',
+    });
+    // The org already had an assignable role, so none was provisioned.
+    expect(createRole).not.toHaveBeenCalled();
+  });
+
+  it('provisions a default Member role when the fresh org seeds only Owner', async () => {
+    // A freshly created org has only the system Owner role — nothing to invite
+    // anyone as — so the finish step provisions a "Member" role first.
+    const user = userEvent.setup();
+    listRoles.mockResolvedValueOnce({
+      rows: [{ ...memberRole('rol_owner'), name: 'Owner', isSystem: true }],
+    });
+    createRole.mockResolvedValueOnce(memberRole('rol_provisioned'));
+    seedDoneStep(['a@acme.com']);
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(createRole).toHaveBeenCalledTimes(1);
+    expect(inviteMember).toHaveBeenCalledWith({
+      email: 'a@acme.com',
+      roleId: 'rol_provisioned',
+    });
   });
 
   it('finishes both mode to personal dashboard without creating a team org', async () => {

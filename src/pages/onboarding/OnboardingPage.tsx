@@ -6,7 +6,7 @@ import i18n from '@/lib/i18n/i18n.ts';
 import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
 import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
-import { createInvitation } from '@/shared/api/organization-api.ts';
+import { createRole, inviteMember, listRoles } from '@/shared/api/organization-api.ts';
 import { isSafeRedirectPath } from '@/shared/auth/redirect-safety.ts';
 import { getAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
@@ -42,7 +42,7 @@ import { WelcomeStep } from './components/WelcomeStep/index.ts';
 import { WorkspaceStep } from './components/WorkspaceStep/index.ts';
 import { useOnboardingStepMotion } from './hooks/useOnboardingStepMotion/index.ts';
 import {
-  ONBOARDING_INVITE_ROLE,
+  ONBOARDING_DEFAULT_MEMBER_PERMISSIONS,
   ONBOARDING_KEYS,
   ONBOARDING_NS,
   ONBOARDING_TEST_IDS,
@@ -223,6 +223,52 @@ async function activateWorkspaceAfterOnboardingFinish(input: {
 }
 
 /**
+ * An assignable (non-Owner) role id for onboarding invites. A freshly created
+ * org seeds only the system **Owner** role (core-be), so there is nothing to
+ * invite anyone *as*: reuse an existing non-system role if the org already has
+ * one, otherwise provision a default "Member" role. Scoped by the active-org
+ * token, so the caller must switch to the new org first.
+ */
+async function resolveInviteRoleId(): Promise<string> {
+  const { rows } = await listRoles();
+  const existing = rows.find((role) => !role.isSystem);
+  if (existing) return existing.id;
+
+  const created = await createRole({
+    name: i18n.t(ONBOARDING_KEYS.defaults.memberRoleName, { ns: ONBOARDING_NS }),
+    description: i18n.t(ONBOARDING_KEYS.defaults.memberRoleDescription, {
+      ns: ONBOARDING_NS,
+    }),
+    permissions: [...ONBOARDING_DEFAULT_MEMBER_PERMISSIONS],
+  });
+  return created.id;
+}
+
+/**
+ * Send onboarding invites: create an INVITED membership per email
+ * (`POST /organization/memberships` with a real `role_id`), all into one
+ * resolved role. Returns how many failed. Best-effort and non-blocking — a
+ * failure (including not being able to provision a role) never strands the
+ * wizard; the caller warns on partial failure and the user can resend from
+ * Members. Must run AFTER the token has switched to the new org.
+ */
+async function sendOnboardingInvites(emails: string[]): Promise<number> {
+  if (emails.length === 0) return 0;
+
+  let roleId: string;
+  try {
+    roleId = await resolveInviteRoleId();
+  } catch {
+    return emails.length;
+  }
+
+  const results = await Promise.allSettled(
+    emails.map((email) => inviteMember({ email, roleId })),
+  );
+  return results.filter((result) => result.status === 'rejected').length;
+}
+
+/**
  * Land the user directly on their resolved workspace after onboarding — no hop
  * through the `/` resolver (which would re-fetch me/context and add a second
  * redirect). A safe `?redirect=` deep link (attached by the workspace guards
@@ -378,15 +424,6 @@ export function OnboardingPage() {
         invitedCount: data.invites.length,
       });
 
-      const results = await Promise.allSettled(
-        effectiveSteps.includes('invite')
-          ? data.invites.map((email) =>
-              createInvitation({ email, role: ONBOARDING_INVITE_ROLE }),
-            )
-          : [],
-      );
-      const failed = results.filter((r) => r.status === 'rejected').length;
-
       // Stamp onboarding complete on the backend BEFORE re-reading me/context, so
       // the refreshed context (and every later `/` resolve + workspace guard)
       // reports onboarding done and routes to the dashboard instead of looping
@@ -401,6 +438,13 @@ export function OnboardingPage() {
         personalOrganizationId: refreshedContext.personalOrganizationId,
         organizations: refreshedContext.organizations,
       });
+
+      // Invites go out AFTER activation: they are scoped by the active-org token
+      // (switched above), and a just-created org needs an assignable role first.
+      const failed =
+        effectiveSteps.includes('invite') && organizationId
+          ? await sendOnboardingInvites(data.invites)
+          : 0;
 
       complete();
       if (failed > 0) {

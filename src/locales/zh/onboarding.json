@@ -101,7 +101,9 @@
     "settingUp": "设置中…"
   },
   "defaults": {
-    "organizationName": "我的组织"
+    "organizationName": "我的组织",
+    "memberRoleName": "成员",
+    "memberRoleDescription": "受邀团队成员的默认角色。"
   },
   "toast": {
     "finishSuccess": "欢迎！您的工作空间已就绪。",
