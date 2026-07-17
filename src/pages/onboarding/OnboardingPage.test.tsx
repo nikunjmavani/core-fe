@@ -35,9 +35,11 @@ vi.mock('@/shared/tenancy/session-context.ts', () => ({
 }));
 
 const navigate = vi.fn();
+const searchRef = vi.hoisted(() => ({ value: {} as Record<string, unknown> }));
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
   ...(await importOriginal<Record<string, unknown>>()),
   useNavigate: () => navigate,
+  useSearch: () => searchRef.value,
 }));
 
 const switchToOrganization = vi.fn();
@@ -73,6 +75,7 @@ vi.mock('@/shared/api/auth-api.ts', () => ({
   },
 }));
 
+import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 
 import { OnboardingPage } from './OnboardingPage.tsx';
@@ -163,6 +166,57 @@ describe('OnboardingPage', () => {
     expect(await screen.findByTestId('onboarding-page')).toBeInTheDocument();
   });
 
+  it("wipes a previous user's persisted wizard state when a different user signs in", async () => {
+    // User A abandoned the wizard mid-flow on this browser: owner bound,
+    // name typed, a later step reached — all persisted to localStorage.
+    const store = useOnboardingStore.getState();
+    store.claimForUser('usr_previous');
+    store.patch({ firstName: 'Prev', lastName: 'User', teamSize: '2–10' });
+    store.setStepIndex(2);
+
+    // User B signs in on the same browser — me/context resolves with THEIR id.
+    vi.mocked(useMeContext).mockReturnValue({
+      data: {
+        user: {
+          id: 'usr_next',
+          email: 'next@example.test',
+          firstName: null,
+          lastName: null,
+          onboardingCompleted: false,
+        },
+        activeOrganization: null,
+        myPermissions: [],
+        globalRole: null,
+        organizations: [],
+        deploymentFlags: { personalOrganizations: false, teamOrganizations: true },
+        personalOrganizationId: null,
+      },
+      isPending: false,
+      isError: false,
+    } as unknown as ReturnType<typeof useMeContext>);
+
+    try {
+      renderWithProviders(<OnboardingPage />);
+
+      // The claim wipes user A's progress and binds the store to user B — the
+      // wizard restarts from scratch instead of submitting A's name for B.
+      await waitFor(() => {
+        expect(useOnboardingStore.getState().forUserId).toBe('usr_next');
+      });
+      const state = useOnboardingStore.getState();
+      expect(state.stepIndex).toBe(0);
+      expect(state.data.firstName).toBe('');
+      expect(state.data.teamSize).toBe('');
+    } finally {
+      // Restore the suite default (clearAllMocks does not undo mockReturnValue).
+      vi.mocked(useMeContext).mockReturnValue({
+        data: null,
+        isPending: false,
+        isError: false,
+      } as unknown as ReturnType<typeof useMeContext>);
+    }
+  });
+
   it('creates the org once and navigates to its dashboard', async () => {
     const user = userEvent.setup();
     seedDoneStep(['a@acme.com']);
@@ -201,6 +255,131 @@ describe('OnboardingPage', () => {
     expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({ params: { organizationSlug: 'existing-slug' } }),
     );
+  });
+
+  it('activates the sole existing team org instead of personal (invited/pre-provisioned user)', async () => {
+    const user = userEvent.setup();
+    // Hybrid deployment; the wizard creates nothing. The user ALREADY belongs
+    // to one team (invited or seeded) and has a personal org provisioned.
+    deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: true };
+    hydratedContextRef.value = {
+      ...hydratedContextRef.value,
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+      organizations: [teamOrg('acme')],
+      personalOrganizationId: 'org_personal_1',
+    };
+    const store = useOnboardingStore.getState();
+    store.reset();
+    store.setStepIndex(4); // hybrid+team steps: welcome/profile/questions/invite/done
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    // Their team is the destination — NOT the personal fallback that used to
+    // hide the workspace they were brought here to join.
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(createOrganization).not.toHaveBeenCalled();
+    expect(switchToOrganization).toHaveBeenCalledWith('org_acme');
+    expect(switchToPersonal).not.toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({ params: { organizationSlug: 'acme' }, replace: true }),
+    );
+  });
+
+  it('falls back to personal when several teams exist (no unambiguous destination)', async () => {
+    const user = userEvent.setup();
+    deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: true };
+    hydratedContextRef.value = {
+      ...hydratedContextRef.value,
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+      organizations: [teamOrg('acme'), teamOrg('beta')],
+      personalOrganizationId: 'org_personal_1',
+    };
+    const store = useOnboardingStore.getState();
+    store.reset();
+    store.setStepIndex(4);
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(switchToOrganization).not.toHaveBeenCalled();
+    expect(switchToPersonal).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns the user to the guarded deep link after finishing (?redirect=)', async () => {
+    const user = userEvent.setup();
+    searchRef.value = { redirect: '/organization/acme/settings' };
+    try {
+      seedDoneStep();
+      renderWithProviders(<OnboardingPage />);
+
+      await user.click(await screen.findByTestId('onboarding-finish'));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+      expect(navigate).toHaveBeenCalledWith({
+        to: '/organization/acme/settings',
+        replace: true,
+      });
+    } finally {
+      searchRef.value = {};
+    }
+  });
+
+  it('ignores an unsafe redirect and falls back to the resolved workspace', async () => {
+    const user = userEvent.setup();
+    searchRef.value = { redirect: 'https://evil.example/phish' };
+    try {
+      seedDoneStep();
+      renderWithProviders(<OnboardingPage />);
+
+      await user.click(await screen.findByTestId('onboarding-finish'));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalledTimes(1));
+      expect(navigate).toHaveBeenCalledWith(
+        expect.objectContaining({ params: { organizationSlug: 'acme' }, replace: true }),
+      );
+    } finally {
+      searchRef.value = {};
+    }
+  });
+
+  it('persists the typed profile name BEFORE refetching me/context (greeting consistency)', async () => {
+    const user = userEvent.setup();
+    const order: string[] = [];
+    const { authApi } = await import('@/shared/api/auth-api.ts');
+    const { hydrateSessionContext } = await import('@/shared/tenancy/session-context.ts');
+    const { setAccessToken, clearAccessToken } = await import('@/shared/auth/token.ts');
+    // Structurally valid base64url JWT — setAccessToken validates the shape.
+    const b64u = (value: object) =>
+      btoa(JSON.stringify(value))
+        .replace(/=/g, '')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_');
+    const fakeJwt = `${b64u({ alg: 'none' })}.${b64u({ sub: 'usr_1', exp: 9999999999 })}.sig`;
+    setAccessToken(fakeJwt);
+    vi.mocked(authApi.updateProfile).mockImplementationOnce(async () => {
+      await new Promise((r) => setTimeout(r, 20)); // let hydrate overtake if unordered
+      order.push('updateProfile');
+    });
+    vi.mocked(hydrateSessionContext).mockImplementationOnce(async () => {
+      order.push('hydrate');
+      return hydratedContextRef.value;
+    });
+    try {
+      seedDoneStep();
+      useOnboardingStore.getState().patch({ firstName: 'Ada', lastName: 'Lovelace' });
+      renderWithProviders(<OnboardingPage />);
+
+      await user.click(await screen.findByTestId('onboarding-finish'));
+
+      await waitFor(() => expect(navigate).toHaveBeenCalled());
+      // The PATCH must land before the refetch, or the refreshed context still
+      // carries firstName: null and the dashboard greets by email prefix.
+      expect(order).toEqual(['updateProfile', 'hydrate']);
+    } finally {
+      clearAccessToken();
+    }
   });
 
   it('creates the org when persisted createdOrganizationId is stale (404 guard)', async () => {

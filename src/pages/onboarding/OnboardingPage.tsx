@@ -1,4 +1,4 @@
-import { useNavigate } from '@tanstack/react-router';
+import { useNavigate, useSearch } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -7,6 +7,7 @@ import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
 import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { authApi } from '@/shared/api/auth-api.ts';
 import { createInvitation } from '@/shared/api/organization-api.ts';
+import { isSafeRedirectPath } from '@/shared/auth/redirect-safety.ts';
 import { getAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
@@ -46,6 +47,7 @@ import {
   ONBOARDING_NS,
   ONBOARDING_TEST_IDS,
 } from './onboarding.constants.ts';
+import type { OnboardingSearch } from './onboarding.search.ts';
 import {
   deriveOnboardingSteps,
   type OnboardingStep,
@@ -186,6 +188,13 @@ function isOnboardingDirty(input: {
  * writes `activeOrganization` into the me/context cache, so the returned context
  * is what the destination resolver should read.
  *
+ * When the wizard created nothing, an EXISTING sole team membership outranks
+ * the personal fallback: an invited (or pre-provisioned) user finishing the
+ * wizard was brought here to join that team — landing them on Personal hides
+ * the very workspace they came for. With several teams no single one is the
+ * obvious destination, so fall back to personal; the dashboard switcher lists
+ * them all.
+ *
  * Gate the personal switch on the concrete `personalOrganizationId`, not the
  * deployment flag: personal orgs can be *enabled* yet unprovisioned for a user
  * (core-be self-heals this, but the FE stays defensive), in which case
@@ -195,9 +204,17 @@ function isOnboardingDirty(input: {
 async function activateWorkspaceAfterOnboardingFinish(input: {
   organizationId: string | null;
   personalOrganizationId: string | null;
+  organizations: MeContext['organizations'];
 }): Promise<MeContext | undefined> {
   if (input.organizationId) {
     return switchToOrganization(input.organizationId);
+  }
+  const activeTeams = input.organizations.filter(
+    (o) => o.type === 'TEAM' && o.status === 'ACTIVE',
+  );
+  const soleTeam = activeTeams.length === 1 ? activeTeams[0] : undefined;
+  if (soleTeam) {
+    return switchToOrganization(soleTeam.id);
   }
   if (input.personalOrganizationId) {
     return switchToPersonal();
@@ -208,15 +225,21 @@ async function activateWorkspaceAfterOnboardingFinish(input: {
 /**
  * Land the user directly on their resolved workspace after onboarding — no hop
  * through the `/` resolver (which would re-fetch me/context and add a second
- * redirect). `resolveRootTarget` is the same decision `/` makes, run on the
- * post-switch context we already hold. Only when no workspace resolves (should
- * not happen once a switch succeeded) do we defer to `/` rather than self-loop
- * back into onboarding.
+ * redirect). A safe `?redirect=` deep link (attached by the workspace guards
+ * when they bounced the user here) wins over the resolved workspace: it is the
+ * page the user originally asked for, and its own guards re-validate
+ * membership/status on arrival. Otherwise `resolveRootTarget` is the same
+ * decision `/` makes, run on the post-switch context we already hold.
  */
 function navigateAfterOnboarding(
   navigate: ReturnType<typeof useNavigate>,
   ctx: MeContext,
+  redirectPath?: string,
 ): void {
+  if (redirectPath && isSafeRedirectPath(redirectPath)) {
+    void navigate({ to: redirectPath, replace: true });
+    return;
+  }
   const target = resolveRootTarget(ctx);
   if (target.to === '/organization/$organizationSlug/dashboard') {
     void navigate({ to: target.to, params: target.params, replace: true });
@@ -256,6 +279,12 @@ function renderStep(step: ReturnType<typeof stepAtIndex>) {
 export function OnboardingPage() {
   const { t } = useTranslation(ONBOARDING_NS);
   const navigate = useNavigate();
+  // Deep link the workspace guards carried here (?redirect=…) — consumed at
+  // finish so the user lands on the page they originally asked for. The
+  // non-strict search is untyped here; validateOnboardingSearch (routeTree)
+  // guarantees `redirect` is a string when present.
+  const search: OnboardingSearch = useSearch({ strict: false });
+  const redirectSearch = search.redirect;
   const {
     stepIndex,
     data,
@@ -266,6 +295,7 @@ export function OnboardingPage() {
     createdOrganizationSlug,
     setCreatedOrganizationSlug,
     setStepIndex,
+    claimForUser,
   } = useOnboardingStore();
   const { data: meContext } = useMeContext();
   const deploymentFlags = useDeploymentFlags();
@@ -282,6 +312,15 @@ export function OnboardingPage() {
     confirmLabel: t(ONBOARDING_KEYS.guard.discard),
     cancelLabel: t(ONBOARDING_KEYS.guard.stay),
   });
+
+  // Bind persisted wizard progress to the signed-in user as soon as their id
+  // is known: a store left behind by a DIFFERENT user on this browser is wiped
+  // before any of its data can be reviewed or submitted (the wizard would
+  // otherwise PATCH the previous user's name onto this account).
+  const sessionUserId = meContext?.user.id ?? null;
+  useEffect(() => {
+    if (sessionUserId) claimForUser(sessionUserId);
+  }, [sessionUserId, claimForUser]);
 
   // Persisted wizard state can carry a created-org id from a prior session while
   // fresh signup with an empty membership list skips duplicate org creation
@@ -325,7 +364,12 @@ export function OnboardingPage() {
         setCreatedOrganizationSlug,
       });
 
-      void persistOnboardingResult({
+      // Awaited so the profile PATCH lands BEFORE the me/context refetch below —
+      // unawaited, the refreshed context could still carry firstName: null and
+      // the dashboard would greet the user by their email prefix instead of the
+      // name they just typed. Still best-effort: every failure inside is
+      // swallowed, so awaiting can never strand the wizard.
+      await persistOnboardingResult({
         firstName: data.firstName,
         lastName: data.lastName,
         teamSize: data.teamSize,
@@ -355,6 +399,7 @@ export function OnboardingPage() {
       const activatedContext = await activateWorkspaceAfterOnboardingFinish({
         organizationId,
         personalOrganizationId: refreshedContext.personalOrganizationId,
+        organizations: refreshedContext.organizations,
       });
 
       complete();
@@ -370,7 +415,11 @@ export function OnboardingPage() {
           i18n.t(ONBOARDING_KEYS.toast.finishSuccess, { ns: ONBOARDING_NS }),
         );
       }
-      navigateAfterOnboarding(navigate, activatedContext ?? refreshedContext);
+      navigateAfterOnboarding(
+        navigate,
+        activatedContext ?? refreshedContext,
+        redirectSearch,
+      );
     } catch {
       notify.error(i18n.t(ONBOARDING_KEYS.toast.finishError, { ns: ONBOARDING_NS }));
     } finally {

@@ -257,6 +257,29 @@ describe('workspace provision guards', () => {
     });
   });
 
+  it('onboarding redirects carry the guarded deep link as ?redirect=', async () => {
+    vi.mocked(ensureSessionContext).mockResolvedValue({
+      user: { onboardingCompleted: false } as MeContext['user'],
+      activeOrganization: null,
+      organizations: [],
+      deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
+    } as MeContext);
+
+    await expect(
+      requireProvisionedTeamWorkspace({ redirectFrom: '/organization/acme/dashboard' }),
+    ).rejects.toMatchObject({
+      options: {
+        to: '/onboarding',
+        search: { redirect: '/organization/acme/dashboard' },
+      },
+    });
+    await expect(
+      requireProvisionedPersonalDashboard({ redirectFrom: '/dashboard' }),
+    ).rejects.toMatchObject({
+      options: { to: '/onboarding', search: { redirect: '/dashboard' } },
+    });
+  });
+
   it('requireOnboardingWorkspace passes when onboarding is required (no orgs)', async () => {
     vi.mocked(ensureSessionContext).mockResolvedValue({
       user: { onboardingCompleted: false } as MeContext['user'],

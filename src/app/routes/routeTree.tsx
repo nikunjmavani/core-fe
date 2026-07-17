@@ -35,6 +35,7 @@ import { manifest as loginManifest } from '@/pages/login/login.manifest.ts';
 import { validateLoginSearch } from '@/pages/login/login.search.ts';
 import { manifest as mfaManifest } from '@/pages/mfa/mfa.manifest.ts';
 import { manifest as onboardingManifest } from '@/pages/onboarding/onboarding.manifest.ts';
+import { validateOnboardingSearch } from '@/pages/onboarding/onboarding.search.ts';
 import { manifest as dashboardManifest } from '@/pages/organization/$organizationSlug/dashboard/dashboard.manifest.ts';
 import { manifest as organizationShellManifest } from '@/pages/organization/$organizationSlug/organization-slug.manifest.ts';
 import { manifest as suspendedManifest } from '@/pages/organization/$organizationSlug/suspended/suspended.manifest.ts';
@@ -222,6 +223,7 @@ const onboardingRoute = createRoute({
   getParentRoute: () => publicShellRoute,
   path: '/onboarding',
   head: manifestHead(onboardingManifest),
+  validateSearch: validateOnboardingSearch,
   beforeLoad: async ({ location }) => {
     await requireAuth(location.href);
     await requireOnboardingWorkspace();
@@ -273,7 +275,7 @@ const organizationPickerRoute = createRoute({
   beforeLoad: async ({ location, preload }) => {
     if (preload) return;
     await requireAuth(location.href);
-    await requireProvisionedWorkspace({ params: {} });
+    await requireProvisionedWorkspace({ params: {}, redirectFrom: location.href });
   },
   component: OrganizationPickerPage,
   errorComponent: RouteErrorBoundary,
@@ -291,7 +293,7 @@ const organizationShellRoute = createRoute({
     if (preload) return;
     await requireAuth(location.href);
     requireTeamDeployment({ params });
-    await requireProvisionedWorkspace({ params });
+    await requireProvisionedWorkspace({ params, redirectFrom: location.href });
     await resolveActiveOrg({ params });
   },
   component: function OrganizationShellRoute() {
@@ -346,7 +348,7 @@ const personalShellRoute = createRoute({
     if (preload) return;
     await requireAuth(location.href);
     requirePersonalDeployment({});
-    await requirePersonalDashboardWorkspace({});
+    await requirePersonalDashboardWorkspace({ redirectFrom: location.href });
   },
   component: function PersonalShellRoute() {
     return (

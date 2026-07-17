@@ -21,8 +21,15 @@ import {
 import { ensureSessionContext } from '@/shared/tenancy/session-context.ts';
 import { switchToOrganization } from '@/shared/tenancy/switch.ts';
 
-function throwWorkspaceRedirect(target: RootTarget): never {
-  if (target.to === '/onboarding') throw redirect({ to: '/onboarding' });
+function throwWorkspaceRedirect(target: RootTarget, redirectFrom?: string): never {
+  if (target.to === '/onboarding') {
+    // Carry the originally requested deep link through the wizard so finishing
+    // onboarding can return the user there instead of dropping the destination.
+    throw redirect({
+      to: '/onboarding',
+      search: redirectFrom ? { redirect: redirectFrom } : undefined,
+    });
+  }
   if (target.to === '/dashboard') throw redirect({ to: '/dashboard' });
   if (target.to === '/organization') throw redirect({ to: '/organization' });
   throw redirect({ to: target.to, params: target.params });
@@ -134,22 +141,29 @@ export async function requireOnboardingWorkspace(): Promise<void> {
 
 /**
  * Block `/dashboard` when `me/context` says the user still belongs on onboarding
- * or a team slug dashboard (same rule as `/` resolver).
+ * or a team slug dashboard (same rule as `/` resolver). `redirectFrom` (the
+ * guarded location) rides along on the onboarding redirect so the wizard can
+ * return the user to it.
  */
-export async function requireProvisionedPersonalDashboard(): Promise<void> {
+export async function requireProvisionedPersonalDashboard(options?: {
+  redirectFrom?: string;
+}): Promise<void> {
   const ctx = await ensureSessionContext();
   const redirectTarget = workspaceRedirectForPersonalDashboard(ctx);
-  if (redirectTarget) throwWorkspaceRedirect(redirectTarget);
+  if (redirectTarget) throwWorkspaceRedirect(redirectTarget, options?.redirectFrom);
 }
 
 /**
  * Block team slug space when there is no provisioned workspace yet, or when the
  * active org is personal-only (dual-URL sends those users to `/dashboard`).
+ * `redirectFrom` (the guarded location) rides along on the onboarding redirect
+ * so the wizard can return the user to the deep link they asked for.
  */
 export async function requireProvisionedTeamWorkspace(options?: {
   organizationPicker?: boolean;
+  redirectFrom?: string;
 }): Promise<void> {
   const ctx = await ensureSessionContext();
   const redirectTarget = workspaceRedirectForTeamEntry(ctx, options);
-  if (redirectTarget) throwWorkspaceRedirect(redirectTarget);
+  if (redirectTarget) throwWorkspaceRedirect(redirectTarget, options?.redirectFrom);
 }

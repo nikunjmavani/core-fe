@@ -13,6 +13,7 @@ import { cancelTokenRefresh, scheduleTokenRefresh } from '@/shared/auth/refresh-
 import { clearSessionStart, markSessionStart } from '@/shared/auth/session-lifetime.ts';
 import { clearAccessToken, getAccessToken, setAccessToken } from '@/shared/auth/token.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOnboardingStore } from '@/shared/store/useOnboardingStore/index.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import type { MeContext } from '@/shared/tenancy/me-context.ts';
 import { hydrateSessionContext } from '@/shared/tenancy/session-context.ts';
@@ -54,6 +55,11 @@ function clearLocalAuthState(): void {
     // logout while already on /login — from leaving one user's grants in the
     // store for the next sign-in.
     useOrganizationStore.getState().clearOrganization();
+    // Onboarding progress persists to localStorage (resumable wizard) and
+    // holds PII (names, invite emails). Left behind, the NEXT user on this
+    // browser would inherit the previous user's step + data — and the wizard
+    // would submit the previous user's name onto their account.
+    useOnboardingStore.getState().reset();
     queryClient.clear();
   } catch (cleanupError) {
     if (platformConfig.debugLogging) {
