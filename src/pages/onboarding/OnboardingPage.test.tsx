@@ -477,6 +477,23 @@ describe('OnboardingPage', () => {
     });
   });
 
+  it('finishes even when no invite role can be provisioned (best-effort)', async () => {
+    // Fresh org has only Owner AND createRole fails → resolveInviteRoleId throws;
+    // invites are all counted failed but the wizard still completes.
+    const user = userEvent.setup();
+    listRoles.mockResolvedValueOnce({
+      rows: [{ ...memberRole('rol_owner'), name: 'Owner', isSystem: true }],
+    });
+    createRole.mockRejectedValueOnce(new Error('nope'));
+    seedDoneStep(['a@acme.com']);
+    renderWithProviders(<OnboardingPage />);
+
+    await user.click(await screen.findByTestId('onboarding-finish'));
+
+    await waitFor(() => expect(navigate).toHaveBeenCalled());
+    expect(inviteMember).not.toHaveBeenCalled();
+  });
+
   it('finishes both mode to personal dashboard without creating a team org', async () => {
     deploymentFlagsRef.value = { personalOrganizations: true, teamOrganizations: true };
     hydratedContextRef.value.deploymentFlags = {

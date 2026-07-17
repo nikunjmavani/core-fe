@@ -90,6 +90,18 @@ describe('OrganizationRolesPanel', () => {
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
+  it('shows a loading skeleton while roles load', () => {
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [], isPending: true }));
+    render(<OrganizationRolesPanel />);
+    expect(screen.getByTestId('roles-loading')).toBeInTheDocument();
+  });
+
+  it('shows a retry error when the roles query fails', () => {
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [], isError: true }));
+    render(<OrganizationRolesPanel />);
+    expect(screen.getByText(/couldn.t load roles/i)).toBeInTheDocument();
+  });
+
   it('shows an actions menu only for custom roles, and only with the permission', () => {
     useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE, SYSTEM_ROLE] }));
     setCanManage(true);
