@@ -9,6 +9,7 @@ export interface OnboardingSearch {
   redirect?: string;
 }
 
+/** Parse `/onboarding` search params into a typed {@link OnboardingSearch}. */
 export function validateOnboardingSearch(
   search: Record<string, unknown>,
 ): OnboardingSearch {
