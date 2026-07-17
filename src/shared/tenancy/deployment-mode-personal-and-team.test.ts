@@ -29,7 +29,8 @@ function meCtx(
       createdAt: 't',
       updatedAt: 't',
     },
-    myPermissions: [],
+    // A member landing on a team dashboard can read the org (realistic default).
+    myPermissions: ['organization:read'],
     globalRole: null,
     organizations: [],
     deploymentFlags: BOTH,

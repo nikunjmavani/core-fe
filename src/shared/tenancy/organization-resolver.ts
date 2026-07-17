@@ -33,6 +33,27 @@ function targetWhenNoActiveOrg(flags: DeploymentFlags, ctx: MeContext): RootTarg
   return { to: '/dashboard' } as const;
 }
 
+/**
+ * The org dashboard — the team landing surface — is gated on `organization:read`
+ * (see `dashboard.manifest.ts`). A member whose active org is a team they can't
+ * read (a role without that grant, e.g. a mis-seeded org) would land on that
+ * dashboard and be bounced to `/unauthorized` — whose "Go Home" resolves right
+ * back here, a dead-end loop. So land such a session on the **org picker**
+ * instead: a gate-light surface they can always reach, where they pick a
+ * workspace they can enter (or sign out). Members WITH the grant are unaffected.
+ */
+const DASHBOARD_LANDING_PERMISSION = 'organization:read';
+
+function teamDashboardOrPicker(ctx: MeContext, organizationSlug: string): RootTarget {
+  if (!ctx.myPermissions.includes(DASHBOARD_LANDING_PERMISSION)) {
+    return { to: '/organization' } as const;
+  }
+  return {
+    to: '/organization/$organizationSlug/dashboard',
+    params: { organizationSlug },
+  } as const;
+}
+
 export function resolveRootTarget(ctx: MeContext): RootTarget {
   // Onboarding is the first gate for EVERY deployment mode: a fresh user goes
   // through the wizard once before any dashboard — even in personal modes, where
@@ -53,10 +74,7 @@ export function resolveRootTarget(ctx: MeContext): RootTarget {
   if (mode === 'team-only') {
     if (!active) return noActive;
     if (active.type === 'TEAM' && active.slug) {
-      return {
-        to: '/organization/$organizationSlug/dashboard',
-        params: { organizationSlug: active.slug },
-      } as const;
+      return teamDashboardOrPicker(ctx, active.slug);
     }
     return noActive;
   }
@@ -64,10 +82,7 @@ export function resolveRootTarget(ctx: MeContext): RootTarget {
   if (!active) return noActive;
   if (active.type === 'PERSONAL') return { to: '/dashboard' } as const;
   if (active.slug) {
-    return {
-      to: '/organization/$organizationSlug/dashboard',
-      params: { organizationSlug: active.slug },
-    } as const;
+    return teamDashboardOrPicker(ctx, active.slug);
   }
   return noActive;
 }

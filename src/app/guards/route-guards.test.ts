@@ -352,6 +352,8 @@ describe('workspace provision guards', () => {
         slug: 'acme',
         status: 'ACTIVE',
       },
+      // A member landing on the team dashboard can read the org.
+      myPermissions: ['organization:read'],
       deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
     } as MeContext);
 
