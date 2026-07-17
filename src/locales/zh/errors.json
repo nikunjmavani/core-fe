@@ -136,11 +136,7 @@
       },
       "invitations": {
         "sendFailed": "无法发送邀请",
-        "revokeFailed": "无法撤销邀请",
-        "resendFailed": "无法重新发送邀请",
-        "sendSuccess": "邀请已发送至 {{email}}",
-        "revokeSuccess": "邀请已撤销",
-        "resendSuccess": "邀请已重新发送至 {{email}}"
+        "sendSuccess": "邀请已发送至 {{email}}"
       }
     },
     "profileUpdated": "个人资料已更新"

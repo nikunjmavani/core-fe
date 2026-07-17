@@ -33,8 +33,6 @@ export const orgQueryKeys = {
     [...orgQueryKeys.org(organizationId), 'members'] as const,
   membersList: (organizationId: string | null, params: OrgListKeyParams) =>
     [...orgQueryKeys.members(organizationId), 'list', params] as const,
-  invitations: (organizationId: string | null) =>
-    [...orgQueryKeys.org(organizationId), 'invitations'] as const,
   roles: (organizationId: string | null) =>
     [...orgQueryKeys.org(organizationId), 'roles'] as const,
   rolesList: (organizationId: string | null, params: OrgListKeyParams) =>

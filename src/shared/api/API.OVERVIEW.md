@@ -36,4 +36,4 @@ If the schemas lived in `pages/`, shared components would import from pages (for
 
 ## What's coming
 
-When resource pages are rewritten to use `useList<Member>('members')`, `useCreate<Invitation>('invitations')`, etc. (the shared CRUD hooks), `organization-api.ts` shrinks dramatically — most of its 20 functions disappear, leaving only special-case operations (`getMyPermissions`, `acceptInvitation`).
+When resource pages are rewritten to use `useList<Member>('members')`, `useCreate<RoleSummary>('roles')`, etc. (the shared CRUD hooks), `organization-api.ts` shrinks dramatically — most of its functions disappear, leaving only special-case operations (`getMyPermissions`, `acceptInvitation`).

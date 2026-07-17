@@ -38,18 +38,10 @@ export const invitationStatusSchema = z.enum([
   'expired',
   'revoked',
 ]);
+// `InvitationStatus` still backs the accept-invite status badge
+// (OrganizationBadges); the full invitation resource/type was removed with the
+// dead /invitations subsystem — invites are INVITED memberships (see Member).
 export type InvitationStatus = z.infer<typeof invitationStatusSchema>;
-
-export const invitationSchema = z.object({
-  id: z.string(),
-  email: z.email(),
-  role: orgRoleSchema,
-  status: invitationStatusSchema,
-  invitedByName: z.string(),
-  createdAt: z.string(),
-  expiresAt: z.string(),
-});
-export type Invitation = z.infer<typeof invitationSchema>;
 
 export const roleSummarySchema = z.object({
   id: z.string(),

@@ -136,11 +136,7 @@
       },
       "invitations": {
         "sendFailed": "Could not send invitation",
-        "revokeFailed": "Could not revoke invitation",
-        "resendFailed": "Could not resend invitation",
-        "sendSuccess": "Invitation sent to {{email}}",
-        "revokeSuccess": "Invitation revoked",
-        "resendSuccess": "Invitation resent to {{email}}"
+        "sendSuccess": "Invitation sent to {{email}}"
       }
     },
     "profileUpdated": "Profile updated"

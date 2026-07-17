@@ -6,7 +6,6 @@ describe('orgQueryKeys', () => {
   it('namespaces every resource key under the organization root', () => {
     const resourceKeys = [
       orgQueryKeys.members('org_1'),
-      orgQueryKeys.invitations('org_1'),
       orgQueryKeys.roles('org_1'),
       orgQueryKeys.apiKeys('org_1'),
     ];
@@ -18,7 +17,6 @@ describe('orgQueryKeys', () => {
   it('keeps resource keys distinct (no cache collisions)', () => {
     const serialized = [
       orgQueryKeys.members('org_1'),
-      orgQueryKeys.invitations('org_1'),
       orgQueryKeys.roles('org_1'),
       orgQueryKeys.apiKeys('org_1'),
     ].map((k) => JSON.stringify(k));
