@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { Member } from '@/shared/api/organization-contracts.ts';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/index.ts';
 import { EmptyState } from '@/shared/components/EmptyState/index.ts';
+import { InviteMemberDialog } from '@/shared/components/InviteMemberDialog/index.ts';
 import { RetryError } from '@/shared/components/RetryError/index.ts';
 import {
   formatSettingsBreadcrumb,
@@ -79,6 +80,10 @@ export function OrganizationMembersPanel() {
     permission: 'membership:manage',
     teamOrganizationOnly: true,
   });
+  const canInvite = useCan({
+    permission: 'invitation:manage',
+    teamOrganizationOnly: true,
+  });
   const removeMember = useRemoveMember();
   const [toRemove, setToRemove] = useState<Member | null>(null);
 
@@ -97,15 +102,18 @@ export function OrganizationMembersPanel() {
         description={t(panels.description)}
       />
 
-      <OrgListControls
-        search={search}
-        onSearchChange={setSearch}
-        sort={sort}
-        onSortChange={setSort}
-        searchPlaceholder={t(panels.searchPlaceholder)}
-        searchTestId="members-search"
-        sortTestId="members-sort"
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <OrgListControls
+          search={search}
+          onSearchChange={setSearch}
+          sort={sort}
+          onSortChange={setSort}
+          searchPlaceholder={t(panels.searchPlaceholder)}
+          searchTestId="members-search"
+          sortTestId="members-sort"
+        />
+        {canInvite ? <InviteMemberDialog /> : null}
+      </div>
 
       {members.isPending ? <MembersLoading /> : null}
 

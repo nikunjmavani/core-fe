@@ -1,19 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { getMock, postMock, patchMock, deleteMock } = vi.hoisted(() => ({
+const { getMock, postMock, putMock, patchMock, deleteMock } = vi.hoisted(() => ({
   getMock: vi.fn(),
   postMock: vi.fn(),
+  putMock: vi.fn(),
   patchMock: vi.fn(),
   deleteMock: vi.fn(),
 }));
 vi.mock('@/core/http/fetch-client.ts', () => ({
-  apiClient: { get: getMock, post: postMock, patch: patchMock, delete: deleteMock },
+  apiClient: {
+    get: getMock,
+    post: postMock,
+    put: putMock,
+    patch: patchMock,
+    delete: deleteMock,
+  },
 }));
 
 import {
   createApiKey,
   createRole,
   deleteRole,
+  inviteMember,
   listApiKeys,
   listMembers,
   listRoles,
@@ -47,6 +55,7 @@ const WIRE_MEMBER = {
 beforeEach(() => {
   getMock.mockReset();
   postMock.mockReset();
+  putMock.mockReset();
   patchMock.mockReset();
   deleteMock.mockReset();
 });
@@ -139,6 +148,21 @@ describe('organization-api memberships (live)', () => {
       expect.stringContaining('/memberships/mem_x'),
     );
   });
+
+  it('inviteMember posts email + role_id to /memberships (not /invitations)', async () => {
+    // Regression: the old createInvitation hit a non-existent /invitations
+    // endpoint (404). core-be adds an INVITED member via POST /memberships.
+    postMock.mockResolvedValue({
+      data: { ...WIRE_MEMBER, status: 'INVITED', joined_at: null },
+    });
+    const member = await inviteMember({ email: 'new@acme.test', roleId: ROL });
+    expect(postMock).toHaveBeenCalledWith(expect.stringContaining('/memberships'), {
+      email: 'new@acme.test',
+      role_id: ROL,
+    });
+    expect(postMock.mock.calls[0]?.[0]).not.toContain('/invitations');
+    expect(member.status).toBe('invited');
+  });
 });
 
 const ROLE_WIRE = {
@@ -172,14 +196,31 @@ describe('organization-api roles (live)', () => {
     expect(role?.description).toBe('');
   });
 
-  it('createRole posts the input and maps the result', async () => {
+  it('createRole POSTs name+description then PUTs permission_codes (two-step)', async () => {
+    // Regression: core-be's create body is `.strict()` and rejects `permissions`
+    // (400). Permissions are applied via PUT /roles/:id/permissions.
     postMock.mockResolvedValue({ data: { ...ROLE_WIRE, is_system: false } });
-    await createRole({ name: 'X', description: 'd', permissions: ['role:read'] });
-    expect(postMock).toHaveBeenCalledWith(expect.stringContaining('/roles'), {
+    putMock.mockResolvedValue({ data: null });
+    const role = await createRole({
       name: 'X',
       description: 'd',
       permissions: ['role:read'],
     });
+    expect(postMock).toHaveBeenCalledWith(expect.stringContaining('/roles'), {
+      name: 'X',
+      description: 'd',
+    });
+    expect(putMock).toHaveBeenCalledWith(
+      expect.stringContaining(`/roles/${ROL}/permissions`),
+      { permission_codes: ['role:read'] },
+    );
+    expect(role.permissions).toEqual(['role:read']);
+  });
+
+  it('createRole skips the permissions PUT when none are selected', async () => {
+    postMock.mockResolvedValue({ data: { ...ROLE_WIRE, is_system: false } });
+    await createRole({ name: 'X', description: 'd', permissions: [] });
+    expect(putMock).not.toHaveBeenCalled();
   });
 
   it('deleteRole deletes and returns the id', async () => {

@@ -6,16 +6,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
-const { listInvitations, createInvitation, revokeInvitation, resendInvitation } =
-  vi.hoisted(() => ({
+const { listInvitations, inviteMember, revokeInvitation, resendInvitation } = vi.hoisted(
+  () => ({
     listInvitations: vi.fn(),
-    createInvitation: vi.fn(),
+    inviteMember: vi.fn(),
     revokeInvitation: vi.fn(),
     resendInvitation: vi.fn(),
-  }));
+  }),
+);
 vi.mock('@/shared/api/organization-api.ts', () => ({
   listInvitations,
-  createInvitation,
+  inviteMember,
   revokeInvitation,
   resendInvitation,
 }));
@@ -27,7 +28,11 @@ vi.mock('@/shared/notify/index.ts', () => ({
   notify: { success: notifySuccess, error: notifyError },
 }));
 
-import { useInvitations, useRevokeInvitation } from './useInvitations.ts';
+import {
+  useInvitations,
+  useInviteMember,
+  useRevokeInvitation,
+} from './useInvitations.ts';
 
 type Row = { id: string; email?: string };
 
@@ -61,6 +66,23 @@ describe('useInvitations', () => {
     const { result } = renderHook(() => useInvitations(), { wrapper });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual([{ id: 'inv_1', email: 'a@b.c' }]);
+  });
+});
+
+describe('useInviteMember', () => {
+  it('invites via inviteMember and invalidates the MEMBERS list (not invitations)', async () => {
+    // Invited people land in the members list as INVITED — that's what must
+    // refetch, so the new invitee shows up without a manual reload.
+    inviteMember.mockResolvedValue({ id: 'mem_new', email: 'new@x.test' });
+    const invalidate = vi.spyOn(client, 'invalidateQueries');
+    const { result } = renderHook(() => useInviteMember(), { wrapper });
+
+    result.current.mutate({ email: 'new@x.test', roleId: 'rol_1' });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(inviteMember).toHaveBeenCalledWith({ email: 'new@x.test', roleId: 'rol_1' });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: orgQueryKeys.members(ORG) });
+    expect(notifySuccess).toHaveBeenCalledTimes(1);
   });
 });
 

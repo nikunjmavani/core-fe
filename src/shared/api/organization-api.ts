@@ -164,6 +164,24 @@ export async function removeMember(membershipId: string): Promise<{ id: string }
   return { id: membershipId };
 }
 
+/**
+ * Invite a member by email (core-be REQ-1). There is no separate "invitation"
+ * resource: `POST /organization/memberships` provisions/resolves the user and
+ * creates an **INVITED** membership with the given role, emailing an invite
+ * token. The invitee then appears in the members list as `invited` until they
+ * accept. Requires `invitation:manage`.
+ */
+export async function inviteMember(input: {
+  email: string;
+  roleId: string;
+}): Promise<Member> {
+  const res = await apiClient.post<unknown>(`${ORG_API}/memberships`, {
+    email: input.email,
+    role_id: input.roleId,
+  });
+  return toMember(membershipWire.parse(res.data));
+}
+
 // ── Invitations ──
 
 const invitationWire = z.object({
@@ -259,13 +277,30 @@ export async function listRoles(
   return { ...page, rows: page.rows.map(toRoleSummary) };
 }
 
+/**
+ * Create a custom role. core-be splits this into two calls: `POST /roles`
+ * accepts only `{ name, description }` (a `.strict()` body — sending
+ * `permissions` 400s), and the permission set is applied via
+ * `PUT /roles/:id/permissions` with `permission_codes`. We chain them and
+ * return the role with the permissions we just assigned.
+ */
 export async function createRole(input: {
   name: string;
   description: string;
   permissions: string[];
 }): Promise<RoleSummary> {
-  const res = await apiClient.post<unknown>(`${ORG_API}/roles`, input);
-  return toRoleSummary(roleWire.parse(res.data));
+  const created = await apiClient.post<unknown>(`${ORG_API}/roles`, {
+    name: input.name,
+    description: input.description,
+  });
+  const role = toRoleSummary(roleWire.parse(created.data));
+
+  if (input.permissions.length === 0) return role;
+
+  await apiClient.put<unknown>(`${ORG_API}/roles/${role.id}/permissions`, {
+    permission_codes: input.permissions,
+  });
+  return { ...role, permissions: input.permissions };
 }
 
 export async function updateRole(input: {
