@@ -13,6 +13,15 @@ vi.mock('@/shared/hooks/useMembers/index.ts', () => ({
   useMembers: useMembersMock,
   useRemoveMember: () => ({ mutate: removeMutate }),
 }));
+// The invite dialog is exercised in its own suite; here we only assert the
+// panel renders it (gated on invitation:manage), so stub it to its trigger.
+vi.mock('@/shared/components/InviteMemberDialog/index.ts', () => ({
+  InviteMemberDialog: () => (
+    <button type="button" data-testid="invite-member-open">
+      Invite member
+    </button>
+  ),
+}));
 vi.mock('@/shared/notify/notify-deferred.ts', () => ({
   notifyDeferredCommit: ({ onCommit }: { onCommit: () => void }) => onCommit(),
 }));
@@ -52,7 +61,8 @@ function setCanManage(value: boolean) {
   });
   useOrganizationStore.setState({
     organizationType: value ? 'TEAM' : 'PERSONAL',
-    permissions: value ? ['membership:manage'] : [],
+    // An owner/admin holds both; a viewer/member (or personal org) holds neither.
+    permissions: value ? ['membership:manage', 'invitation:manage'] : [],
   });
 }
 
@@ -141,5 +151,21 @@ describe('OrganizationMembersPanel', () => {
 
     await user.click(screen.getByTestId('members-load-more'));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('exposes an Invite member button for a manager (was previously unreachable)', () => {
+    // Regression: the invite UI existed but nothing rendered it — a team owner
+    // had no way to invite anyone despite both dashboard CTAs pointing here.
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [MEMBER] }));
+    setCanManage(true);
+    render(<OrganizationMembersPanel />);
+    expect(screen.getByTestId('invite-member-open')).toBeInTheDocument();
+  });
+
+  it('hides the invite button without invitation:manage', () => {
+    useMembersMock.mockReturnValue(membersQueryResult({ rows: [MEMBER] }));
+    setCanManage(false);
+    render(<OrganizationMembersPanel />);
+    expect(screen.queryByTestId('invite-member-open')).not.toBeInTheDocument();
   });
 });

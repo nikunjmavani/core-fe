@@ -13,6 +13,15 @@ vi.mock('@/shared/hooks/useRoles/index.ts', () => ({
   useRoles: useRolesMock,
   useDeleteRole: () => ({ mutate: deleteMutate }),
 }));
+// CreateRoleDialog has its own suite; here we only assert the panel renders it
+// (gated on role:manage), so stub it to its trigger.
+vi.mock('@/shared/components/CreateRoleDialog/index.ts', () => ({
+  CreateRoleDialog: () => (
+    <button type="button" data-testid="role-create-open">
+      New role
+    </button>
+  ),
+}));
 vi.mock('@/shared/notify/notify-deferred.ts', () => ({
   notifyDeferredCommit: ({ onCommit }: { onCommit: () => void }) => onCommit(),
 }));
@@ -93,6 +102,22 @@ describe('OrganizationRolesPanel', () => {
     setCanManage(false);
     render(<OrganizationRolesPanel />);
     expect(screen.queryByTestId('role-delete-rol_1')).not.toBeInTheDocument();
+  });
+
+  it('exposes a New role button for a manager (roles were create-less before)', () => {
+    // Regression: the panel was read/delete-only, so a new org (which has only
+    // the system Owner role) could never gain a role to invite members as.
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [SYSTEM_ROLE] }));
+    setCanManage(true);
+    render(<OrganizationRolesPanel />);
+    expect(screen.getByTestId('role-create-open')).toBeInTheDocument();
+  });
+
+  it('hides the New role button without role:manage', () => {
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [SYSTEM_ROLE] }));
+    setCanManage(false);
+    render(<OrganizationRolesPanel />);
+    expect(screen.queryByTestId('role-create-open')).not.toBeInTheDocument();
   });
 
   it('confirms and deletes a custom role', async () => {
