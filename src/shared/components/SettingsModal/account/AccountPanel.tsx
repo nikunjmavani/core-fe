@@ -1,8 +1,12 @@
+import { useMutation } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import i18n from '@/lib/i18n/i18n.ts';
+import { authApi } from '@/shared/api/auth-api.ts';
+import { forceLogout } from '@/shared/auth/service.ts';
+import { getAccessToken } from '@/shared/auth/token.ts';
 import {
   SETTINGS_KEYS,
   SETTINGS_NS,
@@ -28,6 +32,7 @@ import {
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
 import { Separator } from '@/shared/components/ui/separator.tsx';
+import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
 import { Copy, ShieldCheck, Trash2, TriangleAlert } from '@/shared/icons/index.ts';
 import { notify } from '@/shared/notify/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
@@ -43,13 +48,12 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
 
 /**
  * Account section — read-only account metadata plus a destructive "danger
- * zone" for deactivating or deleting the account, each gated behind a confirm
- * dialog.
+ * zone", each gated behind a confirm dialog.
  *
- * Deferred to the FE↔BE integration epic. core-be exposes `GET /users/me` and
- * `DELETE /users/me`, but there is NO `deactivate` endpoint — the danger-zone
- * actions need either a real deactivate route or a decision to map "deactivate"
- * onto delete before they can be wired to a mutation here.
+ * **Delete** is wired to core-be `DELETE /users/me`, then tears down the local
+ * session. **Deactivate** is still a placeholder: core-be has no `deactivate`
+ * endpoint, so it needs either a real route or a product decision to map
+ * "deactivate" onto delete before it can stop being a no-op toast.
  */
 export function AccountPanel() {
   const { t } = useTranslation(SETTINGS_NS);
@@ -69,6 +73,26 @@ export function AccountPanel() {
       notify.error(i18n.t(ERRORS_KEYS.frontend.account.copyFailed, { ns: ERRORS_NS }));
     }
   };
+
+  const deleteAccount = useMutation({
+    mutationFn: async () => {
+      const token = getAccessToken();
+      if (!token) throw new Error('Not authenticated');
+      await authApi.deleteAccount(token);
+    },
+    onSuccess: () => {
+      setConfirmDelete(false);
+      notify.success(
+        i18n.t(ERRORS_KEYS.frontend.account.accountDeletionPending, { ns: ERRORS_NS }),
+      );
+      // The account (and its session) no longer exists — tear down the local
+      // session and route to /login. `logout` reason keeps it non-forced.
+      forceLogout({ reason: 'logout' });
+    },
+    onError: (error) => {
+      notify.error(mapFrontendError(error));
+    },
+  });
 
   return (
     <div className="space-y-6" data-testid="settings-section-account">
@@ -173,14 +197,13 @@ export function AccountPanel() {
             </AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
-              onClick={() => {
-                setConfirmDelete(false);
-                notify.success(
-                  i18n.t(ERRORS_KEYS.frontend.account.accountDeletionPending, {
-                    ns: ERRORS_NS,
-                  }),
-                );
+              onClick={(e) => {
+                // Keep the dialog open until the request resolves (success routes
+                // away; error stays so the user can retry).
+                e.preventDefault();
+                deleteAccount.mutate();
               }}
+              disabled={deleteAccount.isPending}
               data-testid="account-delete-confirm"
             >
               {t(accountPanels.deleteConfirm)}

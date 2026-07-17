@@ -17,7 +17,7 @@ import { ProfileForm } from '@/shared/forms/ProfileForm/index.ts';
 import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
 
 /**
- * Profile section — name, job title, bio, location, timezone.
+ * Profile section — name and job title (the fields core-be persists).
  * Reuses {@link ProfileForm} so there's one source of truth.
  */
 export function AccountProfilePanel() {
@@ -26,9 +26,6 @@ export function AccountProfilePanel() {
   const [values, setValues] = useState<ProfileInput>({
     name: user?.name ?? '',
     jobTitle: '',
-    bio: '',
-    location: '',
-    timezone: '',
   });
   const completeness = useMemo(() => computeProfileCompleteness(values), [values]);
 

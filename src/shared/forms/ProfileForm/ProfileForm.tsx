@@ -1,10 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
-import { type Control, Controller, useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { queryClient } from '@/core/http/queryClient.ts';
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import i18n from '@/lib/i18n/i18n.ts';
+import { authApi } from '@/shared/api/auth-api.ts';
+import { getAccessToken } from '@/shared/auth/token.ts';
 import {
   SETTINGS_KEYS,
   SETTINGS_NS,
@@ -23,50 +27,12 @@ import {
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/components/ui/select.tsx';
-import { Textarea } from '@/shared/components/ui/textarea.tsx';
+import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
 import { notify } from '@/shared/notify/index.ts';
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { meContextQueryKey } from '@/shared/tenancy/me-context.ts';
 
-import { type ProfileInput, profileSchema, TIMEZONES } from './contracts.ts';
-
-const BIO_MAX = 280;
-
-/** Timezone picker wired to react-hook-form via a controlled Select. */
-function TimezoneField({ control }: { control: Control<ProfileInput> }) {
-  return (
-    <Controller
-      control={control}
-      name="timezone"
-      render={({ field }) => (
-        <Select
-          value={field.value === '' ? undefined : field.value}
-          onValueChange={field.onChange}
-        >
-          <SelectTrigger
-            id="profile-timezone"
-            className="w-full"
-            data-testid="profile-timezone"
-          >
-            <SelectValue placeholder="Select a timezone" />
-          </SelectTrigger>
-          <SelectContent>
-            {TIMEZONES.map((tz) => (
-              <SelectItem key={tz} value={tz}>
-                {tz}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-    />
-  );
-}
+import { type ProfileInput, profileSchema } from './contracts.ts';
 
 interface ProfileFormProps {
   email: string;
@@ -79,21 +45,15 @@ function toDefaults(values?: Partial<ProfileInput>): ProfileInput {
   return {
     name: values?.name ?? '',
     jobTitle: values?.jobTitle ?? '',
-    bio: values?.bio ?? '',
-    location: values?.location ?? '',
-    timezone: values?.timezone ?? '',
   };
 }
 
 /**
- * "About you" profile form: name, job title, bio, location, and timezone.
- * Validates with {@link profileSchema}; saving is confirmed via a dialog.
- *
- * NOT YET PERSISTED — deferred to the FE↔BE integration epic. core-be
- * `PATCH /users/me` currently accepts only `name` (+ avatar); `jobTitle`, `bio`,
- * `location`, and `timezone` have no backend column. Wiring requires (a) those
- * fields added to the user model + PATCH payload, then (b) a `useUpdateProfile`
- * mutation here. Until then the confirm dialog resets the form locally only.
+ * "About you" profile form: name and job title — the fields core-be
+ * `PATCH /users/me` persists. Validates with {@link profileSchema}; saving is
+ * confirmed via a dialog, then written through {@link authApi.updateProfile}.
+ * On success the app shell name (avatar/greeting) updates immediately and
+ * `me/context` is refetched so every consumer sees the new name.
  */
 export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFormProps) {
   const { t } = useTranslation(SETTINGS_NS);
@@ -103,10 +63,9 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
   const {
     register,
     handleSubmit,
-    control,
     watch,
     reset,
-    formState: { errors, isSubmitting, isDirty },
+    formState: { errors, isDirty },
   } = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
     defaultValues: toDefaults(defaultValues),
@@ -121,12 +80,33 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
     return () => subscription.unsubscribe();
   }, [watch, onValuesChange]);
 
-  const bioValue = watch('bio') ?? '';
+  const save = useMutation({
+    mutationFn: async (values: ProfileInput) => {
+      const token = getAccessToken();
+      if (!token) throw new Error('Not authenticated');
+      await authApi.updateProfile(
+        { name: values.name, jobTitle: values.jobTitle },
+        token,
+      );
+      return values;
+    },
+    onSuccess: async (values) => {
+      // Reflect the new name in the app shell (avatar + header) right away, and
+      // refetch me/context so the dashboard greeting picks it up too.
+      const user = useAuthStore.getState().user;
+      if (user) useAuthStore.getState().setUser({ ...user, name: values.name });
+      reset(values);
+      setShowConfirm(false);
+      notify.success(i18n.t(ERRORS_KEYS.frontend.profileUpdated, { ns: ERRORS_NS }));
+      await queryClient.invalidateQueries({ queryKey: meContextQueryKey });
+    },
+    onError: (error) => {
+      notify.error(mapFrontendError(error));
+    },
+  });
 
   const onConfirmedSubmit = handleSubmit((values) => {
-    setShowConfirm(false);
-    reset(values);
-    notify.success(i18n.t(ERRORS_KEYS.frontend.profileUpdated, { ns: ERRORS_NS }));
+    save.mutate(values);
   });
 
   return (
@@ -189,51 +169,12 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
           </p>
         </div>
 
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="profile-bio">Bio</Label>
-            <span className="text-muted-foreground text-xs tabular-nums">
-              {bioValue.length}/{BIO_MAX}
-            </span>
-          </div>
-          <Textarea
-            id="profile-bio"
-            {...register('bio')}
-            maxLength={BIO_MAX}
-            placeholder="A short bio about you."
-            aria-invalid={!!errors.bio}
-            data-testid="profile-bio"
-          />
-          {errors.bio && (
-            <p className="text-destructive text-xs" role="alert">
-              {errors.bio.message}
-            </p>
-          )}
-        </div>
-
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="profile-location">Location</Label>
-            <Input
-              id="profile-location"
-              {...register('location')}
-              placeholder="e.g. San Francisco, CA"
-              data-testid="profile-location"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="profile-timezone">Timezone</Label>
-            <TimezoneField control={control} />
-          </div>
-        </div>
-
         <Button
           type="submit"
-          disabled={isSubmitting || !isDirty}
+          disabled={save.isPending || !isDirty}
           data-testid="profile-submit"
         >
-          {isSubmitting ? t(panels.saving) : t(panels.save)}
+          {save.isPending ? t(panels.saving) : t(panels.save)}
         </Button>
       </form>
 
@@ -250,7 +191,13 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
               {t(panels.confirmCancel)}
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => void onConfirmedSubmit()}
+              onClick={(e) => {
+                // Keep the dialog open until the mutation resolves (onSuccess
+                // closes it); Radix would otherwise close on click.
+                e.preventDefault();
+                void onConfirmedSubmit();
+              }}
+              disabled={save.isPending}
               data-testid="profile-confirm-save"
             >
               {t(panels.confirmSave)}

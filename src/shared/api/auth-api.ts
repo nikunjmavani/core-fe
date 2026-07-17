@@ -216,6 +216,22 @@ export const authApi = {
   },
 
   /**
+   * Permanently delete the caller's account (core-be `DELETE /users/me`). The
+   * caller is responsible for tearing down the local session afterward
+   * (`forceLogout`) — the refresh cookie/session is invalidated server-side.
+   */
+  deleteAccount: async (token: string): Promise<void> => {
+    const response = await authFetch(`${authBase()}${API_ENDPOINTS.AUTH.ME}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+      const json = (await response.json().catch(() => null)) as unknown;
+      throwOnNotOk(response, json, `Account deletion failed (${response.status})`);
+    }
+  },
+
+  /**
    * Stamp the caller's onboarding as complete (idempotent). Called when the wizard
    * finishes so the next `me/context` reports `onboarding_completed: true` and the
    * post-login resolver routes to the dashboard instead of back into onboarding.
