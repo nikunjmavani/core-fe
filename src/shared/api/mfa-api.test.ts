@@ -38,21 +38,28 @@ describe('mfa-api', () => {
     expect(result).toEqual({ secret: 'S', otpauthUri: 'otpauth://x' });
   });
 
-  it('confirms with a totp_code body and maps recovery_codes', async () => {
+  it('confirms with a code body and maps recovery_codes', async () => {
     postMock.mockResolvedValue({ data: { recovery_codes: ['a', 'b'] } });
     const result = await confirmMfaEnrollment('123456');
     expect(postMock).toHaveBeenCalledWith(
       expect.stringContaining('/auth/me/mfa/enroll/confirm'),
       {
-        totp_code: '123456',
+        code: '123456',
       },
     );
     expect(result).toEqual({ recoveryCodes: ['a', 'b'] });
   });
 
-  it('disables via DELETE', async () => {
+  it('disables by listing enrolled methods and deleting each by id', async () => {
+    // core-be has no collection DELETE — each method is removed by id.
+    getMock.mockResolvedValue({ data: [{ id: 'mfa_1' }, { id: 'mfa_2' }] });
     deleteMock.mockResolvedValue({ data: null });
     await disableMfa();
-    expect(deleteMock).toHaveBeenCalledWith(expect.stringContaining('/auth/me/mfa'));
+    expect(deleteMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/me/mfa/mfa_1'),
+    );
+    expect(deleteMock).toHaveBeenCalledWith(
+      expect.stringContaining('/auth/me/mfa/mfa_2'),
+    );
   });
 });

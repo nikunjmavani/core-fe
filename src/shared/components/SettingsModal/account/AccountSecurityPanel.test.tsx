@@ -29,7 +29,7 @@ vi.mock('@/shared/hooks/useMfa/index.ts', () => ({
 vi.mock('@/shared/hooks/usePasskeys/index.ts', () => ({
   usePasskeys: usePasskeysMock,
   useRegisterPasskey: () => ({ mutateAsync: registerMutateAsync, isPending: false }),
-  useRemovePasskey: () => ({ mutate: removePasskeyMutate, isPending: false }),
+  useRemovePasskey: () => ({ mutateAsync: removePasskeyMutate, isPending: false }),
 }));
 vi.mock('@/shared/notify/index.ts', () => ({
   notify: { success: vi.fn(), error: vi.fn() },
@@ -57,6 +57,7 @@ beforeEach(() => {
     ],
   });
   registerMutateAsync.mockResolvedValue({ id: 'pk_2', name: 'YubiKey' });
+  removePasskeyMutate.mockResolvedValue(undefined);
 });
 
 describe('AccountSecurityPanel', () => {
@@ -108,7 +109,7 @@ describe('AccountSecurityPanel', () => {
     const user = userEvent.setup();
     render(<AccountSecurityPanel />);
     await user.click(screen.getByTestId('passkey-remove'));
-    expect(removePasskeyMutate).toHaveBeenCalledWith('pk_1');
+    await waitFor(() => expect(removePasskeyMutate).toHaveBeenCalledWith('pk_1'));
   });
 
   it('has no accessibility violations', async () => {

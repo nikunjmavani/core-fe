@@ -12,6 +12,7 @@ import {
   SETTINGS_NS,
 } from '@/shared/components/SettingsModal/settings.constants.ts';
 import { SectionHeader } from '@/shared/components/SettingsModal/SettingsPanelShell.tsx';
+import { useStepUpGuard } from '@/shared/components/StepUpDialog/index.ts';
 import { TotpCodeInput } from '@/shared/components/TotpCodeInput/index.ts';
 import { Badge } from '@/shared/components/ui/badge.tsx';
 import { Button } from '@/shared/components/ui/button.tsx';
@@ -53,6 +54,7 @@ function MfaCard() {
   const begin = useBeginMfaEnrollment();
   const confirm = useConfirmMfaEnrollment();
   const disable = useDisableMfa();
+  const { guard, stepUpDialog } = useStepUpGuard();
 
   const [setupOpen, setSetupOpen] = useState(false);
   const [enrollment, setEnrollment] = useState<MfaEnrollment | null>(null);
@@ -76,13 +78,19 @@ function MfaCard() {
     setConfirmError(null);
     setRecoveryCodes(null);
     setSecretCopied(false);
-    begin
-      .mutateAsync()
-      .then((result) => {
-        setEnrollment(result);
-        setSetupOpen(true);
-      })
-      .catch(() => notify.error(t(SETTINGS_KEYS.security.mfa.errors.setupFailed)));
+    // Enrollment is step-up gated; the bootstrap email-code factor is allowed
+    // here (it exists exactly so a passwordless account can enroll its first
+    // second factor).
+    guard(
+      () =>
+        begin.mutateAsync().then((result) => {
+          setEnrollment(result);
+          setSetupOpen(true);
+        }),
+      {
+        onError: () => notify.error(t(SETTINGS_KEYS.security.mfa.errors.setupFailed)),
+      },
+    );
   }
 
   function handleSubmitCode(nextCode = code) {
@@ -172,48 +180,11 @@ function MfaCard() {
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-4">
-                {enrollment?.otpauthUri ? (
-                  <div className="flex flex-col items-center gap-2">
-                    <Card className="gap-0 py-0" data-testid="mfa-qr">
-                      <CardContent className="flex size-44 items-center justify-center p-3">
-                        <QrCode data={enrollment.otpauthUri} />
-                      </CardContent>
-                    </Card>
-                    <p className="text-muted-foreground text-center text-xs">
-                      {t(SETTINGS_KEYS.security.mfa.scanHint)}
-                    </p>
-                  </div>
-                ) : null}
-
-                <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="mfa-secret">
-                    {t(SETTINGS_KEYS.security.mfa.secretLabel)}
-                  </Label>
-                  <div className="flex gap-2">
-                    <div
-                      id="mfa-secret"
-                      className="bg-muted flex-1 rounded-md p-3 font-mono text-sm break-all"
-                      data-testid="mfa-secret"
-                    >
-                      {enrollment?.secret}
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label={t(SETTINGS_KEYS.security.mfa.copySecret)}
-                      onClick={() => void handleCopySecret()}
-                      data-testid="mfa-copy-secret"
-                    >
-                      <Copy data-icon="inline-start" />
-                    </Button>
-                  </div>
-                  {secretCopied ? (
-                    <p className="text-success text-xs">
-                      {t(SETTINGS_KEYS.security.mfa.copiedSecret)}
-                    </p>
-                  ) : null}
-                </div>
+                <MfaEnrollmentSecret
+                  enrollment={enrollment}
+                  secretCopied={secretCopied}
+                  onCopy={() => void handleCopySecret()}
+                />
 
                 <div className="flex flex-col gap-2">
                   <Label htmlFor="mfa-code">
@@ -252,18 +223,99 @@ function MfaCard() {
         </DialogContent>
       </Dialog>
 
-      <ConfirmDialog
+      <MfaDisableConfirm
         open={disableOpen}
         onOpenChange={setDisableOpen}
-        title={t(SETTINGS_KEYS.security.mfa.disableTitle)}
-        description={t(SETTINGS_KEYS.security.mfa.disableDescription)}
-        confirmLabel={t(SETTINGS_KEYS.security.mfa.disableConfirm)}
-        destructive
-        onConfirm={async () => {
-          await disable.mutateAsync();
+        onConfirm={() => {
+          // Destructive — needs a STRONG step-up window (TOTP for MFA accounts;
+          // the bootstrap email code is never accepted here).
+          guard(() => disable.mutateAsync(), { allowEmailCode: false });
         }}
       />
+
+      {stepUpDialog}
     </Card>
+  );
+}
+
+/** QR + copyable secret for the staged enrollment (scan or manual entry). */
+function MfaEnrollmentSecret({
+  enrollment,
+  secretCopied,
+  onCopy,
+}: {
+  enrollment: MfaEnrollment | null;
+  secretCopied: boolean;
+  onCopy: () => void;
+}) {
+  const { t } = useTranslation(SETTINGS_NS);
+  return (
+    <>
+      {enrollment?.otpauthUri ? (
+        <div className="flex flex-col items-center gap-2">
+          <Card className="gap-0 py-0" data-testid="mfa-qr">
+            <CardContent className="flex size-44 items-center justify-center p-3">
+              <QrCode data={enrollment.otpauthUri} />
+            </CardContent>
+          </Card>
+          <p className="text-muted-foreground text-center text-xs">
+            {t(SETTINGS_KEYS.security.mfa.scanHint)}
+          </p>
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="mfa-secret">{t(SETTINGS_KEYS.security.mfa.secretLabel)}</Label>
+        <div className="flex gap-2">
+          <div
+            id="mfa-secret"
+            className="bg-muted flex-1 rounded-md p-3 font-mono text-sm break-all"
+            data-testid="mfa-secret"
+          >
+            {enrollment?.secret}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label={t(SETTINGS_KEYS.security.mfa.copySecret)}
+            onClick={onCopy}
+            data-testid="mfa-copy-secret"
+          >
+            <Copy data-icon="inline-start" />
+          </Button>
+        </div>
+        {secretCopied ? (
+          <p className="text-success text-xs">
+            {t(SETTINGS_KEYS.security.mfa.copiedSecret)}
+          </p>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+/** Disable-2FA confirmation, extracted to keep {@link MfaCard} readable. */
+function MfaDisableConfirm({
+  open,
+  onOpenChange,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}) {
+  const { t } = useTranslation(SETTINGS_NS);
+  return (
+    <ConfirmDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t(SETTINGS_KEYS.security.mfa.disableTitle)}
+      description={t(SETTINGS_KEYS.security.mfa.disableDescription)}
+      confirmLabel={t(SETTINGS_KEYS.security.mfa.disableConfirm)}
+      destructive
+      onConfirm={onConfirm}
+    />
   );
 }
 
@@ -273,6 +325,7 @@ function PasskeysCard() {
   const { data: passkeys = [] } = usePasskeys();
   const register = useRegisterPasskey();
   const remove = useRemovePasskey();
+  const { guard, stepUpDialog } = useStepUpGuard();
   const [addOpen, setAddOpen] = useState(false);
   const [name, setName] = useState('');
 
@@ -282,10 +335,8 @@ function PasskeysCard() {
   }
 
   function submitAdd() {
-    register
-      .mutateAsync(name.trim() || 'New passkey')
-      .then(closeAdd)
-      .catch(() => undefined);
+    // Registration is step-up gated; bootstrap email-code is allowed (first factor).
+    guard(() => register.mutateAsync(name.trim() || 'New passkey').then(closeAdd));
   }
 
   return (
@@ -333,7 +384,10 @@ function PasskeysCard() {
                 aria-label={t(SETTINGS_KEYS.security.passkeys.removeAria, {
                   name: passkey.name,
                 })}
-                onClick={() => remove.mutate(passkey.id)}
+                onClick={() =>
+                  // Destructive — STRONG step-up only (never the email code).
+                  guard(() => remove.mutateAsync(passkey.id), { allowEmailCode: false })
+                }
                 disabled={remove.isPending}
                 data-testid="passkey-remove"
               >
@@ -383,6 +437,8 @@ function PasskeysCard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {stepUpDialog}
     </Card>
   );
 }

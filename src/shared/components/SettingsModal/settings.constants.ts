@@ -27,6 +27,20 @@ export const SETTINGS_KEYS = {
   security: {
     heading: 'security.heading',
     description: 'security.description',
+    stepUp: {
+      title: 'security.stepUp.title',
+      description: 'security.stepUp.description',
+      passwordLabel: 'security.stepUp.passwordLabel',
+      totpLabel: 'security.stepUp.totpLabel',
+      emailCodeLabel: 'security.stepUp.emailCodeLabel',
+      emailCodeSent: 'security.stepUp.emailCodeSent',
+      resend: 'security.stepUp.resend',
+      resent: 'security.stepUp.resent',
+      verify: 'security.stepUp.verify',
+      verifying: 'security.stepUp.verifying',
+      invalid: 'security.stepUp.invalid',
+      passwordRequired: 'security.stepUp.passwordRequired',
+    },
     mfa: {
       title: 'security.mfa.title',
       description: 'security.mfa.description',
