@@ -232,7 +232,8 @@ describe('AuthEmailPanel', () => {
         createdAt: TS,
         updatedAt: TS,
       },
-      myPermissions: [],
+      // Member can read the team org → lands on its dashboard (not the picker).
+      myPermissions: ['organization:read'],
       globalRole: null,
       organizations: [],
       deploymentFlags: { personalOrganizations: true, teamOrganizations: true },

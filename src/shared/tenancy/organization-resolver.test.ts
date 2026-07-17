@@ -33,7 +33,10 @@ function meCtx(
       updatedAt: 't',
     },
     activeOrganization,
-    myPermissions: [],
+    // A member landing on a team dashboard can read the org — the realistic
+    // default. Tests for the "can't read the active team org" fallback override
+    // this to [].
+    myPermissions: ['organization:read'],
     globalRole: null,
     organizations: [],
     deploymentFlags: { personalOrganizations: true, teamOrganizations: true },
@@ -122,6 +125,14 @@ describe('resolveRootTarget (dual-URL `/` decision — slug variant)', () => {
       to: '/organization/$organizationSlug/dashboard',
       params: { organizationSlug: 'acme' },
     });
+  });
+
+  it('lands on the picker (not a dead-end) when the active team org is unreadable', () => {
+    // Regression: a member whose role lacks organization:read used to resolve to
+    // the team dashboard, get bounced to /unauthorized, and loop on "Go Home".
+    expect(
+      resolveRootTarget({ ...meCtx(activeOrg('TEAM', 'acme')), myPermissions: [] }),
+    ).toEqual({ to: '/organization' });
   });
 
   it('routes a slugless team to organization picker when not onboarding', () => {
