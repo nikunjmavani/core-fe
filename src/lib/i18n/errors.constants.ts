@@ -80,7 +80,6 @@ export const ERRORS_KEYS = {
       notificationStylePreview: 'frontend.account.notificationStylePreview',
       notificationStylePreviewDescription:
         'frontend.account.notificationStylePreviewDescription',
-      accountDeactivatedPending: 'frontend.account.accountDeactivatedPending',
       accountDeletionPending: 'frontend.account.accountDeletionPending',
     },
     profileUpdated: 'frontend.profileUpdated',
@@ -143,11 +142,7 @@ export const ERRORS_KEYS = {
       },
       invitations: {
         sendFailed: 'frontend.hooks.invitations.sendFailed',
-        revokeFailed: 'frontend.hooks.invitations.revokeFailed',
-        resendFailed: 'frontend.hooks.invitations.resendFailed',
         sendSuccess: 'frontend.hooks.invitations.sendSuccess',
-        revokeSuccess: 'frontend.hooks.invitations.revokeSuccess',
-        resendSuccess: 'frontend.hooks.invitations.resendSuccess',
       },
     },
   },

@@ -75,8 +75,7 @@
       "themeLinkCopiedDescription": "Comparte esta URL para reproducir el aspecto.",
       "notificationStylePreview": "Estilo de notificación",
       "notificationStylePreviewDescription": "{{variant}} — con tu acento y colores semánticos.",
-      "accountDeactivatedPending": "Cuenta desactivada (pendiente de API)",
-      "accountDeletionPending": "Eliminación de cuenta solicitada (pendiente de API)"
+      "accountDeletionPending": "Cuenta eliminada. Cerrando sesión…"
     },
     "hooks": {
       "passkeys": {
@@ -137,11 +136,7 @@
       },
       "invitations": {
         "sendFailed": "No se pudo enviar la invitación",
-        "revokeFailed": "No se pudo revocar la invitación",
-        "resendFailed": "No se pudo reenviar la invitación",
-        "sendSuccess": "Invitación enviada a {{email}}",
-        "revokeSuccess": "Invitación revocada",
-        "resendSuccess": "Invitación reenviada a {{email}}"
+        "sendSuccess": "Invitación enviada a {{email}}"
       }
     },
     "profileUpdated": "Perfil actualizado"

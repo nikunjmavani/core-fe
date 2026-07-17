@@ -9,8 +9,6 @@ import { parseListTolerant } from '@/lib/parse-list-tolerant.ts';
 import type {
   ApiKey,
   ApiKeyWithSecret,
-  Invitation,
-  InvitationStatus,
   Member,
   MembershipStatus,
   OrgRole,
@@ -105,6 +103,8 @@ function toMember(w: MembershipWire): Member {
     name: fullName.length > 0 ? fullName : w.user.email,
     email: w.user.email,
     role: toOrgRole(w.role.name),
+    roleId: w.role.id,
+    roleName: w.role.name,
     status: toMembershipStatus(w.status),
     avatarUrl: w.user.avatar_url ?? undefined,
     joinedAt: w.joined_at ?? '',
@@ -182,69 +182,10 @@ export async function inviteMember(input: {
   return toMember(membershipWire.parse(res.data));
 }
 
-// ── Invitations ──
-
-const invitationWire = z.object({
-  id: z.string(),
-  email: z.string(),
-  role: z.union([z.object({ name: z.string() }), z.string()]),
-  status: z.enum(['PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED']),
-  invited_by: z.object({ name: z.string() }).optional(),
-  invited_by_name: z.string().optional(),
-  created_at: isoDateString,
-  expires_at: isoDateString,
-});
-
-function toInvitationStatus(
-  status: z.infer<typeof invitationWire>['status'],
-): InvitationStatus {
-  if (status === 'ACCEPTED') return 'accepted';
-  if (status === 'EXPIRED') return 'expired';
-  if (status === 'REVOKED') return 'revoked';
-  return 'pending';
-}
-
-function toInvitation(w: z.infer<typeof invitationWire>): Invitation {
-  const roleName = typeof w.role === 'string' ? w.role : w.role.name;
-  return {
-    id: w.id,
-    email: w.email,
-    role: toOrgRole(roleName),
-    status: toInvitationStatus(w.status),
-    invitedByName: w.invited_by?.name ?? w.invited_by_name ?? '',
-    createdAt: w.created_at,
-    expiresAt: w.expires_at,
-  };
-}
-
-export async function listInvitations(): Promise<Invitation[]> {
-  const res = await apiClient.get<unknown>(`${ORG_API}/invitations`);
-  return parseListTolerant(invitationWire, res.data, 'invitations').map(toInvitation);
-}
-
-export async function createInvitation(input: {
-  email: string;
-  role: OrgRole;
-}): Promise<Invitation> {
-  const res = await apiClient.post<unknown>(`${ORG_API}/invitations`, {
-    email: input.email,
-    role: input.role,
-  });
-  return toInvitation(invitationWire.parse(res.data));
-}
-
-export async function revokeInvitation(invitationId: string): Promise<Invitation> {
-  const res = await apiClient.delete<unknown>(`${ORG_API}/invitations/${invitationId}`);
-  return toInvitation(invitationWire.parse(res.data));
-}
-
-export async function resendInvitation(invitationId: string): Promise<Invitation> {
-  const res = await apiClient.post<unknown>(
-    `${ORG_API}/invitations/${invitationId}/resend`,
-    {},
-  );
-  return toInvitation(invitationWire.parse(res.data));
-}
+// Invitations are INVITED memberships (see `inviteMember` above), not a
+// standalone resource. The old /organization/invitations list/create/revoke/
+// resend calls were removed — core-be has no such route (they 404'd). The
+// separate accept-invite flow (`acceptInvitation`) is unrelated and lives above.
 
 // ── Roles ──
 
@@ -303,6 +244,12 @@ export async function createRole(input: {
   return { ...role, permissions: input.permissions };
 }
 
+/**
+ * Update a custom role. Same two-step contract as {@link createRole}: `PATCH
+ * /roles/:id` takes only `{ name, description }` (its `.strict()` body 400s on
+ * `permissions`), and the permission set is replaced via `PUT
+ * /roles/:id/permissions` with `permission_codes`.
+ */
 export async function updateRole(input: {
   id: string;
   name: string;
@@ -312,14 +259,32 @@ export async function updateRole(input: {
   const res = await apiClient.patch<unknown>(`${ORG_API}/roles/${input.id}`, {
     name: input.name,
     description: input.description,
-    permissions: input.permissions,
   });
-  return toRoleSummary(roleWire.parse(res.data));
+  const role = toRoleSummary(roleWire.parse(res.data));
+
+  await apiClient.put<unknown>(`${ORG_API}/roles/${input.id}/permissions`, {
+    permission_codes: input.permissions,
+  });
+  return { ...role, permissions: input.permissions };
 }
 
 export async function deleteRole(roleId: string): Promise<{ id: string }> {
   await apiClient.delete<unknown>(`${ORG_API}/roles/${roleId}`);
   return { id: roleId };
+}
+
+const rolePermissionWire = z.object({ permission_code: z.string() });
+
+/**
+ * The permission codes granted to one role. The roles LIST omits permissions
+ * (only `GET /roles/:id/permissions` returns them), so editing a role must read
+ * them here to pre-fill — otherwise a save would wipe the role's real grants.
+ */
+export async function getRolePermissions(roleId: string): Promise<string[]> {
+  const res = await apiClient.get<unknown>(`${ORG_API}/roles/${roleId}/permissions`);
+  return parseListTolerant(rolePermissionWire, res.data, 'role permissions').map(
+    (row) => row.permission_code,
+  );
 }
 
 // ── API keys ──

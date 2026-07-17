@@ -57,7 +57,11 @@ export const ONBOARDING_KEYS = {
     enterDashboard: 'actions.enterDashboard',
     settingUp: 'actions.settingUp',
   },
-  defaults: { organizationName: 'defaults.organizationName' },
+  defaults: {
+    organizationName: 'defaults.organizationName',
+    memberRoleName: 'defaults.memberRoleName',
+    memberRoleDescription: 'defaults.memberRoleDescription',
+  },
   toast: {
     finishSuccess: 'toast.finishSuccess',
     finishError: 'toast.finishError',
@@ -115,5 +119,13 @@ export const ONBOARDING_ANALYTICS = {
 
 // ── API / non-copy defaults ──────────────────────────────────────────────────
 
-/** Default invitation role sent on the finish step (API contract — not UI copy). */
-export const ONBOARDING_INVITE_ROLE = 'member';
+/**
+ * Permission set for the default "Member" role the finish step provisions when
+ * a freshly created org has no assignable (non-Owner) role yet — a safe,
+ * read-only baseline (see the org can be viewed; its members can be listed).
+ * API contract, not UI copy.
+ */
+export const ONBOARDING_DEFAULT_MEMBER_PERMISSIONS = [
+  'organization:read',
+  'membership:read',
+] as const;

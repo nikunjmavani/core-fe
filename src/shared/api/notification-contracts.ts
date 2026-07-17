@@ -59,7 +59,7 @@ export const unreadCountWireSchema = z.object({
   count: z.number().int().nonnegative(),
 });
 
-/** Delivery channels for a notification category. */
+/** Delivery channels the UI models. "desktop" is web push (core-be `PUSH`). */
 export const notificationChannelSchema = z.enum(['email', 'inApp', 'desktop']);
 export type NotificationChannel = z.infer<typeof notificationChannelSchema>;
 
@@ -71,32 +71,43 @@ export const notificationPreferenceSchema = z.object({
 });
 export type NotificationPreference = z.infer<typeof notificationPreferenceSchema>;
 
-/** Wire form — core-be uses snake_case `in_app` for the in-app channel. */
+/**
+ * Wire form — core-be `PUT/GET /users/me/notification-preferences`. A preference
+ * is `{ notification_type, channel, is_enabled }`, keyed by
+ * `(notification_type, channel)`; the PUT replaces the whole set. `channel` is
+ * an UPPERCASE enum (`EMAIL`/`SMS`/`PUSH`/`IN_APP`) and `notification_type` is a
+ * free string — the UI models a fixed set of categories, so we round-trip the
+ * category slug as the type. (Earlier this sent `{category, channel:lowercase,
+ * enabled}`, which core-be rejected with a 400 — the save silently failed.)
+ */
 export const notificationPreferenceWireSchema = z.object({
-  category: notificationCategorySchema,
-  channel: z.enum(['email', 'in_app', 'desktop']),
-  enabled: z.boolean(),
+  notification_type: z.string(),
+  channel: z.enum(['EMAIL', 'SMS', 'PUSH', 'IN_APP']),
+  is_enabled: z.boolean(),
 });
 export type NotificationPreferenceWire = z.infer<typeof notificationPreferenceWireSchema>;
 
-const CHANNEL_FROM_WIRE: Record<
-  NotificationPreferenceWire['channel'],
-  NotificationChannel
-> = { email: 'email', in_app: 'inApp', desktop: 'desktop' };
+/** UI channel → core-be channel. SMS has no UI equivalent (send/receive skip it). */
 const CHANNEL_TO_WIRE: Record<
   NotificationChannel,
   NotificationPreferenceWire['channel']
-> = { email: 'email', inApp: 'in_app', desktop: 'desktop' };
+> = { email: 'EMAIL', inApp: 'IN_APP', desktop: 'PUSH' };
+const CHANNEL_FROM_WIRE: Partial<
+  Record<NotificationPreferenceWire['channel'], NotificationChannel>
+> = { EMAIL: 'email', IN_APP: 'inApp', PUSH: 'desktop' };
 
-/** Map a wire preference to the UI domain shape. */
+/**
+ * Map a wire preference to the UI domain shape, or `null` when it can't be
+ * modeled — an unknown `notification_type` (core-be stores free strings) or the
+ * `SMS` channel the UI doesn't expose. Callers filter the nulls.
+ */
 export function toNotificationPreference(
   wire: NotificationPreferenceWire,
-): NotificationPreference {
-  return {
-    category: wire.category,
-    channel: CHANNEL_FROM_WIRE[wire.channel],
-    enabled: wire.enabled,
-  };
+): NotificationPreference | null {
+  const category = notificationCategorySchema.safeParse(wire.notification_type);
+  const channel = CHANNEL_FROM_WIRE[wire.channel];
+  if (!category.success || !channel) return null;
+  return { category: category.data, channel, enabled: wire.is_enabled };
 }
 
 /** Map a domain preference back to the wire shape (for full-replace PUT). */
@@ -104,8 +115,8 @@ export function toNotificationPreferenceWire(
   pref: NotificationPreference,
 ): NotificationPreferenceWire {
   return {
-    category: pref.category,
+    notification_type: pref.category,
     channel: CHANNEL_TO_WIRE[pref.channel],
-    enabled: pref.enabled,
+    is_enabled: pref.enabled,
   };
 }

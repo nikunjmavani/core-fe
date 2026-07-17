@@ -21,6 +21,7 @@ import {
   createApiKey,
   createRole,
   deleteRole,
+  getRolePermissions,
   inviteMember,
   listApiKeys,
   listMembers,
@@ -29,6 +30,7 @@ import {
   revokeApiKey,
   updateMemberRole,
   updateMemberStatus,
+  updateRole,
 } from './organization-api.ts';
 
 const TS = '2026-01-01T00:00:00.000Z';
@@ -221,6 +223,42 @@ describe('organization-api roles (live)', () => {
     postMock.mockResolvedValue({ data: { ...ROLE_WIRE, is_system: false } });
     await createRole({ name: 'X', description: 'd', permissions: [] });
     expect(putMock).not.toHaveBeenCalled();
+  });
+
+  it('updateRole PATCHes name+description then PUTs permission_codes (two-step)', async () => {
+    // Same strict-body contract as createRole: the PATCH rejects `permissions`.
+    patchMock.mockResolvedValue({ data: { ...ROLE_WIRE, is_system: false } });
+    putMock.mockResolvedValue({ data: null });
+    const role = await updateRole({
+      id: ROL,
+      name: 'X',
+      description: 'd',
+      permissions: ['role:read', 'membership:manage'],
+    });
+    expect(patchMock).toHaveBeenCalledWith(expect.stringContaining(`/roles/${ROL}`), {
+      name: 'X',
+      description: 'd',
+    });
+    expect(putMock).toHaveBeenCalledWith(
+      expect.stringContaining(`/roles/${ROL}/permissions`),
+      { permission_codes: ['role:read', 'membership:manage'] },
+    );
+    expect(role.permissions).toEqual(['role:read', 'membership:manage']);
+  });
+
+  it('getRolePermissions maps the wire rows to permission_code strings', async () => {
+    // The roles LIST omits permissions; the edit dialog reads them here.
+    getMock.mockResolvedValue({
+      data: [
+        { permission_code: 'membership:read' },
+        { permission_code: 'membership:manage' },
+      ],
+    });
+    const perms = await getRolePermissions(ROL);
+    expect(getMock).toHaveBeenCalledWith(
+      expect.stringContaining(`/roles/${ROL}/permissions`),
+    );
+    expect(perms).toEqual(['membership:read', 'membership:manage']);
   });
 
   it('deleteRole deletes and returns the id', async () => {

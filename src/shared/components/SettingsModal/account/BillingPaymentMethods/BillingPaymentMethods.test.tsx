@@ -79,4 +79,18 @@ describe('BillingPaymentMethods', () => {
       updater({ setup_intent_client_secret: 'si_secret', redirect_status: 'succeeded' }),
     ).toEqual({});
   });
+
+  it('renders nothing when disabled (no subscription — was a stuck skeleton)', () => {
+    // Regression: the card rendered whenever Stripe was on, but the query was
+    // disabled without a subscription, stranding a permanent loading skeleton.
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    });
+    const { queryByTestId } = render(
+      <QueryClientProvider client={client}>
+        <BillingPaymentMethods enabled={false} canManage />
+      </QueryClientProvider>,
+    );
+    expect(queryByTestId('billing-payment-methods-card')).not.toBeInTheDocument();
+  });
 });

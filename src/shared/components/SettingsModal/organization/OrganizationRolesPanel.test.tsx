@@ -14,11 +14,14 @@ vi.mock('@/shared/hooks/useRoles/index.ts', () => ({
   useDeleteRole: () => ({ mutate: deleteMutate }),
 }));
 // CreateRoleDialog has its own suite; here we only assert the panel renders it
-// (gated on role:manage), so stub it to its trigger.
+// (create trigger + controlled edit instance), so stub it to reflect its mode.
 vi.mock('@/shared/components/CreateRoleDialog/index.ts', () => ({
-  CreateRoleDialog: () => (
-    <button type="button" data-testid="role-create-open">
-      New role
+  CreateRoleDialog: ({ role }: { role?: { id: string } }) => (
+    <button
+      type="button"
+      data-testid={role ? `role-edit-dialog-${role.id}` : 'role-create-open'}
+    >
+      {role ? 'Edit role' : 'New role'}
     </button>
   ),
 }));
@@ -87,21 +90,45 @@ describe('OrganizationRolesPanel', () => {
     expect(screen.getByTestId('empty-state')).toBeInTheDocument();
   });
 
-  it('lists roles; only custom roles are deletable, and only with the permission', () => {
+  it('shows a loading skeleton while roles load', () => {
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [], isPending: true }));
+    render(<OrganizationRolesPanel />);
+    expect(screen.getByTestId('roles-loading')).toBeInTheDocument();
+  });
+
+  it('shows a retry error when the roles query fails', () => {
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [], isError: true }));
+    render(<OrganizationRolesPanel />);
+    expect(screen.getByText(/couldn.t load roles/i)).toBeInTheDocument();
+  });
+
+  it('shows an actions menu only for custom roles, and only with the permission', () => {
     useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE, SYSTEM_ROLE] }));
     setCanManage(true);
     render(<OrganizationRolesPanel />);
     expect(screen.getByText('Billing Manager')).toBeInTheDocument();
     expect(screen.getByText('Owner')).toBeInTheDocument();
-    expect(screen.getByTestId('role-delete-rol_1')).toBeInTheDocument();
-    expect(screen.queryByTestId('role-delete-rol_owner')).not.toBeInTheDocument();
+    expect(screen.getByTestId('role-actions-rol_1')).toBeInTheDocument();
+    expect(screen.queryByTestId('role-actions-rol_owner')).not.toBeInTheDocument();
   });
 
-  it('hides delete controls without the manage-roles permission', () => {
+  it('hides actions without the manage-roles permission', () => {
     useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE] }));
     setCanManage(false);
     render(<OrganizationRolesPanel />);
-    expect(screen.queryByTestId('role-delete-rol_1')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('role-actions-rol_1')).not.toBeInTheDocument();
+  });
+
+  it('opens the edit dialog for a custom role', async () => {
+    // Regression: roles could only be created + deleted, never edited.
+    useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE] }));
+    setCanManage(true);
+    const user = userEvent.setup();
+    render(<OrganizationRolesPanel />);
+
+    await user.click(screen.getByTestId('role-actions-rol_1'));
+    await user.click(await screen.findByTestId('role-edit-rol_1'));
+    expect(await screen.findByTestId('role-edit-dialog-rol_1')).toBeInTheDocument();
   });
 
   it('exposes a New role button for a manager (roles were create-less before)', () => {
@@ -120,14 +147,15 @@ describe('OrganizationRolesPanel', () => {
     expect(screen.queryByTestId('role-create-open')).not.toBeInTheDocument();
   });
 
-  it('confirms and deletes a custom role', async () => {
+  it('confirms and deletes a custom role from the actions menu', async () => {
     useRolesMock.mockReturnValue(rolesQueryResult({ rows: [CUSTOM_ROLE] }));
     setCanManage(true);
     const user = userEvent.setup();
     render(<OrganizationRolesPanel />);
 
-    await user.click(screen.getByTestId('role-delete-rol_1'));
-    await user.click(screen.getByTestId('confirm-accept'));
+    await user.click(screen.getByTestId('role-actions-rol_1'));
+    await user.click(await screen.findByTestId('role-delete-rol_1'));
+    await user.click(await screen.findByTestId('confirm-accept'));
 
     await waitFor(() => expect(deleteMutate).toHaveBeenCalledWith('rol_1'));
   });

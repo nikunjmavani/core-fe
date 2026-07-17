@@ -101,7 +101,9 @@
     "settingUp": "Setting up…"
   },
   "defaults": {
-    "organizationName": "My organization"
+    "organizationName": "My organization",
+    "memberRoleName": "Member",
+    "memberRoleDescription": "Default role for invited teammates."
   },
   "toast": {
     "finishSuccess": "Welcome! Your workspace is ready.",

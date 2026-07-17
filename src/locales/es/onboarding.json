@@ -101,7 +101,9 @@
     "settingUp": "Configurando…"
   },
   "defaults": {
-    "organizationName": "Mi organización"
+    "organizationName": "Mi organización",
+    "memberRoleName": "Miembro",
+    "memberRoleDescription": "Rol predeterminado para compañeros invitados."
   },
   "toast": {
     "finishSuccess": "¡Bienvenido! Tu espacio está listo.",

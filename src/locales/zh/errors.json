@@ -75,8 +75,7 @@
       "themeLinkCopiedDescription": "分享此 URL 以复现外观。",
       "notificationStylePreview": "通知样式",
       "notificationStylePreviewDescription": "{{variant}} — 使用您的强调色和语义颜色。",
-      "accountDeactivatedPending": "账户停用（待接入 API）",
-      "accountDeletionPending": "账户删除请求（待接入 API）"
+      "accountDeletionPending": "账户已删除，正在登出…"
     },
     "hooks": {
       "passkeys": {
@@ -137,11 +136,7 @@
       },
       "invitations": {
         "sendFailed": "无法发送邀请",
-        "revokeFailed": "无法撤销邀请",
-        "resendFailed": "无法重新发送邀请",
-        "sendSuccess": "邀请已发送至 {{email}}",
-        "revokeSuccess": "邀请已撤销",
-        "resendSuccess": "邀请已重新发送至 {{email}}"
+        "sendSuccess": "邀请已发送至 {{email}}"
       }
     },
     "profileUpdated": "个人资料已更新"

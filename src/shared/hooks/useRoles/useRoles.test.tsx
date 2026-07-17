@@ -11,17 +11,21 @@ import type { ListPage } from '@/shared/api/fetch-list-page.ts';
 import { orgQueryKeys } from '@/shared/api/organization-query-keys.ts';
 import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
-const { listRoles, createRole, updateRole, deleteRole } = vi.hoisted(() => ({
-  listRoles: vi.fn(),
-  createRole: vi.fn(),
-  updateRole: vi.fn(),
-  deleteRole: vi.fn(),
-}));
+const { listRoles, createRole, updateRole, deleteRole, getRolePermissions } = vi.hoisted(
+  () => ({
+    listRoles: vi.fn(),
+    createRole: vi.fn(),
+    updateRole: vi.fn(),
+    deleteRole: vi.fn(),
+    getRolePermissions: vi.fn(),
+  }),
+);
 vi.mock('@/shared/api/organization-api.ts', () => ({
   listRoles,
   createRole,
   updateRole,
   deleteRole,
+  getRolePermissions,
 }));
 const { notifySuccess, notifyError } = vi.hoisted(() => ({
   notifySuccess: vi.fn(),
@@ -31,7 +35,12 @@ vi.mock('@/shared/notify/index.ts', () => ({
   notify: { success: notifySuccess, error: notifyError },
 }));
 
-import { useDeleteRole, useRoles, useUpdateRole } from './useRoles.ts';
+import {
+  useDeleteRole,
+  useRolePermissions,
+  useRoles,
+  useUpdateRole,
+} from './useRoles.ts';
 
 type Row = { id: string; name?: string };
 
@@ -79,6 +88,22 @@ describe('useRoles', () => {
     const { result } = renderHook(() => useRoles(), { wrapper });
     await waitFor(() => expect(result.current.rows).toHaveLength(1));
     expect(result.current.rows).toEqual([{ id: 'role_1', name: 'Admin' }]);
+  });
+});
+
+describe('useRolePermissions', () => {
+  it("fetches a role's permission codes when a roleId is given", async () => {
+    getRolePermissions.mockResolvedValue(['membership:read', 'membership:manage']);
+    const { result } = renderHook(() => useRolePermissions('rol_1'), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(getRolePermissions).toHaveBeenCalledWith('rol_1');
+    expect(result.current.data).toEqual(['membership:read', 'membership:manage']);
+  });
+
+  it('stays disabled (never fetches) while the roleId is undefined', () => {
+    const { result } = renderHook(() => useRolePermissions(undefined), { wrapper });
+    expect(getRolePermissions).not.toHaveBeenCalled();
+    expect(result.current.fetchStatus).toBe('idle');
   });
 });
 

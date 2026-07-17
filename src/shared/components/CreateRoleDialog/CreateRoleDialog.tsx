@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { translateFormMessage } from '@/lib/i18n/translate-form-message.ts';
@@ -7,6 +7,7 @@ import {
   ASSIGNABLE_ROLE_PERMISSIONS,
   type RoleInput,
   roleInputSchema,
+  type RoleSummary,
 } from '@/shared/api/organization-contracts.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import { Checkbox } from '@/shared/components/ui/checkbox.tsx';
@@ -22,7 +23,11 @@ import {
 import { Input } from '@/shared/components/ui/input.tsx';
 import { Label } from '@/shared/components/ui/label.tsx';
 import { Textarea } from '@/shared/components/ui/textarea.tsx';
-import { useCreateRole } from '@/shared/hooks/useRoles/index.ts';
+import {
+  useCreateRole,
+  useRolePermissions,
+  useUpdateRole,
+} from '@/shared/hooks/useRoles/index.ts';
 import { Plus } from '@/shared/icons/index.ts';
 
 const EMPTY_ROLE: RoleInput = { name: '', description: '', permissions: [] };
@@ -37,16 +42,46 @@ function withoutPermission(current: string[], perm: string): string[] {
   return current.filter((p) => p !== perm);
 }
 
+/** Submit-button label for the create-vs-edit × idle-vs-submitting matrix. */
+function roleSubmitLabel(isEdit: boolean, isSubmitting: boolean): string {
+  if (isSubmitting) return isEdit ? 'Saving…' : 'Creating…';
+  return isEdit ? 'Save changes' : 'Create role';
+}
+
+interface CreateRoleDialogProps {
+  /** When provided, the dialog edits this role (controlled) instead of creating. */
+  role?: RoleSummary;
+  /** Controlled open state — required in edit mode (the parent owns the trigger). */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
 /**
- * Dialog + form for creating a custom role (name, description, and a checklist
- * of assignable permissions). A freshly-created org has only the system Owner
- * role, so this is the entry point for the Admin/Member/Viewer roles that make
- * inviting members possible. Gated by the caller (render only when the user
- * holds `role:manage`).
+ * Dialog + form for creating OR editing a custom role (name, description, and a
+ * checklist of assignable permissions). In **create** mode it renders its own
+ * "New role" trigger (a fresh org has only the system Owner role, so this is the
+ * entry point for the Admin/Member/Viewer roles that make inviting possible). In
+ * **edit** mode (`role` given) it is controlled by the parent — no trigger — and
+ * saves via `useUpdateRole`. Gated by the caller (render only for `role:manage`).
  */
-export function CreateRoleDialog() {
-  const [open, setOpen] = useState(false);
+export function CreateRoleDialog({
+  role,
+  open: controlledOpen,
+  onOpenChange,
+}: CreateRoleDialogProps = {}) {
+  const isEdit = role !== undefined;
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = onOpenChange ?? setInternalOpen;
   const createRole = useCreateRole();
+  const updateRole = useUpdateRole();
+  // The roles list omits permissions, so an edit must fetch the role's real
+  // grants to pre-fill — otherwise saving would wipe them.
+  const rolePermissions = useRolePermissions(role?.id);
+
+  const initialValues: RoleInput = role
+    ? { name: role.name, description: role.description, permissions: role.permissions }
+    : EMPTY_ROLE;
 
   const {
     register,
@@ -56,28 +91,50 @@ export function CreateRoleDialog() {
     formState: { errors, isSubmitting },
   } = useForm<RoleInput>({
     resolver: zodResolver(roleInputSchema),
-    defaultValues: EMPTY_ROLE,
+    defaultValues: initialValues,
   });
 
+  // Pre-fill the permission checklist once the role's real grants load.
+  useEffect(() => {
+    if (role && rolePermissions.data) {
+      reset({
+        name: role.name,
+        description: role.description,
+        permissions: rolePermissions.data,
+      });
+    }
+  }, [role, rolePermissions.data, reset]);
+
+  // In edit mode, don't allow a save before the real permissions load.
+  const permissionsPending = isEdit && !rolePermissions.isSuccess;
+
   const onSubmit = async (data: RoleInput) => {
-    await createRole.mutateAsync(data);
-    reset(EMPTY_ROLE);
+    if (isEdit && role) {
+      await updateRole.mutateAsync({ id: role.id, ...data });
+    } else {
+      await createRole.mutateAsync(data);
+    }
+    reset(isEdit ? data : EMPTY_ROLE);
     setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" data-testid="role-create-open">
-          <Plus className="mr-2 h-4 w-4" />
-          New role
-        </Button>
-      </DialogTrigger>
+      {isEdit ? null : (
+        <DialogTrigger asChild>
+          <Button size="sm" data-testid="role-create-open">
+            <Plus className="mr-2 h-4 w-4" />
+            New role
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create a role</DialogTitle>
+          <DialogTitle>{isEdit ? 'Edit role' : 'Create a role'}</DialogTitle>
           <DialogDescription>
-            Define a permission set you can assign to members.
+            {isEdit
+              ? 'Update the name, description, and permissions.'
+              : 'Define a permission set you can assign to members.'}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -159,10 +216,10 @@ export function CreateRoleDialog() {
           <DialogFooter>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || permissionsPending}
               data-testid="role-create-submit"
             >
-              {isSubmitting ? 'Creating…' : 'Create role'}
+              {roleSubmitLabel(isEdit, isSubmitting)}
             </Button>
           </DialogFooter>
         </form>

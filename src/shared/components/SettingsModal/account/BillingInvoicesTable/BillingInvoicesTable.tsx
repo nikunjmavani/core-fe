@@ -88,6 +88,11 @@ function InvoicesTable({ invoices }: { invoices: BillingInvoice[] }) {
 export function BillingInvoicesTable({ enabled = true }: { enabled?: boolean }) {
   const query = useBillingInvoices(enabled);
 
+  // Hide when disabled (no subscription): the query is disabled too, and a
+  // disabled query reports `isPending`, which would strand the card on a
+  // permanent loading skeleton.
+  if (!enabled) return null;
+
   return (
     <Card data-testid="billing-invoices-card">
       <CardHeader>

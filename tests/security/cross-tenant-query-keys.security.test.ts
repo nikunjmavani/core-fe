@@ -26,7 +26,6 @@ const ORG_SCOPED: ReadonlyArray<
   readonly [name: string, factory: (orgId: string | null) => readonly unknown[]]
 > = [
   ['orgQueryKeys.members', orgQueryKeys.members],
-  ['orgQueryKeys.invitations', orgQueryKeys.invitations],
   ['orgQueryKeys.roles', orgQueryKeys.roles],
   ['orgQueryKeys.apiKeys', orgQueryKeys.apiKeys],
   ['billingQueryKeys.subscriptions', billingQueryKeys.subscriptions],
