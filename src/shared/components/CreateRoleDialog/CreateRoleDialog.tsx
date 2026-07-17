@@ -27,9 +27,14 @@ import { Plus } from '@/shared/icons/index.ts';
 
 const EMPTY_ROLE: RoleInput = { name: '', description: '', permissions: [] };
 
-/** Add or remove a permission code from the selected set. */
-function togglePermission(current: string[], perm: string, checked: boolean): string[] {
-  return checked ? [...current, perm] : current.filter((p) => p !== perm);
+/** Selected permission codes with `perm` added. */
+function withPermission(current: string[], perm: string): string[] {
+  return current.includes(perm) ? current : [...current, perm];
+}
+
+/** Selected permission codes with `perm` removed. */
+function withoutPermission(current: string[], perm: string): string[] {
+  return current.filter((p) => p !== perm);
 }
 
 /**
@@ -126,7 +131,9 @@ export function CreateRoleDialog() {
                         checked={field.value.includes(perm)}
                         onCheckedChange={(value) =>
                           field.onChange(
-                            togglePermission(field.value, perm, value === true),
+                            value === true
+                              ? withPermission(field.value, perm)
+                              : withoutPermission(field.value, perm),
                           )
                         }
                         data-testid={`role-perm-${perm}`}
