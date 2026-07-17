@@ -49,4 +49,18 @@ describe('BillingInvoicesTable', () => {
     expect(screen.getByTestId('billing-invoices-table')).toBeInTheDocument();
     expect(screen.getByTestId('billing-invoice-view')).toBeInTheDocument();
   });
+
+  it('renders nothing when disabled (no subscription — was a stuck skeleton)', () => {
+    // Regression: the card always rendered but the query was disabled, so the
+    // QueryBoundary sat on a permanent loading skeleton.
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+    });
+    const { queryByTestId } = render(
+      <QueryClientProvider client={client}>
+        <BillingInvoicesTable enabled={false} />
+      </QueryClientProvider>,
+    );
+    expect(queryByTestId('billing-invoices-card')).not.toBeInTheDocument();
+  });
 });

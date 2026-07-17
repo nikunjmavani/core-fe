@@ -108,7 +108,10 @@ export function BillingPaymentMethods({
     });
   }
 
-  if (!isStripeEnabled()) {
+  // Hide entirely when disabled (no subscription) or Stripe is off. The query
+  // is gated the same way, so a disabled query's `isPending` would otherwise
+  // leave the card stuck on a loading skeleton forever.
+  if (!enabled || !isStripeEnabled()) {
     return null;
   }
 
