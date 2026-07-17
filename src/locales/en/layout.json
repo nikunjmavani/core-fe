@@ -65,6 +65,7 @@
     },
     "orgSwitcher": {
       "selectPlaceholder": "Select organization",
+      "triggerLabel": "Switch organization — current: {{name}}",
       "personal": "Personal",
       "yourOrganizations": "Your organizations",
       "organizations": "Organizations",

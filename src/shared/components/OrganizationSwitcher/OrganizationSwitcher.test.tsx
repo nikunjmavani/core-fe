@@ -75,6 +75,12 @@ describe('OrganizationSwitcher', () => {
     expect(await screen.findByText('Acme Inc.')).toBeInTheDocument();
   });
 
+  it('gives the trigger an accessible name (not the initial+name concatenation)', async () => {
+    renderWithProviders(<OrganizationSwitcher />);
+    const trigger = await screen.findByTestId('organization-switcher-trigger');
+    expect(trigger).toHaveAccessibleName(/switch organization.*acme inc\./i);
+  });
+
   it('lists every organization (incl. personal) plus the create action', async () => {
     const user = userEvent.setup();
     renderWithProviders(<OrganizationSwitcher />);

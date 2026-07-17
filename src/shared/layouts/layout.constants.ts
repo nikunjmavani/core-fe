@@ -59,6 +59,7 @@ export const LAYOUT_KEYS = {
     },
     orgSwitcher: {
       selectPlaceholder: 'app.orgSwitcher.selectPlaceholder',
+      triggerLabel: 'app.orgSwitcher.triggerLabel',
       personal: 'app.orgSwitcher.personal',
       yourOrganizations: 'app.orgSwitcher.yourOrganizations',
       organizations: 'app.orgSwitcher.organizations',

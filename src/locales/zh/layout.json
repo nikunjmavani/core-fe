@@ -65,6 +65,7 @@
     },
     "orgSwitcher": {
       "selectPlaceholder": "选择组织",
+      "triggerLabel": "切换组织 — 当前：{{name}}",
       "personal": "个人",
       "yourOrganizations": "您的组织",
       "organizations": "组织",

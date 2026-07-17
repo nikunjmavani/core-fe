@@ -66,6 +66,8 @@ describe('NotificationCenter', () => {
     render(<NotificationCenter />);
     await user.click(screen.getByTestId('notification-bell'));
     expect(await screen.findByTestId('empty-state')).toBeInTheDocument();
+    // An action that can never apply to an empty inbox is hidden, not disabled.
+    expect(screen.queryByTestId('notification-mark-all')).not.toBeInTheDocument();
   });
 
   it('marks an unread item read on click', async () => {

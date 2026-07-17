@@ -136,6 +136,9 @@ export function OrganizationSwitcher({
               className,
             )}
             disabled={isLoading}
+            aria-label={t(LAYOUT_KEYS.app.orgSwitcher.triggerLabel, {
+              name: activeName,
+            })}
             data-testid="organization-switcher-trigger"
           >
             <span

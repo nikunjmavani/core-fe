@@ -77,7 +77,7 @@ export function MembersTable() {
             <CardTitle className="text-base">
               {t(DASHBOARD_KEYS.members.heading)}
             </CardTitle>
-            {!isPending && !isError ? (
+            {!(isPending || isError) ? (
               <CardDescription>
                 {t(DASHBOARD_KEYS.members.description, { count: rows.length })}
               </CardDescription>
@@ -92,7 +92,7 @@ export function MembersTable() {
             {t(DASHBOARD_KEYS.members.error)}
           </p>
         ) : null}
-        {!isPending && !isError ? (
+        {!(isPending || isError) ? (
           <Table>
             <TableHeader>
               <TableRow>
