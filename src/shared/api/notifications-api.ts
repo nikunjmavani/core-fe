@@ -5,13 +5,13 @@ import { apiClient } from '@/core/http/fetch-client.ts';
 
 import { fetchAllPages } from './fetch-all-pages.ts';
 import {
+  groupNotificationPreferences,
   type Notification,
   type NotificationPreference,
   notificationPreferenceWireSchema,
   notificationWireSchema,
   toNotification,
-  toNotificationPreference,
-  toNotificationPreferenceWire,
+  toNotificationPreferenceWires,
   unreadCountWireSchema,
 } from './notification-contracts.ts';
 
@@ -37,28 +37,20 @@ export async function markAllNotificationsRead(): Promise<void> {
   await apiClient.post<unknown>(`${NOTIF_API}/mark-all-read`, {});
 }
 
-function nonNull(value: NotificationPreference | null): value is NotificationPreference {
-  return value !== null;
-}
-
 export async function getNotificationPreferences(): Promise<NotificationPreference[]> {
   const res = await apiClient.get<unknown>(PREFS_API);
-  return z
-    .array(notificationPreferenceWireSchema)
-    .parse(res.data)
-    .map(toNotificationPreference)
-    .filter(nonNull);
+  return groupNotificationPreferences(
+    z.array(notificationPreferenceWireSchema).parse(res.data),
+  );
 }
 
 export async function updateNotificationPreferences(
   prefs: NotificationPreference[],
 ): Promise<NotificationPreference[]> {
   const res = await apiClient.put<unknown>(PREFS_API, {
-    preferences: prefs.map(toNotificationPreferenceWire),
+    preferences: toNotificationPreferenceWires(prefs),
   });
-  return z
-    .array(notificationPreferenceWireSchema)
-    .parse(res.data)
-    .map(toNotificationPreference)
-    .filter(nonNull);
+  return groupNotificationPreferences(
+    z.array(notificationPreferenceWireSchema).parse(res.data),
+  );
 }

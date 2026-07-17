@@ -20,13 +20,17 @@ import {
 } from './notifications-api.ts';
 
 const NTF = `ntf_${'0'.repeat(20)}1`;
+// core-be wire since #964: canonical dotted `type`, `message`, `action_url`.
 const WIRE = {
   id: NTF,
-  category: 'member',
+  type: 'membership.invite_accepted',
   title: 'T',
-  body: 'B',
+  message: 'B',
+  data: null,
+  action_url: null,
+  action_label: null,
   is_read: false,
-  href: null,
+  read_at: null,
   created_at: '2026-06-23T09:00:00.000Z',
 };
 
@@ -52,9 +56,19 @@ describe('notifications-api', () => {
         body: 'B',
         isRead: false,
         href: null,
+        actionLabel: null,
         createdAt: '2026-06-23T09:00:00.000Z',
       },
     ]);
+  });
+
+  it('buckets an unknown dotted type by prefix instead of dropping the row', async () => {
+    // Forward-compat: a type core-fe doesn't know yet must still reach the bell.
+    getMock.mockResolvedValue({
+      data: [{ ...WIRE, type: 'billing.refund_issued' }],
+    });
+    const [row] = await listNotifications();
+    expect(row?.category).toBe('billing');
   });
 
   it('reads the unread-count envelope', async () => {
@@ -90,37 +104,75 @@ describe('notification preferences', () => {
     expect(prefs).toEqual([{ category: 'member', channel: 'inApp', enabled: true }]);
   });
 
-  it('drops rows the UI cannot model (SMS channel or unknown type)', async () => {
-    // Regression guard: core-be stores free-form notification_type strings and an
-    // SMS channel the UI does not expose — those rows must be filtered, not throw.
+  it('collapses canonical typed rows into the category grid (SMS ignored, ANY wins)', async () => {
+    // Since #964 the backend keys rows by canonical dotted types. Rows collapse
+    // to category × channel; a category is on when ANY member type is on; SMS
+    // has no UI column and is skipped.
     getMock.mockResolvedValue({
       data: [
-        { notification_type: 'security', channel: 'SMS', is_enabled: true },
-        { notification_type: 'system.welcome', channel: 'EMAIL', is_enabled: true },
-        { notification_type: 'billing', channel: 'EMAIL', is_enabled: false },
+        { notification_type: 'security.alert', channel: 'SMS', is_enabled: true },
+        {
+          notification_type: 'billing.payment_failed',
+          channel: 'EMAIL',
+          is_enabled: true,
+        },
+        {
+          notification_type: 'billing.usage_threshold',
+          channel: 'EMAIL',
+          is_enabled: false,
+        },
+        { notification_type: 'system.welcome', channel: 'IN_APP', is_enabled: false },
       ],
     });
     const prefs = await getNotificationPreferences();
-    expect(prefs).toEqual([{ category: 'billing', channel: 'email', enabled: false }]);
+    expect(prefs).toEqual([
+      { category: 'billing', channel: 'email', enabled: true },
+      { category: 'system', channel: 'inApp', enabled: false },
+    ]);
   });
 
-  it('PUTs the corrected wire body on full-replace (was a 400)', async () => {
-    // Regression: the body used {category, channel:lowercase, enabled}, which
-    // core-be rejected. It must be {notification_type, channel:UPPER, is_enabled}.
+  it('fans a category toggle out to every canonical member type on PUT (was a 400)', async () => {
+    // Regression: the PUT once sent the bare category slug, which the enum-
+    // validated notification_type now rejects. Each category × channel toggle
+    // must expand to one row per canonical member type.
     putMock.mockResolvedValue({
-      data: [{ notification_type: 'billing', channel: 'PUSH', is_enabled: false }],
+      data: [{ notification_type: 'security.alert', channel: 'PUSH', is_enabled: false }],
     });
     const result = await updateNotificationPreferences([
-      { category: 'billing', channel: 'desktop', enabled: false },
+      { category: 'security', channel: 'desktop', enabled: false },
+      { category: 'member', channel: 'email', enabled: true },
     ]);
     expect(putMock).toHaveBeenCalledWith(
       expect.stringContaining('/users/me/notification-preferences'),
       {
         preferences: [
-          { notification_type: 'billing', channel: 'PUSH', is_enabled: false },
+          { notification_type: 'security.alert', channel: 'PUSH', is_enabled: false },
+          {
+            notification_type: 'membership.invite_accepted',
+            channel: 'EMAIL',
+            is_enabled: true,
+          },
         ],
       },
     );
-    expect(result).toEqual([{ category: 'billing', channel: 'desktop', enabled: false }]);
+    expect(result).toEqual([
+      { category: 'security', channel: 'desktop', enabled: false },
+    ]);
+  });
+
+  it('expands a multi-type category (billing) to all four canonical types', async () => {
+    putMock.mockResolvedValue({ data: [] });
+    await updateNotificationPreferences([
+      { category: 'billing', channel: 'email', enabled: true },
+    ]);
+    const body = putMock.mock.calls[0]?.[1] as {
+      preferences: { notification_type: string }[];
+    };
+    expect(body.preferences.map((p) => p.notification_type).sort()).toEqual([
+      'billing.payment_failed',
+      'billing.payment_succeeded',
+      'billing.usage_threshold',
+      'subscription.updated',
+    ]);
   });
 });
