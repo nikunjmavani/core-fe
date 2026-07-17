@@ -2,14 +2,30 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { RoleSummary } from '@/shared/api/organization-contracts.ts';
 import { axeForDialog } from '@/tests/utils/axe-for-dialog.ts';
 
 import { CreateRoleDialog } from './CreateRoleDialog.tsx';
 
-const { createRoleMutate } = vi.hoisted(() => ({ createRoleMutate: vi.fn() }));
+const { createRoleMutate, updateRoleMutate, useRolePermissionsMock } = vi.hoisted(() => ({
+  createRoleMutate: vi.fn(),
+  updateRoleMutate: vi.fn(),
+  useRolePermissionsMock: vi.fn(() => ({ data: undefined, isSuccess: false })),
+}));
 vi.mock('@/shared/hooks/useRoles/index.ts', () => ({
   useCreateRole: () => ({ mutateAsync: createRoleMutate, isPending: false }),
+  useUpdateRole: () => ({ mutateAsync: updateRoleMutate, isPending: false }),
+  useRolePermissions: useRolePermissionsMock,
 }));
+
+const EDIT_ROLE: RoleSummary = {
+  id: 'rol_x',
+  name: 'Member',
+  description: 'Everyday access',
+  permissions: ['membership:read'],
+  memberCount: 3,
+  isSystem: false,
+};
 
 async function open() {
   const user = userEvent.setup();
@@ -63,5 +79,43 @@ describe('CreateRoleDialog', () => {
     const { baseElement } = render(<CreateRoleDialog />);
     await open();
     expect(await axeForDialog(baseElement)).toHaveNoViolations();
+  });
+
+  it('edits an existing role: pre-filled and saves via updateRole', async () => {
+    // Regression: roles could be created + deleted but not EDITED.
+    // The list omits permissions, so the dialog fetches the real grants to
+    // pre-fill — otherwise a save would wipe them.
+    useRolePermissionsMock.mockReturnValue({
+      data: ['membership:read'],
+      isSuccess: true,
+    });
+    updateRoleMutate.mockResolvedValueOnce(EDIT_ROLE);
+    const user = userEvent.setup();
+    render(<CreateRoleDialog role={EDIT_ROLE} open onOpenChange={vi.fn()} />);
+
+    const form = await screen.findByTestId('role-create-form');
+    expect(form).toBeInTheDocument();
+    // Pre-filled from the role.
+    expect(screen.getByTestId('role-create-name')).toHaveValue('Member');
+    // Pre-filled from the fetched permissions (checkbox reflects the grant).
+    await waitFor(() =>
+      expect(screen.getByTestId('role-perm-membership:read')).toHaveAttribute(
+        'data-state',
+        'checked',
+      ),
+    );
+    // Add a permission and save.
+    await user.click(screen.getByTestId('role-perm-membership:manage'));
+    await user.click(screen.getByTestId('role-create-submit'));
+
+    await waitFor(() =>
+      expect(updateRoleMutate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'rol_x',
+          name: 'Member',
+          permissions: expect.arrayContaining(['membership:read', 'membership:manage']),
+        }),
+      ),
+    );
   });
 });

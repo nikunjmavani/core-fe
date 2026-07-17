@@ -305,6 +305,12 @@ export async function createRole(input: {
   return { ...role, permissions: input.permissions };
 }
 
+/**
+ * Update a custom role. Same two-step contract as {@link createRole}: `PATCH
+ * /roles/:id` takes only `{ name, description }` (its `.strict()` body 400s on
+ * `permissions`), and the permission set is replaced via `PUT
+ * /roles/:id/permissions` with `permission_codes`.
+ */
 export async function updateRole(input: {
   id: string;
   name: string;
@@ -314,14 +320,32 @@ export async function updateRole(input: {
   const res = await apiClient.patch<unknown>(`${ORG_API}/roles/${input.id}`, {
     name: input.name,
     description: input.description,
-    permissions: input.permissions,
   });
-  return toRoleSummary(roleWire.parse(res.data));
+  const role = toRoleSummary(roleWire.parse(res.data));
+
+  await apiClient.put<unknown>(`${ORG_API}/roles/${input.id}/permissions`, {
+    permission_codes: input.permissions,
+  });
+  return { ...role, permissions: input.permissions };
 }
 
 export async function deleteRole(roleId: string): Promise<{ id: string }> {
   await apiClient.delete<unknown>(`${ORG_API}/roles/${roleId}`);
   return { id: roleId };
+}
+
+const rolePermissionWire = z.object({ permission_code: z.string() });
+
+/**
+ * The permission codes granted to one role. The roles LIST omits permissions
+ * (only `GET /roles/:id/permissions` returns them), so editing a role must read
+ * them here to pre-fill — otherwise a save would wipe the role's real grants.
+ */
+export async function getRolePermissions(roleId: string): Promise<string[]> {
+  const res = await apiClient.get<unknown>(`${ORG_API}/roles/${roleId}/permissions`);
+  return parseListTolerant(rolePermissionWire, res.data, 'role permissions').map(
+    (row) => row.permission_code,
+  );
 }
 
 // ── API keys ──

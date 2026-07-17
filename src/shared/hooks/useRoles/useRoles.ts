@@ -1,3 +1,5 @@
+import { useQuery } from '@tanstack/react-query';
+
 import { ERRORS_KEYS, ERRORS_NS } from '@/lib/i18n/errors.constants.ts';
 import i18n from '@/lib/i18n/i18n.ts';
 import * as orgApi from '@/shared/api/organization-api.ts';
@@ -25,6 +27,19 @@ export function useRoles(params: RolesListParams = {}): CursorListResult<RoleSum
   return useCursorList<RoleSummary>({
     queryKey: orgQueryKeys.rolesList(orgId, params),
     queryFn: (after) => orgApi.listRoles({ ...params, after }),
+  });
+}
+
+/**
+ * A single role's permission codes. The roles list omits permissions, so the
+ * edit form reads them here to pre-fill. Held until a `roleId` is provided.
+ */
+export function useRolePermissions(roleId: string | undefined) {
+  const orgId = useOrganizationStore((s) => s.organizationId);
+  return useQuery({
+    queryKey: [...orgQueryKeys.roles(orgId), 'permissions', roleId],
+    queryFn: () => orgApi.getRolePermissions(roleId ?? ''),
+    enabled: roleId !== undefined,
   });
 }
 
