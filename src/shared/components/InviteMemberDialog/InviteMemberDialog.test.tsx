@@ -90,4 +90,14 @@ describe('InviteMemberDialog', () => {
     expect(await screen.findByTestId('invite-member-no-roles')).toBeInTheDocument();
     expect(screen.queryByTestId('invite-member-form')).not.toBeInTheDocument();
   });
+
+  it('shows a loading state while roles are fetching', async () => {
+    useRolesMock.mockReturnValue(rolesResult([], true));
+    render(<InviteMemberDialog />);
+    await open();
+
+    expect(await screen.findByTestId('invite-member-loading')).toBeInTheDocument();
+    expect(screen.queryByTestId('invite-member-form')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('invite-member-no-roles')).not.toBeInTheDocument();
+  });
 });
