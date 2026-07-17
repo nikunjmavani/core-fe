@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { RoleSummary } from '@/shared/api/organization-contracts.ts';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog/index.ts';
+import { CreateRoleDialog } from '@/shared/components/CreateRoleDialog/index.ts';
 import { EmptyState } from '@/shared/components/EmptyState/index.ts';
 import { RetryError } from '@/shared/components/RetryError/index.ts';
 import {
@@ -73,15 +74,18 @@ export function OrganizationRolesPanel() {
         description={t(panels.description)}
       />
 
-      <OrgListControls
-        search={search}
-        onSearchChange={setSearch}
-        sort={sort}
-        onSortChange={setSort}
-        searchPlaceholder={t(panels.searchPlaceholder)}
-        searchTestId="roles-search"
-        sortTestId="roles-sort"
-      />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <OrgListControls
+          search={search}
+          onSearchChange={setSearch}
+          sort={sort}
+          onSortChange={setSort}
+          searchPlaceholder={t(panels.searchPlaceholder)}
+          searchTestId="roles-search"
+          sortTestId="roles-sort"
+        />
+        {canManage ? <CreateRoleDialog /> : null}
+      </div>
 
       {roles.isPending ? <RolesLoading /> : null}
 
