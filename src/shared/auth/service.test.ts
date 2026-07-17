@@ -290,6 +290,51 @@ describe('auth/service', () => {
       expect(window.location.href).toBe('/login');
     });
 
+    it('sends the current access token as the Authorization bearer', async () => {
+      // Regression: core-be revokes the session BY the bearer token and 401s
+      // without one. logout() used to omit the header, so the server session
+      // and refresh cookie survived and the /login bootstrap silently signed
+      // the user straight back in — "Log out" was a visible no-op.
+      (fetchMock as Mock).mockResolvedValueOnce(mockFetchResponse({}));
+      setAccessToken(VALID_TOKEN);
+
+      await logout();
+
+      expect(fetchMock).toHaveBeenCalledWith(
+        expect.stringContaining('/auth/logout'),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: `Bearer ${VALID_TOKEN}`,
+          }),
+        }),
+      );
+    });
+
+    it('omits the Authorization header when no token is in memory', async () => {
+      (fetchMock as Mock).mockResolvedValueOnce(mockFetchResponse({}));
+
+      await logout();
+
+      const headers = (fetchMock as Mock).mock.calls[0]?.[1]?.headers as Record<
+        string,
+        string
+      >;
+      expect(headers.Authorization).toBeUndefined();
+      expect(window.location.href).toBe('/login');
+    });
+
+    it('still clears local state when the server refuses the revoke (non-2xx)', async () => {
+      (fetchMock as Mock).mockResolvedValueOnce(
+        mockFetchResponse({ error: { message: 'unauthorized' } }, 401),
+      );
+      setAccessToken(VALID_TOKEN);
+
+      await logout();
+
+      expect(getAccessToken()).toBeNull();
+      expect(window.location.href).toBe('/login');
+    });
+
     it('still clears state even if logout endpoint fails', async () => {
       (fetchMock as Mock).mockRejectedValueOnce(new Error('Network down'));
       setAccessToken(VALID_TOKEN);
