@@ -8,6 +8,8 @@ vi.mock('@/core/http/fetch-client.ts', () => ({
   apiClient: { get: getMock, post: postMock },
 }));
 
+import { HttpError } from '@/shared/errors/HttpError.ts';
+
 import {
   changeSubscriptionPlan,
   createPaymentMethodSetup,
@@ -95,6 +97,23 @@ describe('billing-api', () => {
     const sub = await getActiveSubscription();
     expect(sub?.id).toBe('sub_abcdefghij0123456789y');
     expect(sub?.status).toBe('active');
+  });
+
+  // Regression: a personal workspace is forbidden from reading subscriptions
+  // (403). That must degrade to "no subscription" so the billing panel shows the
+  // no-plan state, not a dead-end "couldn't load billing" whose Retry can't win.
+  it('treats a 403 (no billing access) as no subscription', async () => {
+    getMock.mockRejectedValue(
+      new HttpError('Forbidden', 403, '/billing/subscriptions', 'GET', null),
+    );
+    await expect(getActiveSubscription()).resolves.toBeNull();
+  });
+
+  it('rethrows a non-403 subscription error', async () => {
+    getMock.mockRejectedValue(
+      new HttpError('Server error', 500, '/billing/subscriptions', 'GET', null),
+    );
+    await expect(getActiveSubscription()).rejects.toThrow();
   });
 
   it('creates a subscription with plan_id and billing_cycle', async () => {
