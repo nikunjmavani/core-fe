@@ -31,6 +31,9 @@ export function useMembers(params: MembersListParams = {}): CursorListResult<Mem
   return useCursorList<Member>({
     queryKey: orgQueryKeys.membersList(orgId, params),
     queryFn: (after) => orgApi.listMembers({ ...params, after }),
+    // No active org (mid org-switch, or before context resolves) → skip the
+    // request instead of firing a `Forbidden` against an empty org scope.
+    enabled: Boolean(orgId),
   });
 }
 

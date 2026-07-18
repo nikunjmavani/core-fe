@@ -80,6 +80,13 @@ describe('useApiKeys', () => {
     await waitFor(() => expect(result.current.rows).toHaveLength(1));
     expect(result.current.rows).toEqual([{ id: 'key_1', name: 'CI' }]);
   });
+
+  it('stays idle without an active organization (no doomed request mid-switch)', async () => {
+    useOrganizationStore.setState({ organizationId: null });
+    const { result } = renderHook(() => useApiKeys(), { wrapper });
+    await waitFor(() => expect(result.current.isFetching).toBe(false));
+    expect(listApiKeys).not.toHaveBeenCalled();
+  });
 });
 
 describe('useRenameApiKey', () => {
