@@ -100,6 +100,13 @@ describe('useMembers', () => {
       expect(listMembers).toHaveBeenCalledWith(expect.objectContaining({ q: 'ada' })),
     );
   });
+
+  it('stays idle without an active organization (no doomed request mid-switch)', async () => {
+    useOrganizationStore.setState({ organizationId: null });
+    const { result } = renderHook(() => useMembers(), { wrapper });
+    await waitFor(() => expect(result.current.isFetching).toBe(false));
+    expect(listMembers).not.toHaveBeenCalled();
+  });
 });
 
 describe('useUpdateMemberRole', () => {

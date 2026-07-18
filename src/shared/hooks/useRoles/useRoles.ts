@@ -27,6 +27,9 @@ export function useRoles(params: RolesListParams = {}): CursorListResult<RoleSum
   return useCursorList<RoleSummary>({
     queryKey: orgQueryKeys.rolesList(orgId, params),
     queryFn: (after) => orgApi.listRoles({ ...params, after }),
+    // No active org (mid org-switch, or before context resolves) → skip the
+    // request instead of firing a `Forbidden` against an empty org scope.
+    enabled: Boolean(orgId),
   });
 }
 

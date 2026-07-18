@@ -89,6 +89,13 @@ describe('useRoles', () => {
     await waitFor(() => expect(result.current.rows).toHaveLength(1));
     expect(result.current.rows).toEqual([{ id: 'role_1', name: 'Admin' }]);
   });
+
+  it('stays idle without an active organization (no doomed request mid-switch)', async () => {
+    useOrganizationStore.setState({ organizationId: null });
+    const { result } = renderHook(() => useRoles(), { wrapper });
+    await waitFor(() => expect(result.current.isFetching).toBe(false));
+    expect(listRoles).not.toHaveBeenCalled();
+  });
 });
 
 describe('useRolePermissions', () => {
