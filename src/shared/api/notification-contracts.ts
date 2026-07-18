@@ -108,7 +108,7 @@ export const unreadCountWireSchema = z.object({
   count: z.number().int().nonnegative(),
 });
 
-/** Delivery channels the UI models. "desktop" is web push (core-be `PUSH`). */
+/** Delivery channels the UI models. "desktop" is web push (core-be `WEB_PUSH`). */
 export const notificationChannelSchema = z.enum(['email', 'inApp', 'desktop']);
 export type NotificationChannel = z.infer<typeof notificationChannelSchema>;
 
@@ -130,7 +130,7 @@ export type NotificationPreference = z.infer<typeof notificationPreferenceSchema
  */
 export const notificationPreferenceWireSchema = z.object({
   notification_type: z.string(),
-  channel: z.enum(['EMAIL', 'SMS', 'PUSH', 'IN_APP']),
+  channel: z.enum(['EMAIL', 'SMS', 'WEB_PUSH', 'IN_APP']),
   is_enabled: z.boolean(),
 });
 export type NotificationPreferenceWire = z.infer<typeof notificationPreferenceWireSchema>;
@@ -139,10 +139,10 @@ export type NotificationPreferenceWire = z.infer<typeof notificationPreferenceWi
 const CHANNEL_TO_WIRE: Record<
   NotificationChannel,
   NotificationPreferenceWire['channel']
-> = { email: 'EMAIL', inApp: 'IN_APP', desktop: 'PUSH' };
+> = { email: 'EMAIL', inApp: 'IN_APP', desktop: 'WEB_PUSH' };
 const CHANNEL_FROM_WIRE: Partial<
   Record<NotificationPreferenceWire['channel'], NotificationChannel>
-> = { EMAIL: 'email', IN_APP: 'inApp', PUSH: 'desktop' };
+> = { EMAIL: 'email', IN_APP: 'inApp', WEB_PUSH: 'desktop' };
 
 /**
  * Collapse wire rows to the category × channel grid. A category is enabled on a
