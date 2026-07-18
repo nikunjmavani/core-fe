@@ -106,7 +106,7 @@ Guards and `/` resolver share the same helper — do not fork a second `me/conte
 Pure redirect route — no island UI. `resolveRootTarget` checks **onboarding first**:
 `!user.onboarding_completed` → `/onboarding` (every deployment mode — even personal,
 whose org is auto-provisioned; only the wizard steps differ). Once onboarded:
-last-used org dashboard → `/organization` picker. Personal org uses root `/dashboard`;
+active org dashboard → `/organization` picker. Personal org uses root `/dashboard`;
 team org uses `/organization/$organizationSlug/dashboard`. Onboarding finish stamps the
 flag via `POST /users/me/onboarding/complete` before the resolver re-runs.
 

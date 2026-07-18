@@ -218,7 +218,7 @@ const indexRoute = createRoute({
 ```
 
 Established cases:
-- `/` → resolver route (last-used organization's dashboard, else `/organization`, else `/onboarding`)
+- `/` → resolver route (active organization's dashboard, else `/organization`, else `/onboarding`)
 - Future resource layouts with multiple children pick a default child
 
 ## Nested routes — direct children (`<segment>/`, `$param/`)
@@ -248,7 +248,7 @@ Settings is **not a route space**. The global `SettingsModal` (`shared/component
 
 Route guards never see hashes: auth, organization-context, and permission gating live inside the modal (`settings-permissions.ts`, reusing `core/rbac` — never forked). Open/section state lives in the URL hash — never in `useUIStore` (the store is only for transient chrome: `sidebarOpen`, `commandPaletteOpen`). Hash changes are invisible to pageview analytics, so the modal emits an explicit PostHog event. Escape hatch: a section that becomes a heavy admin surface (members, billing, …) is promoted to a real page under `pages/organization/$organizationSlug/`, keeping a hash → path redirect shim.
 
-`/` is the other folder-less URL: a pure resolver route (last-used organization's dashboard, else the `/organization` picker, else `/onboarding`) registered inline in `routeTree.tsx`.
+`/` is the other folder-less URL: a pure resolver route (active organization's dashboard, else the `/organization` picker, else `/onboarding`) registered inline in `routeTree.tsx`.
 
 ## Dialog vs full page — decision tree
 
