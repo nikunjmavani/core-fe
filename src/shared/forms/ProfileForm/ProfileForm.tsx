@@ -98,7 +98,7 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
         useAuthStore.getState().setUser({
           ...user,
           name: values.name,
-          jobTitle: values.jobTitle || undefined,
+          jobTitle: values.jobTitle,
         });
       }
       reset(values);
