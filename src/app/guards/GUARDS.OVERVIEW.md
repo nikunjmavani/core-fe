@@ -5,7 +5,7 @@ redirecting). Spec: `docs/reference/routing-and-tenancy.md` §5. Frontend guards
 only; the backend/RLS re-checks everything. UI-level checks use `PermissionGuard` /
 `useRBAC` in `src/shared/`.
 
-Platform overview: [`docs/reference/frontend-platform.md`](../../docs/reference/frontend-platform.md).
+Platform overview: [`docs/reference/frontend-platform.md`](../../../docs/reference/frontend-platform.md).
 
 ## Guard chain for `/organization/$organizationSlug/*`
 

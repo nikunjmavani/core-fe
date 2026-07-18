@@ -15,7 +15,7 @@ import { e2eTeamOrgProfile } from '@/tests/utils/e2e-faker.ts';
 import { gotoApp } from '@/tests/utils/e2e-hybrid.ts';
 import {
   createSessionViaEmailCode,
-  E2E_AUTH_HEADERS,
+  e2eAuthHeaders,
   uniqueE2eEmail,
   verifyDatabaseConnection,
 } from '@/tests/utils/e2e-session.ts';
@@ -43,7 +43,7 @@ test.describe('Auth workflow (API)', () => {
     const email = uniqueE2eEmail('workflow');
     const send = await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: { email },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(send.status()).toBe(201);
 
@@ -71,11 +71,11 @@ test.describe('Auth workflow (API)', () => {
     const email = uniqueE2eEmail('bad-code');
     await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: { email },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     const login = await api.post(AUTH_EMAIL_CODE_LOGIN_PATH, {
       data: { email, code: 'BAD000' },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(login.status()).toBe(401);
     expect((await login.json()).error).toBeTruthy();

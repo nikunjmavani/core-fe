@@ -37,7 +37,7 @@ import {
 type Mode = 'light' | 'dark' | 'system';
 
 interface ThemeStore {
-  /** Light/dark mode (name kept for back-compat with existing consumers). */
+  /** Light/dark mode. */
   theme: Mode;
   /** Active named accent preset (see `shared/theme`); `custom` when generated. */
   preset: string;

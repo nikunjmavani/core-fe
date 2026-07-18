@@ -155,7 +155,7 @@ function makeIcon(name: IconName): AppIcon {
 }
 
 export type { AppIcon, IconProps } from './icon-types.ts';
-/** Back-compat alias — existing `icon: LucideIcon` props keep working. */
+/** Alias for {@link AppIcon} — the type used by `icon` props across the app. */
 export type LucideIcon = AppIcon;
 
 export const AlertCircle = makeIcon('AlertCircle');

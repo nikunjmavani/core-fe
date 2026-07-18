@@ -20,12 +20,6 @@ describe('mapFrontendError', () => {
     );
   });
 
-  it('maps legacy English invalid credentials message', () => {
-    expect(resolveKnownFrontendError(new Error('Invalid email or password'))).toBe(
-      i18n.t(AUTH_KEYS.login.errors.invalidCredentials, { ns: AUTH_NS }),
-    );
-  });
-
   it('maps HttpError invalid_credentials reason to localized message', () => {
     const err = new HttpError('HTTP 401', 401, '/auth/login', 'POST', {
       error: { reason: 'invalid_credentials', detail: 'Bad email or password' },

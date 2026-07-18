@@ -33,18 +33,6 @@ const CODE_TO_AUTH_KEY: Record<string, string> = {
     ERRORS_KEYS.frontend.organization.roleRequired,
 };
 
-/** Legacy English strings still thrown in mocks or older code paths. */
-const LEGACY_MESSAGE_TO_AUTH_KEY: Record<string, string> = {
-  'Invalid email or password': AUTH_KEYS.login.errors.invalidCredentials,
-  'Multi-factor authentication is required (not yet supported here).':
-    AUTH_KEYS.apiErrors.mfaUnsupported,
-  'Passkey registration was cancelled.': AUTH_KEYS.apiErrors.passkeyCancelled,
-  'This invitation has expired or is invalid.':
-    AUTH_KEYS.acceptInvite.errors.invalidOrExpired,
-  'A role id is required to change a member role.':
-    ERRORS_KEYS.frontend.organization.roleRequired,
-};
-
 function translateKey(key: string): string {
   if (key.startsWith('frontend.')) {
     return tErrors(key);
@@ -54,11 +42,6 @@ function translateKey(key: string): string {
 
 function resolveByCode(code: string): string | undefined {
   const authKey = CODE_TO_AUTH_KEY[code];
-  return authKey ? translateKey(authKey) : undefined;
-}
-
-function resolveLegacyMessage(message: string): string | undefined {
-  const authKey = LEGACY_MESSAGE_TO_AUTH_KEY[message];
   return authKey ? translateKey(authKey) : undefined;
 }
 
@@ -90,7 +73,6 @@ function resolveBeErrorDetail(message: string): string | undefined {
 function resolveErrorMessage(message: string): string | undefined {
   return (
     resolveBeErrorDetail(message) ??
-    resolveLegacyMessage(message) ??
     resolveOAuthNoRedirect(message) ??
     resolveI18nKeyMessage(message)
   );
@@ -110,7 +92,7 @@ function resolveHttpReason(error: unknown): string | undefined {
 }
 
 /**
- * Map a known frontend / auth error code or legacy English message to a localized
+ * Map a known frontend / auth error code or recognized error message to a localized
  * string. Returns `undefined` when the error should fall through to HTTP handling.
  */
 export function resolveKnownFrontendError(error: unknown): string | undefined {

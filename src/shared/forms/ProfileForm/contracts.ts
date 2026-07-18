@@ -6,10 +6,10 @@ import { z } from 'zod';
  *
  * Only the fields core-be `PATCH /users/me` actually persists live here: `name`
  * → `first_name` + `last_name`, `jobTitle` → `job_title` (snake_case, mapped in
- * `authApi.updateProfile`). Bio / location / timezone were removed — the backend
- * has no column for them, so a form that showed them silently discarded input
- * while claiming success. Re-add them here (with their snake_case wire names)
- * once the backend model gains the columns.
+ * `authApi.updateProfile`). Bio / location / timezone are intentionally absent —
+ * the backend has no column for them, so a form that showed them would silently
+ * discard input while claiming success. Add them here (with their snake_case wire
+ * names) once the backend model gains the columns.
  */
 export const profileSchema = z.object({
   name: z.string().min(1, 'Name is required').max(80, 'Name is too long'),

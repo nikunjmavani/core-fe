@@ -109,7 +109,7 @@ Every key sits under exactly one half. Sub-sections (`# --- Title ---`) group re
 
 ## config.js contract
 
-Runtime deploy overrides use `window.__CONFIG__` with keys **without** `VITE_` prefix. Document new public keys in `public/config.js` header comment when operators may override at deploy. See [csp-trusted-types-production.md](../../docs/deployment/runbooks/csp-trusted-types-production.md) for SRI promotion.
+Runtime deploy overrides use `window.__CONFIG__` with keys **without** `VITE_` prefix. Document new public keys in `public/config.js` header comment when operators may override at deploy. See [csp-trusted-types-production.md](../../../docs/deployment/runbooks/csp-trusted-types-production.md) for SRI promotion.
 
 ## Netlify / GitHub Actions deploy
 

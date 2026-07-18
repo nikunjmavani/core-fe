@@ -263,27 +263,17 @@ export function regionLocaleFacts(formatLocale: string): {
   };
 }
 
-const LEGACY_DATE_FORMATS: Record<string, DateFormatPreference> = {
-  short: 'short',
-  medium: 'medium',
-  long: 'long',
-  full: 'full',
-  datetime: 'datetime',
-};
-
 export function isDateFormatPreference(value: string): value is DateFormatPreference {
-  if ((DATE_FORMAT_PREFERENCES as readonly string[]).includes(value)) return true;
-  return value in LEGACY_DATE_FORMATS;
+  return (DATE_FORMAT_PREFERENCES as readonly string[]).includes(value);
 }
 
 export function normalizeDateFormatPreference(
   value: string | undefined,
 ): DateFormatPreference {
-  if (!value) return DEFAULT_DATE_FORMAT;
-  if ((DATE_FORMAT_PREFERENCES as readonly string[]).includes(value)) {
+  if (value && (DATE_FORMAT_PREFERENCES as readonly string[]).includes(value)) {
     return value as DateFormatPreference;
   }
-  return LEGACY_DATE_FORMATS[value] ?? DEFAULT_DATE_FORMAT;
+  return DEFAULT_DATE_FORMAT;
 }
 
 export function isHourCyclePreference(value: string): value is HourCyclePreference {

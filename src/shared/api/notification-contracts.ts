@@ -72,8 +72,7 @@ export type Notification = z.infer<typeof notificationSchema>;
 
 /**
  * core-be wire shape (snake_case). `type` is the canonical dotted vocabulary;
- * `message`/`action_url`/`action_label` are the body/link fields (renamed from
- * the pre-#964 `body`/`href` shape that silently emptied the bell).
+ * `message`/`action_url`/`action_label` are the body/link fields.
  */
 export const notificationWireSchema = z.object({
   id: publicId('ntf'),
