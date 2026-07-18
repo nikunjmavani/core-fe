@@ -99,12 +99,6 @@ Constants: [`src/core/config/constants.ts`](../../src/core/config/constants.ts) 
 
 ---
 
-## Not the same: legacy verify-only email (removed)
-
-`POST /auth/email/verify` and `POST /auth/email/resend-verification` were removed with the unified passwordless flow. Unverified users should use `/login` (send-code → login) or the in-app banner, which also calls `POST /auth/email/send-code`.
-
----
-
 ## Route map (FE pages vs APIs)
 
 | FE route      | Role                       | Status                     |

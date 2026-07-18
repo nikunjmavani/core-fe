@@ -85,7 +85,7 @@ export function resolveThemeLock(flag: string | undefined): boolean {
 
 export type OAuthProviderFlags = Record<OAuthProviderId, boolean>;
 
-/** Per-provider OAuth toggles from env (hard break — no legacy VITE_AUTH_OAUTH). */
+/** Per-provider OAuth toggles from env. */
 export function resolveOAuthProviderFlags(
   get: (key: string) => string | undefined,
 ): OAuthProviderFlags {

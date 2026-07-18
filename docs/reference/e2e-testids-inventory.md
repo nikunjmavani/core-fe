@@ -61,10 +61,10 @@ Convention: `page.getByTestId('…')` in `tests/e2e/`.
 | `dashboard-page`     | Page root (placeholder — REPLACE_WITH_MODULE after auth) | `DashboardPage.tsx` |
 | `dashboard-greeting` | Placeholder heading                                      | `DashboardPage.tsx` |
 
-> The widget test ids (stat cards, charts, activity, team) were removed with the
-> dashboard module stub; re-add them here when the module is rebuilt.
-> `members-table` / `invitations-table` / `widget-error-*` remain available from
-> `shared/components/` for future modules.
+> The dashboard is a placeholder stub — add widget test ids (stat cards, charts,
+> activity, team) here when the module is built. `members-table` /
+> `invitations-table` / `widget-error-*` are available from `shared/components/`
+> for future modules.
 
 ---
 

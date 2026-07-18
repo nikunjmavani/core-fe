@@ -7,7 +7,7 @@ import {
 import { e2eTeamOrgProfile } from '@/tests/utils/e2e-faker.ts';
 import {
   createSessionViaEmailCode,
-  E2E_AUTH_HEADERS,
+  e2eAuthHeaders,
   uniqueE2eEmail,
 } from '@/tests/utils/e2e-session.ts';
 
@@ -33,7 +33,7 @@ test.describe('core-be server — auth & tenancy contracts', () => {
     const email = uniqueE2eEmail();
     const res = await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: { email },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(res.status()).toBe(201);
     const body = await res.json();
@@ -82,11 +82,11 @@ test.describe('core-be server — auth & tenancy contracts', () => {
     const email = uniqueE2eEmail();
     await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: { email },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     const res = await api.post(AUTH_EMAIL_CODE_LOGIN_PATH, {
       data: { email, code: 'ZZZZZZ' },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(res.status()).toBe(401);
     expect((await res.json()).error).toBeTruthy();
@@ -152,11 +152,11 @@ test.describe('core-be server — auth & tenancy contracts', () => {
     await createSessionViaEmailCode(api, email);
     const known = await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: { email },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     const unknown = await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: { email: uniqueE2eEmail() },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(known.status()).toBe(201);
     expect(unknown.status()).toBe(201);
@@ -168,7 +168,7 @@ test.describe('core-be server — auth & tenancy contracts', () => {
   test('[-] email send-code with malformed address → 4xx', async () => {
     const res = await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: { email: 'not-an-email' },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(res.status()).toBeGreaterThanOrEqual(400);
     expect(res.status()).toBeLessThan(500);
@@ -177,7 +177,7 @@ test.describe('core-be server — auth & tenancy contracts', () => {
   test('[-] email login without a prior send-code → 401', async () => {
     const res = await api.post(AUTH_EMAIL_CODE_LOGIN_PATH, {
       data: { email: uniqueE2eEmail(), code: 'ABCDEF' },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(res.status()).toBe(401);
   });
@@ -193,7 +193,7 @@ test.describe('core-be server — auth & tenancy contracts', () => {
   test('[-] send-code with a missing email field → 4xx validation envelope', async () => {
     const res = await api.post(AUTH_EMAIL_CODE_SEND_PATH, {
       data: {},
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(res.status()).toBeGreaterThanOrEqual(400);
     expect(res.status()).toBeLessThan(500);
@@ -205,7 +205,7 @@ test.describe('core-be server — auth & tenancy contracts', () => {
   test('[-] email login with a missing code field → 4xx validation', async () => {
     const res = await api.post(AUTH_EMAIL_CODE_LOGIN_PATH, {
       data: { email: uniqueE2eEmail() },
-      headers: E2E_AUTH_HEADERS,
+      headers: e2eAuthHeaders(),
     });
     expect(res.status()).toBeGreaterThanOrEqual(400);
     expect(res.status()).toBeLessThan(500);

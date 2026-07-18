@@ -177,7 +177,7 @@ export const authApi = {
       /** Explicit split name — preferred (onboarding collects these directly). */
       firstName?: string;
       lastName?: string;
-      /** Legacy single-field name — split on the first space (settings ProfileForm). */
+      /** Single-field display name — split on the first space (settings ProfileForm). */
       name?: string;
       jobTitle?: string;
     },
@@ -185,7 +185,7 @@ export const authApi = {
   ): Promise<void> => {
     // core-be `PATCH /users/me` expects snake_case keys and models the display
     // name as first_name + last_name (there is no single `name` column). Explicit
-    // firstName/lastName map 1:1; a legacy `name` is split on the first space.
+    // firstName/lastName map 1:1; a single-field `name` is split on the first space.
     const body: {
       first_name?: string;
       last_name?: string | null;

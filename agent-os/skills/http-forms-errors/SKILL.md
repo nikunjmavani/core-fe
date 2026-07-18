@@ -123,7 +123,7 @@ unresolved key leak) — fix it in core-be's serializer, not with a per-key FE b
 When a form offers several mutually-exclusive submit actions (e.g. the `/login` auth methods), keep a
 single "which action is pending" value and drive every button from it — only the clicked one shows a
 spinner; the rest disable **without** a spinner. `/login` codifies this in
-[`AuthMethodButton`](../../src/shared/forms/AuthForm/components/AuthMethodButton/AuthMethodButton.tsx)
+[`AuthMethodButton`](../../../src/shared/forms/AuthForm/components/AuthMethodButton/AuthMethodButton.tsx)
 
 - `auth-form-pending.ts`; copy that shape (stable label, icon→spinner, per-method captcha gate,
   `extraDisabled` for form/cooldown conditions). Adding an auth method is one more `<AuthMethodButton>`.

@@ -16,9 +16,6 @@ export function e2eAuthHeaders(): Record<string, string> {
   return loadCachedE2eAuthHeaders();
 }
 
-/** @deprecated Prefer {@link e2eAuthHeaders} — kept for existing imports. */
-export const E2E_AUTH_HEADERS: Record<string, string> = loadCachedE2eAuthHeaders();
-
 const VERIFICATION_CODE_HTML_REGEX = />([A-Z0-9]{6})</;
 
 function databaseUrl(): string | undefined {
