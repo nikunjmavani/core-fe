@@ -85,6 +85,20 @@
       "downloadStarted": "Descarga iniciada",
       "clipboardNotice": "Los secretos copiados se borran del portapapeles después de un minuto.",
       "acknowledge": "He guardado estos códigos de recuperación en un lugar seguro"
+    },
+    "stepUp": {
+      "title": "Confirma que eres tú",
+      "description": "Por seguridad, vuelve a verificarte antes de cambiar el inicio de sesión.",
+      "passwordLabel": "Contraseña",
+      "totpLabel": "Código del autenticador",
+      "emailCodeLabel": "Código de verificación",
+      "emailCodeSent": "Enviamos un código de 6 caracteres a {{email}}.",
+      "resend": "Reenviar código",
+      "resent": "Código enviado",
+      "verify": "Verificar",
+      "verifying": "Verificando…",
+      "invalid": "No coincide. Inténtalo de nuevo.",
+      "passwordRequired": "Esta acción requiere tu contraseña o un código del autenticador."
     }
   },
   "discard": {

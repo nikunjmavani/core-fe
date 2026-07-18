@@ -7,6 +7,7 @@ import { ANALYTICS_EVENTS } from '@/shared/analytics/analytics.constants.ts';
 import { captureAnalyticsEvent } from '@/shared/analytics/capture.ts';
 import { acceptInvitation } from '@/shared/api/organization-api.ts';
 import { silentRefresh } from '@/shared/auth/service.ts';
+import { getAccessToken } from '@/shared/auth/token.ts';
 import { Button } from '@/shared/components/ui/button.tsx';
 import {
   Card,
@@ -15,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/shared/components/ui/card.tsx';
+import { HttpError } from '@/shared/errors/HttpError.ts';
 import { mapFrontendError } from '@/shared/errors/map-frontend-error.ts';
 import { useConsumedSearchToken } from '@/shared/hooks/useConsumedSearchToken/index.ts';
 import { CheckCircle2, Loader2, XCircle } from '@/shared/icons/index.ts';
@@ -50,6 +52,21 @@ export function AcceptInvitePage() {
           setStatus('error');
           return;
         }
+        // Accepting requires a signed-in session whose email matches the
+        // invite — and the email recipient is usually NOT signed in yet. Send
+        // them to login first, carrying this page (token included) as the
+        // post-login redirect, instead of firing a doomed accept that renders
+        // an "Invitation problem: Unauthorized" card for the happy path.
+        if (!getAccessToken()) {
+          void navigate({
+            to: '/login',
+            search: {
+              redirect: `/accept-invite/${invitationId}?token=${encodeURIComponent(invitationToken)}`,
+            },
+            replace: true,
+          });
+          return;
+        }
         const accepted = await acceptInvitation(invitationId, invitationToken);
 
         try {
@@ -79,6 +96,18 @@ export function AcceptInvitePage() {
           );
         }
       } catch (err) {
+        // A 401 here means the session died between boot and accept — the
+        // invitation itself is fine, so recover through login, not the card.
+        if (err instanceof HttpError && err.status === 401) {
+          void navigate({
+            to: '/login',
+            search: {
+              redirect: `/accept-invite/${invitationId}?token=${encodeURIComponent(invitationToken)}`,
+            },
+            replace: true,
+          });
+          return;
+        }
         setError(mapFrontendError(err));
         setStatus('error');
       }

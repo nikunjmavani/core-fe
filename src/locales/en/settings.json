@@ -85,6 +85,20 @@
       "downloadStarted": "Download started",
       "clipboardNotice": "Copied secrets are cleared from your clipboard after one minute.",
       "acknowledge": "I have saved these recovery codes in a safe place"
+    },
+    "stepUp": {
+      "title": "Confirm it’s you",
+      "description": "For security, re-verify before changing sign-in settings.",
+      "passwordLabel": "Password",
+      "totpLabel": "Authenticator code",
+      "emailCodeLabel": "Verification code",
+      "emailCodeSent": "We emailed a 6-character code to {{email}}.",
+      "resend": "Resend code",
+      "resent": "Code sent",
+      "verify": "Verify",
+      "verifying": "Verifying…",
+      "invalid": "That didn’t match. Please try again.",
+      "passwordRequired": "This action needs your password or an authenticator code."
     }
   },
   "discard": {

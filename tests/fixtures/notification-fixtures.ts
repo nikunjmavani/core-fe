@@ -21,6 +21,7 @@ export const SAMPLE_NOTIFICATIONS: Notification[] = [
     body: 'Ada Byron accepted your invitation.',
     isRead: false,
     href: '#settings/organization/members',
+    actionLabel: 'View members',
     createdAt: '2026-06-23T09:00:00.000Z',
   },
 ];

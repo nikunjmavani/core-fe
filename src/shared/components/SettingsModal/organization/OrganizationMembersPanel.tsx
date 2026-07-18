@@ -263,9 +263,11 @@ export function OrganizationMembersPanel() {
                   </Avatar>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{member.name}</p>
-                    <p className="text-muted-foreground truncate text-xs">
-                      {member.email}
-                    </p>
+                    {member.email !== member.name ? (
+                      <p className="text-muted-foreground truncate text-xs">
+                        {member.email}
+                      </p>
+                    ) : null}
                   </div>
                   <Badge variant="secondary" className="hidden capitalize sm:inline-flex">
                     {member.roleName}

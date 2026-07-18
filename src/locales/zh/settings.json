@@ -85,6 +85,20 @@
       "downloadStarted": "已开始下载",
       "clipboardNotice": "复制的密钥会在一分钟后从剪贴板清除。",
       "acknowledge": "我已将这些恢复代码保存在安全的地方"
+    },
+    "stepUp": {
+      "title": "请确认是您本人",
+      "description": "为了安全，修改登录设置前请重新验证身份。",
+      "passwordLabel": "密码",
+      "totpLabel": "验证器代码",
+      "emailCodeLabel": "验证码",
+      "emailCodeSent": "我们已向 {{email}} 发送了 6 位验证码。",
+      "resend": "重新发送验证码",
+      "resent": "验证码已发送",
+      "verify": "验证",
+      "verifying": "验证中…",
+      "invalid": "验证失败，请重试。",
+      "passwordRequired": "此操作需要您的密码或验证器代码。"
     }
   },
   "discard": {
