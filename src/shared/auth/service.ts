@@ -179,6 +179,7 @@ function meContextToAuthUser(ctx: MeContext): AuthUser {
     email: ctx.user.email,
     role: ctx.globalRole ?? 'user',
     name: name.length > 0 ? name : undefined,
+    jobTitle: ctx.user.jobTitle ?? undefined,
     avatarUrl: ctx.user.avatarUrl ?? undefined,
     organizationId: ctx.activeOrganization?.id,
   };

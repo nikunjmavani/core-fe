@@ -33,6 +33,7 @@ const userWire = z.object({
   is_mfa_enabled: z.boolean(),
   first_name: z.string().nullable(),
   last_name: z.string().nullable(),
+  job_title: z.string().nullable().optional(),
   avatar_url: z.string().nullable(),
   status: z.enum(['ACTIVE', 'LOCKED', 'SUSPENDED']),
   /** Whether the user has finished the onboarding wizard. Optional for
@@ -84,6 +85,7 @@ export interface MeUser {
   isMfaEnabled: boolean;
   firstName: string | null;
   lastName: string | null;
+  jobTitle: string | null;
   avatarUrl: string | null;
   status: 'ACTIVE' | 'LOCKED' | 'SUSPENDED';
   /** Whether the user has finished the onboarding wizard (drives post-login routing). */
@@ -130,6 +132,7 @@ export function toMeContext(wire: MeContextWire): MeContext {
       isMfaEnabled: wire.user.is_mfa_enabled,
       firstName: wire.user.first_name,
       lastName: wire.user.last_name,
+      jobTitle: wire.user.job_title ?? null,
       avatarUrl: wire.user.avatar_url,
       status: wire.user.status,
       // Absent (older backend) → treat as onboarded so a version skew can't trap
