@@ -12,8 +12,9 @@ to follow these. Companion tiers:
 canonical. `useOrganizationStore` is synced _from_ the route
 (`syncOrganizationFromRoute`), never the other way around.
 **Why:** one authority means back/forward, deep links, and multi-tab all agree
-without reconciliation. localStorage and subdomain only feed the `/` resolver's
-redirect choice — never the in-app active org.
+without reconciliation. The `/` resolver's redirect choice comes from me/context; a
+subdomain only seeds a boot-time store fallback — never the in-app active org, which the
+URL owns.
 **Applies to:** anything that reads or changes the active org — read the param /
 `me/context`, don't write the store as a side channel.
 

@@ -7,8 +7,8 @@ bug, not a style nit. Companion tiers: [OVERVIEW](./TENANCY.OVERVIEW.md) ·
 ## The URL param is the only authority for active org
 
 **Must:** inside `/organization/$organizationSlug/*`, derive active org from the
-route param; sync the store _from_ it. Never treat the store (or localStorage, or
-subdomain) as the authority in-app.
+route param; sync the store _from_ it. Never treat the store (or subdomain) as the
+authority in-app.
 **Because:** two writers race — a stale store value serves org A's data under org
 B's URL.
 **Enforced by:** `organization-context.ts` (`syncOrganizationFromRoute`) + the

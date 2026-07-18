@@ -132,8 +132,10 @@ src/pages/
 
 - Inside `/organization/$organizationSlug/*`, **`params.organizationSlug` is canonical**.
 - `useOrganizationStore` is a **derived cache synced from the route** —
-  never the other way around. localStorage / subdomain resolution are used only by the `/`
-  resolver to pick a redirect target.
+  never the other way around. The `/` resolver picks its redirect target from me/context
+  (the active organization); a subdomain, when present, only seeds a boot-time store
+  fallback (`resolveOrganizationFromSubdomain`). localStorage plays no role in organization
+  context.
 - Multi-tab correctness follows automatically: each tab's URL carries its own organization.
 - **Permissions are per-organization**: the `$organizationSlug` boundary refetches
   memberships/permissions whenever the param changes (today's once-if-empty bootstrap is not
@@ -254,7 +256,7 @@ Executed as phase 0 of the epic:
 | `OrgPermission` (`core/types/permissions.ts`)                 | `OrganizationPermission`                                                               |
 | `shared/api/my-orgs.ts`                                       | `shared/tenancy/my-organizations.ts`                                                   |
 | `OrgSwitcher`, `OrgBadges` (`shared/components/`)             | `OrganizationSwitcher`, `OrganizationBadges`                                           |
-| `TENANT.*` constants, `getLastTenantFromStorage`              | `ORGANIZATION.*`, `getLastOrganizationFromStorage`                                     |
+| `TENANT.*` constants                                          | `ORGANIZATION.*` constants                                                             |
 | Settings section id `org-general`                             | scope `organization`, section `general`                                                |
 
 ## 11. Phased migration

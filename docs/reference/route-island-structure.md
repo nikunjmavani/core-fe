@@ -155,7 +155,7 @@ const indexRoute = createRoute({
 
 Established case:
 
-- `/` → the last-used organization's dashboard, else the `/organization` picker, else `/onboarding` — the root resolver (`resolveRootRedirect` in `src/shared/tenancy/organization-resolver.ts`, wired as the index route's `beforeLoad` in `src/app/routes/routeTree.tsx`)
+- `/` → the active organization's dashboard (from me/context), else the `/organization` picker, else `/onboarding` — the root resolver (`resolveRootRedirect` in `src/shared/tenancy/organization-resolver.ts`, wired as the index route's `beforeLoad` in `src/app/routes/routeTree.tsx`)
 
 (Settings is not a route space — it is the global `#settings/<scope>/<section>` hash modal.)
 

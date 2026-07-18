@@ -11,16 +11,17 @@ runtime sequences · [POLICIES](./TENANCY.POLICIES.md) — the invariants.
 
 **The URL is the single source of truth for organization context.** Inside
 `/organization/$organizationSlug/*` the route param is canonical; `useOrganizationStore` is a
-derived cache synced FROM the route. localStorage / subdomain resolution only feed the `/`
-resolver's redirect choice.
+derived cache synced FROM the route. The `/` resolver's redirect choice comes from
+me/context (the active organization); a subdomain, when present, only seeds a boot-time
+store fallback. localStorage plays no role in organization context.
 
 ## Files
 
 | File                            | Responsibility                                                                                                                                                   |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `organization-context.ts`       | `syncOrganizationFromRoute` (URL → store, persists last-used), `getActiveOrganizationId`                                                                         |
+| `organization-context.ts`       | `syncOrganizationFromRoute` (URL → store), `getActiveOrganizationId`                                                                                             |
 | `organization-membership.ts`    | `findMembership`, `ensurePermissionsFor` — refetches permissions when the organization changes (a once-if-empty check would leak org A's permissions into org B) |
-| `organization-resolver.ts`      | `resolveRootRedirect` for `/`: **not onboarded** (`!user.onboarding_completed`) → onboarding; else last-used (validated) → dashboard, else picker                |
+| `organization-resolver.ts`      | `resolveRootRedirect` for `/`: **not onboarded** (`!user.onboarding_completed`) → onboarding; else active org (validated) → dashboard, else picker               |
 | `my-organizations.ts` (+ .test) | `listMyOrganizations()`, `createOrganization()` + schemas                                                                                                        |
 | `tenancy-service.ts` (+ .test)  | Subdomain fallback resolution (`resolveOrganizationFromSubdomain`) — boot-time default for the organization header                                               |
 
