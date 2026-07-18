@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import {
-  getLastOrganizationFromStorage,
-  useOrganizationStore,
-} from '@/shared/store/useOrganizationStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import type { MeContext } from './me-context.ts';
 import {
@@ -48,12 +45,15 @@ describe('organization context (URL → derived store)', () => {
     localStorage.clear();
   });
 
-  it('syncs the store from the route param and persists last-used', () => {
+  it('syncs the store from the route param without persisting org to storage', () => {
     syncOrganizationFromRoute('org_acme', 'acme');
 
     expect(useOrganizationStore.getState().organizationId).toBe('org_acme');
     expect(useOrganizationStore.getState().organizationSlug).toBe('acme');
-    expect(getLastOrganizationFromStorage()).toEqual({ id: 'org_acme', slug: 'acme' });
+    // The active org lives in the URL + derived store only — never localStorage.
+    // A persisted `core-last-organization` pointer used to survive logout and
+    // expose the previous user's org to the next sign-in on this browser.
+    expect(localStorage.getItem('core-last-organization')).toBeNull();
   });
 
   it('does not reset the store when the organization is unchanged', () => {

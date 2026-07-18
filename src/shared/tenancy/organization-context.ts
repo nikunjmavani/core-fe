@@ -1,9 +1,6 @@
 import type { OrganizationPermission } from '@/core/rbac/policies.ts';
 import { organizationPermissionSchema } from '@/core/types/permissions.ts';
-import {
-  persistOrganizationToStorage,
-  useOrganizationStore,
-} from '@/shared/store/useOrganizationStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 
 import type { MeContext } from './me-context.ts';
 
@@ -12,11 +9,11 @@ import type { MeContext } from './me-context.ts';
  *
  * Inside `/organization/$organizationSlug/*` the route param is canonical; the
  * Zustand store is a derived cache synced FROM the route (never the other way
- * around), kept only so non-React code — the HTTP client's organization
- * header, RBAC helpers — can read the active organization synchronously.
- * localStorage / subdomain resolution are used solely by the `/` resolver to
- * pick a redirect target. Multi-tab correctness follows: each tab's URL
- * carries its own organization. (docs/reference/routing-and-tenancy.md §4)
+ * around), kept only so non-React code — the HTTP client, RBAC helpers — can
+ * read the active organization synchronously. The `/` resolver picks its
+ * redirect target from me/context (the active organization), not from storage.
+ * Multi-tab correctness follows: each tab's URL carries its own organization.
+ * (docs/reference/routing-and-tenancy.md §4)
  */
 export function syncOrganizationFromRoute(
   organizationId: string,
@@ -30,7 +27,6 @@ export function syncOrganizationFromRoute(
   ) {
     store.setOrganization(organizationId, slug, status);
   }
-  persistOrganizationToStorage(organizationId, slug);
 }
 
 /** Active organization id (derived cache — canonical value is me/context). */
