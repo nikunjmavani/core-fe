@@ -136,7 +136,9 @@ describe('notification preferences', () => {
     // validated notification_type now rejects. Each category × channel toggle
     // must expand to one row per canonical member type.
     putMock.mockResolvedValue({
-      data: [{ notification_type: 'security.alert', channel: 'PUSH', is_enabled: false }],
+      data: [
+        { notification_type: 'security.alert', channel: 'WEB_PUSH', is_enabled: false },
+      ],
     });
     const result = await updateNotificationPreferences([
       { category: 'security', channel: 'desktop', enabled: false },
@@ -146,7 +148,7 @@ describe('notification preferences', () => {
       expect.stringContaining('/users/me/notification-preferences'),
       {
         preferences: [
-          { notification_type: 'security.alert', channel: 'PUSH', is_enabled: false },
+          { notification_type: 'security.alert', channel: 'WEB_PUSH', is_enabled: false },
           {
             notification_type: 'membership.invite_accepted',
             channel: 'EMAIL',
