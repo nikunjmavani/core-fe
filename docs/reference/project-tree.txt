@@ -65,6 +65,7 @@ core-fe/
 │   │   ├── reusable-unit-gate.yml
 │   │   ├── reusable-vitest-unit-only.yml
 │   │   ├── rollback-deploy.yml
+│   │   ├── scheduled-deps-audit.yml
 │   │   ├── scheduled-release-guards.yml
 │   │   └── sync-drift-canary.yml
 │   ├── CODEOWNERS
