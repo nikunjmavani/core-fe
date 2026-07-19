@@ -32,6 +32,8 @@ jobs:
       e2e: ${{ steps.filter.outputs.e2e }}
       ci-config: ${{ steps.filter.outputs.ci-config }}
       agent-os: ${{ steps.filter.outputs.agent-os }}
+      deps: ${{ steps.filter.outputs.deps }}
+      iac: ${{ steps.filter.outputs.iac }}
       docs-only-md: ${{ steps.filter.outputs.docs-only-md == 'true' && steps.filter.outputs.src-code == 'false' && steps.filter.outputs.e2e == 'false' && steps.filter.outputs.ci-config == 'false' && steps.filter.outputs.agent-os == 'false' }}
 
     steps:
@@ -77,6 +79,18 @@ jobs:
               - '.claude/**'
               - '.cursor/**'
               - '.codex/**'
+            deps:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.npmrc'
+              - 'tooling/ci/bulk-audit.mjs'
+            iac:
+              - '.github/**'
+              - 'netlify.toml'
+              - 'docker-compose*.yml'
+              - 'catalog-info.yaml'
+              - '**/Dockerfile'
+              - '**/*.tf'
             docs-only-md:
               - '**/*.md'
               - 'docs/**'
@@ -287,7 +301,10 @@ jobs:
   security-audit:
     name: Security audit
     needs: [changes]
-    if: needs.changes.outputs.docs-only-md != 'true'
+    # Deps-only: the audit is a pure function of the dependency tree, so a
+    # src-only PR would reproduce main's result. Advisory drift on unchanged
+    # deps is covered by scheduled-deps-audit.yml (weekly).
+    if: needs.changes.outputs.deps == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -354,7 +371,9 @@ jobs:
     # Actions workflows. Complements Semgrep/pnpm audit (no IaC coverage).
     name: Security IaC (Trivy config)
     needs: [changes]
-    if: needs.changes.outputs.docs-only-md != 'true'
+    # IaC-only: Trivy config scans .github, Netlify, compose, and catalog files —
+    # nothing under src/. A src-only PR reproduces main's result.
+    if: needs.changes.outputs.iac == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -397,7 +416,9 @@ jobs:
   dependency-review:
     name: Dependency review
     needs: [changes]
-    if: needs.changes.outputs.docs-only-md != 'true'
+    # Deps-only: the action diffs the PR's dependency manifest; with no manifest
+    # change there is nothing to review.
+    if: needs.changes.outputs.deps == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -416,7 +437,9 @@ jobs:
   actionlint:
     name: Actionlint
     needs: [changes]
-    if: needs.changes.outputs.docs-only-md != 'true'
+    # CI-config-only: actionlint validates .github workflow YAML — a src-only PR
+    # touches none of it.
+    if: needs.changes.outputs.ci-config == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
