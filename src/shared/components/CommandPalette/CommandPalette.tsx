@@ -1,10 +1,14 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Command } from 'cmdk';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { ORGANIZATION } from '@/core/config/constants.ts';
 import { logout } from '@/shared/auth/service.ts';
+import { SETTINGS_NS } from '@/shared/components/SettingsModal/settings.constants.ts';
 import { settingsHash } from '@/shared/components/SettingsModal/settings-hash-grammar.ts';
+import { visibleSettingsNavGroups } from '@/shared/components/SettingsModal/settings-nav-visibility.ts';
+import { useDeploymentFlags } from '@/shared/hooks/useDeploymentFlags/index.ts';
 import { useMeContext } from '@/shared/hooks/useMeContext/index.ts';
 import {
   Building2,
@@ -17,6 +21,8 @@ import {
   Sun,
 } from '@/shared/icons/index.ts';
 import { LAYOUT_KEYS, LAYOUT_NS } from '@/shared/layouts/layout.constants.ts';
+import { useAuthStore } from '@/shared/store/useAuthStore/index.ts';
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import { useThemeStore } from '@/shared/store/useThemeStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 
@@ -37,6 +43,31 @@ export function CommandPalette() {
   // Organization settings only has sections for a team workspace; on a personal
   // workspace the command would just fall back to account/profile — so hide it.
   const isTeamOrg = meContext?.activeOrganization?.type === 'TEAM';
+  // Settings destinations, gated exactly like the Settings modal nav (permission +
+  // org type + deployment) so ⌘K can jump straight to e.g. Billing or Members.
+  const { t: tSettings } = useTranslation(SETTINGS_NS);
+  const deploymentFlags = useDeploymentFlags();
+  const organizationId = useOrganizationStore((s) => s.organizationId);
+  const permissions = useOrganizationStore((s) => s.permissions);
+  const user = useAuthStore((s) => s.user);
+  const settingsItems = useMemo(
+    () =>
+      visibleSettingsNavGroups({
+        hasOrganizationContext:
+          !!organizationId && organizationId !== ORGANIZATION.LOCALHOST_FALLBACK,
+        orgType: meContext?.activeOrganization?.type,
+        teamOrganizations: deploymentFlags.teamOrganizations,
+        role: user?.role ?? 'user',
+        permissions,
+      }).flatMap((group) => group.items),
+    [
+      deploymentFlags.teamOrganizations,
+      meContext?.activeOrganization?.type,
+      organizationId,
+      permissions,
+      user?.role,
+    ],
+  );
   const setShortcutsOpen = useUIStore((s) => s.setShortcutsOpen);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -165,6 +196,31 @@ export function CommandPalette() {
               ) : null}
             </Command.Group>
 
+            {settingsItems.length > 0 ? (
+              <Command.Group
+                heading={t(cp.settings)}
+                className="text-muted-foreground px-1 py-1.5 text-xs font-medium"
+              >
+                {settingsItems.map((item) => (
+                  <CommandItem
+                    key={`${item.scope}/${item.section}`}
+                    icon={item.icon}
+                    keywords={item.keywords}
+                    onSelect={() =>
+                      runCommand(() =>
+                        navigate({
+                          to: '.',
+                          hash: settingsHash(item.scope, item.section),
+                        }),
+                      )
+                    }
+                  >
+                    {tSettings(item.labelKey)}
+                  </CommandItem>
+                ))}
+              </Command.Group>
+            ) : null}
+
             {meContext ? (
               <CommandPaletteOrgGroup
                 meContext={meContext}
@@ -222,16 +278,6 @@ export function CommandPalette() {
               heading={t(cp.groups.account)}
               className="text-muted-foreground px-1 py-1.5 text-xs font-medium"
             >
-              <CommandItem
-                onSelect={() =>
-                  runCommand(() =>
-                    navigate({ to: '.', hash: settingsHash('account', 'profile') }),
-                  )
-                }
-                icon={Settings}
-              >
-                {t(cp.settings)}
-              </CommandItem>
               <CommandItem
                 onSelect={() =>
                   runCommand(() => {

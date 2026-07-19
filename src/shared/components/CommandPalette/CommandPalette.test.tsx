@@ -2,6 +2,7 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { useOrganizationStore } from '@/shared/store/useOrganizationStore/index.ts';
 import { useUIStore } from '@/shared/store/useUIStore/index.ts';
 import type { MeContext } from '@/shared/tenancy/me-context.ts';
 import { renderWithProviders } from '@/tests/utils/renderWithProviders.tsx';
@@ -36,6 +37,7 @@ describe('CommandPalette', () => {
 
   beforeEach(() => {
     useUIStore.setState({ commandPaletteOpen: true });
+    useOrganizationStore.setState({ permissions: [] });
     useMeContextMock.mockReturnValue({ data: meContext('TEAM') });
     navigateMock.mockClear();
   });
@@ -55,6 +57,42 @@ describe('CommandPalette', () => {
     await user.click(await screen.findByText('Organization settings'));
 
     expect(navigateMock).toHaveBeenCalledWith(expect.objectContaining({ to: '.' }));
+  });
+
+  // F2: settings destinations are searchable in the palette (were "No results").
+  it('lists settings destinations as searchable commands', async () => {
+    useOrganizationStore.setState({ permissions: ['organization:read'] });
+    renderWithProviders(<CommandPalette />);
+
+    // Account sections need only a signed-in user; Billing needs organization:read.
+    expect(await screen.findByText('Profile')).toBeInTheDocument();
+    expect(screen.getByText('Billing')).toBeInTheDocument();
+  });
+
+  it('finds a settings section by keyword (billing → Billing)', async () => {
+    useOrganizationStore.setState({ permissions: ['organization:read'] });
+    const user = userEvent.setup();
+    renderWithProviders(<CommandPalette />);
+
+    await user.type(
+      await screen.findByPlaceholderText('Type a command or search...'),
+      'billing',
+    );
+
+    expect(await screen.findByText('Billing')).toBeInTheDocument();
+    expect(screen.queryByText('Profile')).not.toBeInTheDocument();
+  });
+
+  it('navigates to a settings section when selected', async () => {
+    useOrganizationStore.setState({ permissions: ['organization:read'] });
+    const user = userEvent.setup();
+    renderWithProviders(<CommandPalette />);
+
+    await user.click(await screen.findByText('Billing'));
+
+    expect(navigateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ to: '.', hash: expect.stringContaining('billing') }),
+    );
   });
 
   // Regression (F4): Organization settings has no sections on a personal workspace
