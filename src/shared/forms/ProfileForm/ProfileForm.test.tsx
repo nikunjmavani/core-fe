@@ -57,6 +57,22 @@ describe('ProfileForm', () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  // Regression (F7): the confirm dialog must not open for invalid input — the
+  // form validates first, so an over-length name shows its error immediately
+  // instead of leaving the confirm open with a Save that silently fails.
+  it('validates before opening the confirm dialog', async () => {
+    const user = userEvent.setup();
+    renderQ(<ProfileForm email="jane@example.com" defaultValues={{ name: 'Jane' }} />);
+
+    await user.clear(screen.getByTestId('profile-name'));
+    await user.type(screen.getByTestId('profile-name'), 'X'.repeat(81)); // > max 80
+
+    await user.click(screen.getByTestId('profile-submit'));
+
+    expect(await screen.findByText(/name is too long/i)).toBeInTheDocument();
+    expect(screen.queryByTestId('profile-confirm-save')).not.toBeInTheDocument();
+  });
+
   it('persists via the API and refreshes the app-shell name on confirmed save', async () => {
     const user = userEvent.setup();
     renderQ(<ProfileForm email="jane@example.com" defaultValues={{ name: 'Jane' }} />);
