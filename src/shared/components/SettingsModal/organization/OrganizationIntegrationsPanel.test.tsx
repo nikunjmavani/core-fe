@@ -65,7 +65,8 @@ function setCanManage(value: boolean) {
   });
   useOrganizationStore.setState({
     organizationType: value ? 'TEAM' : 'PERSONAL',
-    permissions: value ? ['role:manage'] : [],
+    // `webhook:read` gates the Webhooks sub-section; `role:manage` gates its controls.
+    permissions: value ? ['role:manage', 'webhook:read'] : [],
   });
 }
 
@@ -158,6 +159,24 @@ describe('OrganizationIntegrationsPanel — webhooks', () => {
     render(<OrganizationIntegrationsPanel />);
     expect(screen.queryByTestId('webhook-add')).not.toBeInTheDocument();
     expect(screen.queryByTestId('webhook-delete-whk_1')).not.toBeInTheDocument();
+  });
+
+  // Regression (F5): the section is reachable via api-key:read, but the Webhooks
+  // sub-section stays hidden unless the caller can actually read webhooks — so
+  // API-key management shows without dragging in an inaccessible webhooks UI.
+  it('hides the whole Webhooks section without webhook:read, but keeps API keys', () => {
+    useAuthStore.setState({
+      user: { id: 'u', email: 'a@b.test', role: 'user' },
+      isAuthenticated: true,
+    });
+    useOrganizationStore.setState({
+      organizationType: 'TEAM',
+      permissions: ['role:manage', 'api-key:read'],
+    });
+    render(<OrganizationIntegrationsPanel />);
+    expect(screen.getByText('CI deploy key')).toBeInTheDocument();
+    expect(screen.queryByTestId('webhook-add')).not.toBeInTheDocument();
+    expect(screen.queryByText('https://x.test/hook')).not.toBeInTheDocument();
   });
 
   it('creates a webhook with a URL + selected event', async () => {

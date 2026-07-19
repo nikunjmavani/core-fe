@@ -19,7 +19,11 @@ const ORGANIZATION_SECTION_PERMISSION: Record<
   general: 'organization:read',
   members: 'membership:read',
   roles: 'role:read',
-  integrations: 'webhook:read',
+  // API-key management is the always-available part of Integrations; webhooks are
+  // gated separately inside the panel on `webhook:read`. Gating the whole section
+  // on `webhook:read` (a permission the backend never grants) hid the API-key
+  // management the user IS entitled to via `api-key:read`.
+  integrations: 'api-key:read',
 };
 
 export function canViewSettingsSection(

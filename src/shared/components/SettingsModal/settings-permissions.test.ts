@@ -56,6 +56,24 @@ describe('canViewSettingsSection', () => {
     ).toBe(false);
   });
 
+  it('integrations is reachable via api-key:read, not the never-granted webhook:read', () => {
+    // Regression: integrations was gated on `webhook:read`, which the backend never
+    // grants, so the whole section (incl. API-key management the user IS entitled to)
+    // was unreachable for everyone.
+    expect(
+      canViewSettingsSection(
+        { scope: 'organization', section: 'integrations' },
+        member(['api-key:read']),
+      ),
+    ).toBe(true);
+    expect(
+      canViewSettingsSection(
+        { scope: 'organization', section: 'integrations' },
+        member(['webhook:read']),
+      ),
+    ).toBe(false);
+  });
+
   it('super_admin bypasses organization permissions', () => {
     expect(
       canViewSettingsSection(

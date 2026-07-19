@@ -327,11 +327,17 @@ function WebhooksSection() {
  * with one-time-secret reveal remains a follow-up.
  */
 export function OrganizationIntegrationsPanel() {
+  // Webhooks are only shown when the caller can actually read them; API keys are
+  // the always-available part of this section (see settings-permissions.ts).
+  const canReadWebhooks = useCan({
+    permission: 'webhook:read',
+    teamOrganizationOnly: true,
+  });
   return (
     <section className="space-y-8" data-testid="settings-organization-integrations">
       <SectionHeader title="Integrations" description="API keys and webhooks." />
       <ApiKeysSection />
-      <WebhooksSection />
+      {canReadWebhooks ? <WebhooksSection /> : null}
     </section>
   );
 }
