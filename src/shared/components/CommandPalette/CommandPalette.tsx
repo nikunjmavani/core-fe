@@ -34,6 +34,9 @@ export function CommandPalette() {
   const navigate = useNavigate();
   const setTheme = useThemeStore((s) => s.setTheme);
   const { data: meContext } = useMeContext();
+  // Organization settings only has sections for a team workspace; on a personal
+  // workspace the command would just fall back to account/profile — so hide it.
+  const isTeamOrg = meContext?.activeOrganization?.type === 'TEAM';
   const setShortcutsOpen = useUIStore((s) => s.setShortcutsOpen);
   const dialogRef = useRef<HTMLDivElement>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
@@ -145,16 +148,21 @@ export function CommandPalette() {
               >
                 {t(cp.userSettings)}
               </CommandItem>
-              <CommandItem
-                onSelect={() =>
-                  runCommand(() =>
-                    navigate({ to: '.', hash: settingsHash('organization', 'general') }),
-                  )
-                }
-                icon={Building2}
-              >
-                {t(cp.organizationSettings)}
-              </CommandItem>
+              {isTeamOrg ? (
+                <CommandItem
+                  onSelect={() =>
+                    runCommand(() =>
+                      navigate({
+                        to: '.',
+                        hash: settingsHash('organization', 'general'),
+                      }),
+                    )
+                  }
+                  icon={Building2}
+                >
+                  {t(cp.organizationSettings)}
+                </CommandItem>
+              ) : null}
             </Command.Group>
 
             {meContext ? (
