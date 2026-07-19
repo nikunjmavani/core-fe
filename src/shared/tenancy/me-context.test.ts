@@ -19,6 +19,7 @@ const WIRE: MeContextWire = {
     is_mfa_enabled: false,
     first_name: 'Ada',
     last_name: null,
+    job_title: 'Staff Engineer',
     avatar_url: null,
     status: 'ACTIVE',
     created_at: '2026-01-01T00:00:00.000Z',
@@ -110,6 +111,7 @@ describe('toMeContext', () => {
     expect(ctx.user.isEmailVerified).toBe(true);
     expect(ctx.user.firstName).toBe('Ada');
     expect(ctx.user.lastName).toBeNull();
+    expect(ctx.user.jobTitle).toBe('Staff Engineer');
     expect(ctx.activeOrganization?.type).toBe('TEAM');
     expect(ctx.myPermissions).toContain('organization:read');
     expect(ctx.globalRole).toBeNull();
@@ -132,6 +134,20 @@ describe('toMeContext', () => {
     expect(
       toMeContext({ ...WIRE, active_organization: null }).activeOrganization,
     ).toBeNull();
+  });
+
+  it('maps a null job_title to null', () => {
+    expect(
+      toMeContext({ ...WIRE, user: { ...WIRE.user, job_title: null } }).user.jobTitle,
+    ).toBeNull();
+  });
+
+  it('tolerates a wire payload with no job_title field (optional)', () => {
+    const userNoJob = { ...WIRE.user };
+    delete (userNoJob as { job_title?: unknown }).job_title;
+    const parsed = meContextWire.safeParse({ ...WIRE, user: userNoJob });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect(toMeContext(parsed.data).user.jobTitle).toBeNull();
   });
 });
 

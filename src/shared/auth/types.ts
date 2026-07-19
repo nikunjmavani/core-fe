@@ -24,6 +24,7 @@ export const authUserSchema = z.object({
   role: roleSchema,
   organizationId: z.string().optional(),
   name: z.string().optional(),
+  jobTitle: z.string().optional(),
   avatarUrl: z.string().optional(),
 });
 

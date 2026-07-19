@@ -25,7 +25,7 @@ export function AccountProfilePanel() {
   const user = useAuthStore((s) => s.user);
   const [values, setValues] = useState<ProfileInput>({
     name: user?.name ?? '',
-    jobTitle: '',
+    jobTitle: user?.jobTitle ?? '',
   });
   const completeness = useMemo(() => computeProfileCompleteness(values), [values]);
 

@@ -94,7 +94,13 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
       // Reflect the new name in the app shell (avatar + header) right away, and
       // refetch me/context so the dashboard greeting picks it up too.
       const user = useAuthStore.getState().user;
-      if (user) useAuthStore.getState().setUser({ ...user, name: values.name });
+      if (user) {
+        useAuthStore.getState().setUser({
+          ...user,
+          name: values.name,
+          jobTitle: values.jobTitle,
+        });
+      }
       reset(values);
       setShowConfirm(false);
       notify.success(i18n.t(ERRORS_KEYS.frontend.profileUpdated, { ns: ERRORS_NS }));

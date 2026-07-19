@@ -19,6 +19,7 @@ import {
   billingSubscriptionWireSchema,
 } from '@/shared/api/billing-contracts.ts';
 import { fetchAllPages } from '@/shared/api/fetch-all-pages.ts';
+import { isHttpError } from '@/shared/errors/HttpError.ts';
 
 const BILLING_API = `${API_BASE_PATH}/billing`;
 
@@ -148,9 +149,23 @@ export async function listSubscriptions(): Promise<BillingSubscription[]> {
   ).map(toBillingSubscription);
 }
 
-/** First non-terminal subscription for the active organization, if any. */
+/**
+ * First non-terminal subscription for the active organization, if any.
+ *
+ * A personal workspace (and any context without billing access) is **forbidden**
+ * from reading subscriptions — the backend answers `403`. That means "no active
+ * subscription", not a failure: treat it as `null` so the billing panel renders
+ * the no-plan state instead of a dead-end "couldn't load billing" error whose
+ * Retry can never succeed.
+ */
 export async function getActiveSubscription(): Promise<BillingSubscription | null> {
-  const subscriptions = await listSubscriptions();
+  let subscriptions: BillingSubscription[];
+  try {
+    subscriptions = await listSubscriptions();
+  } catch (error) {
+    if (isHttpError(error) && error.status === 403) return null;
+    throw error;
+  }
   return (
     subscriptions.find(
       (subscription) => !TERMINAL_SUBSCRIPTION_STATUSES.has(subscription.status),
