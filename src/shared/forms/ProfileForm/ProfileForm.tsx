@@ -120,10 +120,12 @@ export function ProfileForm({ email, defaultValues, onValuesChange }: ProfileFor
       <form
         className="space-y-5"
         data-testid="profile-form"
-        onSubmit={(e) => {
-          e.preventDefault();
+        onSubmit={handleSubmit(() => {
+          // Validate BEFORE the confirm dialog — an invalid field (e.g. an
+          // over-length name) must surface its error here, not leave the confirm
+          // open with a "Save changes" that silently fails validation.
           if (isDirty) setShowConfirm(true);
-        }}
+        })}
       >
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2">
