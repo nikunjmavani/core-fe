@@ -52,7 +52,14 @@ Two top-level banners mirror GitHub Secret vs Variable classification:
 # ### GitHub Variables ###   → gh variables / public knobs
 ```
 
-`pnpm github:sync` classifies by **name** (`classifyKey` in `tooling/setup/github/`). Place each key under the half its name resolves to.
+`pnpm github:sync` classifies each key by the **allowlist** in
+[`tooling/setup/setup.config.json`](../../../tooling/setup/setup.config.json): `deploySecrets`
+(pushed as GitHub Secrets, `secrets.*`) and `deployVariables` (managed as GitHub Variables,
+`vars.*`), aligned to how the deploy workflow reads each key. The `.env.example` half a key
+sits under is documentation; the allowlist is the authority. Secrets are always pushed;
+variables are diffed (pushed only when missing/changed) and pruned when equal to the runtime
+schema default — see [`.github/environments/README.md`](../../../.github/environments/README.md)
+and the generated [`env-catalog.md`](../../reference/env-catalog.md).
 
 ## 2. Platform switches
 

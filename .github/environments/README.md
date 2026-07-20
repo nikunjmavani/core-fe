@@ -36,9 +36,16 @@ upload plugin only when the token is set).
 
 Non-secret deploy knobs are GitHub **Variables** on the same environments, read by
 the deploy/preview workflows via `${{ vars.* }}` and validated against
-`envProfiles.<env>.allowed` (`src/core/config/env-schema.ts`). They are
-**hand-managed** in Settings → Environments (or `gh variable set <NAME> --env <env>`) —
-`github:sync` does not manage variables today:
+`envProfiles.<env>.allowed` (`src/core/config/env-schema.ts`). They are **managed by
+`pnpm github:sync`** from the gitignored `.env.<environment>` files — the managed set is
+`deployVariables` in [`tooling/setup/setup.config.json`](../../tooling/setup/setup.config.json)
+(aligned to the `vars.*` reads in the deploy workflow). Unlike secrets, variables are
+**diffed**: a variable is pushed only when missing or changed, and one whose value equals
+its **runtime schema default** (the env-independent Zod fallback) is **not pushed and is
+pruned** — the runtime falls back to the identical default. Preview an environment with
+`pnpm github:sync <env> --diff`; pass `--keep-schema-defaults` to push default-valued
+variables verbatim. Full key catalog (kind, default, description):
+[`docs/reference/env-catalog.md`](../../docs/reference/env-catalog.md) (`pnpm env:catalog`).
 
 | Variable                               | development          | production           |
 | -------------------------------------- | -------------------- | -------------------- |
@@ -49,8 +56,10 @@ the deploy/preview workflows via `${{ vars.* }}` and validated against
 | `VITE_SENTRY_*_SAMPLE_RATE` (4 keys)   | optional             | optional             |
 | `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24`   | repo-level, optional | repo-level, optional |
 
-An unset variable falls back to the schema default at build time; `VITE_APP_ENV` is
-**not** a variable — the workflows derive it from the resolved environment name.
+An unset variable falls back to the runtime schema default at build time; `VITE_APP_ENV`
+is **not** a managed variable — the workflows derive it from the resolved environment
+name. `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24` is a **repository-level** variable (not
+per-environment), so it stays hand-managed.
 
 ## Secret placement (repository vs environment)
 
@@ -78,14 +87,17 @@ ones (Slack webhook, Codecov/Stryker/npm token, …) the same manual way.
 
 ## Commands
 
-| Command                      | Purpose                                                                     |
-| ---------------------------- | --------------------------------------------------------------------------- |
-| `pnpm github:sync`           | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets           |
-| `pnpm github:sync --check`   | Read-only drift (rulesets, shells, protection, secret names) — fails on any |
-| `pnpm github:sync --dry-run` | Preview changes, no writes                                                  |
-| `pnpm github:sync --yes`     | Skip the secrets-push confirmation (automation)                             |
-| `pnpm github:sync --prune`   | Flag rulesets for branches not in config (`--prune --yes` to delete)        |
-| `pnpm validate:deploy-env`   | Fail if required deploy secrets missing (local, uses GitHub API)            |
+| Command                                   | Purpose                                                                                  |
+| ----------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `pnpm github:sync`                        | Scaffold `.env.*`, sync rulesets, ensure env shells, push secrets + diff/prune variables |
+| `pnpm github:sync --check`                | Read-only drift (rulesets, shells, protection, secrets + variables) — fails on any       |
+| `pnpm github:sync <env> --diff`           | Per-variable table: schema default vs local vs remote vs decision (read-only)            |
+| `pnpm github:sync --dry-run`              | Preview the local-side values plan, no writes (no GitHub query)                          |
+| `pnpm github:sync --keep-schema-defaults` | Push variables equal to their schema default instead of pruning                          |
+| `pnpm github:sync --yes`                  | Skip the values-push confirmation (automation)                                           |
+| `pnpm github:sync --prune`                | Flag rulesets for branches not in config (`--prune --yes` to delete)                     |
+| `pnpm env:catalog` / `:check`             | (Re)generate / drift-check `docs/reference/env-catalog.md`                               |
+| `pnpm validate:deploy-env`                | Fail if required deploy secrets missing (local, uses GitHub API)                         |
 
 Every `github:sync` (all modes) runs a **consistency pre-flight** first: the
 environments in `setup.config.json`, `.github/environments/*.json`, and the
