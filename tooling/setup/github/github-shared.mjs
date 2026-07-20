@@ -156,3 +156,82 @@ export function fetchGitHubResourceLines(environment, resource, jqPath) {
 export function listGitHubEnvironmentSecretNames(environment) {
   return fetchGitHubResourceLines(environment, 'secrets', '.secrets[].name');
 }
+
+/**
+ * Live GitHub Environment Variables as a `name → value` map (values ARE returned
+ * by the API, unlike secrets — so variables can be diffed). Paginates via
+ * `gh api --paginate`; a 404 (environment has no variables yet) yields an empty
+ * map. `@tsv` keeps the value intact even if it contains `=`.
+ * @param {string} environment
+ * @returns {Map<string, string>}
+ */
+export function listGitHubEnvironmentVariables(environment) {
+  /** @type {Map<string, string>} */
+  const variables = new Map();
+  let output;
+  try {
+    // execFileSync (no shell): the jq `|`/`@tsv` are jq operators inside one arg,
+    // and `environment` (a validated config name) never reaches a shell.
+    output = execFileSync(
+      'gh',
+      [
+        'api',
+        '--paginate',
+        `repos/:owner/:repo/environments/${environment}/variables`,
+        '--jq',
+        '.variables[] | [.name, .value] | @tsv',
+      ],
+      { encoding: 'utf-8', stdio: ['pipe', 'pipe', 'pipe'], timeout: 30_000 },
+    );
+  } catch (listError) {
+    const message = listError instanceof Error ? listError.message : String(listError);
+    if (/HTTP 404|Not Found/i.test(message)) return variables;
+    throw listError;
+  }
+  for (const rawLine of output.split('\n')) {
+    const line = rawLine.replace(/\r$/, '');
+    if (!line) continue;
+    const tab = line.indexOf('\t');
+    if (tab === -1) {
+      variables.set(line, '');
+      continue;
+    }
+    variables.set(line.slice(0, tab), line.slice(tab + 1));
+  }
+  return variables;
+}
+
+/**
+ * @param {string} environment
+ * @param {string} name
+ * @param {string} value
+ */
+export function setGitHubVariable(environment, name, value) {
+  execFileSync('gh', ['variable', 'set', name, '--env', environment], {
+    input: value,
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 30_000,
+  });
+}
+
+/**
+ * @param {string} environment
+ * @param {string} name
+ */
+export function deleteGitHubVariable(environment, name) {
+  execFileSync('gh', ['variable', 'delete', name, '--env', environment], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 30_000,
+  });
+}
+
+/**
+ * @param {string} environment
+ * @param {string} name
+ */
+export function deleteGitHubSecret(environment, name) {
+  execFileSync('gh', ['secret', 'delete', name, '--env', environment], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    timeout: 30_000,
+  });
+}

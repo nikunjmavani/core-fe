@@ -9,14 +9,18 @@
  *   1. Scaffold missing `.env.<environment>` files
  *   2. Sync branch rulesets (`.github/rulesets/*.json`) — branch: `main` only
  *   3. Ensure GitHub Environment shells exist
- *   4. Reconcile deploy secrets from `.env.<environment>`
+ *   4. Reconcile deploy VALUES (secrets + variables) from `.env.<environment>`:
+ *      secrets always pushed; variables pushed only when missing/changed and
+ *      pruned when equal to their env-schema default; unmanaged keys untouched.
  *
  * Modes / flags:
- *   (default)            scaffold + rulesets + environments + secrets, all environments
- *   <env>                scope the secrets reconcile to one environment (positional)
+ *   (default)            scaffold + rulesets + environments + values, all environments
+ *   <env>                scope the values reconcile to one environment (positional)
  *   --check              read-only: consistency + remote drift, no writes
- *   --dry-run            preview remote + values push, no writes
- *   --yes | -y           skip the secrets-push confirmation (automation)
+ *   --dry-run            preview the local-side values plan (no GitHub query, no writes)
+ *   --diff               read-only per-variable table (default vs local vs remote vs decision)
+ *   --keep-schema-defaults  push variables equal to their schema default instead of pruning
+ *   --yes | -y           skip the values-push confirmation (automation)
  *   --prune              also flag/remove rulesets for branches not in config
  *                          (flags by default; removes when combined with --yes)
  *   --help | -h          usage
@@ -35,12 +39,13 @@ import { fileURLToPath } from 'node:url';
 
 import { validateGitHubEnvironmentsDrift } from './check-environments-drift.mjs';
 import { driftResultsHaveIssues } from './environments-util.mjs';
+import { formatSyncPreviewTable } from './env-sync-plan.mjs';
 import { requireGhAuth } from './github-shared.mjs';
 import { scaffoldGithubEnvFiles } from './scaffold-env-files.mjs';
 import { getConfiguredEnvironmentNames } from './setup-config.mjs';
 import { checkSyncConsistency } from './sync-consistency.mjs';
 import { ensureGitHubEnvironments } from './sync-environments.mjs';
-import { syncEnvironmentSecrets } from './sync-env-secrets.mjs';
+import { previewEnvironmentValues, syncEnvironmentValues } from './sync-env-secrets.mjs';
 
 /**
  * @param {string} scriptName
@@ -63,29 +68,50 @@ function parseArguments() {
 
   if (argumentsList.includes('--help') || argumentsList.includes('-h')) {
     console.log(
-      'Usage: pnpm github:sync [environment...] [--check | --dry-run] [--yes] [--prune]',
+      'Usage: pnpm github:sync [environment...] [--check | --dry-run | --diff] [--yes] [--prune] [--keep-schema-defaults]',
     );
     console.log('');
     console.log(
-      '  (default)   All environments: scaffold + branch (main) rulesets + env shells + secrets',
+      '  (default)   All environments: scaffold + branch (main) rulesets + env shells + values',
     );
     console.log('  environment Optional environment name(s), e.g. production');
     console.log('  --check     Read-only consistency + remote drift (no writes)');
-    console.log('  --dry-run   Preview remote and values push (no writes)');
-    console.log('  --yes, -y   Skip the secrets-push confirmation prompt');
+    console.log(
+      '  --dry-run   Preview the local-side values plan (no GitHub query, no writes)',
+    );
+    console.log(
+      '  --diff      Per-variable table: schema default vs local vs remote vs decision (read-only)',
+    );
+    console.log(
+      '  --keep-schema-defaults  Push variables equal to their schema default instead of pruning',
+    );
+    console.log('  --yes, -y   Skip the values-push confirmation prompt');
     console.log(
       '  --prune     Flag/remove rulesets for branches not in config (removes with --yes)',
     );
     process.exit(0);
   }
 
-  if (argumentsList.includes('--check') && argumentsList.includes('--dry-run')) {
-    throw new Error('Use either --check or --dry-run, not both.');
+  const readOnlyModes = ['--check', '--dry-run', '--diff'].filter((flag) =>
+    argumentsList.includes(flag),
+  );
+  if (readOnlyModes.length > 1) {
+    throw new Error(
+      `Use only one of --check / --dry-run / --diff (got ${readOnlyModes.join(', ')}).`,
+    );
   }
 
   // Strict parse: every non-flag token must be a valid environment name, and any
   // unknown --flag is a hard error (a typo'd flag must never silently no-op).
-  const allowedFlags = new Set(['--check', '--dry-run', '--yes', '-y', '--prune']);
+  const allowedFlags = new Set([
+    '--check',
+    '--dry-run',
+    '--diff',
+    '--yes',
+    '-y',
+    '--prune',
+    '--keep-schema-defaults',
+  ]);
   const environments = [];
   for (const argument of argumentsList) {
     if (allowedFlags.has(argument)) continue;
@@ -104,11 +130,14 @@ function parseArguments() {
     ? 'check'
     : argumentsList.includes('--dry-run')
       ? 'dry-run'
-      : 'sync';
+      : argumentsList.includes('--diff')
+        ? 'diff'
+        : 'sync';
 
   const skipConfirmation =
     argumentsList.includes('--yes') || argumentsList.includes('-y');
   const prune = argumentsList.includes('--prune');
+  const keepSchemaDefaults = argumentsList.includes('--keep-schema-defaults');
 
   const selectedEnvironments =
     environments.length === 0 ? getConfiguredEnvironmentNames() : environments;
@@ -117,6 +146,7 @@ function parseArguments() {
     mode,
     skipConfirmation,
     prune,
+    keepSchemaDefaults,
     environments: selectedEnvironments,
   };
 }
@@ -137,14 +167,15 @@ function syncRulesets(mode, { prune, skipConfirmation }) {
 async function confirmSecretsPush() {
   const readline = createInterface({ input: process.stdin, output: process.stdout });
   const answer = await readline.question(
-    'Push deploy secrets to GitHub Environments? [y/N] ',
+    'Push deploy secrets + variables to GitHub Environments? [y/N] ',
   );
   readline.close();
   return answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes';
 }
 
 async function main() {
-  const { mode, skipConfirmation, prune, environments } = parseArguments();
+  const { mode, skipConfirmation, prune, keepSchemaDefaults, environments } =
+    parseArguments();
 
   if (mode !== 'dry-run') {
     requireGhAuth();
@@ -170,6 +201,19 @@ async function main() {
   }
   console.log('Consistency check: OK');
   console.log('');
+
+  // --diff is a read-only, per-variable preview of the deploy VALUES only: it
+  // reads each local file, fetches the live GitHub Environment, and prints the
+  // default/local/remote/decision table. It short-circuits before rulesets/env
+  // shells/writes.
+  if (mode === 'diff') {
+    for (const environmentName of environments) {
+      const rows = previewEnvironmentValues(environmentName, { keepSchemaDefaults });
+      console.log(formatSyncPreviewTable({ rows, environment: environmentName }));
+      console.log('');
+    }
+    return;
+  }
 
   if (mode === 'sync') {
     console.log('Step 1/4 — Scaffold local .env.<environment> files');
@@ -214,11 +258,11 @@ async function main() {
   }
   console.log('');
 
-  console.log(`Deploy secrets`);
+  console.log(`Deploy values (secrets + variables)`);
   if (mode === 'check') {
     let totalDrift = 0;
     for (const environmentName of environments) {
-      const result = syncEnvironmentSecrets(environmentName, 'check');
+      const result = syncEnvironmentValues(environmentName, 'check');
       totalDrift += result.drift;
     }
     if (totalDrift > 0) {
@@ -230,24 +274,44 @@ async function main() {
 
   if (mode === 'dry-run') {
     for (const environmentName of environments) {
-      syncEnvironmentSecrets(environmentName, 'dry-run');
+      syncEnvironmentValues(environmentName, 'dry-run', { keepSchemaDefaults });
     }
     console.log('Dry run complete. No changes pushed.');
     return;
   }
 
   if (!skipConfirmation) {
+    console.log('  Secrets are always pushed; variables are pushed only when missing or');
+    console.log(
+      '  changed. A variable equal to its env-schema default is NOT pushed and is',
+    );
+    console.log(
+      '  pruned from GitHub (the runtime falls back to the identical default) —',
+    );
+    console.log(
+      '  pass --keep-schema-defaults to push them verbatim. Unmanaged keys are left',
+    );
+    console.log('  alone.');
     const confirmed = await confirmSecretsPush();
     if (!confirmed) {
-      console.log('Secrets push skipped.');
+      console.log('Values push skipped.');
       return;
     }
   }
 
   let failures = 0;
+  let pushed = 0;
+  let unchanged = 0;
+  let deleted = 0;
+  let schemaDefaultSkipped = 0;
   for (const environmentName of environments) {
-    const result = syncEnvironmentSecrets(environmentName, 'sync');
+    const result = syncEnvironmentValues(environmentName, 'sync', { keepSchemaDefaults });
     failures += result.failures;
+    pushed += result.pushed;
+    unchanged += result.unchanged;
+    deleted += result.deleted;
+    schemaDefaultSkipped += result.schemaDefaultSkipped;
+    console.log('');
   }
 
   if (failures > 0) {
@@ -255,8 +319,11 @@ async function main() {
   }
 
   console.log('');
-  console.log('GitHub sync complete.');
-  console.log('Verify: pnpm validate:deploy-env');
+  console.log(
+    `GitHub sync complete — pushed ${pushed}, unchanged ${unchanged}, ` +
+      `deleted ${deleted}, schema-default ${schemaDefaultSkipped}.`,
+  );
+  console.log('Verify: pnpm github:sync --check');
 }
 
 main().catch((error) => {

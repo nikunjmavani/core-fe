@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 
 const SETUP_CONFIG_PATH = resolve(import.meta.dirname, '../setup.config.json');
 
-/** @typedef {{ name: string, deploySecrets?: string[], deploySecretsRequired?: string[] }} SetupEnvironment */
+/** @typedef {{ name: string, deploySecrets?: string[], deploySecretsRequired?: string[], deployVariables?: string[] }} SetupEnvironment */
 
 /**
  * @returns {{
@@ -79,4 +79,19 @@ export function getOptionalDeploySecretNames(environmentName) {
   const required = new Set(getRequiredDeploySecretNames(environmentName));
   const all = environment.deploySecrets ?? [];
   return all.filter((name) => !required.has(name));
+}
+
+/**
+ * Deploy VARIABLES (non-secret GitHub Environment Variables read as `vars.*` by
+ * the deploy workflow) — the managed variable allowlist. Unlike secrets, these
+ * are diffed against GitHub and only pushed when missing/different; a variable
+ * equal to its env-schema default is pruned so the runtime falls back to the
+ * identical default. Classification MUST match how the workflow reads each key
+ * (`vars.*` vs `secrets.*`) — see docs/deployment/runbooks/environment-variables.md.
+ * @param {string} environmentName
+ * @returns {string[]}
+ */
+export function getDeployVariableNames(environmentName) {
+  const environment = getEnvironmentConfig(environmentName);
+  return [...(environment.deployVariables ?? [])];
 }

@@ -233,6 +233,7 @@ core-fe/
 │   │   ├── design.md
 │   │   ├── documentation-tiers.md
 │   │   ├── e2e-testids-inventory.md
+│   │   ├── env-catalog.md
 │   │   ├── frontend-platform.md
 │   │   ├── internationalization.md
 │   │   ├── local-production-perf.md
@@ -1254,12 +1255,15 @@ core-fe/
 │   │   ├── setup-mcp.ts
 │   │   ├── setup-prerequisites-mac-tools.manifest
 │   │   └── [1 test file]
+│   ├── env-registry/
+│   │   └── env-registry.ts
 │   ├── reports/
 │   │   ├── code-review-report.mjs
 │   │   └── generate-project-tree.py
 │   ├── setup/
 │   │   ├── github/
 │   │   │   ├── check-environments-drift.mjs
+│   │   │   ├── env-sync-plan.mjs
 │   │   │   ├── environments-util.mjs
 │   │   │   ├── github-shared.mjs
 │   │   │   ├── governance-mode.mjs
@@ -1272,7 +1276,7 @@ core-fe/
 │   │   │   ├── sync-rulesets.mjs
 │   │   │   ├── sync.mjs
 │   │   │   ├── validate-github-env.mjs
-│   │   │   └── [4 test files]
+│   │   │   └── [5 test files]
 │   │   └── setup.config.json
 │   ├── sonar/
 │   │   └── sonar-gate.mjs

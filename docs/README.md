@@ -56,19 +56,20 @@ flowchart TB
 
 ## Deployment
 
-| Doc                                                                                             | Purpose                                                               |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [runbook-local-to-production.md](deployment/runbook-local-to-production.md)                     | Step-by-step: local dev → validate → build → deploy                   |
-| [cicd-and-netlify.md](deployment/cicd-and-netlify.md)                                           | CI/CD, Netlify env, deploy commands, GitHub Actions                   |
-| [deployment-and-pre-launch.md](deployment/deployment-and-pre-launch.md)                         | Full deployment guide and pre-launch checklist                        |
-| [path-to-production.md](deployment/path-to-production.md)                                       | Gate: run runbook + checklist before release                          |
-| [production-readiness.md](deployment/production-readiness.md)                                   | **Go / no-go** — what blocks production, categorized                  |
-| [netlify-cli-setup.md](deployment/netlify-cli-setup.md)                                         | Netlify CLI one-time connect and deploy                               |
-| [branch-protection.md](deployment/branch-protection.md)                                         | Branch protection + required CI checks (as-code: `pnpm github:sync`)  |
-| [runbooks/README.md](deployment/runbooks/README.md)                                             | Production runbooks index (CSP / Trusted Types / config.js)           |
-| [runbooks/environment-variables.md](deployment/runbooks/environment-variables.md)               | **Env schema** — `.env.example`, auth switches, GitHub/Netlify deploy |
-| [runbooks/csp-trusted-types-production.md](deployment/runbooks/csp-trusted-types-production.md) | CSP report URI, Trusted Types, `config.js` SRI contract               |
-| [.github/environments/README.md](../.github/environments/README.md)                             | GitHub Environments IaC: `pnpm github:sync`                           |
+| Doc                                                                                             | Purpose                                                                              |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [runbook-local-to-production.md](deployment/runbook-local-to-production.md)                     | Step-by-step: local dev → validate → build → deploy                                  |
+| [cicd-and-netlify.md](deployment/cicd-and-netlify.md)                                           | CI/CD, Netlify env, deploy commands, GitHub Actions                                  |
+| [deployment-and-pre-launch.md](deployment/deployment-and-pre-launch.md)                         | Full deployment guide and pre-launch checklist                                       |
+| [path-to-production.md](deployment/path-to-production.md)                                       | Gate: run runbook + checklist before release                                         |
+| [production-readiness.md](deployment/production-readiness.md)                                   | **Go / no-go** — what blocks production, categorized                                 |
+| [netlify-cli-setup.md](deployment/netlify-cli-setup.md)                                         | Netlify CLI one-time connect and deploy                                              |
+| [branch-protection.md](deployment/branch-protection.md)                                         | Branch protection + required CI checks (as-code: `pnpm github:sync`)                 |
+| [runbooks/README.md](deployment/runbooks/README.md)                                             | Production runbooks index (CSP / Trusted Types / config.js)                          |
+| [runbooks/environment-variables.md](deployment/runbooks/environment-variables.md)               | **Env schema** — `.env.example`, auth switches, GitHub/Netlify deploy                |
+| [runbooks/csp-trusted-types-production.md](deployment/runbooks/csp-trusted-types-production.md) | CSP report URI, Trusted Types, `config.js` SRI contract                              |
+| [.github/environments/README.md](../.github/environments/README.md)                             | GitHub Environments IaC: `pnpm github:sync`                                          |
+| [reference/env-catalog.md](reference/env-catalog.md)                                            | **Env-var catalog** (generated) — kind, schema default, per-env default, description |
 
 ---
 
