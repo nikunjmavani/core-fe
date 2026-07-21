@@ -129,11 +129,19 @@ export default defineConfig([
   },
 
   // Test files — relax rules that produce noise on fixtures/mocks
+  // parameterized-tests (S5976): descriptive per-case `it()` names document
+  // distinct behaviour branches — each carries its own inputs AND its own
+  // expected result, and the name is the "why". Collapsing them into an
+  // `it.each` table trades that intent for a data row. We DO parameterize where
+  // cases vary only by data (see `it.each` across the suite); the rule cannot
+  // tell the two apart, so it stays off for tests and parameterization is a
+  // judgement call, not a lint error.
   {
     files: ['**/*.test.ts', '**/*.test.tsx'],
     rules: {
       'sonarjs/slow-regex': 'off',
       'sonarjs/no-hardcoded-passwords': 'off',
+      'sonarjs/parameterized-tests': 'off',
       'max-lines-per-function': 'off',
     },
   },
@@ -146,6 +154,12 @@ export default defineConfig([
   // assertions-in-tests: hybrid e2e assertions live in tests/utils helpers
   // (expect* wrappers), which the rule cannot see — same rationale as the
   // S2699 test exclusion in sonar-project.properties.
+  // no-fixed-wait-in-tests: some Playwright waits are inherently time-based and
+  // have no observable condition to synchronize on — asserting the ABSENCE of an
+  // event (no reload after the update toast is dismissed) can only be verified by
+  // waiting a fixed budget and confirming nothing changed, and the reduced-motion
+  // animation-settle helper is a fixed frame budget by design. The rule targets
+  // arbitrary sleeps standing in for a real await and misreads these idioms.
   {
     files: ['tests/**/*.ts', 'tests/**/*.tsx'],
     rules: {
@@ -153,6 +167,7 @@ export default defineConfig([
       'sonarjs/pseudo-random': 'off',
       'sonarjs/no-skipped-tests': 'off',
       'sonarjs/assertions-in-tests': 'off',
+      'sonarjs/no-fixed-wait-in-tests': 'off',
     },
   },
 
