@@ -1193,7 +1193,7 @@ core-fe/
 │   └── vite-env.d.ts
 ├── tests/
 │   ├── ci/
-│   │   └── [23 test files]
+│   │   └── [24 test files]
 │   ├── cross-browser/
 │   │   └── [2 test files]
 │   ├── e2e/
