@@ -60,10 +60,10 @@ Every mutation hook returns TanStack Query's `isPending`. Non-optimistic trigger
 ```tsx
 <Button
   type="submit"
-  disabled={createInvitation.isPending}
-  isLoading={createInvitation.isPending}
+  disabled={inviteMember.isPending}
+  isLoading={inviteMember.isPending}
 >
-  {createInvitation.isPending ? t('common.sending') : t('invite.send')}
+  {inviteMember.isPending ? t('common.sending') : t('invite.send')}
 </Button>
 ```
 
@@ -73,7 +73,6 @@ Every mutation hook returns TanStack Query's `isPending`. Non-optimistic trigger
 
 | Domain        | Mutation                                                          |
 | ------------- | ----------------------------------------------------------------- |
-| Invitations   | `useRevokeInvitation`                                             |
 | Roles         | `useUpdateRole`, `useDeleteRole`                                  |
 | API keys      | `useRenameApiKey`, `useRevokeApiKey`                              |
 | Members       | `useUpdateMemberRole`, `useUpdateMemberStatus`, `useRemoveMember` |
@@ -84,10 +83,16 @@ Every mutation hook returns TanStack Query's `isPending`. Non-optimistic trigger
 
 **Non-optimistic** (must show in-progress) — creates + shapes we can't safely patch:
 
-- **Creates:** `useCreateInvitation`, `useCreateRole`, `useCreateApiKey`, `useCreateWebhook`, `useRegisterPasskey`
-- `useResendInvitation` (no list change)
+- **Creates:** `useInviteMember`, `useCreateRole`, `useCreateApiKey`, `useCreateWebhook`, `useRegisterPasskey`
 - `useMarkAllNotificationsRead`, `useUpdateNotificationPreferences`, `useUpdateOrganization`, billing/MFA
 
+> **Invitations are memberships, not a separate resource.** core-be has no
+> standalone `/invitations` endpoint, so `useInviteMember` (a create — hence
+> non-optimistic) is the _only_ invitation-specific hook. Revoking an invite
+> removes the still-`invited` membership through `useRemoveMember` (Members row
+> above); there is no separate revoke or resend hook. See the docstring on
+> [`useInviteMember`](../../src/shared/hooks/useInvitations/useInvitations.ts).
+>
 > The inventory drifts as hooks are added — the **policy** above is the durable
 > contract. When adding or changing a mutation, classify it and update this table.
 
