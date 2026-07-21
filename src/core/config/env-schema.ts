@@ -75,6 +75,10 @@ export const envSchemaBase = z.object({
   NETLIFY_AUTH_TOKEN: z.string().min(1).optional(),
   NETLIFY_SITE_ID: z.string().min(1).optional(),
   NODE_VERSION: z.string().min(1).optional(),
+  // Repository-level GitHub Actions PAT — not environment-scoped, never bundled,
+  // never read by the app or the local dev server. Cataloged here for reference;
+  // the real value lives in GitHub repository secrets (gh secret set --repo).
+  RELEASE_PLEASE_TOKEN: z.string().min(1).optional(),
   CONTEXT7_API_KEY: z.string().min(1).optional(),
 
   // --- Local tooling only (never bundled / never set in CI) ---
@@ -162,6 +166,8 @@ export const envFieldDescriptions: Readonly<Record<string, string>> = {
   NETLIFY_AUTH_TOKEN: 'Netlify CLI deploy token (CI only).',
   NETLIFY_SITE_ID: 'Netlify site ID (deploy target).',
   NODE_VERSION: 'Node version for CI/build; keep in lock step with .nvmrc.',
+  RELEASE_PLEASE_TOKEN:
+    'GitHub Actions PAT (repository secret) for release-please, dependabot-auto-merge, and the weekly PAT canary. Set via `gh secret set RELEASE_PLEASE_TOKEN --repo` (no --env); CI only — never bundled or read locally.',
   CONTEXT7_API_KEY:
     'Context7 docs-MCP API key; consumed by .mcp.json for the docs MCP (local tooling).',
   SONAR_ADMIN_PASSWORD:
